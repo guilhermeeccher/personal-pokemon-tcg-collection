@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Sem escrita: o CI só lê o código e roda verificação.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificacao:
+    name: Lint, tipos e testes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # O corepack já vem com o Node e instala a versão de pnpm fixada no
+      # package.json. Ele precisa vir ANTES do setup-node, senão o cache de
+      # dependências do setup-node não encontra o pnpm.
+      - name: Habilitar pnpm
+        run: corepack enable pnpm
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      # OBRIGATÓRIO, e antes do typecheck. `LayoutProps` e os outros tipos de
+      # rota são gerados pelo Next em `.next/types/`, que é gitignorado — num
+      # checkout limpo o typecheck falha com `Cannot find name 'LayoutProps'`
+      # se esta etapa não rodar. Isso foi medido: sem ela, o primeiro PR de
+      # qualquer pessoa quebra com um erro que parece culpa dela.
+      - name: Gerar tipos de rota do Next
+        run: pnpm exec next typegen
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Testes
+        run: pnpm test
+
+  imagem:
+    name: Build da imagem Docker
+    runs-on: ubuntu-latest
+    # Roda em paralelo com a verificação: ela pega quebra de empacotamento
+    # (entrypoint, dependência que só existe em dev, caminho de arquivo) que
+    # um `next build` na máquina de quem contribuiu não pega. A imagem é só
+    # construída — nada é publicado em lugar nenhum.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: docker build --tag colecao-pokemon:ci .
