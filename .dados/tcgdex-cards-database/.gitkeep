@@ -1,0 +1,12 @@
+Esta pasta é versionada vazia de propósito.
+
+O compose.yaml monta este caminho (só-leitura) em /upstream-dados-tcgdex, e
+quando um bind mount não existe quem o cria é o daemon do Docker — como root.
+A pasta nasceria root:root dentro do seu projeto, e um `rm -rf` no projeto
+falharia com "Permission denied" sem sudo. Ela existir no clone resolve isso:
+o dono é você.
+
+Para usar de verdade o clone de dados da TCGdex, veja o README (seção
+"Catálogo da TCGdex a partir de um clone local"). O caminho recomendado é
+clonar onde você quiser e apontar TCGDEX_REPO_HOST_PATH no .env, porque
+`git clone` recusa diretório não-vazio — e este aqui tem este arquivo.

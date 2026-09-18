@@ -39,7 +39,12 @@ yarn-error.log*
 
 # dados locais fora do Docker: imagens enviadas pelo usuário e o clone
 # do repositório de dados da TCGdex (ver .env.example)
-/.dados/
+/.dados/*
+# Exceção: o ponto de montagem do clone da TCGdex é versionado vazio, para o
+# Docker não criá-lo como root (ver .dados/tcgdex-cards-database/.gitkeep).
+!/.dados/tcgdex-cards-database/
+/.dados/tcgdex-cards-database/*
+!/.dados/tcgdex-cards-database/.gitkeep
 
 # typescript
 *.tsbuildinfo

@@ -144,9 +144,9 @@ docker compose logs -f app
 ```
 
 Você vai ver `Migrations aplicadas.`, depois `[entrypoint] verificando catálogo...` e, no primeiro
-boot, o carregamento do catálogo. O Compose também cria a pasta `.dados/` dentro do projeto: ela é o
-ponto de montagem opcional do clone de dados da TCGdex, fica vazia se você não usar, e é ignorada
-pelo git.
+boot, o carregamento do catálogo. A pasta `.dados/` que já vem no clone é o ponto de montagem opcional
+do clone de dados da TCGdex — pode ignorá-la, e o porquê de ela existir está
+[mais abaixo](#catálogo-da-tcgdex-a-partir-de-um-clone-local).
 
 ### 5. Abra
 
@@ -197,6 +197,37 @@ docker compose exec app pnpm sync:catalogo
 Ele é um cliente educado por obrigação: teto de requisições por segundo, concorrência limitada,
 User-Agent identificado, e aborta tudo na hora se levar bloqueio. Não aumente esses números sem
 saber o que está fazendo — ver `AGENTS.md`.
+
+### Catálogo da TCGdex a partir de um clone local
+
+Os comandos `pnpm importar:catalogo-repo`, `pnpm importar:tipos-catalogo` e
+`pnpm preencher:serie-id-ocidental` leem os dados de um clone do
+[repositório de dados da TCGdex](https://github.com/tcgdex/cards-database) em vez da API. Com o seed
+acima, esse caminho ficou raro — ele existia para trazer o catálogo japonês, que agora já vem junto —
+mas continua disponível para quem quiser dados direto do upstream sem tocar na API.
+
+O `compose.yaml` monta esse clone em `/upstream-dados-tcgdex`, e o caminho no host vem de
+`TCGDEX_REPO_HOST_PATH`. **O recomendado é clonar onde você quiser e apontar a variável:**
+
+```bash
+git clone --depth 1 https://github.com/tcgdex/cards-database.git ~/tcgdex-cards-database
+# no .env:
+# TCGDEX_REPO_HOST_PATH=/home/voce/tcgdex-cards-database
+```
+
+São cerca de 220 MB, e o clone não é atualizado sozinho — rode `git pull` nele quando quiser dados
+mais novos.
+
+#### Por que existe uma pasta `.dados/tcgdex-cards-database/` vazia no repositório
+
+Porque o default do mount aponta para ela, e **bind mount que não existe é criado pelo daemon do
+Docker, que roda como root**. Se a pasta não viesse no clone, toda instalação ganharia um diretório
+`root:root` dentro do projeto — e um `rm -rf` no projeto, no dia da desinstalação, falharia com
+`Permission denied` sem `sudo`. Versioná-la vazia faz o dono ser você.
+
+O efeito colateral é que `git clone` recusa diretório não-vazio, então não dá para clonar o
+repositório da TCGdex direto ali sem antes apagar o `.gitkeep`. É por isso que o caminho recomendado
+acima é a variável de ambiente.
 
 ---
 
