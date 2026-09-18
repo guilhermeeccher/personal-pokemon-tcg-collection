@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
-/* Tokens do design system Collection Vault (`design_system_pokemon.zip`),
-   copiados para o repositório em `src/app/tokens/`. Dois arquivos foram
-   alterados na entrada, e o motivo está comentado dentro de cada um:
+/* Tokens do design system Collection Vault. Ele foi entregue como um pacote
+   à parte, que não faz parte deste repositório; os arquivos em
+   `src/app/tokens/` são a cópia que vale aqui, e a única fonte de verdade da
+   pele do site. Dois deles foram alterados na entrada, e o motivo está
+   comentado dentro de cada um:
    `elevation.css` (anel de foco estava fora de cor) e `typography.css`
    (famílias vêm do next/font, não de @import do Google Fonts).
    O `fonts.css` do design system não foi copiado — ele era só o @import
