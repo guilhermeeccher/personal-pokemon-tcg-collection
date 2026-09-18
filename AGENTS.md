@@ -85,7 +85,7 @@ repositório, e o backup deles é responsabilidade de quem instala.
 | Pacotes | pnpm |
 | Testes | Vitest para as regras de negócio; sem e2e |
 | Runtime | Docker Compose |
-| Porta da app | **3010** no host (3000 fica livre para outros serviços) |
+| Porta da app | **3010** no host por padrão, trocável por `PORTA_HOST` no `.env` (3000 fica livre para outros serviços) |
 | Porta do banco | **não publicar no host** — só na rede interna do Compose |
 | Auth | nenhuma. Rede local, usuário único. Não implementar login. |
 

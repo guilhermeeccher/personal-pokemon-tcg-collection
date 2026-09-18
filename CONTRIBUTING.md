@@ -23,6 +23,10 @@ pnpm install --frozen-lockfile
 pnpm exec next typegen
 ```
 
+Se o `corepack enable` der `EACCES` apontando para `/usr/bin/pnpm`, o seu Node está instalado para o
+sistema inteiro: use `sudo corepack enable pnpm` ou
+`corepack enable --install-directory ~/.local/bin pnpm`.
+
 O `next typegen` não é opcional: `LayoutProps` e os outros tipos de rota são gerados em `.next/types/`,
 que é gitignorado. Sem ele o `typecheck` falha num checkout limpo.
 

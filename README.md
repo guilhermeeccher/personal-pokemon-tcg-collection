@@ -92,6 +92,14 @@ O `corepack` vem junto com o Node 22 e instala a versão de pnpm fixada no `pack
 necessário para rodar comando `pnpm` fora do container** (testes, lint). A imagem Docker faz isso por
 conta própria — se você só quer usar o sistema, pule este passo.
 
+Se der `EACCES: permission denied` apontando para `/usr/bin/pnpm`, é porque o seu Node está instalado
+para o sistema inteiro e o `corepack` tenta escrever num diretório do root. Use `sudo corepack enable
+pnpm`, ou instale numa pasta sua que esteja no `PATH`:
+
+```bash
+corepack enable --install-directory ~/.local/bin pnpm
+```
+
 ### 3. Crie o `.env`
 
 ```bash
@@ -120,6 +128,14 @@ docker compose up -d --build
 A primeira vez demora: ela baixa as imagens base, instala as dependências e compila a aplicação. Nas
 seguintes é questão de segundos.
 
+Se a subida parar com `Bind for 0.0.0.0:3010 failed: port is already allocated`, a porta 3010 já está
+ocupada por outra coisa na sua máquina. Escolha outra no `.env` e suba de novo — é o único lugar que
+precisa mudar:
+
+```dotenv
+PORTA_HOST=3011
+```
+
 Na subida, o container aplica as migrations e, **se o catálogo estiver vazio, carrega as 47.720
 cartas do arquivo versionado em `seed/`** — sem nenhuma requisição de rede. Para acompanhar:
 
@@ -136,6 +152,8 @@ pelo git.
 
 - Na própria máquina: **http://localhost:3010**
 - De outro aparelho na mesma rede local: `http://<ip-da-máquina>:3010`
+
+(Se você trocou `PORTA_HOST` no passo anterior, use a porta que escolheu.)
 
 Não há tela de login, porque não há login. O primeiro lugar para ir é **Cadastro rápido por set**.
 

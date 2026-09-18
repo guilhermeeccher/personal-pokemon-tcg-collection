@@ -2,7 +2,10 @@ services:
   app:
     build: .
     ports:
-      - "3010:3000"
+      # Porta publicada no HOST. O default é 3010; defina PORTA_HOST no .env
+      # se ela já estiver ocupada na sua máquina. A porta de dentro do
+      # container é sempre 3000 e não muda.
+      - "${PORTA_HOST:-3010}:3000"
     environment:
       DATABASE_URL: ${DATABASE_URL}
       NODE_ENV: production
