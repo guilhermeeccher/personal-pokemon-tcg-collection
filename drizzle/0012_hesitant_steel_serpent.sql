@@ -1,0 +1,1 @@
+ALTER TABLE "liga_varredura" ADD COLUMN "atualizado_em" timestamp with time zone DEFAULT now() NOT NULL;

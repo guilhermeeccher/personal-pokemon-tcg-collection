@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+/* Tokens do design system Collection Vault (`design_system_pokemon.zip`),
+   copiados para o repositório em `src/app/tokens/`. Dois arquivos foram
+   alterados na entrada, e o motivo está comentado dentro de cada um:
+   `elevation.css` (anel de foco estava fora de cor) e `typography.css`
+   (famílias vêm do next/font, não de @import do Google Fonts).
+   O `fonts.css` do design system não foi copiado — ele era só o @import
+   do CDN, substituído por next/font/google em `layout.tsx`. */
+@import "./tokens/colors.css";
+@import "./tokens/typography.css";
+@import "./tokens/spacing.css";
+@import "./tokens/radius.css";
+@import "./tokens/elevation.css";
+@import "./tokens/motion.css";
+
+/*
+ * Ponte entre os tokens do design system e os nomes que as telas já usam.
+ *
+ * As ~250 ocorrências de classe de cor espalhadas pelo código (`bg-surface`,
+ * `text-muted`, `border-line`, `bg-accent`, `text-danger-fg` …) continuam
+ * valendo — o que muda é para onde cada uma aponta. Assim a Fase A troca a
+ * pele do site inteiro sem tocar em uma linha de JSX, e as fases seguintes
+ * refinam componente a componente.
+ *
+ * Não existe mais tema escuro. O design system não define um único token sob
+ * `prefers-color-scheme: dark`, e manter o escuro significaria inventar uma
+ * segunda paleta que ninguém desenhou (decisão de 2026-09-03).
+ */
+:root {
+  /* Fundo de página (papel creme) vs. superfície de cartão vs. superfície
+     elevada (modal) vs. superfície rebaixada (hover, trilho de barra). */
+  --background: var(--surface-canvas);
+  --surface: var(--surface-card);
+  --surface-elevated: var(--surface-raised);
+  --surface-hover: var(--surface-sunken);
+
+  /* Texto: corpo, secundário, sutil. Taupe quente — sem cinza frio. */
+  --foreground: var(--text-body);
+  --muted: var(--text-muted);
+  --subtle: var(--text-faint);
+
+  /* Bordas: traço fino (divisória, linha de tabela) e traço forte
+     (contorno de cartão, cabeçalho de tabela, controle). */
+  --hairline: var(--border-hairline);
+  --line: var(--border-strong);
+
+  /* Acento único — ação primária, item de navegação ativo, link, foco.
+     Deixa de ser azul discreto e vira o berry do design system: um
+     vermelho de pôster, e o único lugar onde o sistema levanta a voz. */
+  --accent: var(--action-primary);
+  --accent-hover: var(--action-primary-hover);
+  --accent-fg: var(--action-primary-text);
+  --accent-soft: var(--berry-1);
+  --accent-soft-fg: var(--berry-5);
+
+  /* Estados semânticos, mapeados na rampa de status do design system. */
+  --success: var(--status-success-dot);
+  --success-soft: var(--status-success-bg);
+  --success-fg: var(--status-success-fg);
+
+  --warning: var(--status-warn-dot);
+  --warning-soft: var(--status-warn-bg);
+  --warning-fg: var(--status-warn-fg);
+
+  --danger: var(--status-danger-dot);
+  --danger-soft: var(--status-danger-bg);
+  --danger-fg: var(--status-danger-fg);
+}
+
+@theme inline {
+  /* --- nomes que as telas já consomem hoje --- */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-hover: var(--surface-hover);
+
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+
+  --color-hairline: var(--hairline);
+  --color-line: var(--line);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-fg: var(--accent-soft-fg);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-fg: var(--success-fg);
+
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-fg: var(--warning-fg);
+
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-fg: var(--danger-fg);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  /* --- nomes novos do design system, para as fases seguintes ---
+     Nenhum destes sobrescreve escala padrão do Tailwind. Isso não era
+     verdade quando a Fase A entrou: a escala genérica de raio do design
+     system (`--radius-sm/md/lg/xl`) e duas das curvas (`--ease-in/out`)
+     usam exatamente os nomes do Tailwind v4 e, como os tokens são
+     importados depois do `@import "tailwindcss"`, venciam na cascata e
+     mudavam `rounded-sm`, `rounded-lg`, `ease-in` e `ease-out` no site
+     inteiro em silêncio. Corrigido com namespace (`--raio-*`, `--curva-*`)
+     nos próprios arquivos de token. Raio e curva agora só mudam onde
+     alguém escreveu que muda. */
+  --font-display: var(--font-display);
+
+  --color-paper-1: var(--paper-1);
+  --color-paper-2: var(--paper-2);
+  --color-paper-3: var(--paper-3);
+  --color-paper-4: var(--paper-4);
+
+  --color-shell: var(--surface-shell);
+  --color-shell-hover: var(--surface-shell-hover);
+  --color-shell-active: var(--surface-shell-active);
+  --color-shell-line: var(--border-shell);
+  --color-invert: var(--text-invert);
+  --color-invert-muted: var(--text-invert-muted);
+
+  --color-strong: var(--text-strong);
+  --color-selected: var(--surface-selected);
+  --color-inset: var(--surface-inset);
+
+  --radius-card: var(--radius-card);
+  --radius-control: var(--radius-control);
+  --radius-tcg: var(--radius-tcg);
+  --radius-slot: var(--raio-md);
+  --radius-pill: var(--radius-pill);
+
+  --shadow-1: var(--shadow-1);
+  --shadow-2: var(--shadow-2);
+  --shadow-3: var(--shadow-3);
+  --shadow-4: var(--shadow-4);
+  --shadow-chunky: var(--shadow-chunky);
+  --shadow-tcg: var(--shadow-tcg);
+}
+
+/* Base do design system (`tokens/base.css`), com uma omissão deliberada: a
+   regra global de `a` dele põe borda inferior em todo link, o que
+   sublinharia item de navegação e cartão-link da home. Estilo de link fica
+   por conta do componente, na Fase B. */
+body {
+  margin: 0;
+  background-color: var(--background);
+  background-image: radial-gradient(var(--texture-dot) 1px, transparent 1px);
+  background-size: var(--texture-dot-size) var(--texture-dot-size);
+  color: var(--foreground);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  text-wrap: pretty;
+}
+
+/* Títulos na face arredondada. O tamanho continua vindo da classe Tailwind
+   de cada tela — aqui só troca a família e o peso. */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  letter-spacing: var(--ls-title);
+  font-weight: var(--fw-bold);
+}
+
+/* Números tabulares: contagem, preço, percentual, `#025`, `90/251`. */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: var(--type-numeric-feature);
+  color: var(--text-numeric);
+}
+
+/* Rótulo 11px em caixa alta — o único lugar onde o sistema usa ALL CAPS,
+   fora dos códigos de condição (NM/LP/MP/HP/DMG). */
+.eyebrow {
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+::selection {
+  background: var(--berry-2);
+}
+
+/* Caixa e botão de opção no acento do sistema. O padrão do navegador é um
+   azul que não existe nesta paleta, e são controles espalhados por todas
+   as telas — uma regra aqui evita carimbar classe em cada um. */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--action-primary);
+}
+
+/* Foco de teclado visível em qualquer elemento interativo, sem precisar
+   tocar classe por classe. Anel berry de 3px, no lugar do outline. */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-control);
+}

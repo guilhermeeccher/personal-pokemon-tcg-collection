@@ -1,0 +1,135 @@
+:root{
+/* --- base ramps: warm paper, deep plum shell, saturated play colours --- */
+--ink-1:#1E1726;--ink-2:#2A2036;--ink-3:#372B46;--ink-4:#463857;--ink-5:#5C4B70;
+--slate-1:#7A6A5F;--slate-2:#9C8B7E;--slate-3:#C0AFA1;
+--line-1:#EDDFC9;--line-2:#DCC9AC;--line-3:#F6ECDC;
+--paper-1:#FFFDF8;--paper-2:#FDF5E7;--paper-3:#F8EBD6;--paper-4:#F1E0C6;
+
+--berry-1:#FFE9E2;--berry-2:#FFBCA4;--berry-3:#FF7A4D;--berry-4:#EE3B24;--berry-5:#CC2814;--berry-6:#A11C0C;
+--sky-1:#E4F1FF;--sky-2:#9FD0FF;--sky-3:#2E9BF0;--sky-4:#1C6FD4;--sky-5:#14508F;
+--leaf-1:#E7F8E4;--leaf-2:#B8EDAE;--leaf-3:#68D267;--leaf-4:#28A64A;--leaf-5:#1D8039;--leaf-6:#145E28;
+--sun-1:#FFF4CC;--sun-2:#FFC71F;--sun-3:#9C6F00;
+--sun-4:#FFD84D;
+--grape-1:#F0E8FF;--grape-2:#8A4FEA;--grape-3:#5A2CAE;
+--rose-1:#FDECEF;--rose-2:#E05572;--rose-3:#A82F49;
+--caramel-1:#FBEFE0;--caramel-2:#EFD3A9;--caramel-3:#D08A3C;--caramel-4:#B06E22;--caramel-5:#86501A;
+
+/* legacy aliases kept so nothing breaks */
+--jade-1:var(--leaf-1);--jade-2:var(--leaf-2);--jade-3:var(--leaf-3);--jade-4:var(--leaf-4);--jade-5:var(--leaf-5);--jade-6:var(--leaf-6);
+--copper-1:var(--caramel-1);--copper-2:var(--caramel-2);--copper-3:var(--caramel-3);--copper-4:var(--caramel-4);--copper-5:var(--caramel-5);
+--amber-1:var(--sun-1);--amber-2:var(--sun-2);--amber-3:var(--sun-3);
+--azure-1:var(--sky-1);--azure-2:var(--sky-4);--azure-3:var(--sky-5);
+--violet-1:var(--grape-1);--violet-2:var(--grape-2);--violet-3:var(--grape-3);
+
+/* --- semantic surfaces --- */
+--surface-canvas:var(--paper-2);
+--surface-card:var(--paper-1);
+--surface-sunken:var(--paper-3);
+--surface-raised:var(--paper-1);
+--surface-inset:var(--paper-4);
+--surface-shell:var(--ink-2);
+--surface-shell-hover:var(--ink-3);
+--surface-shell-active:var(--ink-4);
+--surface-overlay:rgba(30,23,38,.52);
+--surface-scrim-blur:saturate(140%) blur(10px);
+--surface-selected:var(--berry-1);
+--texture-dot:rgba(196,150,90,.22);
+--texture-dot-size:18px;
+--texture-ray:rgba(255,199,31,.16);
+--texture-check:rgba(238,59,36,.07);
+/* Original CSS-only motifs. No third-party illustration or imagery is bundled;
+   these are the sanctioned way to add "childhood" texture. @kind other */
+--motif-sunburst:repeating-conic-gradient(from 0deg at 100% 0%,var(--texture-ray) 0deg 6deg,transparent 6deg 14deg);
+--motif-dots:radial-gradient(var(--texture-dot) 1px,transparent 1px);
+--motif-confetti:radial-gradient(circle at 20% 30%,var(--sun-2) 2px,transparent 2px),radial-gradient(circle at 70% 15%,var(--sky-3) 2px,transparent 2px),radial-gradient(circle at 45% 75%,var(--leaf-3) 2px,transparent 2px),radial-gradient(circle at 88% 60%,var(--grape-2) 2px,transparent 2px),radial-gradient(circle at 8% 80%,var(--berry-3) 2px,transparent 2px);
+--motif-confetti-size:120px 120px;
+--motif-stripe:repeating-linear-gradient(135deg,var(--texture-check) 0 6px,transparent 6px 14px);
+
+/* --- semantic text --- */
+--text-strong:var(--ink-1);
+--text-body:#4A3B33;
+--text-muted:var(--slate-1);
+--text-faint:var(--slate-2);
+--text-invert:#FFF8EE;
+/* Texto secundario sobre a superficie escura (a lombada do album). O
+   SidebarNav do design system trazia um #6B7F8C hardcoded neste papel —
+   unico literal fora do sistema de tokens, e um cinza frio, que a propria
+   regra do sistema proibe. Usar este token no lugar. */
+--text-invert-muted:#B9A7C4;
+--text-link:var(--berry-5);
+--text-link-hover:var(--berry-5);
+--text-numeric:var(--ink-1);
+
+/* --- borders --- */
+--border-hairline:var(--line-1);
+--border-strong:var(--line-2);
+--border-shell:#3B2E4B;
+--border-focus:var(--berry-4);
+
+/* --- actions --- */
+--action-primary:var(--berry-4);
+--action-primary-hover:var(--berry-5);
+--action-primary-press:var(--berry-6);
+--action-primary-text:#FFF8EE;
+--action-secondary:var(--paper-1);
+--action-secondary-hover:var(--paper-3);
+--action-secondary-press:var(--paper-4);
+--action-ghost-hover:var(--paper-3);
+--action-danger:var(--rose-2);
+--action-danger-hover:var(--rose-3);
+--action-accent:var(--sky-4);
+--action-accent-hover:var(--sky-5);
+--action-disabled-bg:var(--paper-4);
+--action-disabled-text:var(--slate-3);
+
+/* --- status --- */
+--status-success-bg:var(--leaf-1);--status-success-fg:var(--leaf-5);--status-success-dot:var(--leaf-4);
+--status-warn-bg:var(--sun-1);--status-warn-fg:var(--sun-3);--status-warn-dot:var(--sun-2);
+--status-danger-bg:var(--rose-1);--status-danger-fg:var(--rose-3);--status-danger-dot:var(--rose-2);
+--status-info-bg:var(--sky-1);--status-info-fg:var(--sky-5);--status-info-dot:var(--sky-4);
+--status-neutral-bg:var(--paper-3);--status-neutral-fg:var(--slate-1);--status-neutral-dot:var(--slate-2);
+
+/* --- market movement --- */
+--delta-up:var(--leaf-5);--delta-up-bg:var(--leaf-1);
+--delta-down:var(--rose-2);--delta-down-bg:var(--rose-1);
+--delta-flat:var(--slate-2);--delta-flat-bg:var(--paper-3);
+
+/* --- rarity accents (generic metadata, never licensed symbols) --- */
+--rarity-common:var(--slate-2);
+--rarity-uncommon:var(--leaf-4);
+--rarity-rare:var(--sky-4);
+--rarity-holo:var(--grape-2);
+--rarity-secret:var(--caramel-3);
+
+/* --- variantes (normal / reverse / holo), o eixo mais usado do inventário --- */
+--variant-normal:var(--sky-4);--variant-normal-bg:var(--sky-1);
+--variant-reverse:var(--grape-2);--variant-reverse-bg:var(--grape-1);
+--variant-holo:var(--sun-2);--variant-holo-bg:var(--sun-1);
+
+/* --- vagas de coleção (Pokédex, sets) --- */
+--slot-filled-bg:var(--paper-1);
+--slot-filled-border:var(--leaf-3);
+--slot-empty-bg:var(--paper-3);
+--slot-empty-border:var(--line-2);
+--slot-allocated:var(--berry-4);
+
+/* --- condition scale (NM -> DMG) --- */
+--cond-nm:var(--leaf-4);
+--cond-lp:var(--leaf-3);
+--cond-mp:var(--sun-2);
+--cond-hp:var(--caramel-3);
+--cond-dmg:var(--rose-2);
+
+/* --- energy types: the game's own vocabulary, our own colours --- */
+--energy-fogo:#F0602F;
+--energy-agua:#3D9BE0;
+--energy-planta:#4FAE5B;
+--energy-eletrico:#F2C230;
+--energy-psiquico:#A05FD8;
+--energy-lutador:#C4622F;
+--energy-sombrio:#4A3F58;
+--energy-metal:#8D98A6;
+--energy-fada:#EE7FA8;
+--energy-dragao:#C79A2E;
+--energy-incolor:#C9BBA9;
+}

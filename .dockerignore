@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+*.md
+!AGENTS.md
+.env
+.env.local
+drizzle-meta
+coverage
+.dados

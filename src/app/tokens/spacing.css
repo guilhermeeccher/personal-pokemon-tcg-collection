@@ -1,0 +1,17 @@
+:root{
+--space-0:0;--space-1:2px;--space-2:4px;--space-3:6px;--space-4:8px;--space-5:12px;
+--space-6:16px;--space-7:20px;--space-8:24px;--space-9:32px;--space-10:40px;
+--space-11:48px;--space-12:64px;--space-13:80px;
+
+/* layout constants (desktop-first, fixed chrome) */
+--layout-sidebar-w:248px;
+--layout-sidebar-collapsed-w:64px;
+--layout-topbar-h:56px;
+--layout-subbar-h:48px;
+--layout-inspector-w:340px;
+--layout-content-max:1440px; /* @kind spacing */
+--layout-gutter:24px;
+--layout-row-h:44px;
+--layout-row-h-dense:36px;
+--control-h-sm:28px;--control-h:34px;--control-h-lg:42px;
+}

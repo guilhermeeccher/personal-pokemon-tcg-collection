@@ -1,0 +1,1 @@
+ALTER TABLE "carta_catalogo" ADD COLUMN "tipos" text[] DEFAULT '{}' NOT NULL;

@@ -1,0 +1,2 @@
+CREATE INDEX "carta_catalogo_set_id_idx" ON "carta_catalogo" USING btree ("set_id");--> statement-breakpoint
+CREATE INDEX "copia_carta_catalogo_idx" ON "copia" USING btree ("carta_id","idioma_catalogo");

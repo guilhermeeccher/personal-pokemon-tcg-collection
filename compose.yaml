@@ -1,0 +1,53 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3010:3000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NODE_ENV: production
+      # Caminho DENTRO do container onde ficam os arquivos de imagem local
+      # (tarefa "carta sem foto", 2026-08-26), lido por
+      # `lib/armazenamento-imagens.ts`. Configurável via .env; precisa
+      # bater com o destino do volume nomeado `imagens_locais` abaixo,
+      # que usa a MESMA variável de propósito.
+      IMAGENS_LOCAIS_DIR: ${IMAGENS_LOCAIS_DIR:-/dados/imagens-locais}
+    # Bind mount só-leitura do clone local de tcgdex/cards-database, usado
+    # por `pnpm importar:catalogo-repo` (scripts/importar-catalogo-repo.ts)
+    # para popular o catálogo japonês sem depender de api.tcgdex.net (IP
+    # bloqueado desde 2026-08-25, AGENTS.md). O container não monta o
+    # código do projeto como volume — mas este é dado externo, não código,
+    # e o clone fica fora do repositório de propósito (~220 MB, MIT). Sem
+    # efeito quando o host não tem o clone: o caminho só é lido sob demanda.
+    #
+    # `imagens_locais`: volume nomeado para os arquivos de imagem local
+    # que o usuário fornece por carta sem foto — a tabela `imagem_local`
+    # guarda só o metadado, os bytes ficam aqui.
+    volumes:
+      - ${TCGDEX_REPO_HOST_PATH:-./.dados/tcgdex-cards-database}:/upstream-dados-tcgdex:ro
+      - imagens_locais:${IMAGENS_LOCAIS_DIR:-/dados/imagens-locais}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    # Sem publicação de porta no host — só na rede interna do Compose
+    # (AGENTS.md: "Porta do banco: não publicar no host").
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  imagens_locais:

@@ -1,0 +1,1 @@
+ALTER TABLE "carta_catalogo" ADD COLUMN "dex_ids_derivado" boolean DEFAULT false NOT NULL;

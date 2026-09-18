@@ -1,0 +1,1 @@
+ALTER TABLE "carta_catalogo" ADD COLUMN "set_serie_id" text;

@@ -1,0 +1,22 @@
+:root{
+/* As quatro curvas foram renomeadas de --ease-* para --curva-* na entrada
+   (2026-09-03), pelo mesmo motivo do radius.css: --ease-in e --ease-out sao
+   nomes da escala padrao do Tailwind, e estes arquivos venciam na cascata,
+   trocando as classes `ease-in`/`ease-out` do site em silencio. */
+--dur-instant:100ms; /* @kind other */
+--dur-fast:160ms; /* @kind other */
+--dur-base:220ms; /* @kind other */
+--dur-slow:340ms; /* @kind other */
+--curva-padrao:cubic-bezier(.2,.7,.25,1); /* @kind other */
+--curva-saida:cubic-bezier(.16,1,.3,1); /* @kind other */
+--curva-entrada:cubic-bezier(.4,0,1,1); /* @kind other */
+--curva-salto:cubic-bezier(.34,1.5,.64,1); /* @kind other */
+--transition-control:background-color var(--dur-fast) var(--curva-padrao),border-color var(--dur-fast) var(--curva-padrao),color var(--dur-fast) var(--curva-padrao),box-shadow var(--dur-fast) var(--curva-padrao),transform var(--dur-fast) var(--curva-salto); /* @kind other */
+--transition-surface:transform var(--dur-base) var(--curva-salto),box-shadow var(--dur-base) var(--curva-saida); /* @kind other */
+}
+@media (prefers-reduced-motion:reduce){:root{
+--dur-instant:0ms; /* @kind other */
+--dur-fast:0ms; /* @kind other */
+--dur-base:0ms; /* @kind other */
+--dur-slow:0ms; /* @kind other */
+}}

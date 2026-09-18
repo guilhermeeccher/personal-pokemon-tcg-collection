@@ -1,0 +1,600 @@
+{
+  "id": "7cc42c90-a4ca-4520-a4f8-115050377983",
+  "prevId": "21d4c562-a391-42ce-9b12-7fee2744ac25",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.carta_catalogo": {
+      "name": "carta_catalogo",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idioma": {
+          "name": "idioma",
+          "type": "idioma",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "set_id": {
+          "name": "set_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "set_nome": {
+          "name": "set_nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "set_serie": {
+          "name": "set_serie",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "set_serie_id": {
+          "name": "set_serie_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "set_sigla": {
+          "name": "set_sigla",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "set_lancamento": {
+          "name": "set_lancamento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "local_id": {
+          "name": "local_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "categoria": {
+          "name": "categoria",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raridade": {
+          "name": "raridade",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dex_ids": {
+          "name": "dex_ids",
+          "type": "integer[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "forma": {
+          "name": "forma",
+          "type": "forma",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'normal'"
+        },
+        "variante_normal_disponivel": {
+          "name": "variante_normal_disponivel",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "variante_reverse_disponivel": {
+          "name": "variante_reverse_disponivel",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "variante_holo_disponivel": {
+          "name": "variante_holo_disponivel",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "variante_primeira_edicao_disponivel": {
+          "name": "variante_primeira_edicao_disponivel",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "variante_promo_disponivel": {
+          "name": "variante_promo_disponivel",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "imagem_url": {
+          "name": "imagem_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ilustrador": {
+          "name": "ilustrador",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "set_qtd_oficial": {
+          "name": "set_qtd_oficial",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "set_qtd_total": {
+          "name": "set_qtd_total",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ativa": {
+          "name": "ativa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "carta_catalogo_set_id_idx": {
+          "name": "carta_catalogo_set_id_idx",
+          "columns": [
+            {
+              "expression": "set_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "carta_catalogo_id_idioma_pk": {
+          "name": "carta_catalogo_id_idioma_pk",
+          "columns": [
+            "id",
+            "idioma"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.colecao": {
+      "name": "colecao",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_colecao",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parametro": {
+          "name": "parametro",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "idioma_exigido": {
+          "name": "idioma_exigido",
+          "type": "idioma",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.copia": {
+      "name": "copia",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "carta_id": {
+          "name": "carta_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idioma_catalogo": {
+          "name": "idioma_catalogo",
+          "type": "idioma",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idioma": {
+          "name": "idioma",
+          "type": "idioma",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "variante": {
+          "name": "variante",
+          "type": "variante_copia",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantidade": {
+          "name": "quantidade",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "condicao": {
+          "name": "condicao",
+          "type": "condicao",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "graded_empresa": {
+          "name": "graded_empresa",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "graded_nota": {
+          "name": "graded_nota",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "graded_certificado": {
+          "name": "graded_certificado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "localizacao": {
+          "name": "localizacao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aquisicao_data": {
+          "name": "aquisicao_data",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aquisicao_origem": {
+          "name": "aquisicao_origem",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aquisicao_preco": {
+          "name": "aquisicao_preco",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "copia_carta_catalogo_idx": {
+          "name": "copia_carta_catalogo_idx",
+          "columns": [
+            {
+              "expression": "carta_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "idioma_catalogo",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "copia_carta_catalogo_fk": {
+          "name": "copia_carta_catalogo_fk",
+          "tableFrom": "copia",
+          "tableTo": "carta_catalogo",
+          "columnsFrom": [
+            "carta_id",
+            "idioma_catalogo"
+          ],
+          "columnsTo": [
+            "id",
+            "idioma"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.vaga": {
+      "name": "vaga",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "colecao_id": {
+          "name": "colecao_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chave": {
+          "name": "chave",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "copia_id": {
+          "name": "copia_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "vaga_colecao_id_colecao_id_fk": {
+          "name": "vaga_colecao_id_colecao_id_fk",
+          "tableFrom": "vaga",
+          "tableTo": "colecao",
+          "columnsFrom": [
+            "colecao_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "vaga_copia_id_copia_id_fk": {
+          "name": "vaga_copia_id_copia_id_fk",
+          "tableFrom": "vaga",
+          "tableTo": "copia",
+          "columnsFrom": [
+            "copia_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "vaga_copia_id_unique": {
+          "name": "vaga_copia_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "copia_id"
+          ]
+        },
+        "vaga_colecao_chave_unique": {
+          "name": "vaga_colecao_chave_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "colecao_id",
+            "chave"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.condicao": {
+      "name": "condicao",
+      "schema": "public",
+      "values": [
+        "NM",
+        "LP",
+        "MP",
+        "HP",
+        "DMG"
+      ]
+    },
+    "public.forma": {
+      "name": "forma",
+      "schema": "public",
+      "values": [
+        "normal",
+        "alola",
+        "galar",
+        "hisui",
+        "paldea",
+        "mega",
+        "gigantamax"
+      ]
+    },
+    "public.idioma": {
+      "name": "idioma",
+      "schema": "public",
+      "values": [
+        "pt",
+        "en",
+        "jp"
+      ]
+    },
+    "public.tipo_colecao": {
+      "name": "tipo_colecao",
+      "schema": "public",
+      "values": [
+        "pokedex",
+        "set",
+        "customizada"
+      ]
+    },
+    "public.variante_copia": {
+      "name": "variante_copia",
+      "schema": "public",
+      "values": [
+        "normal",
+        "reverse",
+        "holo",
+        "primeira_edicao",
+        "promo"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

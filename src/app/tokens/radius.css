@@ -1,0 +1,13 @@
+:root{
+/* A escala generica foi renomeada de --radius-* para --raio-* na entrada
+   (2026-09-03). O design system usava exatamente os mesmos nomes que a
+   escala padrao do Tailwind v4 (--radius-sm/md/lg/xl); como estes arquivos
+   sao importados depois do @import "tailwindcss", eles venciam na cascata e
+   mudavam `rounded-sm` e `rounded-lg` no site inteiro em silencio.
+   Com o namespace proprio, toda mudanca de raio passa a ser deliberada.
+   Ao portar componente do design system, traduza var(--radius-md) para
+   var(--raio-md). Os nomes semanticos abaixo nao colidem e seguem iguais. */
+--raio-xs:6px;--raio-sm:8px;--raio-md:14px;--raio-lg:22px;--raio-xl:28px;
+--radius-pill:999px;
+--radius-card:18px;--radius-control:12px;--radius-chip:999px;--radius-tcg:8px; /* card-art corner */
+}
