@@ -5,7 +5,7 @@
  * `lib/dominio/liga-busca.ts`; aqui só se lê e escreve.
  */
 
-import { and, asc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 
 import type { Database } from "./client";
 import {
@@ -28,6 +28,7 @@ import {
   normalizarNumeroCarta,
   type AlvoVagaSet,
 } from "@/lib/dominio/liga-set";
+import { JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS } from "@/lib/dominio/estimativa-varredura";
 import { compararLocalId } from "@/lib/dominio/ordenacao";
 import type { ParametroSet } from "@/lib/dominio/parametro-colecao";
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
@@ -187,6 +188,38 @@ export async function listarVagasVaziasSet(
       },
     ];
   });
+}
+
+/**
+ * Quando cada vaga desta coleção foi consultada pela última vez — o instante da
+ * opção mais nova gravada para aquela chave, em qualquer rodada.
+ *
+ * É o que permite uma varredura nova pular a vaga que já tem dado recente.
+ * Obedecendo o `Crawl-delay` deles, a rodada completa de uma Pokédex passa de
+ * ~12 minutos para ~16 horas: nessa escala reinício de container é rotina, e
+ * recomeçar do zero custaria as horas já gastas **e** mandaria o dobro de
+ * requisições pedindo o que já temos. A decisão de pular é pura e mora em
+ * `lib/dominio/frescor-consulta.ts`; aqui só se lê.
+ *
+ * `desde` recorta a consulta ao que ainda pode ser fresco — o histórico antigo
+ * não interessa e não precisa ser agregado.
+ */
+export async function ultimaConsultaPorChave(
+  db: Database,
+  colecaoId: string,
+  desde: Date,
+): Promise<Map<string, Date>> {
+  const linhas = await db
+    .select({
+      chave: ligaOpcao.chave,
+      consultadaEm: sql<Date>`max(${ligaOpcao.criadoEm})`,
+    })
+    .from(ligaOpcao)
+    .innerJoin(ligaVarredura, eq(ligaVarredura.id, ligaOpcao.varreduraId))
+    .where(and(eq(ligaVarredura.colecaoId, colecaoId), gte(ligaOpcao.criadoEm, desde)))
+    .groupBy(ligaOpcao.chave);
+
+  return new Map(linhas.map((l) => [l.chave, new Date(l.consultadaEm)]));
 }
 
 /**
@@ -441,12 +474,16 @@ export async function gravarOpcoes(
 /**
  * Janela sem batimento a partir da qual uma rodada é dada como morta.
  *
- * Uma espécie leva ~3,75 s (uma requisição a cada 3 s mais jitter), e no pior
- * caso três páginas: ~11 s. Dois minutos é folgado o bastante para não matar
- * rodada viva num soluço de rede, e curto o bastante para o usuário não
- * ficar olhando "em andamento" de uma rodada que morreu.
+ * **Não é mais constante, e não pode ser.** O batimento é tocado ao fim de
+ * cada vaga; quando o intervalo era 3 s, uma vaga levava ~11 s no pior caso e
+ * dois minutos davam folga de sobra. Obedecendo o `Crawl-delay` deles, uma
+ * vaga sozinha pode levar mais do que esses dois minutos — e aí a janela fixa
+ * declararia morta toda rodada viva, liberando uma segunda rodada em paralelo
+ * que dobra o ritmo contra o site deles. A conta vive em
+ * `lib/dominio/estimativa-varredura.ts`; o default abaixo é o piso, para quem
+ * chama sem informar o ritmo.
  */
-export const SEGUNDOS_SEM_BATIMENTO_PARA_MORTA = 120;
+export const SEGUNDOS_SEM_BATIMENTO_PARA_MORTA = JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS;
 
 /** Batimento por espécie: progresso visível e prova de que a rodada vive. */
 export async function tocarProgresso(
@@ -471,6 +508,7 @@ export async function tocarProgresso(
 export async function varreduraViva(
   db: Database,
   colecaoId: string,
+  segundosSemBatimento: number = SEGUNDOS_SEM_BATIMENTO_PARA_MORTA,
 ): Promise<VarreduraSalva | null> {
   const [linha] = await db
     .select()
@@ -479,7 +517,7 @@ export async function varreduraViva(
       and(
         eq(ligaVarredura.colecaoId, colecaoId),
         isNull(ligaVarredura.concluidaEm),
-        sql`${ligaVarredura.atualizadoEm} > now() - make_interval(secs => ${SEGUNDOS_SEM_BATIMENTO_PARA_MORTA})`,
+        sql`${ligaVarredura.atualizadoEm} > now() - make_interval(secs => ${segundosSemBatimento})`,
       ),
     )
     .limit(1);
@@ -490,7 +528,11 @@ export async function varreduraViva(
  * Fecha as rodadas que morreram sem se despedir — container reiniciado,
  * processo derrubado. Sem isso elas ficam "em andamento" para sempre.
  */
-export async function encerrarVarredurasMortas(db: Database, colecaoId: string): Promise<number> {
+export async function encerrarVarredurasMortas(
+  db: Database,
+  colecaoId: string,
+  segundosSemBatimento: number = SEGUNDOS_SEM_BATIMENTO_PARA_MORTA,
+): Promise<number> {
   const fechadas = await db
     .update(ligaVarredura)
     .set({
@@ -501,7 +543,7 @@ export async function encerrarVarredurasMortas(db: Database, colecaoId: string):
       and(
         eq(ligaVarredura.colecaoId, colecaoId),
         isNull(ligaVarredura.concluidaEm),
-        sql`${ligaVarredura.atualizadoEm} <= now() - make_interval(secs => ${SEGUNDOS_SEM_BATIMENTO_PARA_MORTA})`,
+        sql`${ligaVarredura.atualizadoEm} <= now() - make_interval(secs => ${segundosSemBatimento})`,
       ),
     )
     .returning({ id: ligaVarredura.id });

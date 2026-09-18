@@ -19,15 +19,22 @@
  *
  * ## Por que roda em segundo plano
  *
- * 161 vagas vazias a uma requisição a cada 3 segundos dão ~12 minutos. Nenhum
- * navegador espera isso numa requisição HTTP. Então o POST cria a linha de
- * varredura, devolve o id na hora, e o trabalho segue no processo: a tela
+ * 161 vagas vazias no ritmo do `robots.txt` deles dão ~16 horas (eram ~12
+ * minutos quando o intervalo era 3 s — ver `./ritmo.ts`). Nenhum navegador
+ * espera nem o menor dos dois numa requisição HTTP. Então o POST cria a linha
+ * de varredura, devolve o id na hora, e o trabalho segue no processo: a tela
  * consulta o progresso e vai mostrando o que já chegou.
  *
  * **Grava por vaga, não no fim.** Se a varredura morrer no meio — bloqueio do
  * site, restart do container —, o que já foi consultado continua servindo. Uma
- * rodada que só entrega no fim transforma 12 minutos de trabalho em zero ao
+ * rodada que só entrega no fim transforma horas de trabalho em zero ao
  * primeiro tropeço.
+ *
+ * **E a rodada seguinte não refaz o que já tem.** Na escala de horas, reinício
+ * é rotina; `vagasParaVarrer` pula a vaga cuja opção ainda está dentro da
+ * validade, então disparar de novo consulta só o que faltava. É a outra metade
+ * da mesma ideia: gravar cedo preserva o trabalho, pular o fresco evita
+ * repeti-lo.
  */
 
 import type { Database } from "@/lib/db/client";
@@ -41,10 +48,16 @@ import {
   listarVagasVaziasSet,
   registrarEdicoesVistas,
   tocarProgresso,
+  ultimaConsultaPorChave,
   vinculosDoSet,
   type VagaVaziaPokedex,
   type VagaVaziaSet,
 } from "@/lib/db/liga";
+import {
+  corteDeFrescor,
+  separarPorFrescor,
+  VALIDADE_CONSULTA_HORAS,
+} from "@/lib/dominio/frescor-consulta";
 import type { LinhaBuscaLiga } from "@/lib/dominio/liga-busca";
 import { nomeCompativelComEspecie, termoDeBusca } from "@/lib/dominio/liga-busca";
 import type { Filtros, OpcaoCompra } from "@/lib/dominio/liga-opcoes";
@@ -259,18 +272,46 @@ export async function executarVarredura(
   return { vagasConsultadas, requisicoes, opcoesEncontradas, erro, falhas };
 }
 
+export interface OpcoesVagasParaVarrer {
+  /** Recorta a rodada a um subconjunto — a tela pedindo "só estas vagas". */
+  apenasChaves?: readonly string[];
+  /** Validade da consulta anterior, em horas. Zero consulta tudo de novo. */
+  validadeHoras?: number;
+  agora?: Date;
+}
+
 /**
- * As vagas que a varredura vai consultar, na ordem em que serão consultadas.
+ * As vagas que a varredura vai consultar, na ordem em que serão consultadas —
+ * e as que ela vai pular por já terem dado recente.
  *
- * `apenasChaves` recorta a rodada a um subconjunto — é como a tela pede "só
- * estas vagas" sem varrer a coleção inteira de novo.
+ * ## Por que pular
+ *
+ * Obedecendo o `Crawl-delay` deles, as 161 vagas de uma Pokédex levam ~16
+ * horas em vez de ~12 minutos. Nessa escala, reinício de container é rotina, e
+ * a gravação por vaga (que já existia) só resolvia metade do problema: o que
+ * foi consultado sobrevivia, mas a rodada seguinte o consultava de novo do
+ * mesmo jeito, porque a lista de vagas não tinha noção de "esta eu já
+ * consultei faz pouco". Cair na hora 15 de 16 custava 15 horas e mandava o
+ * dobro de requisições pedindo o que já temos — o oposto do motivo de estar
+ * indo para o intervalo maior.
+ *
+ * Com o filtro, **quem dispara de novo continua de onde parou**, porque só o
+ * que falta é consultado. Isto não é retomada automática: não há fila, worker
+ * nem job persistente, e nada sobe sozinho com o container. Quem decide rodar
+ * continua sendo o usuário.
+ *
+ * Vale igual para os dois tipos de vaga — é o mesmo motor.
  */
 export async function vagasParaVarrer(
   db: Database,
   colecaoId: string,
   tipo: "pokedex" | "set",
-  apenasChaves?: readonly string[],
-): Promise<VagaParaVarrer[]> {
+  {
+    apenasChaves,
+    validadeHoras = VALIDADE_CONSULTA_HORAS,
+    agora = new Date(),
+  }: OpcoesVagasParaVarrer = {},
+): Promise<{ pendentes: VagaParaVarrer[]; puladas: VagaParaVarrer[] }> {
   const todas: VagaParaVarrer[] =
     tipo === "pokedex"
       ? (await listarVagasVaziasPokedex(db, colecaoId)).map((v) => ({
@@ -282,7 +323,17 @@ export async function vagasParaVarrer(
           ...v,
         }));
 
-  if (!apenasChaves || apenasChaves.length === 0) return todas;
-  const permitidas = new Set(apenasChaves);
-  return todas.filter((v) => permitidas.has(v.chave));
+  const pedidas =
+    !apenasChaves || apenasChaves.length === 0
+      ? todas
+      : todas.filter((v) => new Set(apenasChaves).has(v.chave));
+
+  if (validadeHoras <= 0) return { pendentes: pedidas, puladas: [] };
+
+  const consultadas = await ultimaConsultaPorChave(
+    db,
+    colecaoId,
+    corteDeFrescor({ agora, validadeHoras }),
+  );
+  return separarPorFrescor(pedidas, consultadas, { agora, validadeHoras });
 }

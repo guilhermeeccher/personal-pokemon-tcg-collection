@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 
 import { criarClienteLiga, ErroBloqueioLiga } from "./cliente";
+import { criarRitmoFixo, ErroRotaProibidaLiga } from "./ritmo";
 
 const paginaReal = readFileSync(
   new URL("../dominio/fixtures/liga-busca-bulbasaur.html", import.meta.url),
@@ -32,6 +33,9 @@ function clienteFake(respostas: Array<Response | Error>) {
     // Sem relógio real: o teste mede comportamento, não paciência.
     dormir: async () => {},
     aleatorio: () => 0.5,
+    // Ritmo fixo: quem testa a leitura do robots.txt é `ritmo.test.ts`, e
+    // aqui nenhuma requisição pode sair para o arquivo deles.
+    ritmo: criarRitmoFixo(3),
   });
   return { cliente, chamadas };
 }
@@ -119,7 +123,7 @@ describe("criarClienteLiga", () => {
         esperas.push(ms);
       },
       aleatorio: () => 1,
-      porSegundo: 1 / 3,
+      ritmo: criarRitmoFixo(3),
     });
 
     await cliente.buscarEspecie("Pikachu", 999999);
@@ -169,12 +173,62 @@ describe("criarClienteLiga", () => {
 
   it("identifica o cliente no User-Agent", async () => {
     const fetchImpl = vi.fn(async () => ok(paginaReal)) as unknown as typeof fetch;
-    const cliente = criarClienteLiga({ fetchImpl, dormir: async () => {}, aleatorio: () => 0 });
+    const cliente = criarClienteLiga({
+      fetchImpl,
+      dormir: async () => {},
+      aleatorio: () => 0,
+      ritmo: criarRitmoFixo(3),
+    });
     await cliente.buscarEspecie("Bulbasaur", 20);
 
     const [, init] = (fetchImpl as unknown as { mock: { calls: [string, RequestInit][] } }).mock
       .calls[0];
     const headers = init.headers as Record<string, string>;
     expect(headers["User-Agent"]).toContain("colecao-pokemon");
+  });
+  it("pede o intervalo ao ritmo, em vez de carregar um número próprio", async () => {
+    // O ponto da fase: o valor vem do robots.txt deles, não daqui.
+    const esperas: number[] = [];
+    const fetchImpl = vi.fn(async () => ok(paginaCheia("1,00"))) as unknown as typeof fetch;
+    const cliente = criarClienteLiga({
+      fetchImpl,
+      dormir: async (ms) => {
+        esperas.push(ms);
+      },
+      aleatorio: () => 0,
+      ritmo: criarRitmoFixo(10),
+    });
+
+    await cliente.buscarEspecie("Pikachu", 999999);
+
+    const esperasDoLimitador = esperas.filter((ms) => ms > 0);
+    expect(esperasDoLimitador).toHaveLength(2);
+    expect(esperasDoLimitador.every((ms) => ms >= 9_900)).toBe(true);
+  });
+
+  it("checa a rota ANTES de a requisição sair", async () => {
+    // Barrar depois de esperar o intervalo seria a mesma recusa, só que tarde
+    // — e com a requisição já na porta deles.
+    const fetchImpl = vi.fn(async () => ok(paginaReal)) as unknown as typeof fetch;
+    const vistas: string[] = [];
+    const base = criarRitmoFixo(3);
+    const cliente = criarClienteLiga({
+      fetchImpl,
+      dormir: async () => {},
+      aleatorio: () => 0,
+      ritmo: {
+        ...base,
+        exigirRotaPermitida(url: string) {
+          vistas.push(url);
+          throw new ErroRotaProibidaLiga(url, "teste");
+        },
+      },
+    });
+
+    await expect(cliente.buscarEspecie("Bulbasaur", 20)).rejects.toBeInstanceOf(
+      ErroRotaProibidaLiga,
+    );
+    expect(vistas).toHaveLength(1);
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 });

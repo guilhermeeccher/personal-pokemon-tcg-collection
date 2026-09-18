@@ -18,6 +18,8 @@ import {
   type Filtros,
   type Ordenacao,
 } from "@/lib/dominio/liga-opcoes";
+import { formatarDuracao } from "@/lib/dominio/estimativa-varredura";
+import { VALIDADE_CONSULTA_HORAS } from "@/lib/dominio/frescor-consulta";
 import { compararLocalId } from "@/lib/dominio/ordenacao";
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
 
@@ -38,9 +40,14 @@ import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
  * carta fora do catálogo (a carta do set está no catálogo por construção) — e
  * ganha, no lugar, a ordem da própria lista de vagas.
  *
- * A varredura leva minutos (uma requisição a cada 3 segundos contra o site
- * deles), então a tela pergunta o progresso de tempos em tempos e vai
- * mostrando o que já chegou — em vez de uma ampulheta que não diz nada.
+ * ## A varredura leva horas, e a tela precisa dizer isso
+ *
+ * O intervalo entre requisições passou a obedecer o `robots.txt` deles
+ * (`lib/liga/ritmo.ts`): as mesmas 161 vagas que levavam ~12 minutos levam
+ * ~16 horas. Um texto em minutos e uma ampulheta não servem nessa escala —
+ * daí o progresso trazer **consultadas, restantes e previsão de término**, e a
+ * tela dizer de onde o ritmo saiu. Ela continua se atualizando sozinha e
+ * mostrando o que já chegou; ninguém precisa ficar com a aba aberta.
  */
 
 const SITE = "https://www.ligapokemon.com.br";
@@ -88,10 +95,21 @@ interface VarreduraDTO {
   erro: string | null;
   criadoEm: string;
   emAndamento: boolean;
+  /** Vagas que ainda faltam consultar. Nulo quando a rodada já acabou. */
+  vagasRestantes: number | null;
+  segundosRestantes: number | null;
+  previsaoTermino: string | null;
+}
+
+/** De onde saiu o intervalo entre requisições — ver `lib/liga/ritmo.ts`. */
+interface RitmoDTO {
+  intervaloSegundos: number;
+  origem: "env" | "robots" | "conservador";
 }
 
 interface RespostaDTO {
   tipo: TipoColecaoComVaga;
+  ritmo: RitmoDTO;
   varredura: VarreduraDTO | null;
   vagas: VagaDTO[];
   /** Cartas da triagem cuja vaga ainda está vazia — as que vão na string. */
@@ -113,6 +131,38 @@ type OrdemVagasSet = "numero" | "preco";
 const brl = (valor: number) =>
   valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+/**
+ * Hora do fim, curta. Numa rodada de 16 horas a previsão quase sempre cai em
+ * outro dia — então a data aparece quando não é hoje, e só então.
+ */
+function horaLegivel(iso: string | null): string {
+  if (iso === null) return "—";
+  const quando = new Date(iso);
+  const hora = quando.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const hoje = new Date().toDateString() === quando.toDateString();
+  return hoje
+    ? `às ${hora}`
+    : `${quando.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} às ${hora}`;
+}
+
+/** Como a tela explica de onde veio o intervalo entre requisições. */
+function textoDoRitmo(ritmo: RitmoDTO | undefined): string {
+  if (!ritmo) return "";
+  const intervalo =
+    ritmo.intervaloSegundos >= 60
+      ? `${Math.round(ritmo.intervaloSegundos / 60)} min`
+      : `${ritmo.intervaloSegundos} s`;
+
+  if (ritmo.origem === "env")
+    return `Uma requisição a cada ${intervalo}, definido em LIGA_INTERVALO_SEGUNDOS.`;
+  if (ritmo.origem === "robots")
+    return `Uma requisição a cada ${intervalo}, que é o Crawl-delay do robots.txt deles.`;
+  return (
+    `Uma requisição a cada ${intervalo}: o robots.txt deles não pôde ser lido, ` +
+    `e sem leitura vale o valor conservador.`
+  );
+}
+
 /** O menor preço encontrado para a vaga, ou `null` quando ela não tem oferta. */
 function menorPreco(vaga: VagaDTO): number | null {
   if (vaga.opcoes.length === 0) return null;
@@ -132,6 +182,9 @@ export default function OpcoesCompraPage() {
   const [teto, setTeto] = useState(String(FILTROS_PADRAO.tetoPreco ?? ""));
   const [ordenacao, setOrdenacao] = useState<Ordenacao>(FILTROS_PADRAO.ordenacao);
   const [incluirFora, setIncluirFora] = useState(FILTROS_PADRAO.incluirForaDoCatalogo);
+  // Escape do pulo por frescor: sem ele, quem varreu hoje só receberia
+  // "já consultadas" ao clicar, sem caminho para pedir preço novo.
+  const [reconsultarTudo, setReconsultarTudo] = useState(false);
   const [soComOpcao, setSoComOpcao] = useState(false);
   const [ordemVagas, setOrdemVagas] = useState<OrdemVagasSet>("numero");
 
@@ -189,14 +242,20 @@ export default function OpcoesCompraPage() {
     [],
   );
 
-  // Enquanto a varredura roda, a tela se atualiza sozinha. Cinco segundos é
-  // mais lento que o ritmo dela (uma vaga a cada ~3,75s), então cada consulta
-  // traz novidade — e não vira polling à toa.
+  // Enquanto a varredura roda, a tela se atualiza sozinha — num período
+  // amarrado ao ritmo dela, e não fixo. A ideia original continua valendo
+  // ("cada consulta traz novidade, e não vira polling à toa"), só que o ritmo
+  // deixou de ser 3 s: com 360 s entre requisições, perguntar de 5 em 5
+  // segundos são 70 consultas ao banco para uma vaga de novidade.
+  const periodoAtualizacao = Math.min(
+    60_000,
+    Math.max(5_000, (dados?.ritmo?.intervaloSegundos ?? 3) * 250),
+  );
   useEffect(() => {
     if (!dados?.varredura?.emAndamento) return;
-    const timer = setInterval(() => carregar(), 5_000);
+    const timer = setInterval(() => carregar(), periodoAtualizacao);
     return () => clearInterval(timer);
-  }, [dados?.varredura?.emAndamento, carregar]);
+  }, [dados?.varredura?.emAndamento, carregar, periodoAtualizacao]);
 
   const ehSet = dados?.tipo === "set";
 
@@ -219,6 +278,8 @@ export default function OpcoesCompraPage() {
         tetoPreco: tetoNumero,
         ordenacao,
         incluirForaDoCatalogo: incluirFora,
+        // Zero desliga o pulo por frescor: consulta tudo de novo.
+        ...(reconsultarTudo ? { validadeHoras: 0 } : {}),
       }),
     });
 
@@ -230,10 +291,16 @@ export default function OpcoesCompraPage() {
       return;
     }
 
-    const minutos = Math.ceil(corpo.estimativaSegundos / 60);
+    const puladas =
+      corpo.vagasPuladas > 0
+        ? ` ${corpo.vagasPuladas} vaga(s) já tinham consulta recente e foram puladas.`
+        : "";
     setAviso(
-      `Varredura iniciada: ${corpo.vagasParaConsultar} vaga(s), estimativa de ${minutos} minuto(s). ` +
-        `Pode sair desta tela — o resultado fica salvo.`,
+      `Varredura iniciada: ${corpo.vagasParaConsultar} vaga(s), estimativa de ` +
+        `${formatarDuracao(corpo.estimativaSegundos)} (previsão de término ` +
+        `${horaLegivel(corpo.previsaoTermino)}).${puladas} ` +
+        `Pode sair desta tela — o resultado fica salvo, e disparar de novo ` +
+        `continua de onde parou.`,
     );
     carregar();
   }
@@ -414,6 +481,15 @@ export default function OpcoesCompraPage() {
             </label>
           )}
 
+          <label className="flex items-center gap-2 text-sm text-muted">
+            <input
+              type="checkbox"
+              checked={reconsultarTudo}
+              onChange={(e) => setReconsultarTudo(e.target.checked)}
+            />
+            Reconsultar tudo (ignora o que já foi consultado)
+          </label>
+
           <Botao
             type="button"
             variante="primario"
@@ -428,7 +504,8 @@ export default function OpcoesCompraPage() {
           </Botao>
         </div>
         <p className="mt-3 text-xs text-muted">
-          Uma requisição a cada 3 segundos contra o site deles. Reverse e holo não entram aqui: a
+          {textoDoRitmo(dados?.ritmo)} Vaga consultada nas últimas {VALIDADE_CONSULTA_HORAS} horas é pulada, então
+          disparar de novo continua de onde parou. Reverse e holo não entram aqui: a
           variante é da oferta, não da carta — ela aparece ao abrir uma carta específica.
           {ehSet &&
             " No set, a busca é pelo nome da carta e só entra a edição e o número certos: reimpressão em outra edição não preenche a vaga."}
@@ -444,6 +521,17 @@ export default function OpcoesCompraPage() {
             {varredura.vagasConsultadas} vaga(s) consultada(s) · {varredura.requisicoes}{" "}
             requisição(ões) · {new Date(varredura.criadoEm).toLocaleString("pt-BR")}
           </span>
+          {/* Numa rodada de horas, "em andamento" sozinho não é informação:
+              o que responde "posso fechar isto?" é quanto falta e até quando. */}
+          {rodando && varredura.vagasRestantes !== null && (
+            <span className="text-muted">
+              faltam {varredura.vagasRestantes} vaga(s)
+              {varredura.segundosRestantes !== null &&
+                ` · ~${formatarDuracao(varredura.segundosRestantes)}`}
+              {varredura.previsaoTermino !== null &&
+                ` · término ${horaLegivel(varredura.previsaoTermino)}`}
+            </span>
+          )}
           {rodando && (
             <span className="text-muted">
               a tela se atualiza sozinha; pode sair e voltar
