@@ -3,6 +3,11 @@ node_modules
 .git
 *.md
 !AGENTS.md
+# NOTICE.md viaja com a imagem de propósito: o catálogo em seed/ é obra
+# derivada da TCGdex sob MIT, e a licença deles exige que o aviso acompanhe
+# a cópia — inclusive uma cópia empacotada num container.
+!NOTICE.md
+.github
 .env
 .env.local
 drizzle-meta
