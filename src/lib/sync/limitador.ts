@@ -16,8 +16,17 @@
  * `agora` e `dormir` são injetáveis para o teste rodar sem relógio real.
  */
 export interface OpcoesLimitador {
-  /** Teto de requisições por segundo. */
-  porSegundo: number;
+  /**
+   * Teto de requisições por segundo.
+   *
+   * Aceita função para o caso em que o teto **muda enquanto o cliente roda**:
+   * o coletor da LigaPokemon lê o `Crawl-delay` do `robots.txt` deles ao vivo
+   * (`lib/liga/ritmo.ts`), e um aperto publicado no meio de uma varredura de
+   * 16 horas precisa valer da requisição seguinte em diante. Recriar o
+   * limitador com a taxa nova não serviria: zeraria a próxima largada e
+   * liberaria uma rajada justamente na hora de ir mais devagar.
+   */
+  porSegundo: number | (() => number);
   agora?: () => number;
   dormir?: (ms: number) => Promise<void>;
 }
@@ -32,11 +41,19 @@ export function criarLimitador({
   agora = () => Date.now(),
   dormir = (ms) => new Promise((r) => setTimeout(r, ms)),
 }: OpcoesLimitador): Limitador {
-  if (!Number.isFinite(porSegundo) || porSegundo <= 0) {
-    throw new Error(`Taxa inválida para o limitador: ${porSegundo}`);
+  const taxa = typeof porSegundo === "function" ? porSegundo : () => porSegundo;
+
+  function intervaloMs(): number {
+    const valor = taxa();
+    if (!Number.isFinite(valor) || valor <= 0) {
+      throw new Error(`Taxa inválida para o limitador: ${valor}`);
+    }
+    return 1000 / valor;
   }
 
-  const intervaloMs = 1000 / porSegundo;
+  // Taxa fixa é validada na criação, e não só no primeiro uso: configuração
+  // errada tem que estourar onde foi escrita.
+  if (typeof porSegundo === "number") intervaloMs();
   // Instante em que a próxima requisição pode partir. Fica no passado
   // enquanto o sync está ocioso, o que faz a primeira requisição sair na hora.
   let proximaLargada = 0;
@@ -48,7 +65,7 @@ export function criarLimitador({
     const minhaVez = fila.then(async () => {
       const instante = agora();
       const largada = Math.max(instante, proximaLargada);
-      proximaLargada = largada + intervaloMs;
+      proximaLargada = largada + intervaloMs();
       const espera = largada - instante;
       if (espera > 0) await dormir(espera);
     });

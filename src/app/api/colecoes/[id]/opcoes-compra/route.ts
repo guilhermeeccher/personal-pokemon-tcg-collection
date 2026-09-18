@@ -9,8 +9,21 @@ import {
   listarVagasVaziasPokedex,
   listarVagasVaziasSet,
   obterUltimaVarredura,
+  ultimaConsultaPorChave,
   varreduraViva,
 } from "@/lib/db/liga";
+import {
+  corteDeFrescor,
+  separarPorFrescor,
+  VALIDADE_CONSULTA_HORAS,
+} from "@/lib/dominio/frescor-consulta";
+import {
+  formatarDuracao,
+  janelaSemBatimentoSegundos,
+  previsaoDeTermino,
+  segundosDeVarredura,
+} from "@/lib/dominio/estimativa-varredura";
+import { ritmoLigaPadrao } from "@/lib/liga/ritmo";
 import {
   FILTROS_PADRAO,
   FILTROS_PADRAO_SET,
@@ -32,9 +45,10 @@ import { executarVarredura, vagasParaVarrer } from "@/lib/liga/varredura";
  * set em 2026-09-03).
  *
  * `POST` dispara a varredura e devolve na hora o id dela; o trabalho segue no
- * processo, porque 161 vagas a uma requisição a cada 3 segundos dão ~12
- * minutos e nenhum navegador espera isso. `GET` lê o snapshot — **nunca** bate
- * no site deles durante a renderização.
+ * processo, porque 161 vagas no ritmo do `robots.txt` deles dão ~16 horas e
+ * nenhum navegador espera isso. `GET` lê o snapshot — **nunca** bate no site
+ * deles durante a renderização, nem para saber o ritmo: ele usa o último
+ * estado já conhecido (`ritmo.atual()`, sem I/O).
  *
  * Coleção customizada fica de fora: a vaga dela nasce ao alocar, com chave
  * sequencial, e não representa uma carta que falta comprar.
@@ -45,7 +59,9 @@ type TipoComVaga = "pokedex" | "set";
 function validarFiltros(
   corpo: unknown,
   padrao: Filtros,
-): { ok: true; filtros: Filtros; chaves?: string[] } | { ok: false; erro: string } {
+):
+  | { ok: true; filtros: Filtros; chaves?: string[]; validadeHoras: number }
+  | { ok: false; erro: string } {
   if (typeof corpo !== "object" || corpo === null) {
     return { ok: false, erro: "Corpo inválido (JSON esperado)." };
   }
@@ -80,9 +96,22 @@ function validarFiltros(
     chaves = [...(chaves ?? []), ...(dexBruto as number[]).map(String)];
   }
 
+  // Validade da consulta anterior: é o que faz a rodada nova pular a vaga que
+  // já tem dado recente. Zero força reconsulta de tudo — a saída para quem
+  // quer preço novo hoje, custe o tempo que custar.
+  const validadeBruta = bruto.validadeHoras;
+  if (
+    validadeBruta !== undefined &&
+    (typeof validadeBruta !== "number" || !Number.isFinite(validadeBruta) || validadeBruta < 0)
+  ) {
+    return { ok: false, erro: "validadeHoras deve ser um número de horas não negativo." };
+  }
+
   return {
     ok: true,
     chaves,
+    validadeHoras:
+      validadeBruta === undefined ? VALIDADE_CONSULTA_HORAS : (validadeBruta as number),
     filtros: {
       tetoPreco: teto === undefined ? padrao.tetoPreco : (teto as number | null),
       incluirForaDoCatalogo:
@@ -96,20 +125,6 @@ function validarFiltros(
           : null,
     },
   };
-}
-
-/**
- * Segundos estimados da rodada — o número que evita a pergunta "travou?".
- *
- * A base é 3,75 s por requisição (3 s de intervalo mais o jitter médio). Na
- * Pokédex é uma requisição por vaga. No set a busca pode precisar de até três
- * páginas até achar a carta, e as de Treinador podem ainda gastar uma segunda
- * tentativa com o nome em português — na primeira rodada real do PFL a média
- * é o que vai calibrar isto; até lá, 1,6 requisição por vaga é a estimativa
- * declarada como estimativa.
- */
-function estimativaSegundos(tipo: TipoComVaga, vagas: number): number {
-  return Math.round(vagas * 3.75 * (tipo === "set" ? 1.6 : 1));
 }
 
 /** As vagas vazias de hoje, no formato que o agrupamento da tela espera. */
@@ -160,11 +175,23 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ erro: validacao.erro }, { status: 400 });
   }
 
+  // Uma leitura do `robots.txt` antes de qualquer decisão desta rota: é dela
+  // que saem a janela de batimento e a estimativa, e é ela que garante que a
+  // primeira requisição da rodada já sai no ritmo certo, em vez de descobrir
+  // isso no meio do caminho. Cacheada — não é uma leitura por clique.
+  const ritmo = await ritmoLigaPadrao().atualizar();
+
+  // A janela de "morta" acompanha o ritmo: com 360 s entre requisições, uma
+  // vaga sozinha passa dos 2 minutos que bastavam a 3 s, e a janela antiga
+  // daria como morta uma rodada viva — liberando uma segunda em paralelo, que
+  // é justamente o que dobra o ritmo contra o site deles.
+  const janela = janelaSemBatimentoSegundos(ritmo.intervaloSegundos);
+
   // Rodada morta por reinício do processo fica "em andamento" para sempre —
   // fecha antes de decidir se há uma viva.
-  await encerrarVarredurasMortas(db, id);
+  await encerrarVarredurasMortas(db, id, janela);
 
-  const emAndamento = await varreduraViva(db, id);
+  const emAndamento = await varreduraViva(db, id, janela);
   if (emAndamento) {
     // Duas rodadas simultâneas DOBRAM o ritmo contra o site deles: o
     // limitador é por rodada e não enxerga a irmã. Aconteceu em 2026-09-02,
@@ -179,31 +206,47 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     );
   }
 
-  const vagas = await vagasParaVarrer(db, id, tipo, validacao.chaves);
-  if (vagas.length === 0) {
-    return NextResponse.json(
-      {
-        erro:
-          tipo === "set"
-            ? "Nenhuma vaga vazia com carta identificável nesta coleção."
-            : "Nenhuma vaga vazia com espécie identificável nesta coleção.",
-      },
-      { status: 400 },
-    );
+  // Vaga com opção recente é pulada: na escala de horas do ritmo novo,
+  // disparar de novo depois de um reinício tem que continuar de onde parou, e
+  // não refazer tudo. Ver `lib/dominio/frescor-consulta.ts`.
+  const { pendentes, puladas } = await vagasParaVarrer(db, id, tipo, {
+    apenasChaves: validacao.chaves,
+    validadeHoras: validacao.validadeHoras,
+  });
+
+  if (pendentes.length === 0) {
+    const nadaAConsultar =
+      puladas.length > 0
+        ? `As ${puladas.length} vaga(s) desta coleção já foram consultadas nas últimas ` +
+          `${validacao.validadeHoras} horas. Mande validadeHoras: 0 para consultar tudo de novo.`
+        : tipo === "set"
+          ? "Nenhuma vaga vazia com carta identificável nesta coleção."
+          : "Nenhuma vaga vazia com espécie identificável nesta coleção.";
+    return NextResponse.json({ erro: nadaAConsultar, vagasPuladas: puladas.length }, { status: 400 });
   }
+
+  const estimativaSegundos = segundosDeVarredura({
+    tipo,
+    vagas: pendentes.length,
+    intervaloSegundos: ritmo.intervaloSegundos,
+  });
 
   const varreduraId = await criarVarredura(db, id, validacao.filtros);
 
   // Deliberadamente sem `await`: a resposta sai agora e a varredura segue.
   // O `catch` existe para que uma falha aqui não vire rejeição sem dono no
   // processo do Next.
-  void executarVarredura(db, id, varreduraId, vagas, validacao.filtros).catch(() => {});
+  void executarVarredura(db, id, varreduraId, pendentes, validacao.filtros).catch(() => {});
 
   return NextResponse.json(
     {
       varreduraId,
-      vagasParaConsultar: vagas.length,
-      estimativaSegundos: estimativaSegundos(tipo, vagas.length),
+      vagasParaConsultar: pendentes.length,
+      vagasPuladas: puladas.length,
+      estimativaSegundos,
+      estimativaTexto: formatarDuracao(estimativaSegundos),
+      previsaoTermino: previsaoDeTermino(new Date(), estimativaSegundos).toISOString(),
+      ritmo: { intervaloSegundos: ritmo.intervaloSegundos, origem: ritmo.origem },
     },
     { status: 202 },
   );
@@ -220,8 +263,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
   }
 
+  // Estado do ritmo SEM I/O: a tela se atualiza a cada 5 segundos, e ler o
+  // arquivo deles a cada render seria exatamente o padrão que a regra "a tela
+  // lê snapshot, nunca o site" existe para impedir. Quem mantém isto quente é
+  // a varredura.
+  const ritmo = ritmoLigaPadrao().atual();
+
   const vazio = {
     tipo: colecao.tipo,
+    ritmo: { intervaloSegundos: ritmo.intervaloSegundos, origem: ritmo.origem },
     varredura: null,
     vagas: [],
     selecionadas: 0,
@@ -262,8 +312,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   };
 
   // Mesma limpeza do POST: quem abre a tela depois de um reinício precisa ver
-  // "interrompida", não uma ampulheta eterna.
-  await encerrarVarredurasMortas(db, id);
+  // "interrompida", não uma ampulheta eterna. E a mesma janela elástica: no
+  // ritmo do robots.txt, uma rodada viva fica minutos sem bater.
+  await encerrarVarredurasMortas(
+    db,
+    id,
+    janelaSemBatimentoSegundos(ritmo.intervaloSegundos),
+  );
 
   const varredura = await obterUltimaVarredura(db, id);
   if (!varredura) {
@@ -303,8 +358,41 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const vagasDaRodada = await vagasParaAgrupar(id, colecao.tipo);
   const agrupadas = montarOpcoesPorVaga(opcoesComMarcacao, vagasDaRodada, varredura.filtros);
 
+  const emAndamento = varredura.concluidaEm === null;
+
+  // Quanto falta, em escala de horas.
+  //
+  // Derivado da mesma regra de frescor que a varredura usa, e não de um total
+  // gravado na rodada: o que sobra aqui é exatamente o que uma rodada nova
+  // consultaria agora — inclusive depois de um reinício, quando o total
+  // original já não descreveria o trabalho restante. Mesmo ponto cego,
+  // declarado uma vez em `frescor-consulta.ts`: vaga consultada que não achou
+  // oferta conta como restante.
+  const agora = new Date();
+  const restantes = emAndamento
+    ? separarPorFrescor(
+        vagasDaRodada,
+        await ultimaConsultaPorChave(
+          db,
+          id,
+          corteDeFrescor({ agora, validadeHoras: VALIDADE_CONSULTA_HORAS }),
+        ),
+        { agora, validadeHoras: VALIDADE_CONSULTA_HORAS },
+      ).pendentes.length
+    : null;
+
+  const segundosRestantes =
+    restantes === null
+      ? null
+      : segundosDeVarredura({
+          tipo: colecao.tipo,
+          vagas: restantes,
+          intervaloSegundos: ritmo.intervaloSegundos,
+        });
+
   return NextResponse.json({
     tipo: colecao.tipo,
+    ritmo: { intervaloSegundos: ritmo.intervaloSegundos, origem: ritmo.origem },
     varredura: {
       id: varredura.id,
       filtros: varredura.filtros,
@@ -313,7 +401,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       concluidaEm: varredura.concluidaEm,
       erro: varredura.erro,
       criadoEm: varredura.criadoEm,
-      emAndamento: varredura.concluidaEm === null,
+      emAndamento,
+      vagasRestantes: restantes,
+      segundosRestantes,
+      previsaoTermino:
+        segundosRestantes === null
+          ? null
+          : previsaoDeTermino(agora, segundosRestantes).toISOString(),
     },
     vagas: agrupadas,
     ...resumoDaLista,

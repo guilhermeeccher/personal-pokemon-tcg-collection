@@ -75,6 +75,30 @@ describe("criarLimitador", () => {
     expect(relogio.dormidas).toEqual([200]);
   });
 
+  it("taxa em função é relida a cada largada — aperto no meio da rodada vale", async () => {
+    // O caso real: o `Crawl-delay` do robots.txt deles é relido durante uma
+    // varredura longa, e uma restrição publicada no meio dela precisa valer
+    // da requisição seguinte em diante.
+    const relogio = relogioFalso();
+    let porSegundo = 5;
+    const limitador = criarLimitador({ porSegundo: () => porSegundo, ...relogio });
+
+    await limitador.aguardarVez();
+    await limitador.aguardarVez();
+    porSegundo = 1;
+    await limitador.aguardarVez();
+
+    expect(relogio.dormidas).toEqual([200, 200]);
+    // A largada seguinte já reserva o intervalo novo: 1/s => 1000 ms.
+    await limitador.aguardarVez();
+    expect(relogio.dormidas).toEqual([200, 200, 1_000]);
+  });
+
+  it("taxa em função inválida estoura na hora de usar", async () => {
+    const limitador = criarLimitador({ porSegundo: () => 0 });
+    await expect(limitador.aguardarVez()).rejects.toThrow(/Taxa inválida/);
+  });
+
   it("recusa taxa inválida em vez de virar divisão por zero", () => {
     expect(() => criarLimitador({ porSegundo: 0 })).toThrow(/Taxa inválida/);
     expect(() => criarLimitador({ porSegundo: -1 })).toThrow(/Taxa inválida/);
