@@ -13,6 +13,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",
     "sync:catalogo": "tsx scripts/sync-catalogo.ts",
+    "seed:catalogo": "tsx scripts/seed-catalogo.ts",
     "backfill:metadados-set": "tsx scripts/backfill-metadados-set.ts",
     "importar:catalogo-repo": "tsx scripts/importar-catalogo-repo.ts",
     "preencher:serie-id-ocidental": "tsx scripts/preencher-serie-id-ocidental.ts",
