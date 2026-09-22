@@ -111,7 +111,8 @@ Beyond CI, for the PR to be accepted:
 
 - **a business rule that was touched has a test**, and the test runs without a database;
 - **no collection data in the diff** — not aggregated, not as a fixture "just for testing";
-- **no card image bytes**;
+- **no card image files.** The screenshots in `docs/screenshots/` are the maintainer's own,
+  published once and deliberately; they are not a precedent for putting card art in a PR;
 - **no person's name, e-mail, IP, hostname or machine path** in code, comment or commit message;
 - **the comment updated along with the code.** Almost every non-obvious decision in this repository
   has a paragraph explaining what was measured and what was discarded. If you change the decision,

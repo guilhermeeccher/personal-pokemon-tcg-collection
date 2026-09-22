@@ -47,9 +47,11 @@ SOFTWARE.
 
 **What does not come with it: the images.** The catalog stores the URL of the art on the TCGdex CDN
 (`assets.tcgdex.net`), never the file. The image is loaded by the browser of whoever installed the
-system, at display time, straight from the source. Not one byte of card art is versioned in this
+system, at display time, straight from the source. No card art file is versioned in this
 repository, and that is a decision, not an accident: redistributing the image file is a different
-responsibility from redistributing metadata under MIT.
+responsibility from redistributing metadata under MIT. The screenshots in `docs/screenshots/`
+show the interface with cards displayed in it; they illustrate the program and are not a source
+of images for anything.
 
 ## mypcards — `seed/set-mypcards.csv`
 
@@ -63,7 +65,7 @@ and cannot be derived from our catalog (`src/lib/dominio/mypcards.ts` documents 
 how it was taken apart).
 
 The mapping is a fact of interoperability, not their content — but the credit is owed all the same,
-because without the site's cataloging work it would not exist. **No mypcards image is in this
+because without the site's cataloging work it would not exist. **No mypcards image file is in this
 repository.** Each installation downloads its own, from the source, into a local Docker volume
 (`pnpm baixar:imagens-mypcards`).
 

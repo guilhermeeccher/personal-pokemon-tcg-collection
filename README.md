@@ -21,9 +21,10 @@ and it has no relationship with LigaPokemon, TCGdex or mypcards beyond reading p
 publish.
 
 Pokémon, the names of the cards, the Pokémon and the expansions, the artwork and every related
-trademark belong to their respective owners. **This repository redistributes no card art**: images
-are loaded at display time, straight from the source, by the installation that uses them (see
-[Card images](#card-images)).
+trademark belong to their respective owners. **This repository ships no card art for the program to
+use**: images are loaded at display time, straight from the source, by the installation that
+uses them (see [Card images](#card-images)). The card art you can see here is inside the
+screenshots, which are pictures of the interface.
 
 It is a personal, non-commercial tool for organizing a collection that already exists on paper.
 Nothing here is meant for selling, professional grading or reproducing a card.
@@ -262,8 +263,10 @@ above is the environment variable.
 
 ## Card images
 
-Each card's art is loaded **at display time, straight from the TCGdex CDN**. Not one image byte is in
-this repository, and none is copied into your database by default.
+Each card's art is loaded **at display time, straight from the TCGdex CDN**. No image file is in
+this repository, and none is copied into your database by default. The screenshots above are the
+one exception: they are pictures of the interface with cards in it, and nothing in the program
+reads them.
 
 A minority of cards have no photo in any TCGdex source — whole energy sets, promos and galleries that
 were never digitized there. For those there are two paths, both manual and both optional:

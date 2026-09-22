@@ -87,7 +87,7 @@ because none of them is undone by `git revert`: the data would already be in the
    to whoever installed the system. They do not go into the repository in any form — not aggregated,
    not anonymized, not as a fixture "just for testing". A test that needs data uses made-up data
    inside the test itself.
-2. **No card image bytes**, and no per-card image reference. Images come from the CDN at display
+2. **No card image files**, and no per-card image reference. Images come from the CDN at display
    time, or are downloaded by each installation into a local Docker volume. A list of already
    downloaded images would say which cards whoever generated the file has at home — that is
    collection data coming in through the back door.
@@ -96,8 +96,16 @@ because none of them is undone by `git revert`: the data would already be in the
    comments still apply — what changes is the subject: write "decision of 2026-09-02", not the name
    of who decided; "the user supplied the photo", not who supplied it.
 
-Git does not cover the data: the database and the image bytes live in Docker volumes, outside the
-repository, and backing them up is the responsibility of whoever installs the system.
+**The one exception, and where it stops.** The screenshots in `docs/screenshots/` show the
+interface with real cards in it, so they carry both card art and a view of one collection —
+rules 1 and 2 would otherwise forbid them. They exist because a README has to show what the
+program looks like, and they were published once, deliberately, by the person the collection
+belongs to. That covers those files and nothing else. It does not transfer: a pull request adds
+no card art and no collection data, including there. The screenshots illustrate the program;
+nothing in the program reads them.
+
+Git does not cover the data: the database and the image files live in Docker volumes, outside
+the repository, and backing them up is the responsibility of whoever installs the system.
 
 ---
 
