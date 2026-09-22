@@ -6,7 +6,10 @@ with it and loads by itself on the first boot.
 
 The question it exists to answer is not "how much do I have", it is **"what is missing"**.
 
-<!-- Screenshots would go here: home, quick entry by set, the grid of a collection and the list of what is missing. -->
+![A Pokedex collection with 125 of its 251 slots filled, the empty ones offering to be allocated](docs/screenshots/pokedex.png)
+
+A collection is a grid of slots. A filled slot carries the copy allocated to it, with the language
+and variant of the card you physically own. An empty one names the species you are still missing.
 
 ---
 
@@ -60,6 +63,29 @@ It is not for anyone who wants a public, multi-user site, or sales and trading c
   [the section on it](#ligapokemon-prices) before turning it on.
 - **Export** — inventory as CSV, a collection in LigaPokemon's import format, and a buy list ready to
   paste.
+
+---
+
+## What it looks like
+
+The list of missing cards reads the collection the other way round: every empty slot you have,
+grouped by collection. This is what you take to a shop.
+
+![The missing cards screen, showing 157 empty slots across two collections](docs/screenshots/missing-cards.png)
+
+Typing in a collection you already own goes set by set. Pick one and the whole card grid comes up
+with a quantity box per card; variant, language and condition start from a batch default, and you
+change only the cards that differ from it.
+
+![Quick add by set, with the 151 set loaded and a quantity box on every card](docs/screenshots/quick-add-by-set.png)
+
+The overview answers how much there is and how it is spread out. Every breakdown links into the
+inventory with that filter already applied.
+
+![The overview screen with totals, collection progress and breakdowns by set and rarity](docs/screenshots/overview.png)
+
+The interface is available in English and Brazilian Portuguese; the selector sits at the bottom of
+the sidebar.
 
 ---
 
