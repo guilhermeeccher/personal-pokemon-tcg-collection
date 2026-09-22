@@ -608,10 +608,10 @@ export const melhoriaDescartada = pgTable(
   (t) => [primaryKey({ columns: [t.vagaId, t.copiaId] })],
 );
 
-// --- escolha_compra — a triagem dele, que sobrevive à varredura -----------
+// --- escolha_compra — a triagem do usuário, que sobrevive à varredura -----------
 
 /**
- * Uma carta que o usuário decidiu comprar para uma vaga — a triagem dele.
+ * Uma carta que o usuário decidiu comprar para uma vaga — a triagem do usuário.
  *
  * ## O problema que esta tabela resolve
  *
