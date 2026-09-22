@@ -163,10 +163,10 @@ async function importar(): Promise<ResultadoImportacao> {
 
   if (!fs.existsSync(PASTA_DADOS_ASIA)) {
     throw new Error(
-      `Pasta de dados não encontrada: ${PASTA_DADOS_ASIA}. Clone ` +
-        `https://github.com/tcgdex/cards-database.git e aponte ` +
-        `TCGDEX_REPO_PATH (ou monte em /upstream-dados-tcgdex, ver ` +
-        `compose.yaml) para a raiz do clone.`,
+      `Data folder not found: ${PASTA_DADOS_ASIA}. Clone ` +
+        `https://github.com/tcgdex/cards-database.git and point ` +
+        `TCGDEX_REPO_PATH (or mount it at /upstream-dados-tcgdex, see ` +
+        `compose.yaml) at the root of the clone.`,
     );
   }
 
@@ -259,7 +259,7 @@ async function importar(): Promise<ResultadoImportacao> {
 
       if (cartasDoSet.length === 0) {
         resultado.setsSemCartas.push(
-          `${set.id} (${serieDir}/${setFileId}, pasta tinha arquivos mas nenhum com nome em ja)`,
+          `${set.id} (${serieDir}/${setFileId}, folder had files but none with a name in ja)`,
         );
         continue;
       }
@@ -309,36 +309,36 @@ async function importar(): Promise<ResultadoImportacao> {
 }
 
 async function main() {
-  console.log(`importar:catalogo-repo — lendo de ${PASTA_DADOS_ASIA}`);
+  console.log(`importar:catalogo-repo — reading from ${PASTA_DADOS_ASIA}`);
   const r = await importar();
-  console.log(`\nsets encontrados (.ts): ${r.setsEncontrados}`);
-  console.log(`sets ignorados (série excluída '${SERIE_EXCLUIDA_ID}'): ${r.setsSerieExcluida}`);
-  console.log(`sets sem nome em '${CODIGO_IDIOMA_REPO}' (set ou série): ${r.setsSemNomeNoIdioma}`);
-  console.log(`sets qualificados para ${IDIOMA_BANCO}: ${r.setsQualificados}`);
-  console.log(`sets qualificados mas sem nenhuma carta importável: ${r.setsSemCartas.length}`);
+  console.log(`\nsets found (.ts): ${r.setsEncontrados}`);
+  console.log(`sets skipped (excluded series '${SERIE_EXCLUIDA_ID}'): ${r.setsSerieExcluida}`);
+  console.log(`sets with no name in '${CODIGO_IDIOMA_REPO}' (set or series): ${r.setsSemNomeNoIdioma}`);
+  console.log(`sets qualified for ${IDIOMA_BANCO}: ${r.setsQualificados}`);
+  console.log(`sets qualified but with no importable card: ${r.setsSemCartas.length}`);
   if (r.setsSemCartas.length > 0) {
     console.log(`  -> ${r.setsSemCartas.join(", ")}`);
   }
   if (r.setsComErro.length > 0) {
-    console.log(`sets com erro ao importar o módulo: ${r.setsComErro.length}`);
+    console.log(`sets that errored while importing the module: ${r.setsComErro.length}`);
     for (const e of r.setsComErro) console.log(`  -> ${e.set}: ${e.erro}`);
   }
-  console.log(`\narquivos de carta encontrados (nos sets qualificados): ${r.cartasEncontradas}`);
-  console.log(`cartas sem nome em '${CODIGO_IDIOMA_REPO}' (excluídas): ${r.cartasSemNomeNoIdioma}`);
+  console.log(`\ncard files found (in the qualified sets): ${r.cartasEncontradas}`);
+  console.log(`cards with no name in '${CODIGO_IDIOMA_REPO}' (excluded): ${r.cartasSemNomeNoIdioma}`);
   if (r.cartasComErro.length > 0) {
-    console.log(`cartas com erro ao importar o módulo: ${r.cartasComErro.length}`);
+    console.log(`cards that errored while importing the module: ${r.cartasComErro.length}`);
     for (const e of r.cartasComErro) console.log(`  -> ${e.arquivo}: ${e.erro}`);
   }
-  console.log(`cartas upsertadas em carta_catalogo (idioma=${IDIOMA_BANCO}): ${r.cartasUpsertadas}`);
-  console.log(`  das quais com dexId único (elegíveis para vaga de Pokédex): ${r.cartasComDexIdUnico}`);
-  console.log(`duração: ${(r.duracaoMs / 1000).toFixed(1)}s`);
+  console.log(`cards upserted into carta_catalogo (idioma=${IDIOMA_BANCO}): ${r.cartasUpsertadas}`);
+  console.log(`  of those, with a unique dexId (eligible for a Pokédex slot): ${r.cartasComDexIdUnico}`);
+  console.log(`duration: ${(r.duracaoMs / 1000).toFixed(1)}s`);
 
   process.exitCode = r.setsComErro.length > 0 || r.cartasComErro.length > 0 ? 1 : 0;
 }
 
 main()
   .catch((err) => {
-    console.error("Erro inesperado no importador:", err);
+    console.error("Unexpected error in the importer:", err);
     process.exitCode = 1;
   })
   .finally(async () => {

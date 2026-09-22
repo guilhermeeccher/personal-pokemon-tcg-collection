@@ -171,7 +171,7 @@ cards from the file versioned in `seed/`** — with no network request at all. T
 docker compose logs -f app
 ```
 
-You will see `Migrations aplicadas.`, then `[entrypoint] verificando catálogo...` and, on the first
+You will see `Migrations applied.`, then `[entrypoint] checking catalog...` and, on the first
 boot, the catalog load. The `.dados/` folder that comes with the clone is the optional mount point
 for the TCGdex data clone — you can ignore it, and why it exists is
 [further down](#tcgdex-catalog-from-a-local-clone).

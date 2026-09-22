@@ -77,7 +77,7 @@ async function mapearSetParaSerie(): Promise<{
     try {
       const serie = await importarModulo(arquivoSerie);
       if (!ehObjetoComId(serie) || typeof serie.id !== "string") {
-        throw new Error("série sem id");
+        throw new Error("series with no id");
       }
       serieId = serie.id;
       seriesLidas++;
@@ -106,17 +106,17 @@ async function mapearSetParaSerie(): Promise<{
 async function main() {
   if (!fs.existsSync(PASTA_DADOS)) {
     console.error(
-      `Clone do repositório não encontrado em ${PASTA_DADOS}. ` +
-        `Veja o cabeçalho de scripts/importar-catalogo-repo.ts.`,
+      `Repository clone not found at ${PASTA_DADOS}. ` +
+        `See the header of scripts/importar-catalogo-repo.ts.`,
     );
     process.exitCode = 1;
     return;
   }
 
   const { mapa, seriesLidas, erros } = await mapearSetParaSerie();
-  console.log(`séries lidas: ${seriesLidas} | sets mapeados: ${mapa.size}`);
+  console.log(`series read: ${seriesLidas} | sets mapped: ${mapa.size}`);
   if (erros.length > 0) {
-    console.log(`arquivos com erro de leitura: ${erros.length}`);
+    console.log(`files that failed to read: ${erros.length}`);
     for (const e of erros.slice(0, 5)) console.log(`  ${e.arquivo}: ${e.erro}`);
   }
 
@@ -164,12 +164,12 @@ async function main() {
 
   console.log(
     DRY_RUN
-      ? `[dry-run] sets que seriam preenchidos: ${setsAtualizados}`
-      : `sets preenchidos: ${setsAtualizados} | linhas atualizadas: ${linhasAtualizadas}`,
+      ? `[dry-run] sets that would be filled: ${setsAtualizados}`
+      : `sets filled: ${setsAtualizados} | rows updated: ${linhasAtualizadas}`,
   );
   if (semMapeamento.length > 0) {
     console.log(
-      `sets sem série no repositório (ficam nulos): ${semMapeamento.length}`,
+      `sets with no series in the repository (left null): ${semMapeamento.length}`,
     );
     console.log(`  ${semMapeamento.slice(0, 15).join(", ")}`);
   }
@@ -183,12 +183,12 @@ async function main() {
         isNull(cartaCatalogo.setSerieId),
       ),
     );
-  console.log(`linhas pt/en ainda sem set_serie_id: ${restantes[0].n}`);
+  console.log(`pt/en rows still without set_serie_id: ${restantes[0].n}`);
 }
 
 main()
   .catch((err) => {
-    console.error("Erro inesperado:", err);
+    console.error("Unexpected error:", err);
     process.exitCode = 1;
   })
   .finally(async () => {

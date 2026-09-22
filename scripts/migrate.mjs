@@ -8,7 +8,7 @@ import postgres from "postgres";
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
-  console.error("DATABASE_URL não configurada.");
+  console.error("DATABASE_URL is not set.");
   process.exit(1);
 }
 
@@ -20,7 +20,7 @@ if (!databaseUrl) {
  * despejar o objeto cru do protocolo no console (`{ severity_local: 'NOTICE',
  * severity: 'NOTICE', code: '00000', message: 'drop cascades to ...' }`). Num
  * primeiro boot isso é a primeira coisa que aparece na tela, logo antes de
- * "Migrations aplicadas" — parece uma pilha de erro, e não é.
+ * "Migrations applied." — parece uma pilha de erro, e não é.
  *
  * Aqui cada aviso passa por um filtro por severidade. NOTICE, INFO, DEBUG e
  * LOG — informativos por definição do próprio protocolo — saem contados no
@@ -48,23 +48,23 @@ function aoReceberAviso(aviso) {
   }
 
   const detalhe = aviso.detail ? ` (${aviso.detail})` : "";
-  console.warn(`[migrate] ${severidade || "AVISO"}: ${aviso.message ?? ""}${detalhe}`);
+  console.warn(`[migrate] ${severidade || "WARNING"}: ${aviso.message ?? ""}${detalhe}`);
 }
 
 const sql = postgres(databaseUrl, { max: 1, onnotice: aoReceberAviso });
 const db = drizzle(sql);
 
 try {
-  console.log("Aplicando migrations...");
+  console.log("Applying migrations...");
   await migrate(db, { migrationsFolder: "./drizzle" });
   console.log(
     avisosInformativos > 0
-      ? `Migrations aplicadas. (${avisosInformativos} aviso(s) informativo(s) do Postgres ` +
-          "omitido(s): objeto que já existia, ou dependência removida em cascata.)"
-      : "Migrations aplicadas.",
+      ? `Migrations applied. (${avisosInformativos} informational Postgres notice(s) ` +
+          "omitted: an object that already existed, or a dependency dropped in cascade.)"
+      : "Migrations applied.",
   );
 } catch (err) {
-  console.error("Falha ao aplicar migrations:", err);
+  console.error("Failed to apply migrations:", err);
   process.exit(1);
 } finally {
   await sql.end();

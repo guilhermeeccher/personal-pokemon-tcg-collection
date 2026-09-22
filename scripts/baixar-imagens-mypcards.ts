@@ -59,21 +59,21 @@ async function principal(): Promise<void> {
   const mapeamentos = await listarMapeamentos(db);
   if (mapeamentos.length === 0) {
     console.log(
-      "Nenhum set mapeado ainda. Cole o link de uma imagem do set na tela da carta sem foto.",
+      "No set mapped yet. Paste the link to a set image on the screen of a card with no photo.",
     );
     return;
   }
 
   if (opcoes.setId && !(await obterMapeamentoSet(db, opcoes.setId))) {
-    console.error(`Set "${opcoes.setId}" não está mapeado no mypcards.`);
+    console.error(`Set "${opcoes.setId}" is not mapped on mypcards.`);
     process.exitCode = 1;
     return;
   }
 
   const numeroPorSet = new Map(mapeamentos.map((m) => [m.setId, m.numero]));
   const cartas = await listarCartasSemFotoDeSetMapeado(db, opcoes.setId);
-  const alvo = opcoes.setId ? `o set ${opcoes.setId}` : `${mapeamentos.length} set(s) mapeado(s)`;
-  console.log(`${cartas.length} carta(s) sem foto em ${alvo}.`);
+  const alvo = opcoes.setId ? `set ${opcoes.setId}` : `${mapeamentos.length} mapped set(s)`;
+  console.log(`${cartas.length} card(s) with no photo in ${alvo}.`);
 
   if (opcoes.dryRun) {
     for (const c of cartas.slice(0, 20)) {
@@ -86,10 +86,10 @@ async function principal(): Promise<void> {
               localId: c.localId,
               idioma: c.idioma,
             })
-          : "(idioma não publicado no mypcards)";
+          : "(language not published on mypcards)";
       console.log(`  ${c.setId} ${c.localId} (${c.idioma}) ${c.nome} -> ${url}`);
     }
-    if (cartas.length > 20) console.log(`  … e mais ${cartas.length - 20}.`);
+    if (cartas.length > 20) console.log(`  … and ${cartas.length - 20} more.`);
     return;
   }
 
@@ -101,13 +101,13 @@ async function principal(): Promise<void> {
       if (resultado === "baixada") {
         console.log(`  ok   ${carta.setId} ${carta.localId} (${carta.idioma}) ${carta.nome}`);
       } else if (resultado === "falhou") {
-        console.log(`  ERRO ${carta.setId} ${carta.localId} (${carta.idioma}) ${carta.nome}`);
+        console.log(`  FAIL ${carta.setId} ${carta.localId} (${carta.idioma}) ${carta.nome}`);
       }
     },
   );
 
   console.log(
-    `\nBaixadas: ${resumo.baixadas} | sem scan lá: ${resumo.ausentes} | falhas: ${resumo.falhas} | puladas: ${resumo.puladas}`,
+    `\nDownloaded: ${resumo.baixadas} | no scan there: ${resumo.ausentes} | failures: ${resumo.falhas} | skipped: ${resumo.puladas}`,
   );
 }
 

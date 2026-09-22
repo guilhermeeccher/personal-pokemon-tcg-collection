@@ -94,7 +94,7 @@ function lerOpcoes(argv: string[]): Opcoes {
   const iLimite = argv.indexOf("--limite");
   const idioma = iIdioma !== -1 ? argv[iIdioma + 1] : undefined;
   if (idioma && !["pt", "en", "jp"].includes(idioma)) {
-    throw new Error(`Idioma inválido: ${idioma}`);
+    throw new Error(`Invalid language: ${idioma}`);
   }
   return {
     idioma: idioma as Idioma | undefined,
@@ -160,7 +160,7 @@ async function principal(): Promise<void> {
     .from(cartaCatalogo)
     .where(and(...condicoes));
 
-  console.log(`${total} linha(s) por verificar.`);
+  console.log(`${total} row(s) left to check.`);
   if (total === 0) return;
 
   const contagem = { existe: 0, ausente: 0, indefinido: 0 };
@@ -215,7 +215,7 @@ async function principal(): Promise<void> {
 
     processadas += lote.length;
     console.log(
-      `  ${processadas}/${opcoes.limite ?? total} — existe: ${contagem.existe} | ausente: ${contagem.ausente} | indefinido: ${contagem.indefinido}`,
+      `  ${processadas}/${opcoes.limite ?? total} — exists: ${contagem.existe} | missing: ${contagem.ausente} | inconclusive: ${contagem.indefinido}`,
     );
 
     // Linha "indefinido" não é gravada, então continuaria voltando no
@@ -223,7 +223,7 @@ async function principal(): Promise<void> {
     // indefinido, é sinal de problema de rede ou bloqueio — para.
     if (contagem.indefinido >= processadas) {
       console.error(
-        "Nenhuma linha do lote deu resposta conclusiva. Parando — verifique a rede ou se o CDN nos bloqueou.",
+        "No row in the batch gave a conclusive answer. Stopping — check the network, or whether the CDN has blocked us.",
       );
       process.exitCode = 1;
       return;
@@ -231,7 +231,7 @@ async function principal(): Promise<void> {
   }
 
   console.log(
-    `\nExistem: ${contagem.existe} | ausentes: ${contagem.ausente} | inconclusivas: ${contagem.indefinido}`,
+    `\nExist: ${contagem.existe} | missing: ${contagem.ausente} | inconclusive: ${contagem.indefinido}`,
   );
 }
 

@@ -120,20 +120,20 @@ async function principal(): Promise<void> {
   const dryRun = process.argv.includes("--dry-run");
 
   if (!fs.existsSync(REPO_PATH)) {
-    console.error(`Clone não encontrado em ${REPO_PATH}.`);
+    console.error(`Clone not found at ${REPO_PATH}.`);
     process.exitCode = 1;
     return;
   }
 
-  console.log(`Lendo ${REPO_PATH}…`);
+  console.log(`Reading ${REPO_PATH}…`);
   const { itens, setsSemId, erros } = await coletar();
-  console.log(`${itens.length} carta(s) com tipo no repositório.`);
-  if (setsSemId.length > 0) console.log(`  ${setsSemId.length} pasta(s) de set sem arquivo de id (ignoradas).`);
-  if (erros.length > 0) console.log(`  ${erros.length} arquivo(s) com erro de leitura.`);
+  console.log(`${itens.length} card(s) with a type in the repository.`);
+  if (setsSemId.length > 0) console.log(`  ${setsSemId.length} set folder(s) with no id file (skipped).`);
+  if (erros.length > 0) console.log(`  ${erros.length} file(s) that failed to read.`);
 
   if (dryRun) {
     for (const i of itens.slice(0, 10)) console.log(`  ${i.cartaId} -> ${i.tipos.join(", ")}`);
-    console.log("\n(dry-run — nada foi gravado)");
+    console.log("\n(dry-run — nothing was written)");
     return;
   }
 
@@ -157,7 +157,7 @@ async function principal(): Promise<void> {
     .from(cartaCatalogo)
     .where(sql`cardinality(${cartaCatalogo.tipos}) > 0`);
 
-  console.log(`\nLinhas de catálogo com tipo agora: ${comTipo}.`);
+  console.log(`\nCatalog rows with a type now: ${comTipo}.`);
 }
 
 principal()

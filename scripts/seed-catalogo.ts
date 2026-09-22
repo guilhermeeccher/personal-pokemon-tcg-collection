@@ -94,8 +94,8 @@ function emLotes<T>(itens: readonly T[], tamanho: number): T[][] {
 function lerCsvComprimido(caminho: string): string {
   if (!fs.existsSync(caminho)) {
     throw new Error(
-      `Arquivo de seed não encontrado: ${caminho}. Ele é versionado no ` +
-        `repositório — rode o script a partir da raiz do projeto.`,
+      `Seed file not found: ${caminho}. It is versioned in the ` +
+        `repository — run the script from the project root.`,
     );
   }
   return zlib.gunzipSync(fs.readFileSync(caminho)).toString("utf8");
@@ -104,8 +104,8 @@ function lerCsvComprimido(caminho: string): string {
 function lerCsv(caminho: string): string {
   if (!fs.existsSync(caminho)) {
     throw new Error(
-      `Arquivo de seed não encontrado: ${caminho}. Ele é versionado no ` +
-        `repositório — rode o script a partir da raiz do projeto.`,
+      `Seed file not found: ${caminho}. It is versioned in the ` +
+        `repository — run the script from the project root.`,
     );
   }
   return fs.readFileSync(caminho, "utf8");
@@ -203,7 +203,7 @@ async function semear(): Promise<ResultadoSeed> {
     await upsertLoteCatalogo(lote, agora);
     upsertadas += lote.length;
     if ((indice + 1) % 20 === 0 || indice === lotes.length - 1) {
-      console.log(`  ${upsertadas}/${linhasCatalogo.length} cartas`);
+      console.log(`  ${upsertadas}/${linhasCatalogo.length} cards`);
     }
   }
 
@@ -228,25 +228,25 @@ async function main() {
 
   if (soSeVazio && !(await catalogoEstaVazio())) {
     console.log(
-      "seed:catalogo — carta_catalogo já tem cartas; nada a fazer " +
-        "(--se-vazio). Para recarregar mesmo assim, rode sem a flag.",
+      "seed:catalogo — carta_catalogo already has cards; nothing to do " +
+        "(--se-vazio). To load it anyway, run without the flag.",
     );
     return;
   }
 
-  console.log(`seed:catalogo — lendo de ${PASTA_SEED}`);
+  console.log(`seed:catalogo — reading from ${PASTA_SEED}`);
   const r = await semear();
-  console.log(`\ncartas no arquivo: ${r.cartasNoArquivo}`);
-  console.log(`cartas upsertadas em carta_catalogo: ${r.cartasUpsertadas}`);
-  console.log(`sets upsertados em set_mypcards: ${r.setsMypcardsUpsertados}`);
-  console.log(`duração: ${(r.duracaoMs / 1000).toFixed(1)}s`);
+  console.log(`\ncards in the file: ${r.cartasNoArquivo}`);
+  console.log(`cards upserted into carta_catalogo: ${r.cartasUpsertadas}`);
+  console.log(`sets upserted into set_mypcards: ${r.setsMypcardsUpsertados}`);
+  console.log(`duration: ${(r.duracaoMs / 1000).toFixed(1)}s`);
 }
 
 main()
   .catch((err) => {
     // "Nunca bloqueia o uso": o erro é registrado e o exit code sinaliza a
     // falha, mas quem chama (entrypoint) segue subindo o servidor.
-    console.error("Falha ao semear o catálogo:", err);
+    console.error("Failed to seed the catalog:", err);
     process.exitCode = 1;
   })
   .finally(async () => {

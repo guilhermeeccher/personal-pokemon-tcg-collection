@@ -79,11 +79,11 @@ async function principal(): Promise<void> {
   const duplicados = [...grupos.values()].filter((g) => g.length > 1);
 
   if (duplicados.length === 0) {
-    console.log("Nenhuma duplicata a fundir.");
+    console.log("No duplicates to merge.");
     return;
   }
 
-  console.log(`${duplicados.length} grupo(s) de cópias duplicadas:\n`);
+  console.log(`${duplicados.length} group(s) of duplicate copies:\n`);
   const hoje = new Date().toISOString().slice(0, 10);
 
   for (const grupo of duplicados) {
@@ -102,9 +102,9 @@ async function principal(): Promise<void> {
       `  ${sobrevivente.cartaNome} (${sobrevivente.cartaId}, ${sobrevivente.variante}, ${sobrevivente.condicao}, ${sobrevivente.idioma})`,
     );
     console.log(
-      `    ${grupo.length} registros -> 1 com quantidade ${acumulada.quantidade}` +
+      `    ${grupo.length} rows -> 1 with quantity ${acumulada.quantidade}` +
         (divergencias.size > 0
-          ? ` | divergência registrada em notas: ${[...divergencias].join(", ")}`
+          ? ` | divergence recorded in the notes: ${[...divergencias].join(", ")}`
           : ""),
     );
 
@@ -131,7 +131,7 @@ async function principal(): Promise<void> {
     });
   }
 
-  console.log(dryRun ? "\n(dry-run — nada foi alterado)" : "\nFusão concluída.");
+  console.log(dryRun ? "\n(dry-run — nothing was changed)" : "\nMerge completed.");
 }
 
 principal()

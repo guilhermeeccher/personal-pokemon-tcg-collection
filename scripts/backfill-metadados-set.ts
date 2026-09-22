@@ -48,7 +48,7 @@ async function backfillIdioma(idioma: Idioma): Promise<ResultadoIdioma> {
       setDetail = await obterSet(idioma, setBreve.id);
     } catch (err) {
       setsComFalha.push(setBreve.id);
-      console.error(`[backfill:${idioma}] falha ao obter set ${setBreve.id}:`, err);
+      console.error(`[backfill:${idioma}] failed to fetch set ${setBreve.id}:`, err);
       return;
     }
 
@@ -84,33 +84,33 @@ async function main() {
   let houveErroFatal = false;
 
   for (const idioma of IDIOMAS) {
-    console.log(`\n=== backfill:${idioma} — início ===`);
+    console.log(`\n=== backfill:${idioma} — start ===`);
     try {
       const r = await backfillIdioma(idioma);
-      console.log(`[backfill:${idioma}] sets listados: ${r.setsListados}`);
-      console.log(`[backfill:${idioma}] sets com falha ao buscar: ${r.setsComFalha.length}`);
+      console.log(`[backfill:${idioma}] sets listed: ${r.setsListados}`);
+      console.log(`[backfill:${idioma}] sets that failed to fetch: ${r.setsComFalha.length}`);
       if (r.setsComFalha.length > 0) {
         console.log(`[backfill:${idioma}]   -> ${r.setsComFalha.join(", ")}`);
       }
-      console.log(`[backfill:${idioma}] sets com sigla no upstream: ${r.setsComSigla}`);
-      console.log(`[backfill:${idioma}] sets SEM sigla no upstream: ${r.setsSemSigla.length}`);
+      console.log(`[backfill:${idioma}] sets with an abbreviation upstream: ${r.setsComSigla}`);
+      console.log(`[backfill:${idioma}] sets WITHOUT an abbreviation upstream: ${r.setsSemSigla.length}`);
       if (r.setsSemSigla.length > 0) {
         console.log(`[backfill:${idioma}]   -> ${r.setsSemSigla.join(", ")}`);
       }
-      console.log(`[backfill:${idioma}] linhas de carta_catalogo atualizadas: ${r.linhasAtualizadas}`);
+      console.log(`[backfill:${idioma}] carta_catalogo rows updated: ${r.linhasAtualizadas}`);
     } catch (err) {
       houveErroFatal = true;
-      console.error(`[backfill:${idioma}] falha fatal:`, err);
+      console.error(`[backfill:${idioma}] fatal failure:`, err);
     }
   }
 
-  console.log(`\nbackfill:metadados-set ${houveErroFatal ? "terminou com falhas" : "concluído"} em ${((Date.now() - inicio) / 1000).toFixed(1)}s.`);
+  console.log(`\nbackfill:metadados-set ${houveErroFatal ? "finished with failures" : "completed"} in ${((Date.now() - inicio) / 1000).toFixed(1)}s.`);
   process.exitCode = houveErroFatal ? 1 : 0;
 }
 
 main()
   .catch((err) => {
-    console.error("Erro inesperado no backfill:", err);
+    console.error("Unexpected error in the backfill:", err);
     process.exitCode = 1;
   })
   .finally(async () => {

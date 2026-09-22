@@ -45,7 +45,7 @@ function lerIdioma(argv: string[]): Idioma | undefined {
   if (i === -1) return undefined;
   const valor = argv[i + 1];
   if (!["pt", "en", "jp"].includes(valor)) {
-    throw new Error(`Idioma inválido: ${valor}`);
+    throw new Error(`Invalid language: ${valor}`);
   }
   return valor as Idioma;
 }
@@ -72,7 +72,7 @@ async function principal(): Promise<void> {
   const indice = indexarEspeciesConhecidas(
     conhecidas.map((l) => ({ nome: l.nome, idioma: l.idioma, dexId: Number(l.dexId) })),
   );
-  console.log(`${conhecidas.length} linha(s) numeradas pelo upstream -> ${indice.size} espécie(s) conhecida(s).`);
+  console.log(`${conhecidas.length} row(s) numbered upstream -> ${indice.size} known species.`);
 
   const pendentes = await db
     .select({
@@ -91,7 +91,7 @@ async function principal(): Promise<void> {
     )
     .orderBy(cartaCatalogo.idioma, cartaCatalogo.setId, cartaCatalogo.localId);
 
-  console.log(`${pendentes.length} carta(s) Pokémon sem número.\n`);
+  console.log(`${pendentes.length} Pokémon card(s) with no number.\n`);
   if (pendentes.length === 0) return;
 
   let derivadas = 0;
@@ -117,17 +117,17 @@ async function principal(): Promise<void> {
       );
   }
 
-  if (derivadas > 15) console.log(`  … e mais ${derivadas - 15}.`);
+  if (derivadas > 15) console.log(`  … and ${derivadas - 15} more.`);
 
-  console.log(`\nDerivadas: ${derivadas} | sem resolução: ${semResolucao.length}`);
+  console.log(`\nDerived: ${derivadas} | unresolved: ${semResolucao.length}`);
   if (semResolucao.length > 0) {
-    console.log("Sem resolução (ficam fora da Pokédex, como antes):");
+    console.log("Unresolved (they stay out of the Pokédex, as before):");
     for (const s of semResolucao.slice(0, 20)) {
       console.log(`  ${s.idioma} ${s.nome}`);
     }
-    if (semResolucao.length > 20) console.log(`  … e mais ${semResolucao.length - 20}.`);
+    if (semResolucao.length > 20) console.log(`  … and ${semResolucao.length - 20} more.`);
   }
-  if (dryRun) console.log("\n(dry-run — nada foi gravado)");
+  if (dryRun) console.log("\n(dry-run — nothing was written)");
 }
 
 principal()
