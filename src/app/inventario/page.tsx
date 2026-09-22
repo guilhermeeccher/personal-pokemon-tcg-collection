@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import {
@@ -71,6 +72,7 @@ function paraQueryString(filtros: Filtros, pagina: number): string {
 }
 
 export default function InventarioPage() {
+  const t = useTranslations("inventario");
   const [filtros, setFiltros] = useState<Filtros>(FILTROS_VAZIOS);
   const [pagina, setPagina] = useState(1);
   const [itens, setItens] = useState<CopiaDoInventarioDTO[]>([]);
@@ -102,9 +104,9 @@ export default function InventarioPage() {
         if (d.opcoes) setOpcoes(d.opcoes);
         setErro(null);
       })
-      .catch(() => setErro("Falha ao carregar o inventário."))
+      .catch(() => setErro(t("erroCarregar")))
       .finally(() => setCarregando(false));
-  }, [filtros, pagina]);
+  }, [filtros, pagina, t]);
 
   useEffect(() => {
     carregar();
@@ -181,8 +183,11 @@ export default function InventarioPage() {
 
   async function remover(copia: CopiaDoInventarioDTO) {
     const confirmado = window.confirm(
-      `Remover a cópia de ${copia.cartaNome} (${copia.setNome} #${copia.cartaLocalId})?` +
-        (copia.alocada ? " Ela está alocada a uma vaga, que ficará livre." : ""),
+      t("confirmarRemover", {
+        carta: copia.cartaNome,
+        set: copia.setNome,
+        numero: copia.cartaLocalId,
+      }) + (copia.alocada ? t("confirmarRemoverAlocada") : ""),
     );
     if (!confirmado) return;
     const resp = await fetch(`/api/copias/${copia.id}`, { method: "DELETE" });
@@ -190,14 +195,18 @@ export default function InventarioPage() {
       setCarregando(true);
       carregar();
     } else {
-      setErro("Falha ao remover.");
+      setErro(t("erroRemover"));
     }
   }
 
   async function desalocar(copia: CopiaDoInventarioDTO) {
     if (!copia.vagaId) return;
     const confirmado = window.confirm(
-      `Desalocar ${copia.cartaNome} de ${copia.colecaoNome} (vaga #${copia.vagaChave})? A cópia volta a ficar livre no inventário.`,
+      t("confirmarDesalocar", {
+        carta: copia.cartaNome,
+        colecao: copia.colecaoNome ?? "",
+        vaga: copia.vagaChave ?? "",
+      }),
     );
     if (!confirmado) return;
     const resp = await fetch(`/api/vagas/${copia.vagaId}/alocar`, { method: "DELETE" });
@@ -205,7 +214,7 @@ export default function InventarioPage() {
       setCarregando(true);
       carregar();
     } else {
-      setErro("Falha ao desalocar.");
+      setErro(t("erroDesalocar"));
     }
   }
 
@@ -214,23 +223,23 @@ export default function InventarioPage() {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 sm:p-8 md:h-full">
       <CabecalhoPagina
-        titulo="Inventário"
-        descricao={`${total} cópia(s) no total.`}
+        titulo={t("titulo")}
+        descricao={t("descricao", { total })}
         acoes={
           // Download de arquivo (rota de API, não página) — <a> normal é o
           // padrão correto aqui, não navegação client-side do Next.
           <span className="flex gap-2">
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/api/copias/exportar" className={classesBotao("secundario")}>
-              Baixar CSV
+              {t("baixarCsv")}
             </a>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a
               href="/api/copias/exportar-liga"
               className={classesBotao("secundario")}
-              title="ZIP com o inventário no formato de importação da LigaPokemon, fatiado em arquivos de até 995 cartas."
+              title={t("exportarLigaTitulo")}
             >
-              Exportar p/ LigaPokemon
+              {t("exportarLiga")}
             </a>
           </span>
         }
@@ -240,7 +249,7 @@ export default function InventarioPage() {
         <input
           value={filtros.q}
           onChange={(e) => atualizarFiltro("q", e.target.value)}
-          placeholder="Buscar por nome…"
+          placeholder={t("placeholderBusca")}
           className={`col-span-2 ${classesEntrada}`}
         />
         <select
@@ -248,7 +257,7 @@ export default function InventarioPage() {
           onChange={(e) => atualizarFiltro("set", e.target.value)}
           className={classesEntrada}
         >
-          <option value="">Set (todos)</option>
+          <option value="">{t("filtroSet")}</option>
           {opcoes.sets.map((s) => (
             <option key={s.setId} value={s.setId}>
               {s.setNome}
@@ -260,7 +269,7 @@ export default function InventarioPage() {
           onChange={(e) => atualizarFiltro("idioma", e.target.value)}
           className={classesEntrada}
         >
-          <option value="">Idioma (todos)</option>
+          <option value="">{t("filtroIdioma")}</option>
           {IDIOMAS.map((i) => (
             <option key={i} value={i}>
               {i}
@@ -272,7 +281,7 @@ export default function InventarioPage() {
           onChange={(e) => atualizarFiltro("raridade", e.target.value)}
           className={classesEntrada}
         >
-          <option value="">Raridade (todas)</option>
+          <option value="">{t("filtroRaridade")}</option>
           {opcoes.raridades.map((r) => (
             <option key={r} value={r}>
               {r}
@@ -284,7 +293,7 @@ export default function InventarioPage() {
           onChange={(e) => atualizarFiltro("variante", e.target.value)}
           className={classesEntrada}
         >
-          <option value="">Variante (todas)</option>
+          <option value="">{t("filtroVariante")}</option>
           {VARIANTES_COPIA.map((v) => (
             <option key={v} value={v}>
               {v}
@@ -296,7 +305,7 @@ export default function InventarioPage() {
           onChange={(e) => atualizarFiltro("condicao", e.target.value)}
           className={classesEntrada}
         >
-          <option value="">Condição (todas)</option>
+          <option value="">{t("filtroCondicao")}</option>
           {CONDICOES.map((c) => (
             <option key={c} value={c}>
               {c}
@@ -308,52 +317,52 @@ export default function InventarioPage() {
           onChange={(e) => atualizarFiltro("graded", e.target.value)}
           className={classesEntrada}
         >
-          <option value="">Graded (todas)</option>
-          <option value="true">Só graded</option>
-          <option value="false">Só não-graded</option>
+          <option value="">{t("filtroGraded")}</option>
+          <option value="true">{t("filtroGradedSim")}</option>
+          <option value="false">{t("filtroGradedNao")}</option>
         </select>
         <select
           value={filtros.alocacao}
           onChange={(e) => atualizarFiltro("alocacao", e.target.value)}
           className={classesEntrada}
         >
-          <option value="">Alocação (todas)</option>
-          <option value="alocada">Só alocadas</option>
-          <option value="livre">Só livres</option>
+          <option value="">{t("filtroAlocacao")}</option>
+          <option value="alocada">{t("filtroAlocacaoAlocadas")}</option>
+          <option value="livre">{t("filtroAlocacaoLivres")}</option>
         </select>
         <select
           value={filtros.semImagem}
           onChange={(e) => atualizarFiltro("semImagem", e.target.value)}
           className={classesEntrada}
-          title="Cartas sem imagem própria e sem imagem no catálogo. Algumas podem mostrar foto assim mesmo: quando as duas faltam, o sistema tenta o CDN da TCGdex, e só o navegador descobre se o arquivo existe."
+          title={t("filtroImagemTitulo")}
         >
-          <option value="">Imagem (todas)</option>
-          <option value="true">Sem imagem no catálogo</option>
+          <option value="">{t("filtroImagem")}</option>
+          <option value="true">{t("filtroImagemSem")}</option>
         </select>
         <input
           value={filtros.localizacao}
           onChange={(e) => atualizarFiltro("localizacao", e.target.value)}
-          placeholder="Localização contém…"
+          placeholder={t("placeholderLocalizacao")}
           className={classesEntrada}
         />
         <Botao type="button" variante="secundario" onClick={limparFiltros}>
-          Limpar filtros
+          {t("limparFiltros")}
         </Botao>
       </div>
 
       {erro && <p className="text-sm text-danger">{erro}</p>}
       {mensagem && <p className="text-sm text-success-fg">{mensagem}</p>}
-      {carregando && <p className="text-sm text-muted">Carregando…</p>}
+      {carregando && <p className="text-sm text-muted">{t("carregando")}</p>}
 
       {selecionados.size > 0 && (
         <Painel padding="sm" className="flex items-center justify-between">
-          <span className="text-sm">{selecionados.size} cópia(s) selecionada(s).</span>
+          <span className="text-sm">{t("selecionadas", { total: selecionados.size })}</span>
           <div className="flex gap-2">
             <Botao type="button" variante="primario" tamanho="sm" onClick={() => setEditandoMassa(true)}>
-              Editar selecionadas
+              {t("editarSelecionadas")}
             </Botao>
             <Botao type="button" variante="secundario" tamanho="sm" onClick={() => setSelecionados(new Set())}>
-              Limpar seleção
+              {t("limparSelecao")}
             </Botao>
           </div>
         </Painel>
@@ -367,19 +376,19 @@ export default function InventarioPage() {
                 type="checkbox"
                 checked={itens.length > 0 && selecionados.size === itens.length}
                 onChange={alternarSelecaoTodos}
-                aria-label="Selecionar todos nesta página"
+                aria-label={t("selecionarTodos")}
               />
             </th>
             <th className={classesCelulaCabecalho}></th>
-            <th className={classesCelulaCabecalho}>Carta</th>
-            <th className={classesCelulaCabecalho}>Set</th>
-            <th className={classesCelulaCabecalho}>Qtd.</th>
-            <th className={classesCelulaCabecalho}>Variante</th>
-            <th className={classesCelulaCabecalho}>Idioma</th>
-            <th className={classesCelulaCabecalho}>Condição</th>
-            <th className={classesCelulaCabecalho}>Graded</th>
-            <th className={classesCelulaCabecalho}>Localização</th>
-            <th className={classesCelulaCabecalho}>Vaga</th>
+            <th className={classesCelulaCabecalho}>{t("colunaCarta")}</th>
+            <th className={classesCelulaCabecalho}>{t("colunaSet")}</th>
+            <th className={classesCelulaCabecalho}>{t("colunaQtd")}</th>
+            <th className={classesCelulaCabecalho}>{t("colunaVariante")}</th>
+            <th className={classesCelulaCabecalho}>{t("colunaIdioma")}</th>
+            <th className={classesCelulaCabecalho}>{t("colunaCondicao")}</th>
+            <th className={classesCelulaCabecalho}>{t("colunaGraded")}</th>
+            <th className={classesCelulaCabecalho}>{t("colunaLocalizacao")}</th>
+            <th className={classesCelulaCabecalho}>{t("colunaVaga")}</th>
             <th className={classesCelulaCabecalho}></th>
           </tr>
         </thead>
@@ -392,7 +401,7 @@ export default function InventarioPage() {
                     type="checkbox"
                     checked={selecionados.has(c.id)}
                     onChange={() => alternarSelecao(c.id)}
-                    aria-label={`Selecionar ${c.cartaNome}`}
+                    aria-label={t("selecionarCarta", { carta: c.cartaNome })}
                   />
                 </td>
                 <td className="p-2">
@@ -463,24 +472,24 @@ export default function InventarioPage() {
                       {c.colecaoNome} #{c.vagaChave}
                     </Distintivo>
                   ) : (
-                    <Distintivo tom="neutro">livre</Distintivo>
+                    <Distintivo tom="neutro">{t("livre")}</Distintivo>
                   )}
                 </td>
                 <td className="p-2 whitespace-nowrap">
                   {c.alocada ? (
                     <button type="button" onClick={() => desalocar(c)} className="mr-2 text-warning-fg hover:underline">
-                      Desalocar
+                      {t("desalocar")}
                     </button>
                   ) : (
                     <button type="button" onClick={() => setAlocando(c)} className="mr-2 text-accent hover:underline">
-                      Alocar
+                      {t("alocar")}
                     </button>
                   )}
                   <button type="button" onClick={() => setEditando(c)} className="mr-2 text-accent hover:underline">
-                    Editar
+                    {t("editar")}
                   </button>
                   <button type="button" onClick={() => remover(c)} className="text-danger hover:underline">
-                    Remover
+                    {t("remover")}
                   </button>
                 </td>
               </tr>
@@ -489,7 +498,7 @@ export default function InventarioPage() {
           {itens.length === 0 && !carregando && (
             <tr>
               <td colSpan={12} className="p-4">
-                <EstadoVazio>Nenhuma cópia encontrada com esses filtros.</EstadoVazio>
+                <EstadoVazio>{t("vazio")}</EstadoVazio>
               </td>
             </tr>
           )}
@@ -498,18 +507,16 @@ export default function InventarioPage() {
 
       <div className="flex items-center justify-between text-sm">
         <Botao type="button" variante="secundario" disabled={pagina <= 1} onClick={() => irParaPagina(pagina - 1)}>
-          Anterior
+          {t("anterior")}
         </Botao>
-        <span>
-          Página {pagina} de {totalPaginas}
-        </span>
+        <span>{t("paginacao", { pagina, totalPaginas })}</span>
         <Botao
           type="button"
           variante="secundario"
           disabled={pagina >= totalPaginas}
           onClick={() => irParaPagina(pagina + 1)}
         >
-          Próxima
+          {t("proxima")}
         </Botao>
       </div>
 
@@ -568,6 +575,7 @@ function ModalEdicao({
 }) {
   // Nunca oferece uma variante que a carta não tem no catálogo (mesma
   // regra do cadastro por set/busca).
+  const t = useTranslations("inventario");
   const opcoesVariante = variantesDisponiveis(copia);
   const [quantidade, setQuantidade] = useState(copia.quantidade);
   const [variante, setVariante] = useState<VarianteCopia>(copia.variante);
@@ -609,12 +617,12 @@ function ModalEdicao({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? "Falha ao salvar.");
+        setErro(dados.erro ?? t("erroSalvar"));
         return;
       }
       onSalvo();
     } catch {
-      setErro("Falha de rede ao salvar.");
+      setErro(t("erroRedeSalvar"));
     } finally {
       setSalvando(false);
     }
@@ -623,11 +631,12 @@ function ModalEdicao({
   return (
     <Modal as="form" onSubmit={salvar}>
       <h2 className="font-medium text-foreground">
-        Editar {copia.cartaNome} — {copia.setNome} #{copia.cartaLocalId}
+        {t("modalEditarTitulo", { carta: copia.cartaNome })} — {copia.setNome} #
+        {copia.cartaLocalId}
       </h2>
 
       <div className="grid grid-cols-2 gap-3">
-        <Campo rotulo="Quantidade">
+        <Campo rotulo={t("campoQuantidade")}>
           <input
             type="number"
             min={1}
@@ -636,7 +645,7 @@ function ModalEdicao({
             className={classesEntrada}
           />
         </Campo>
-        <Campo rotulo="Variante">
+        <Campo rotulo={t("colunaVariante")}>
           <select
             value={variante}
             onChange={(e) => setVariante(e.target.value as VarianteCopia)}
@@ -649,7 +658,7 @@ function ModalEdicao({
             ))}
           </select>
         </Campo>
-        <Campo rotulo="Idioma (físico)">
+        <Campo rotulo={t("campoIdiomaFisico")}>
           <select value={idioma} onChange={(e) => setIdioma(e.target.value as Idioma)} className={classesEntrada}>
             {IDIOMAS.map((i) => (
               <option key={i} value={i}>
@@ -658,7 +667,7 @@ function ModalEdicao({
             ))}
           </select>
         </Campo>
-        <Campo rotulo="Condição">
+        <Campo rotulo={t("colunaCondicao")}>
           <select value={condicao} onChange={(e) => setCondicao(e.target.value as Condicao)} className={classesEntrada}>
             {CONDICOES.map((c) => (
               <option key={c} value={c}>
@@ -669,41 +678,41 @@ function ModalEdicao({
         </Campo>
       </div>
 
-      <Campo rotulo="Localização física">
+      <Campo rotulo={t("campoLocalizacaoFisica")}>
         <input
           value={localizacao}
           onChange={(e) => setLocalizacao(e.target.value)}
-          placeholder="ex.: Fichário 1, página 3"
+          placeholder={t("placeholderFichario")}
           className={classesEntrada}
         />
       </Campo>
 
       <fieldset className="flex flex-col gap-2 rounded border border-line p-3">
-        <legend className="px-1 text-muted">Graded</legend>
+        <legend className="px-1 text-muted">{t("colunaGraded")}</legend>
         <div className="grid grid-cols-3 gap-3">
           <input
             value={gradedEmpresa}
             onChange={(e) => setGradedEmpresa(e.target.value)}
-            placeholder="Empresa (PSA…)"
+            placeholder={t("placeholderGradedEmpresa")}
             className={classesEntrada}
           />
           <input
             value={gradedNota}
             onChange={(e) => setGradedNota(e.target.value)}
-            placeholder="Nota"
+            placeholder={t("placeholderGradedNota")}
             className={classesEntrada}
           />
           <input
             value={gradedCertificado}
             onChange={(e) => setGradedCertificado(e.target.value)}
-            placeholder="Certificado"
+            placeholder={t("placeholderGradedCertificado")}
             className={classesEntrada}
           />
         </div>
       </fieldset>
 
       <fieldset className="flex flex-col gap-2 rounded border border-line p-3">
-        <legend className="px-1 text-muted">Aquisição</legend>
+        <legend className="px-1 text-muted">{t("aquisicao")}</legend>
         <div className="grid grid-cols-3 gap-3">
           <input
             type="date"
@@ -714,7 +723,7 @@ function ModalEdicao({
           <input
             value={aquisicaoOrigem}
             onChange={(e) => setAquisicaoOrigem(e.target.value)}
-            placeholder="Origem"
+            placeholder={t("placeholderAquisicaoOrigem")}
             className={classesEntrada}
           />
           <input
@@ -723,13 +732,13 @@ function ModalEdicao({
             min={0}
             value={aquisicaoPreco}
             onChange={(e) => setAquisicaoPreco(e.target.value)}
-            placeholder="Preço pago (R$)"
+            placeholder={t("placeholderAquisicaoPreco")}
             className={classesEntrada}
           />
         </div>
       </fieldset>
 
-      <Campo rotulo="Notas">
+      <Campo rotulo={t("campoNotas")}>
         <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} className={classesEntrada} />
       </Campo>
 
@@ -737,10 +746,10 @@ function ModalEdicao({
 
       <div className="flex justify-end gap-2 pt-2">
         <Botao type="button" variante="secundario" onClick={onFechar}>
-          Cancelar
+          {t("cancelar")}
         </Botao>
         <Botao type="submit" variante="primario" disabled={salvando}>
-          {salvando ? "Salvando…" : "Salvar"}
+          {salvando ? t("salvando") : t("salvar")}
         </Botao>
       </div>
     </Modal>
@@ -766,6 +775,7 @@ function ModalAlocarDestino({
   onFechar: () => void;
   onAlocado: (msg: string) => void;
 }) {
+  const t = useTranslations("inventario");
   const [destinos, setDestinos] = useState<DestinoElegivelDaCopiaDTO[] | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -776,9 +786,9 @@ function ModalAlocarDestino({
     fetch(`/api/copias/${copia.id}/destinos`)
       .then((r) => r.json())
       .then((d) => setDestinos(d.itens ?? []))
-      .catch(() => setErro("Falha ao carregar destinos elegíveis."))
+      .catch(() => setErro(t("erroDestinos")))
       .finally(() => setCarregando(false));
-  }, [copia.id]);
+  }, [copia.id, t]);
 
   // Chave de UI: uma vaga se identifica pelo vagaId, uma customizada pelo
   // colecaoId (não tem vaga ainda — ela nasce ao adicionar).
@@ -801,22 +811,24 @@ function ModalAlocarDestino({
       );
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? "Falha ao alocar.");
+        setErro(dados.erro ?? t("erroAlocar"));
         return;
       }
       const partes = [
         destino.vagaId
-          ? `${copia.cartaNome} alocada em ${destino.colecaoNome} — vaga #${destino.chave}.`
-          : `${copia.cartaNome} adicionada a ${destino.colecaoNome}.`,
+          ? t("alocadaEmVaga", {
+              carta: copia.cartaNome,
+              colecao: destino.colecaoNome,
+              vaga: destino.chave ?? "",
+            })
+          : t("adicionadaAColecao", { carta: copia.cartaNome, colecao: destino.colecaoNome }),
       ];
       if (dados.dividida) {
-        partes.push(
-          "O lote foi dividido: 1 unidade foi para a coleção, o restante segue livre no inventário.",
-        );
+        partes.push(t("loteDividido"));
       }
       onAlocado(partes.join(" "));
     } catch {
-      setErro("Falha de rede ao alocar.");
+      setErro(t("erroRedeAlocar"));
     } finally {
       setEnviandoChave(null);
       setConfirmandoChave(null);
@@ -826,11 +838,12 @@ function ModalAlocarDestino({
   return (
     <Modal>
       <h2 className="font-medium text-foreground">
-        Alocar {copia.cartaNome} <span className="text-muted">#{copia.cartaLocalId}</span>
+        {t("modalAlocarTitulo", { carta: copia.cartaNome })}{" "}
+        <span className="text-muted">#{copia.cartaLocalId}</span>
       </h2>
-      <p className="text-muted">O sistema sugere coleções/vagas elegíveis; a escolha é sempre sua.</p>
+      <p className="text-muted">{t("modalAlocarExplicacao")}</p>
 
-      {carregando && <p className="text-muted">Carregando destinos…</p>}
+      {carregando && <p className="text-muted">{t("carregandoDestinos")}</p>}
       {erro && <p className="text-danger">{erro}</p>}
 
       <ul className="flex flex-col divide-y divide-hairline">
@@ -842,26 +855,28 @@ function ModalAlocarDestino({
                 <div>
                   {d.colecaoNome}
                   <Distintivo tom="neutro" className="ml-2">
-                    {d.colecaoTipo}
+                    {t.has(`tipoColecao.${d.colecaoTipo}`)
+                      ? t(`tipoColecao.${d.colecaoTipo}`)
+                      : d.colecaoTipo}
                   </Distintivo>
                   {d.foraDePadrao && (
                     <Distintivo tom="aviso" className="ml-2">
-                      fora de padrão ({copia.idioma})
+                      {t("foraDePadrao", { idioma: copia.idioma })}
                     </Distintivo>
                   )}
                 </div>
                 <div className="text-xs text-muted">
-                  {d.vagaId ? `vaga #${d.chave}` : "coleção customizada — sem vaga fixa"}
+                  {d.vagaId ? t("vagaNumero", { vaga: d.chave ?? "" }) : t("semVagaFixa")}
                 </div>
               </div>
               {confirmandoChave === chave ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-warning-fg">Confirma fora de padrão?</span>
+                  <span className="text-xs text-warning-fg">{t("confirmaForaDePadrao")}</span>
                   <Botao type="button" variante="secundario" tamanho="xs" onClick={() => alocar(d, true)}>
-                    Confirmar
+                    {t("confirmar")}
                   </Botao>
                   <button type="button" onClick={() => setConfirmandoChave(null)} className="text-xs text-muted">
-                    Cancelar
+                    {t("cancelar")}
                   </button>
                 </div>
               ) : (
@@ -872,7 +887,7 @@ function ModalAlocarDestino({
                   disabled={enviandoChave === chave}
                   onClick={() => (d.foraDePadrao ? setConfirmandoChave(chave) : alocar(d, false))}
                 >
-                  {d.vagaId ? "Alocar" : "Adicionar"}
+                  {d.vagaId ? t("alocar") : t("adicionar")}
                 </Botao>
               )}
             </li>
@@ -880,14 +895,14 @@ function ModalAlocarDestino({
         })}
         {destinos && destinos.length === 0 && (
           <EstadoVazio as="li" className="py-4">
-            Nenhuma coleção ou vaga elegível para esta cópia.
+            {t("semDestinos")}
           </EstadoVazio>
         )}
       </ul>
 
       <div className="flex justify-end pt-2">
         <Botao type="button" variante="secundario" onClick={onFechar}>
-          Fechar
+          {t("fechar")}
         </Botao>
       </div>
     </Modal>
@@ -921,6 +936,7 @@ function ModalEdicaoMassa({
   onFechar: () => void;
   onSalvo: (msg: string) => void;
 }) {
+  const t = useTranslations("inventario");
   const [alterarCondicao, setAlterarCondicao] = useState(false);
   const [condicao, setCondicao] = useState<Condicao>("NM");
   const [alterarLocalizacao, setAlterarLocalizacao] = useState(false);
@@ -957,13 +973,13 @@ function ModalEdicaoMassa({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? "Falha ao aplicar a edição em massa.");
+        setErro(dados.erro ?? t("erroMassa"));
         setConfirmando(false);
         return;
       }
-      onSalvo(`${dados.atualizadas} cópia(s) atualizada(s).`);
+      onSalvo(t("massaAtualizadas", { total: dados.atualizadas }));
     } catch {
-      setErro("Falha de rede ao aplicar a edição em massa.");
+      setErro(t("erroRedeMassa"));
       setConfirmando(false);
     } finally {
       setEnviando(false);
@@ -972,14 +988,14 @@ function ModalEdicaoMassa({
 
   return (
     <Modal>
-      <h2 className="font-medium text-foreground">Editar {itens.length} cópia(s) selecionada(s)</h2>
-      <p className="text-muted">
-        Marque só os campos que quer alterar. A alocação de nenhuma das cópias é tocada por esta edição.
-      </p>
+      <h2 className="font-medium text-foreground">
+        {t("massaTitulo", { total: itens.length })}
+      </h2>
+      <p className="text-muted">{t("massaExplicacao")}</p>
 
       <label className="flex items-center gap-2">
         <input type="checkbox" checked={alterarCondicao} onChange={(e) => setAlterarCondicao(e.target.checked)} />
-        <span className="w-28 text-muted">Condição</span>
+        <span className="w-28 text-muted">{t("colunaCondicao")}</span>
         <select
           value={condicao}
           disabled={!alterarCondicao}
@@ -1000,19 +1016,19 @@ function ModalEdicaoMassa({
           checked={alterarLocalizacao}
           onChange={(e) => setAlterarLocalizacao(e.target.checked)}
         />
-        <span className="w-28 text-muted">Localização</span>
+        <span className="w-28 text-muted">{t("colunaLocalizacao")}</span>
         <input
           value={localizacao}
           disabled={!alterarLocalizacao}
           onChange={(e) => setLocalizacao(e.target.value)}
-          placeholder="ex.: Fichário 1, página 3"
+          placeholder={t("placeholderFichario")}
           className={`flex-1 disabled:opacity-40 ${classesEntrada}`}
         />
       </label>
 
       <label className="flex items-center gap-2">
         <input type="checkbox" checked={alterarIdioma} onChange={(e) => setAlterarIdioma(e.target.checked)} />
-        <span className="w-28 text-muted">Idioma (físico)</span>
+        <span className="w-28 text-muted">{t("campoIdiomaFisico")}</span>
         <select
           value={idioma}
           disabled={!alterarIdioma}
@@ -1034,7 +1050,7 @@ function ModalEdicaoMassa({
           disabled={variantesComuns.length === 0}
           onChange={(e) => setAlterarVariante(e.target.checked)}
         />
-        <span className="w-28 text-muted">Variante</span>
+        <span className="w-28 text-muted">{t("colunaVariante")}</span>
         {variantesComuns.length > 0 ? (
           <select
             value={variante}
@@ -1049,10 +1065,7 @@ function ModalEdicaoMassa({
             ))}
           </select>
         ) : (
-          <span className="flex-1 text-xs text-warning-fg">
-            a seleção mistura cartas sem nenhuma variante em comum no catálogo — edite a variante cópia a
-            cópia
-          </span>
+          <span className="flex-1 text-xs text-warning-fg">{t("semVarianteComum")}</span>
         )}
       </label>
 
@@ -1061,18 +1074,20 @@ function ModalEdicaoMassa({
       <div className="flex items-center justify-end gap-2 pt-2">
         {confirmando ? (
           <>
-            <span className="mr-auto text-warning-fg">Confirma alterar {itens.length} cópia(s)?</span>
+            <span className="mr-auto text-warning-fg">
+              {t("massaConfirma", { total: itens.length })}
+            </span>
             <Botao type="button" variante="secundario" onClick={() => setConfirmando(false)}>
-              Voltar
+              {t("voltar")}
             </Botao>
             <Botao type="button" variante="primario" disabled={enviando} onClick={aplicar}>
-              {enviando ? "Aplicando…" : "Confirmar"}
+              {enviando ? t("aplicando") : t("confirmar")}
             </Botao>
           </>
         ) : (
           <>
             <Botao type="button" variante="secundario" onClick={onFechar}>
-              Cancelar
+              {t("cancelar")}
             </Botao>
             <Botao
               type="button"
@@ -1080,7 +1095,7 @@ function ModalEdicaoMassa({
               disabled={!algumCampoMarcado}
               onClick={() => setConfirmando(true)}
             >
-              Aplicar a {itens.length} cópia(s)
+              {t("massaAplicar", { total: itens.length })}
             </Botao>
           </>
         )}

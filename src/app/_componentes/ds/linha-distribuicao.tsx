@@ -9,17 +9,23 @@
  */
 
 import Link from "next/link";
+import { useLocale } from "next-intl";
 import type { ReactNode } from "react";
 
 import { BarraProgresso } from "./barra-progresso";
 
 /**
- * Percentual com uma casa, no padrão pt-BR — vírgula, não ponto. O design
- * system manda formatar todo número em pt-BR, e misturar `35,9%` com
- * `42.6%` na mesma tela é o tipo de coisa que só aparece renderizada.
+ * Percentual com uma casa, no formato do idioma da interface — vírgula em
+ * pt-BR, ponto em inglês. O design system manda formatar todo número no
+ * idioma da tela, e misturar `35,9%` com `42.6%` na mesma tela é o tipo de
+ * coisa que só aparece renderizada.
+ *
+ * O idioma entra por parâmetro porque esta é uma função, não um
+ * componente: quem chama é que tem o `useLocale`. O padrão continua sendo
+ * pt-BR, o comportamento que a função sempre teve.
  */
-export function formatarPercentual(pct: number): string {
-  return `${pct.toLocaleString("pt-BR", {
+export function formatarPercentual(pct: number, locale: string = "pt-BR"): string {
+  return `${pct.toLocaleString(locale, {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   })}%`;
@@ -43,6 +49,7 @@ export function LinhaDistribuicao({
       lê. Sem cor, cai no acento. */
   cor?: string;
 }) {
+  const locale = useLocale();
   const pct = total > 0 ? (contagem / total) * 100 : 0;
 
   const conteudo = (
@@ -53,7 +60,7 @@ export function LinhaDistribuicao({
           {nota && <span className="font-normal text-subtle"> ({nota})</span>}
         </span>
         <span className="shrink-0 font-mono text-xs tabular-nums whitespace-nowrap text-muted">
-          {contagem.toLocaleString("pt-BR")} · {formatarPercentual(pct)}
+          {contagem.toLocaleString(locale)} · {formatarPercentual(pct, locale)}
         </span>
       </div>
       {/* Barra sempre com um fio de largura, para a linha nunca parecer

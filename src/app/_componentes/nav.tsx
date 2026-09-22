@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Icone } from "./icone";
 import { ENERGIAS, GRUPOS, encontrarAtivo, type ItemNav } from "./nav-estrutura";
+import { SeletorLocale } from "./seletor-locale";
 
 /**
  * Nav — a "lombada do álbum": a única superfície escura do sistema, em
@@ -22,11 +24,12 @@ import { ENERGIAS, GRUPOS, encontrarAtivo, type ItemNav } from "./nav-estrutura"
  */
 
 function ListaGrupos({ ativo, onNavegar }: { ativo: ItemNav | null; onNavegar?: () => void }) {
+  const t = useTranslations("nav");
   return (
     <div className="flex flex-col gap-5">
       {GRUPOS.map((grupo) => (
-        <div key={grupo.titulo} className="flex flex-col gap-0.5">
-          <span className="eyebrow px-3 pb-1 text-invert-muted">{grupo.titulo}</span>
+        <div key={grupo.chaveTitulo} className="flex flex-col gap-0.5">
+          <span className="eyebrow px-3 pb-1 text-invert-muted">{t(grupo.chaveTitulo)}</span>
           {grupo.itens.map((item) => {
             const isAtivo = item.href === ativo?.href;
             return (
@@ -42,7 +45,7 @@ function ListaGrupos({ ativo, onNavegar }: { ativo: ItemNav | null; onNavegar?: 
                 }`}
               >
                 <Icone nome={item.icone} tamanho={15} />
-                {item.label}
+                {t(item.chaveLabel)}
               </Link>
             );
           })}
@@ -54,6 +57,7 @@ function ListaGrupos({ ativo, onNavegar }: { ativo: ItemNav | null; onNavegar?: 
 
 /** Monograma + wordmark, o topo da lombada. */
 function Marca({ onNavegar }: { onNavegar?: () => void }) {
+  const t = useTranslations("nav");
   return (
     <Link
       href="/"
@@ -63,7 +67,7 @@ function Marca({ onNavegar }: { onNavegar?: () => void }) {
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--raio-sm)] bg-accent text-[11px] font-bold text-accent-fg">
         CP
       </span>
-      <span className="font-display text-[15px] font-bold">Coleção Pokémon</span>
+      <span className="font-display text-[15px] font-bold">{t("marca")}</span>
     </Link>
   );
 }
@@ -84,6 +88,7 @@ function PontosDeEnergia() {
 }
 
 export function Nav() {
+  const t = useTranslations("nav");
   const pathname = usePathname();
   const ativo = encontrarAtivo(pathname);
   const [aberto, setAberto] = useState(false);
@@ -97,15 +102,16 @@ export function Nav() {
           type="button"
           onClick={() => setAberto((v) => !v)}
           aria-expanded={aberto}
-          aria-label={aberto ? "Fechar menu" : "Abrir menu"}
+          aria-label={aberto ? t("fecharMenu") : t("abrirMenu")}
           className="rounded-pill p-2 text-invert-muted [transition:var(--transition-control)] hover:bg-shell-hover hover:text-invert"
         >
           <Icone nome={aberto ? "x" : "menu"} tamanho={20} />
         </button>
       </header>
       {aberto && (
-        <nav className="border-b border-shell-line bg-shell px-2 py-3 md:hidden">
+        <nav className="flex flex-col gap-5 border-b border-shell-line bg-shell px-2 py-3 md:hidden">
           <ListaGrupos ativo={ativo} onNavegar={() => setAberto(false)} />
+          <SeletorLocale />
         </nav>
       )}
 
@@ -118,6 +124,7 @@ export function Nav() {
         <nav className="min-h-0 flex-1 overflow-y-auto">
           <ListaGrupos ativo={ativo} />
         </nav>
+        <SeletorLocale />
         <PontosDeEnergia />
       </aside>
     </>

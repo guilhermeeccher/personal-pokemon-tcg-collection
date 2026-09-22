@@ -15,6 +15,7 @@
  * mostrado por carta, mesmo agrupando pelo `carta_id` comum.
  */
 
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { Botao } from "@/app/_componentes/botao";
@@ -29,6 +30,7 @@ import type { CartaRepetidaDTO } from "@/lib/dominio/tipos-cliente";
 const TAMANHO_PAGINA = 50;
 
 export default function RepetidasPage() {
+  const t = useTranslations("repetidas");
   const [itens, setItens] = useState<CartaRepetidaDTO[]>([]);
   const [total, setTotal] = useState(0);
   const [soLivres, setSoLivres] = useState(false);
@@ -48,9 +50,9 @@ export default function RepetidasPage() {
         setTotal(d.total ?? 0);
         setErro(null);
       })
-      .catch(() => setErro("Falha ao carregar as repetidas."))
+      .catch(() => setErro(t("erroCarregar")))
       .finally(() => setCarregando(false));
-  }, [soLivres, pagina]);
+  }, [soLivres, pagina, t]);
 
   useEffect(() => {
     carregar();
@@ -72,29 +74,29 @@ export default function RepetidasPage() {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 sm:p-8 md:h-full">
       <CabecalhoPagina
-        titulo="Repetidas"
-        descricao={`${total} carta(s) com 2 ou mais unidades. Ordenado por unidades livres, decrescente.`}
+        titulo={t("titulo")}
+        descricao={t("descricao", { total })}
       />
 
       <label className="flex w-fit items-center gap-2 text-sm">
         <input type="checkbox" checked={soLivres} onChange={(e) => alternarSoLivres(e.target.checked)} />
-        Só com unidades livres (o que dá para trocar)
+        {t("soLivres")}
       </label>
 
       {erro && <p className="text-sm text-danger">{erro}</p>}
-      {carregando && <p className="text-sm text-muted">Carregando…</p>}
+      {carregando && <p className="text-sm text-muted">{t("carregando")}</p>}
 
       <Tabela rolagemPropria>
         <thead>
           <tr className={classesLinhaCabecalho}>
             <th className={classesCelulaCabecalho}></th>
-            <th className={classesCelulaCabecalho}>Carta</th>
-            <th className={classesCelulaCabecalho}>Set</th>
-            <th className={classesCelulaCabecalho}>Raridade</th>
-            <th className={classesCelulaCabecalho}>Total</th>
-            <th className={classesCelulaCabecalho}>Alocadas</th>
-            <th className={classesCelulaCabecalho}>Livres</th>
-            <th className={classesCelulaCabecalho}>Idiomas (físico)</th>
+            <th className={classesCelulaCabecalho}>{t("colunaCarta")}</th>
+            <th className={classesCelulaCabecalho}>{t("colunaSet")}</th>
+            <th className={classesCelulaCabecalho}>{t("colunaRaridade")}</th>
+            <th className={classesCelulaCabecalho}>{t("colunaTotal")}</th>
+            <th className={classesCelulaCabecalho}>{t("colunaAlocadas")}</th>
+            <th className={classesCelulaCabecalho}>{t("colunaLivres")}</th>
+            <th className={classesCelulaCabecalho}>{t("colunaIdiomas")}</th>
           </tr>
         </thead>
         <tbody>
@@ -126,9 +128,17 @@ export default function RepetidasPage() {
                     <Distintivo
                       key={i.idioma}
                       tom={i.livres > 0 ? "sucesso" : "neutro"}
-                      title={`${i.quantidade} unidade(s) em ${i.idioma}, ${i.livres} livre(s)`}
+                      title={t("idiomaTitulo", {
+                        quantidade: i.quantidade,
+                        idioma: i.idioma,
+                        livres: i.livres,
+                      })}
                     >
-                      {i.idioma} · {i.livres}/{i.quantidade} livre(s)
+                      {t("idiomaChip", {
+                        idioma: i.idioma,
+                        livres: i.livres,
+                        quantidade: i.quantidade,
+                      })}
                     </Distintivo>
                   ))}
                 </div>
@@ -139,9 +149,7 @@ export default function RepetidasPage() {
             <tr>
               <td colSpan={8} className="p-4">
                 <EstadoVazio>
-                  {soLivres
-                    ? "Nenhuma carta repetida com unidades livres no momento."
-                    : "Nenhuma carta repetida (2+ unidades) no inventário."}
+                  {soLivres ? t("vazioSoLivres") : t("vazio")}
                 </EstadoVazio>
               </td>
             </tr>
@@ -151,13 +159,11 @@ export default function RepetidasPage() {
 
       <div className="flex items-center justify-between text-sm">
         <Botao variante="secundario" disabled={pagina <= 1} onClick={() => irParaPagina(pagina - 1)}>
-          Anterior
+          {t("anterior")}
         </Botao>
-        <span>
-          Página {pagina} de {totalPaginas}
-        </span>
+        <span>{t("paginacao", { pagina, totalPaginas })}</span>
         <Botao variante="secundario" disabled={pagina >= totalPaginas} onClick={() => irParaPagina(pagina + 1)}>
-          Próxima
+          {t("proxima")}
         </Botao>
       </div>
     </main>

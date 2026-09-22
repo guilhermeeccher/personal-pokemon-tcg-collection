@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
@@ -14,6 +15,9 @@ import { GradeEscopo } from "@/app/_componentes/ds/grade-escopo";
 import { SeletorExpansao } from "@/app/_componentes/seletor-expansao";
 import type { SetParaCadastroDTO } from "@/lib/dominio/tipos-cliente";
 
+/* Nome de região é nome próprio do universo Pokémon: igual nos dois
+   idiomas, e por isso fica no código, não no catálogo de mensagens. A
+   faixa é numeral puro. */
 const REGIAO_LABEL: Record<Regiao, { rotulo: string; faixa: string }> = {
   kanto: { rotulo: "Kanto", faixa: "1–151" },
   johto: { rotulo: "Johto", faixa: "152–251" },
@@ -28,13 +32,10 @@ const REGIAO_LABEL: Record<Regiao, { rotulo: string; faixa: string }> = {
 
 const OPCOES_REGIAO = REGIOES.map((regiao) => ({ id: regiao, ...REGIAO_LABEL[regiao] }));
 
-const TIPOS: { valor: TipoColecao; rotulo: string }[] = [
-  { valor: "pokedex", rotulo: "Pokédex" },
-  { valor: "set", rotulo: "Set" },
-  { valor: "customizada", rotulo: "Customizada" },
-];
+const TIPOS: readonly TipoColecao[] = ["pokedex", "set", "customizada"] as const;
 
 export default function NovaColecaoPage() {
+  const t = useTranslations("colecaoNova");
   const router = useRouter();
 
   const [tipo, setTipo] = useState<TipoColecao>("pokedex");
@@ -77,7 +78,7 @@ export default function NovaColecaoPage() {
     let parametro: unknown;
     if (tipo === "pokedex") {
       if (escopo === "regioes" && regioesEscolhidas.length === 0) {
-        setErro("Escolha ao menos uma região.");
+        setErro(t("erroRegiao"));
         return;
       }
       parametro =
@@ -86,7 +87,7 @@ export default function NovaColecaoPage() {
           : { escopo: "regioes", regioes: regioesEscolhidas };
     } else if (tipo === "set") {
       if (!setEscolhido) {
-        setErro("Escolha uma expansão.");
+        setErro(t("erroExpansao"));
         return;
       }
       parametro = { setId: setEscolhido.setId, idiomaCatalogo, incluirSecretas };
@@ -109,13 +110,13 @@ export default function NovaColecaoPage() {
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? "Falha ao criar a coleção.");
+        setErro(dados.erro ?? t("erroCriar"));
         setDetalhesErro(dados.detalhes ?? []);
         return;
       }
       router.push(`/colecoes/${dados.id}`);
     } catch {
-      setErro("Falha de rede ao criar a coleção.");
+      setErro(t("erroRede"));
     } finally {
       setEnviando(false);
     }
@@ -124,27 +125,27 @@ export default function NovaColecaoPage() {
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-4 p-4 sm:p-8">
       <CabecalhoPagina
-        titulo="Nova coleção"
-        descricao="As vagas nascem junto com a coleção. A alocação de cada vaga é sempre manual, feita depois de criada — o sistema nunca preenche uma vaga sozinho."
+        titulo={t("titulo")}
+        descricao={t("descricao")}
       />
 
       <form onSubmit={enviar} className="flex flex-col gap-4">
-        <Campo rotulo="Nome">
+        <Campo rotulo={t("campoNome")}>
           <input value={nome} onChange={(e) => setNome(e.target.value)} required className={classesEntrada} />
         </Campo>
 
         <fieldset className="flex flex-col gap-2 rounded-card border border-line bg-surface p-4">
-          <legend className="px-2 text-[13px] font-bold text-strong">Tipo</legend>
+          <legend className="px-2 text-[13px] font-bold text-strong">{t("tipo")}</legend>
           <div className="flex flex-wrap gap-4 text-sm">
-            {TIPOS.map((t) => (
-              <label key={t.valor} className="flex items-center gap-1">
+            {TIPOS.map((valor) => (
+              <label key={valor} className="flex items-center gap-1">
                 <input
                   type="radio"
                   name="tipo"
-                  checked={tipo === t.valor}
-                  onChange={() => setTipo(t.valor)}
+                  checked={tipo === valor}
+                  onChange={() => setTipo(valor)}
                 />
-                {t.rotulo}
+                {t(`tipos.${valor}`)}
               </label>
             ))}
           </div>
@@ -152,7 +153,7 @@ export default function NovaColecaoPage() {
 
         {tipo === "pokedex" && (
           <fieldset className="flex flex-col gap-2 rounded-card border border-line bg-surface p-4">
-            <legend className="px-2 text-[13px] font-bold text-strong">Escopo</legend>
+            <legend className="px-2 text-[13px] font-bold text-strong">{t("escopo")}</legend>
             <div className="flex gap-4 text-sm">
               <label className="flex items-center gap-1">
                 <input
@@ -161,7 +162,7 @@ export default function NovaColecaoPage() {
                   checked={escopo === "nacional"}
                   onChange={() => setEscopo("nacional")}
                 />
-                Nacional (1–1025)
+                {t("escopoNacional")}
               </label>
               <label className="flex items-center gap-1">
                 <input
@@ -170,7 +171,7 @@ export default function NovaColecaoPage() {
                   checked={escopo === "regioes"}
                   onChange={() => setEscopo("regioes")}
                 />
-                Uma ou mais regiões
+                {t("escopoRegioes")}
               </label>
             </div>
             {escopo === "regioes" && (
@@ -185,14 +186,14 @@ export default function NovaColecaoPage() {
 
         {tipo === "set" && (
           <fieldset className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
-            <legend className="px-2 text-[13px] font-bold text-strong">Expansão</legend>
+            <legend className="px-2 text-[13px] font-bold text-strong">{t("expansao")}</legend>
             <SeletorExpansao
               setSelecionadoId={setEscolhido?.setId ?? ""}
               onSelecionar={selecionarSet}
             />
             {setEscolhido && (
               <>
-                <Campo rotulo="Idioma do catálogo (identidade das cartas — não é o idioma físico das suas cópias)">
+                <Campo rotulo={t("campoIdiomaCatalogo")}>
                   <select
                     value={idiomaCatalogo}
                     onChange={(e) => setIdiomaCatalogo(e.target.value as IdiomaCatalogo)}
@@ -202,10 +203,7 @@ export default function NovaColecaoPage() {
                     <option value="en">en</option>
                   </select>
                   {!setEscolhido.temPt && (
-                    <span className="text-xs text-warning-fg">
-                      Este set não tem carta a carta em pt no upstream — a identidade das cartas usa a ficha
-                      em en.
-                    </span>
+                    <span className="text-xs text-warning-fg">{t("semPt")}</span>
                   )}
                 </Campo>
                 <label className="flex items-center gap-2 text-sm">
@@ -214,24 +212,23 @@ export default function NovaColecaoPage() {
                     checked={incluirSecretas}
                     onChange={(e) => setIncluirSecretas(e.target.checked)}
                   />
-                  Incluir secretas ({setEscolhido.qtdTotal} cartas no total, em vez de {setEscolhido.qtdOficial}{" "}
-                  oficiais)
+                  {t("incluirSecretas", {
+                    total: setEscolhido.qtdTotal,
+                    oficiais: setEscolhido.qtdOficial,
+                  })}
                 </label>
               </>
             )}
           </fieldset>
         )}
 
-        <Campo
-          rotulo="Idioma exigido (opcional)"
-          ajuda="Idioma físico da cópia. Cópia de outro idioma continua podendo ser alocada — vem marcada como fora de padrão e exige confirmação explícita."
-        >
+        <Campo rotulo={t("campoIdiomaExigido")} ajuda={t("ajudaIdiomaExigido")}>
           <select
             value={idiomaExigido}
             onChange={(e) => setIdiomaExigido(e.target.value as Idioma | "")}
             className={`w-40 ${classesEntrada}`}
           >
-            <option value="">Qualquer</option>
+            <option value="">{t("qualquer")}</option>
             {IDIOMAS.map((i) => (
               <option key={i} value={i}>
                 {i}
@@ -240,7 +237,7 @@ export default function NovaColecaoPage() {
           </select>
         </Campo>
 
-        <Campo rotulo="Notas (opcional)">
+        <Campo rotulo={t("campoNotas")}>
           <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} className={classesEntrada} />
         </Campo>
 
@@ -259,7 +256,7 @@ export default function NovaColecaoPage() {
 
         <div className="flex gap-2">
           <Botao type="submit" variante="primario" disabled={enviando}>
-            {enviando ? "Criando…" : "Criar coleção"}
+            {enviando ? t("criando") : t("criar")}
           </Botao>
         </div>
       </form>

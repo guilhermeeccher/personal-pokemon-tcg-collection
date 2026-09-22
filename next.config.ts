@@ -1,3 +1,4 @@
+import createNextIntlPlugin from "next-intl/plugin";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -11,4 +12,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/* O plugin só aponta o `next-intl` para `src/i18n/request.ts` (o caminho
+   padrão dele é `./i18n/request.ts`, que não é onde este projeto guarda
+   código-fonte). Nenhum middleware e nenhum prefixo de rota entram junto:
+   o idioma vem do cookie, e as rotas continuam em português. */
+export default createNextIntlPlugin("./src/i18n/request.ts")(nextConfig);

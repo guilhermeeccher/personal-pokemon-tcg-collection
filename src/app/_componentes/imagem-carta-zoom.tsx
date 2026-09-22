@@ -42,6 +42,7 @@
  * sempre: o componente renderiza o `fallback` (por padrão, nada).
  */
 
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -111,6 +112,7 @@ export function ImagemCartaComZoom({
    */
   fallback?: ReactNode;
 }) {
+  const t = useTranslations("componentes");
   const [visivel, setVisivel] = useState(false);
   const [posicao, setPosicao] = useState<Posicao | null>(null);
   // Guarda QUAL url falhou, não um "falhou: sim/não". O React reaproveita
@@ -137,7 +139,12 @@ export function ImagemCartaComZoom({
   // qualidade (low para a miniatura, high para a ampliação).
   const urlMini = urlImagemCarta(imagemUrl, "low");
   const urlGrande = urlImagemCarta(imagemUrl, "high");
+  /* `seloOrigemImagem` continua decidindo SE há selo e qual é o código
+     curto (EN/PT/MYP — códigos, não texto). Só a explicação do `title`
+     vem do catálogo de mensagens, porque essa é frase, e frase tem
+     idioma. */
   const selo = seloOrigemImagem(origem);
+  const tituloSelo = selo ? t(`seloOrigem.${origem}`) : null;
 
 
   function aoEntrar() {
@@ -183,10 +190,10 @@ export function ImagemCartaComZoom({
         // O wrapper só existe quando há selo: sem ele, a miniatura é
         // renderizada exatamente como antes, sem elemento extra no
         // layout de grade/tabela.
-        <span className="relative inline-block leading-none" title={selo.titulo}>
+        <span className="relative inline-block leading-none" title={tituloSelo ?? undefined}>
           {miniatura}
           <span
-            aria-label={selo.titulo}
+            aria-label={tituloSelo ?? undefined}
             className="pointer-events-none absolute bottom-0 right-0 rounded-tl-sm bg-black/70 px-0.5 text-[8px] font-semibold leading-tight text-white"
           >
             {selo.texto}

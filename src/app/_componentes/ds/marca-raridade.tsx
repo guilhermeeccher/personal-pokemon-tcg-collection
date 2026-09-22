@@ -12,6 +12,8 @@
  * nunca os símbolos oficiais de raridade, que são material licenciado.
  */
 
+import { useTranslations } from "next-intl";
+
 import { Icone, type NomeIcone } from "../icone";
 import { classificarRaridade, type ClasseRaridade } from "@/lib/dominio/raridade-visual";
 
@@ -35,8 +37,12 @@ export function MarcaRaridade({
   raridade: string | null | undefined;
   comRotulo?: boolean;
 }) {
+  const t = useTranslations("componentes");
   const { cor, icone } = MAPA[classificarRaridade(raridade)];
-  const rotulo = raridade ?? "Sem raridade";
+  /* A raridade em si nunca é traduzida — é texto livre do catálogo, em 56
+     valores distintos (ver o cabeçalho). Só a ausência dela tem rótulo
+     nosso, e esse fala o idioma da interface. */
+  const rotulo = raridade ?? t("semRaridade");
   return (
     <span className="inline-flex items-center gap-1.5 text-xs" title={rotulo}>
       <span style={{ color: cor }} className="shrink-0">

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Baloo_2, Nunito, IBM_Plex_Mono } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 import "./globals.css";
 
 import { Nav } from "./_componentes/nav";
@@ -32,15 +34,22 @@ const fonteMono = IBM_Plex_Mono({
   weight: ["400", "500", "600"],
 });
 
-export const metadata: Metadata = {
-  title: "Coleção Pokémon",
-  description: "Catalogação da coleção física de cartas Pokémon.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata");
+  return {
+    title: t("titulo"),
+    description: t("descricao"),
+  };
+}
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  /* `lang` tem que acompanhar o idioma resolvido, senão leitor de tela e
+     corretor do navegador continuam tratando a página como português. */
+  const locale = await getLocale();
+
   return (
     <html
-      lang="pt-BR"
+      lang={locale}
       className={`${fonteDisplay.variable} ${fonteSans.variable} ${fonteMono.variable} h-full antialiased`}
     >
       {/*
@@ -50,11 +59,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         header da Nav no topo, como sempre foi.
       */}
       <body className="flex min-h-full flex-col font-sans md:h-full md:flex-row md:overflow-hidden">
-        <Nav />
-        <div className="flex min-w-0 flex-1 flex-col md:h-full">
-          <TopBar />
-          <div className="min-h-0 flex-1 md:overflow-y-auto">{children}</div>
-        </div>
+        {/* O provider entrega locale e catálogo aos componentes de cliente;
+            em componente de servidor eles já vêm do `getRequestConfig`. */}
+        <NextIntlClientProvider>
+          <Nav />
+          <div className="flex min-w-0 flex-1 flex-col md:h-full">
+            <TopBar />
+            <div className="min-h-0 flex-1 md:overflow-y-auto">{children}</div>
+          </div>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

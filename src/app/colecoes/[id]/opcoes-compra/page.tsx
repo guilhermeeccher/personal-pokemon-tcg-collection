@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
@@ -128,39 +129,21 @@ interface RespostaDTO {
 /** Como a lista de vagas de um set é ordenada na tela. */
 type OrdemVagasSet = "numero" | "preco";
 
-const brl = (valor: number) =>
-  valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+/* O preço é sempre em reais — vem da LigaPokemon, que vende em BRL. O que
+   muda com o idioma da interface é só a PONTUAÇÃO do número (R$ 1.234,56 em
+   pt-BR, R$ 1,234.56 em inglês), nunca a moeda. */
+const brl = (valor: number, locale: string) =>
+  valor.toLocaleString(locale, { style: "currency", currency: "BRL" });
 
 /**
- * Hora do fim, curta. Numa rodada de 16 horas a previsão quase sempre cai em
- * outro dia — então a data aparece quando não é hoje, e só então.
+ * O intervalo entre requisições em texto curto. As unidades (`min`, `s`) são
+ * as mesmas nos dois idiomas — só a frase em volta é que muda, e essa vem do
+ * catálogo de mensagens.
  */
-function horaLegivel(iso: string | null): string {
-  if (iso === null) return "—";
-  const quando = new Date(iso);
-  const hora = quando.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  const hoje = new Date().toDateString() === quando.toDateString();
-  return hoje
-    ? `às ${hora}`
-    : `${quando.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} às ${hora}`;
-}
-
-/** Como a tela explica de onde veio o intervalo entre requisições. */
-function textoDoRitmo(ritmo: RitmoDTO | undefined): string {
-  if (!ritmo) return "";
-  const intervalo =
-    ritmo.intervaloSegundos >= 60
-      ? `${Math.round(ritmo.intervaloSegundos / 60)} min`
-      : `${ritmo.intervaloSegundos} s`;
-
-  if (ritmo.origem === "env")
-    return `Uma requisição a cada ${intervalo}, definido em LIGA_INTERVALO_SEGUNDOS.`;
-  if (ritmo.origem === "robots")
-    return `Uma requisição a cada ${intervalo}, que é o Crawl-delay do robots.txt deles.`;
-  return (
-    `Uma requisição a cada ${intervalo}: o robots.txt deles não pôde ser lido, ` +
-    `e sem leitura vale o valor conservador.`
-  );
+function intervaloLegivel(ritmo: RitmoDTO): string {
+  return ritmo.intervaloSegundos >= 60
+    ? `${Math.round(ritmo.intervaloSegundos / 60)} min`
+    : `${ritmo.intervaloSegundos} s`;
 }
 
 /** O menor preço encontrado para a vaga, ou `null` quando ela não tem oferta. */
@@ -170,7 +153,42 @@ function menorPreco(vaga: VagaDTO): number | null {
 }
 
 export default function OpcoesCompraPage() {
+  const t = useTranslations("opcoesCompra");
+  const locale = useLocale();
   const { id } = useParams<{ id: string }>();
+
+  const dinheiro = useCallback((valor: number) => brl(valor, locale), [locale]);
+
+  /**
+   * Hora do fim, curta. Numa rodada de 16 horas a previsão quase sempre cai em
+   * outro dia — então a data aparece quando não é hoje, e só então.
+   */
+  const horaLegivel = useCallback(
+    (iso: string | null): string => {
+      if (iso === null) return "—";
+      const quando = new Date(iso);
+      const hora = quando.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+      const hoje = new Date().toDateString() === quando.toDateString();
+      if (hoje) return t("asHora", { hora });
+      return t("dataHora", {
+        data: quando.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" }),
+        hora,
+      });
+    },
+    [locale, t],
+  );
+
+  /** Como a tela explica de onde veio o intervalo entre requisições. */
+  const textoDoRitmo = useCallback(
+    (ritmo: RitmoDTO | undefined): string => {
+      if (!ritmo) return "";
+      const intervalo = intervaloLegivel(ritmo);
+      if (ritmo.origem === "env") return t("ritmoEnv", { intervalo });
+      if (ritmo.origem === "robots") return t("ritmoRobots", { intervalo });
+      return t("ritmoConservador", { intervalo });
+    },
+    [t],
+  );
 
   const [dados, setDados] = useState<RespostaDTO | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -217,9 +235,9 @@ export default function OpcoesCompraPage() {
         setOrdenacao(FILTROS_PADRAO_SET.ordenacao);
         setIncluirFora(FILTROS_PADRAO_SET.incluirForaDoCatalogo);
       })
-      .catch(() => setErro("Não foi possível carregar as opções."))
+      .catch(() => setErro(t("erroCarregar")))
       .finally(() => setCarregando(false));
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => {
     carregar();
@@ -266,7 +284,7 @@ export default function OpcoesCompraPage() {
 
     const tetoNumero = teto.trim() === "" ? null : Number(teto.replace(",", "."));
     if (tetoNumero !== null && (!Number.isFinite(tetoNumero) || tetoNumero <= 0)) {
-      setErro("Teto de preço inválido.");
+      setErro(t("erroTeto"));
       setDisparando(false);
       return;
     }
@@ -287,20 +305,20 @@ export default function OpcoesCompraPage() {
     setDisparando(false);
 
     if (!resposta.ok) {
-      setErro(corpo.erro ?? "Não foi possível iniciar a varredura.");
+      setErro(corpo.erro ?? t("erroIniciar"));
       return;
     }
 
     const puladas =
-      corpo.vagasPuladas > 0
-        ? ` ${corpo.vagasPuladas} vaga(s) já tinham consulta recente e foram puladas.`
-        : "";
+      corpo.vagasPuladas > 0 ? t("varreduraPuladas", { total: corpo.vagasPuladas }) : "";
     setAviso(
-      `Varredura iniciada: ${corpo.vagasParaConsultar} vaga(s), estimativa de ` +
-        `${formatarDuracao(corpo.estimativaSegundos)} (previsão de término ` +
-        `${horaLegivel(corpo.previsaoTermino)}).${puladas} ` +
-        `Pode sair desta tela — o resultado fica salvo, e disparar de novo ` +
-        `continua de onde parou.`,
+      t("varreduraIniciada", {
+        vagas: corpo.vagasParaConsultar,
+        estimativa: formatarDuracao(corpo.estimativaSegundos),
+        previsao: horaLegivel(corpo.previsaoTermino),
+      }) +
+        puladas +
+        t("varreduraPodeSair"),
     );
     carregar();
   }
@@ -329,7 +347,7 @@ export default function OpcoesCompraPage() {
       body: JSON.stringify({ ids: [opcao.id], selecionada: !opcao.selecionada }),
     });
     if (!resposta.ok) {
-      setErro("A marcação não foi salva. Recarregue a página.");
+      setErro(t("erroMarcacao"));
       carregar();
       return;
     }
@@ -356,7 +374,7 @@ export default function OpcoesCompraPage() {
       .map((v) => v.opcoes[0].id);
 
     if (alvos.length === 0) {
-      setAviso("Todas as vagas com oferta já têm uma carta marcada.");
+      setAviso(t("todasJaMarcadas"));
       return;
     }
 
@@ -365,7 +383,7 @@ export default function OpcoesCompraPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids: alvos, selecionada: true }),
     });
-    if (!resposta.ok) setErro("A marcação não foi salva. Recarregue a página.");
+    if (!resposta.ok) setErro(t("erroMarcacao"));
     carregar();
   }
 
@@ -377,7 +395,7 @@ export default function OpcoesCompraPage() {
       setTimeout(() => setCopiado(false), 2_000);
       return;
     }
-    setErro("Não deu para copiar sozinho — selecione o texto acima e copie à mão.");
+    setErro(t("erroCopiar"));
   }
 
   const varredura = dados?.varredura ?? null;
@@ -413,57 +431,53 @@ export default function OpcoesCompraPage() {
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-4 p-4">
       <Link href={`/colecoes/${id}`} className="text-sm text-accent hover:underline">
-        ← Voltar para a coleção
+        {t("voltar")}
       </Link>
 
       <CabecalhoPagina
-        titulo="Opções de compra"
-        descricao={
-          ehSet
-            ? "Preços da LigaPokemon para as cartas que faltam neste set. Cada vaga tem uma carta só — a decisão de comprar é sua."
-            : "Preços da LigaPokemon para as vagas vazias desta Pokédex. O sistema filtra e ordena; a escolha é sua."
-        }
+        titulo={t("titulo")}
+        descricao={ehSet ? t("descricaoSet") : t("descricaoPokedex")}
       />
 
       {erro && <Alerta tom="perigo">{erro}</Alerta>}
       {aviso && <Alerta tom="neutro">{aviso}</Alerta>}
 
       <section className="rounded-card border border-hairline bg-surface p-4 shadow-1">
-        <h2 className="mb-3 text-sm font-semibold text-foreground">Parâmetros da busca</h2>
+        <h2 className="mb-3 text-sm font-semibold text-foreground">{t("parametros")}</h2>
         <div className="flex flex-wrap items-end gap-4">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted">Teto por carta (R$)</span>
+            <span className="text-muted">{t("tetoPorCarta")}</span>
             <input
               className={classesEntrada}
               value={teto}
               onChange={(e) => setTeto(e.target.value)}
-              placeholder="sem teto"
+              placeholder={t("semTeto")}
               inputMode="decimal"
             />
           </label>
 
           {ehSet ? (
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted">Ordenar a lista por</span>
+              <span className="text-muted">{t("ordenarListaPor")}</span>
               <select
                 className={classesEntrada}
                 value={ordemVagas}
                 onChange={(e) => setOrdemVagas(e.target.value as OrdemVagasSet)}
               >
-                <option value="numero">Número da carta no set</option>
-                <option value="preco">Mais barata primeiro</option>
+                <option value="numero">{t("ordemNumero")}</option>
+                <option value="preco">{t("ordemMaisBarata")}</option>
               </select>
             </label>
           ) : (
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted">Ordenar por</span>
+              <span className="text-muted">{t("ordenarPor")}</span>
               <select
                 className={classesEntrada}
                 value={ordenacao}
                 onChange={(e) => setOrdenacao(e.target.value as Ordenacao)}
               >
-                <option value="preferencia">Melhor carta dentro do teto</option>
-                <option value="preco">Mais barata primeiro</option>
+                <option value="preferencia">{t("ordemPreferencia")}</option>
+                <option value="preco">{t("ordemMaisBarata")}</option>
               </select>
             </label>
           )}
@@ -477,7 +491,7 @@ export default function OpcoesCompraPage() {
                 checked={incluirFora}
                 onChange={(e) => setIncluirFora(e.target.checked)}
               />
-              Incluir cartas fora do nosso catálogo
+              {t("incluirFora")}
             </label>
           )}
 
@@ -487,7 +501,7 @@ export default function OpcoesCompraPage() {
               checked={reconsultarTudo}
               onChange={(e) => setReconsultarTudo(e.target.checked)}
             />
-            Reconsultar tudo (ignora o que já foi consultado)
+            {t("reconsultarTudo")}
           </label>
 
           <Botao
@@ -497,53 +511,57 @@ export default function OpcoesCompraPage() {
             disabled={disparando || rodando}
           >
             {disparando
-              ? "Iniciando…"
+              ? t("iniciando")
               : rodando
-                ? "Varredura em andamento…"
-                : "Verificar opções faltantes"}
+                ? t("emAndamentoBotao")
+                : t("verificarOpcoes")}
           </Botao>
         </div>
         <p className="mt-3 text-xs text-muted">
-          {textoDoRitmo(dados?.ritmo)} Vaga consultada nas últimas {VALIDADE_CONSULTA_HORAS} horas é pulada, então
-          disparar de novo continua de onde parou. Reverse e holo não entram aqui: a
-          variante é da oferta, não da carta — ela aparece ao abrir uma carta específica.
-          {ehSet &&
-            " No set, a busca é pelo nome da carta e só entra a edição e o número certos: reimpressão em outra edição não preenche a vaga."}
+          {textoDoRitmo(dados?.ritmo)} {t("explicacaoFrescor", { horas: VALIDADE_CONSULTA_HORAS })}
+          {ehSet && t("explicacaoSet")}
         </p>
       </section>
 
       {varredura && (
         <section className="flex flex-wrap items-center gap-3 rounded-card border border-hairline bg-surface p-3 text-sm shadow-1">
           <Distintivo tom={varredura.emAndamento ? "aviso" : "neutro"}>
-            {varredura.emAndamento ? "Em andamento" : "Concluída"}
+            {varredura.emAndamento ? t("emAndamento") : t("concluida")}
           </Distintivo>
           <span className="text-muted">
-            {varredura.vagasConsultadas} vaga(s) consultada(s) · {varredura.requisicoes}{" "}
-            requisição(ões) · {new Date(varredura.criadoEm).toLocaleString("pt-BR")}
+            {t("resumoVarredura", {
+              vagas: varredura.vagasConsultadas,
+              requisicoes: varredura.requisicoes,
+            })}{" "}
+            · {new Date(varredura.criadoEm).toLocaleString(locale)}
           </span>
           {/* Numa rodada de horas, "em andamento" sozinho não é informação:
               o que responde "posso fechar isto?" é quanto falta e até quando. */}
           {rodando && varredura.vagasRestantes !== null && (
             <span className="text-muted">
-              faltam {varredura.vagasRestantes} vaga(s)
+              {t("faltamVagas", { total: varredura.vagasRestantes })}
               {varredura.segundosRestantes !== null &&
                 ` · ~${formatarDuracao(varredura.segundosRestantes)}`}
               {varredura.previsaoTermino !== null &&
-                ` · término ${horaLegivel(varredura.previsaoTermino)}`}
+                t("terminoPrevisto", { quando: horaLegivel(varredura.previsaoTermino) })}
             </span>
           )}
           {rodando && (
             <span className="text-muted">
-              a tela se atualiza sozinha; pode sair e voltar
+              {t("telaSeAtualiza")}
             </span>
           )}
           {varredura.filtros.tetoPreco !== null && (
-            <span className="text-muted">teto {brl(varredura.filtros.tetoPreco)}</span>
+            <span className="text-muted">
+              {t("tetoValor", { valor: dinheiro(varredura.filtros.tetoPreco) })}
+            </span>
           )}
           {semOpcao > 0 && (
             <span className="text-muted">
-              {semOpcao} vaga(s) sem {ehSet ? "oferta" : "opção"}
-              {varredura.filtros.tetoPreco !== null ? " dentro do teto" : " com estoque"}
+              {ehSet
+                ? t("vagasSemOferta", { total: semOpcao })
+                : t("vagasSemOpcao", { total: semOpcao })}
+              {varredura.filtros.tetoPreco !== null ? t("dentroDoTeto") : t("comEstoque")}
             </span>
           )}
         </section>
@@ -551,60 +569,60 @@ export default function OpcoesCompraPage() {
 
       {varredura?.erro && (
         <Alerta tom="perigo">
-          A varredura parou antes do fim: {varredura.erro} O que já foi consultado continua abaixo.
+          {t("varreduraInterrompida", { erro: varredura.erro })}
         </Alerta>
       )}
 
       {dados && dados.vagas.some((v) => v.opcoes.length > 0) && (
         <div className="flex flex-wrap items-center gap-3">
           <Botao variante="secundario" tamanho="sm" onClick={() => void marcarMelhorDeCadaVaga()}>
-            Marcar a melhor de cada vaga
+            {t("marcarMelhor")}
           </Botao>
-          <span className="text-xs text-muted">
-            Marca a primeira opção das vagas ainda sem nenhuma carta escolhida — a melhor pelo
-            critério de ordenação que você escolheu.
-          </span>
+          <span className="text-xs text-muted">{t("marcarMelhorAjuda")}</span>
         </div>
       )}
 
       {(dados?.selecionadas ?? 0) > 0 && (
         <section className="sticky top-0 z-10 flex flex-wrap items-center gap-3 rounded-card border-2 border-accent bg-surface p-3 shadow-3">
           <strong className="text-sm text-foreground">
-            {dados?.selecionadas} carta(s) na lista · {brl(totalSelecionado)}
+            {t("cartasNaLista", {
+              total: dados?.selecionadas ?? 0,
+              valor: dinheiro(totalSelecionado),
+            })}
           </strong>
           {(dados?.semPreco ?? 0) > 0 && (
             <span
               className="text-xs text-muted"
-              title="Cartas que não apareceram na última varredura. Continuam na lista com o preço da última vez — ou sem preço, quando nunca houve um."
+              title={t("semPrecoTitulo")}
             >
-              {dados?.semPreco} sem preço conhecido
+              {t("semPrecoConhecido", { total: dados?.semPreco ?? 0 })}
             </span>
           )}
           {(dados?.guardadas ?? 0) > 0 && (
             <span
               className="text-xs text-muted"
-              title="Cartas que você escolheu e cuja vaga já está preenchida. Saem da string, mas ficam guardadas — se a cópia sair da vaga, elas voltam."
+              title={t("guardadasTitulo")}
             >
-              {dados?.guardadas} já cadastrada(s), fora da lista
+              {t("guardadas", { total: dados?.guardadas ?? 0 })}
             </span>
           )}
           <a
             href={`/api/colecoes/${id}/opcoes-compra/exportar?formato=liga`}
             className={classesBotao("secundario", "sm")}
           >
-            Baixar lista da Liga
+            {t("baixarListaLiga")}
           </a>
           <a
             href={`/api/colecoes/${id}/opcoes-compra/exportar?formato=csv`}
             className={classesBotao("secundario", "sm")}
           >
-            Baixar CSV
+            {t("baixarCsv")}
           </a>
           <a
             href={`/api/colecoes/${id}/opcoes-compra/exportar?formato=texto`}
             className={classesBotao("secundario", "sm")}
           >
-            Baixar lista em texto
+            {t("baixarListaTexto")}
           </a>
         </section>
       )}
@@ -613,7 +631,7 @@ export default function OpcoesCompraPage() {
         <section className="flex flex-col gap-2 rounded-card border border-hairline bg-surface p-3 shadow-1">
           <header className="flex flex-wrap items-center gap-2">
             <h2 className="text-sm font-semibold text-foreground">
-              Compra por Lista — texto para colar
+              {t("compraPorLista")}
             </h2>
             <Botao
               variante="secundario"
@@ -621,7 +639,7 @@ export default function OpcoesCompraPage() {
               onClick={() => void copiar(dados.listaLiga)}
               className="ml-auto"
             >
-              {copiado ? "Copiado" : "Copiar"}
+              {copiado ? t("copiado") : t("copiar")}
             </Botao>
           </header>
 
@@ -631,9 +649,7 @@ export default function OpcoesCompraPage() {
               organização de lojas é deles — eles enxergam o marketplace
               inteiro e o preço real; nós, uma fatia. */}
           <p className="text-xs text-muted">
-            Cole na Compra por Lista deles. Em &ldquo;Adicionar Detalhes&rdquo;, Qualidade:{" "}
-            <strong className="text-foreground">NM</strong>. O agrupamento por loja quem faz é a
-            Liga, em &ldquo;Otimizar minha Lista de Compras&rdquo;.
+            {t.rich("comoColar", { forte: (partes) => <strong className="text-foreground">{partes}</strong> })}
           </p>
 
           <pre className="max-h-80 overflow-auto rounded-card bg-inset p-2 text-xs leading-relaxed text-foreground">
@@ -641,12 +657,12 @@ export default function OpcoesCompraPage() {
           </pre>
 
           <p className="text-xs text-muted">
-            A lista fica guardada: ela sobrevive a uma varredura nova (que atualiza os preços em
-            vez de apagar a triagem) e encolhe sozinha conforme você cadastra as cartas.
+            {t("listaGuardada")}
             {dados.precoMaisAntigo &&
-              ` Preço mais antigo da lista: ${new Date(dados.precoMaisAntigo).toLocaleDateString("pt-BR")}.`}{" "}
-            Os {brl(totalSelecionado)} são o menor preço de cada carta em qualquer condição —
-            piso de conferência, não orçamento em NM.
+              t("precoMaisAntigo", {
+                data: new Date(dados.precoMaisAntigo).toLocaleDateString(locale),
+              })}{" "}
+            {t("totalEhPiso", { valor: dinheiro(totalSelecionado) })}
           </p>
         </section>
       )}
@@ -658,17 +674,17 @@ export default function OpcoesCompraPage() {
             checked={soComOpcao}
             onChange={(e) => setSoComOpcao(e.target.checked)}
           />
-          Esconder vagas sem nenhuma {ehSet ? "oferta" : "opção"}
+          {ehSet ? t("esconderSemOferta") : t("esconderSemOpcao")}
         </label>
       )}
 
-      {carregando && <p className="text-sm text-muted">Carregando…</p>}
+      {carregando && <p className="text-sm text-muted">{t("carregando")}</p>}
 
       {!carregando && !varredura && (
         <EstadoVazio>
           {(dados?.selecionadas ?? 0) > 0
-            ? "Sua lista de compras está acima, pronta para colar. Dispare uma busca quando quiser atualizar os preços."
-            : "Nenhuma varredura ainda. Escolha os parâmetros acima e dispare a primeira busca."}
+            ? t("vazioComLista")
+            : t("vazioSemVarredura")}
         </EstadoVazio>
       )}
 
@@ -685,17 +701,15 @@ export default function OpcoesCompraPage() {
               <span className="text-xs text-muted">
                 {/* No set a contagem é sempre 0 ou 1: repetir "1 opção(ões)" em
                     cada linha seria ruído. O que informa lá é o descarte. */}
-                {!ehSet && `${vaga.opcoes.length} opção(ões)`}
+                {!ehSet && t("contagemOpcoes", { total: vaga.opcoes.length })}
                 {vaga.descartadas > 0 &&
-                  `${ehSet ? "" : " · "}${vaga.descartadas} fora dos filtros`}
+                  `${ehSet ? "" : " · "}${t("foraDosFiltros", { total: vaga.descartadas })}`}
               </span>
             </header>
 
             {vaga.opcoes.length === 0 ? (
               <p className="px-3 py-3 text-sm text-muted">
-                {ehSet
-                  ? "Nenhuma oferta com estoque para esta carta dentro dos filtros."
-                  : "Nenhuma carta com estoque dentro do teto."}
+                {ehSet ? t("semOfertaSet") : t("semOpcaoPokedex")}
               </p>
             ) : (
               <ul className="divide-y divide-line">
@@ -708,7 +722,10 @@ export default function OpcoesCompraPage() {
                       type="checkbox"
                       checked={opcao.selecionada}
                       onChange={() => void alternar(opcao)}
-                      aria-label={`Selecionar ${opcao.nome} de ${opcao.edicaoNome}`}
+                      aria-label={t("selecionarOpcao", {
+                        nome: opcao.nome,
+                        edicao: opcao.edicaoNome,
+                      })}
                     />
                     {/* Só a carta que casou com o nosso catálogo tem foto. A
                         LigaPokemon publica a dela, mas o projeto decidiu em
@@ -723,7 +740,7 @@ export default function OpcoesCompraPage() {
                         <span
                           className="inline-block shrink-0 rounded-tcg border border-dashed border-line"
                           style={{ width: 34, height: 47 }}
-                          title="Sem foto no nosso catálogo"
+                          title={t("semFoto")}
                         />
                       }
                     />
@@ -734,18 +751,18 @@ export default function OpcoesCompraPage() {
                     </span>
                     {opcao.raridade && <Distintivo tom="neutro">{opcao.raridade}</Distintivo>}
                     {opcao.cartaId === null && (
-                      <Distintivo tom="aviso" title="Não existe no nosso catálogo: se comprar, o cadastro depois é manual">
-                        fora do catálogo
+                      <Distintivo tom="aviso" title={t("foraDoCatalogoTitulo")}>
+                        {t("foraDoCatalogo")}
                       </Distintivo>
                     )}
-                    <strong className="ml-auto text-foreground">{brl(opcao.preco)}</strong>
+                    <strong className="ml-auto text-foreground">{dinheiro(opcao.preco)}</strong>
                     <a
                       href={`${SITE}${opcao.caminho}`}
                       target="_blank"
                       rel="noreferrer noopener"
                       className="text-xs text-accent hover:underline"
                     >
-                      ver ofertas
+                      {t("verOfertas")}
                     </a>
                   </li>
                 ))}

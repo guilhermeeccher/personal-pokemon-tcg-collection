@@ -9,6 +9,7 @@
  */
 
 import Link from "next/link";
+import { useLocale } from "next-intl";
 import type { ReactNode } from "react";
 
 export function BlocoContagem({
@@ -22,7 +23,8 @@ export function BlocoContagem({
   tom?: string;
   href?: string;
 }) {
-  const formatado = typeof valor === "number" ? valor.toLocaleString("pt-BR") : valor;
+  const locale = useLocale();
+  const formatado = typeof valor === "number" ? valor.toLocaleString(locale) : valor;
 
   const conteudo = (
     <>

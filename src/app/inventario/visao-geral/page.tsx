@@ -14,6 +14,7 @@
  */
 
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
@@ -34,13 +35,9 @@ import type {
   ResumoInventarioDTO,
 } from "@/lib/dominio/tipos-cliente";
 
-const ROTULO_TIPO_COLECAO: Record<string, string> = {
-  pokedex: "Pokédex",
-  set: "Set",
-  customizada: "Customizada",
-};
-
 export default function VisaoGeralPage() {
+  const t = useTranslations("visaoGeral");
+  const locale = useLocale();
   const [dados, setDados] = useState<ResumoInventarioDTO | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -49,19 +46,19 @@ export default function VisaoGeralPage() {
     fetch("/api/inventario/resumo")
       .then((r) => r.json())
       .then((d: ResumoInventarioDTO) => setDados(d))
-      .catch(() => setErro("Falha ao carregar a visão geral."))
+      .catch(() => setErro(t("erroCarregar")))
       .finally(() => setCarregando(false));
-  }, []);
+  }, [t]);
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 p-4 sm:p-8">
       <CabecalhoPagina
-        titulo="Visão geral"
-        descricao="Quanto você tem e como está distribuído. Clique em qualquer recorte para abrir o inventário já filtrado."
+        titulo={t("titulo")}
+        descricao={t("descricao")}
       />
 
       {erro && <p className="text-sm text-danger">{erro}</p>}
-      {carregando && <p className="text-sm text-muted">Carregando…</p>}
+      {carregando && <p className="text-sm text-muted">{t("carregando")}</p>}
 
       {dados && (
         <>
@@ -69,25 +66,25 @@ export default function VisaoGeralPage() {
             {/* As quatro contagens em quatro cores do sistema — a mesma
                 leitura de relance que o design system propõe. */}
             <BlocoContagem
-              rotulo="Cartas distintas"
+              rotulo={t("cartasDistintas")}
               valor={dados.totais.cartasDistintas}
               tom="var(--berry-4)"
               href="/inventario"
             />
             <BlocoContagem
-              rotulo="Unidades totais"
+              rotulo={t("unidadesTotais")}
               valor={dados.totais.totalUnidades}
               tom="var(--sky-4)"
               href="/inventario"
             />
             <BlocoContagem
-              rotulo="Alocadas"
+              rotulo={t("alocadas")}
               valor={dados.totais.unidadesAlocadas}
               tom="var(--grape-2)"
               href="/inventario?alocacao=alocada"
             />
             <BlocoContagem
-              rotulo="Livres"
+              rotulo={t("livres")}
               valor={dados.totais.unidadesLivres}
               tom="var(--leaf-4)"
               href="/inventario?alocacao=livre"
@@ -96,9 +93,11 @@ export default function VisaoGeralPage() {
 
           <Painel as="section" className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <h2 className="text-[length:var(--fs-title-2)] text-strong">Progresso das coleções</h2>
+              <h2 className="text-[length:var(--fs-title-2)] text-strong">
+                {t("progressoColecoes")}
+              </h2>
               <Link href="/colecoes" className="text-sm text-accent hover:underline">
-                Ver todas →
+                {t("verTodas")}
               </Link>
             </div>
             <ul className="flex flex-col divide-y divide-hairline">
@@ -113,16 +112,19 @@ export default function VisaoGeralPage() {
                       <div className="flex items-center justify-between gap-3 text-sm">
                         <span>
                           {c.nome}{" "}
-                          <span className="text-muted">({ROTULO_TIPO_COLECAO[c.tipo] ?? c.tipo})</span>
+                          <span className="text-muted">
+                            ({t.has(`tipo.${c.tipo}`) ? t(`tipo.${c.tipo}`) : c.tipo})
+                          </span>
                         </span>
                         {/* Coleção customizada não tem total: ela não é
                             "quanto falta fechar", é uma seleção a dedo. Sem
                             denominador não há percentual a mostrar. */}
                         <span className="shrink-0 font-mono tabular-nums whitespace-nowrap text-muted">
                           {customizada
-                            ? `${c.vagasPreenchidas} carta(s)`
+                            ? t("cartas", { total: c.vagasPreenchidas })
                             : `${c.vagasPreenchidas}/${c.totalVagas} · ${formatarPercentual(
                                 c.totalVagas > 0 ? (c.vagasPreenchidas / c.totalVagas) * 100 : 0,
+                                locale,
                               )}`}
                         </span>
                       </div>
@@ -133,7 +135,11 @@ export default function VisaoGeralPage() {
                   </li>
                 );
               })}
-              {dados.colecoes.length === 0 && <EstadoVazio as="li" className="py-6">Nenhuma coleção ainda.</EstadoVazio>}
+              {dados.colecoes.length === 0 && (
+                <EstadoVazio as="li" className="py-6">
+                  {t("nenhumaColecao")}
+                </EstadoVazio>
+              )}
             </ul>
           </Painel>
 
@@ -146,8 +152,8 @@ export default function VisaoGeralPage() {
           </div>
 
           <Painel as={Link} href="/inventario/repetidas" className="transition-colors hover:border-accent/40">
-            <h2 className="text-[length:var(--fs-title-2)] text-strong">Repetidas</h2>
-            <p className="mt-1 text-sm text-muted">O que sobra para troca — total, alocadas e livres por carta →</p>
+            <h2 className="text-[length:var(--fs-title-2)] text-strong">{t("repetidas")}</h2>
+            <p className="mt-1 text-sm text-muted">{t("repetidasDescricao")}</p>
           </Painel>
         </>
       )}
@@ -165,8 +171,9 @@ function CartaoSecao({ titulo, children }: { titulo: string; children: React.Rea
 }
 
 function SecaoExpansao({ itens, totalUnidades }: { itens: DistribuicaoExpansaoDTO[]; totalUnidades: number }) {
+  const t = useTranslations("visaoGeral");
   return (
-    <CartaoSecao titulo="Por expansão">
+    <CartaoSecao titulo={t("porExpansao")}>
       {itens.map((i) => (
         <LinhaDistribuicao
           key={i.setId}
@@ -176,14 +183,17 @@ function SecaoExpansao({ itens, totalUnidades }: { itens: DistribuicaoExpansaoDT
           href={`/inventario?set=${encodeURIComponent(i.setId)}`}
         />
       ))}
-      {itens.length === 0 && <EstadoVazio className="text-left">Nenhuma cópia cadastrada ainda.</EstadoVazio>}
+      {itens.length === 0 && (
+        <EstadoVazio className="text-left">{t("nenhumaCopia")}</EstadoVazio>
+      )}
     </CartaoSecao>
   );
 }
 
 function SecaoRaridade({ itens, totalUnidades }: { itens: DistribuicaoRaridadeDTO[]; totalUnidades: number }) {
+  const t = useTranslations("visaoGeral");
   return (
-    <CartaoSecao titulo="Por raridade">
+    <CartaoSecao titulo={t("porRaridade")}>
       {itens.map((i) => (
         <LinhaDistribuicao
           key={i.raridade ?? "sem-raridade"}
@@ -194,14 +204,17 @@ function SecaoRaridade({ itens, totalUnidades }: { itens: DistribuicaoRaridadeDT
           href={i.raridade ? `/inventario?raridade=${encodeURIComponent(i.raridade)}` : undefined}
         />
       ))}
-      {itens.length === 0 && <EstadoVazio className="text-left">Nenhuma cópia cadastrada ainda.</EstadoVazio>}
+      {itens.length === 0 && (
+        <EstadoVazio className="text-left">{t("nenhumaCopia")}</EstadoVazio>
+      )}
     </CartaoSecao>
   );
 }
 
 function SecaoIdioma({ itens, totalUnidades }: { itens: DistribuicaoIdiomaDTO[]; totalUnidades: number }) {
+  const t = useTranslations("visaoGeral");
   return (
-    <CartaoSecao titulo="Por idioma (físico)">
+    <CartaoSecao titulo={t("porIdioma")}>
       {itens.map((i) => (
         <LinhaDistribuicao
           key={i.idioma}
@@ -212,14 +225,17 @@ function SecaoIdioma({ itens, totalUnidades }: { itens: DistribuicaoIdiomaDTO[];
           href={`/inventario?idioma=${i.idioma}`}
         />
       ))}
-      {itens.length === 0 && <EstadoVazio className="text-left">Nenhuma cópia cadastrada ainda.</EstadoVazio>}
+      {itens.length === 0 && (
+        <EstadoVazio className="text-left">{t("nenhumaCopia")}</EstadoVazio>
+      )}
     </CartaoSecao>
   );
 }
 
 function SecaoCondicao({ itens, totalUnidades }: { itens: DistribuicaoCondicaoDTO[]; totalUnidades: number }) {
+  const t = useTranslations("visaoGeral");
   return (
-    <CartaoSecao titulo="Por condição">
+    <CartaoSecao titulo={t("porCondicao")}>
       {itens.map((i) => (
         <LinhaDistribuicao
           key={i.condicao}
@@ -230,14 +246,17 @@ function SecaoCondicao({ itens, totalUnidades }: { itens: DistribuicaoCondicaoDT
           href={`/inventario?condicao=${i.condicao}`}
         />
       ))}
-      {itens.length === 0 && <EstadoVazio className="text-left">Nenhuma cópia cadastrada ainda.</EstadoVazio>}
+      {itens.length === 0 && (
+        <EstadoVazio className="text-left">{t("nenhumaCopia")}</EstadoVazio>
+      )}
     </CartaoSecao>
   );
 }
 
 function SecaoVariante({ itens, totalUnidades }: { itens: DistribuicaoVarianteDTO[]; totalUnidades: number }) {
+  const t = useTranslations("visaoGeral");
   return (
-    <CartaoSecao titulo="Por variante">
+    <CartaoSecao titulo={t("porVariante")}>
       {itens.map((i) => (
         <LinhaDistribuicao
           key={i.variante}
@@ -248,7 +267,9 @@ function SecaoVariante({ itens, totalUnidades }: { itens: DistribuicaoVarianteDT
           href={`/inventario?variante=${i.variante}`}
         />
       ))}
-      {itens.length === 0 && <EstadoVazio className="text-left">Nenhuma cópia cadastrada ainda.</EstadoVazio>}
+      {itens.length === 0 && (
+        <EstadoVazio className="text-left">{t("nenhumaCopia")}</EstadoVazio>
+      )}
     </CartaoSecao>
   );
 }

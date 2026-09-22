@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { classesBotao } from "@/app/_componentes/botao";
@@ -9,18 +10,13 @@ import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import type { ColecaoListaDTO } from "@/lib/dominio/tipos-cliente";
 
-const ROTULO_TIPO: Record<string, string> = {
-  pokedex: "Pokédex",
-  set: "Set",
-  customizada: "Customizada",
-};
-
 interface ContagemElegiveis {
   prontas: number;
   foraDePadrao: number;
 }
 
 export default function ColecoesPage() {
+  const t = useTranslations("colecoes");
   const [itens, setItens] = useState<ColecaoListaDTO[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -30,9 +26,9 @@ export default function ColecoesPage() {
     fetch("/api/colecoes")
       .then((r) => r.json())
       .then((d) => setItens(d.itens ?? []))
-      .catch(() => setErro("Falha ao carregar as coleções."))
+      .catch(() => setErro(t("erroCarregar")))
       .finally(() => setCarregando(false));
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     carregar();
@@ -51,15 +47,15 @@ export default function ColecoesPage() {
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-4 p-4 sm:p-8">
       <CabecalhoPagina
-        titulo="Coleções"
-        descricao={`${itens.length} coleção(ões).`}
+        titulo={t("titulo")}
+        descricao={t("contagem", { total: itens.length })}
         acoes={
           <>
             <Link href="/colecoes/falta" className={classesBotao("secundario")}>
-              O que falta
+              {t("oQueFalta")}
             </Link>
             <Link href="/colecoes/nova" className={classesBotao("primario")}>
-              Nova coleção
+              {t("nova")}
             </Link>
           </>
         }
@@ -72,22 +68,26 @@ export default function ColecoesPage() {
         >
           {elegiveis.prontas > 0 && (
             <>
-              Você tem <strong>{elegiveis.prontas}</strong> cópia(s) livre(s) no inventário que
-              preenchem vaga(s) vazia(s) de alguma coleção.{" "}
+              {t.rich("elegiveisProntas", {
+                total: elegiveis.prontas,
+                forte: (partes) => <strong>{partes}</strong>,
+              })}{" "}
             </>
           )}
           {elegiveis.foraDePadrao > 0 && (
             <>
-              Mais <strong>{elegiveis.foraDePadrao}</strong> cópia(s) elegível(is) só fora do
-              idioma exigido (precisam de confirmação explícita).{" "}
+              {t.rich("elegiveisForaDePadrao", {
+                total: elegiveis.foraDePadrao,
+                forte: (partes) => <strong>{partes}</strong>,
+              })}{" "}
             </>
           )}
-          Ver o que falta →
+          {t("verOQueFalta")}
         </Link>
       )}
 
       {erro && <p className="text-sm text-danger">{erro}</p>}
-      {carregando && <p className="text-sm text-muted">Carregando…</p>}
+      {carregando && <p className="text-sm text-muted">{t("carregando")}</p>}
 
       <ul className="flex flex-col divide-y divide-hairline">
         {itens.map((c) => {
@@ -101,15 +101,21 @@ export default function ColecoesPage() {
                 <div>
                   <div className="font-medium">{c.nome}</div>
                   <div className="text-sm text-muted">
-                    {ROTULO_TIPO[c.tipo] ?? c.tipo}
-                    {c.idiomaExigido ? ` · idioma exigido: ${c.idiomaExigido}` : ""}
+                    {t.has(`tipo.${c.tipo}`) ? t(`tipo.${c.tipo}`) : c.tipo}
+                    {c.idiomaExigido ? t("idiomaExigido", { idioma: c.idiomaExigido }) : ""}
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  {c.avisoCatalogoIncompleto && <Distintivo tom="aviso">catálogo incompleto</Distintivo>}
-                  {c.avisoSemNumeracaoOficial && <Distintivo tom="aviso">sem numeração oficial</Distintivo>}
+                  {c.avisoCatalogoIncompleto && (
+                    <Distintivo tom="aviso">{t("catalogoIncompleto")}</Distintivo>
+                  )}
+                  {c.avisoSemNumeracaoOficial && (
+                    <Distintivo tom="aviso">{t("semNumeracaoOficial")}</Distintivo>
+                  )}
                   <span className="tabular-nums text-muted">
-                    {customizada ? `${c.vagasPreenchidas} carta(s)` : `${c.vagasPreenchidas}/${c.totalVagas}`}
+                    {customizada
+                      ? t("cartas", { total: c.vagasPreenchidas })
+                      : `${c.vagasPreenchidas}/${c.totalVagas}`}
                   </span>
                 </div>
               </Link>
@@ -118,7 +124,7 @@ export default function ColecoesPage() {
         })}
         {itens.length === 0 && !carregando && (
           <EstadoVazio as="li" className="py-6">
-            Nenhuma coleção ainda.
+            {t("vazio")}
           </EstadoVazio>
         )}
       </ul>

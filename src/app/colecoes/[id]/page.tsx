@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
@@ -18,8 +19,6 @@ import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { ImagemCartaComZoom } from "@/app/_componentes/imagem-carta-zoom";
 import { ImagemVagaVazia } from "@/app/_componentes/imagem-vaga-vazia";
 import { Modal } from "@/app/_componentes/modal";
-import { rotuloAlocacao } from "@/lib/dominio/alocacao-disponivel";
-import { rotuloMelhoria } from "@/lib/dominio/melhoria-vaga";
 import type {
   CandidataMelhoriaDTO,
   CandidatoVagaDTO,
@@ -30,12 +29,8 @@ import type {
   VagaDaColecaoDTO,
 } from "@/lib/dominio/tipos-cliente";
 
-const ROTULO_TIPO: Record<string, string> = {
-  pokedex: "Pokédex",
-  set: "Set",
-  customizada: "Customizada",
-};
-
+/* Nome de região é nome próprio do universo Pokémon — não traduz, e por
+   isso fica aqui e não no catálogo de mensagens. */
 const NOME_REGIAO: Record<Regiao, string> = {
   kanto: "Kanto",
   johto: "Johto",
@@ -57,6 +52,7 @@ const OPCOES_REGIAO = REGIOES.map((regiao) => ({
 }));
 
 export default function ColecaoPage() {
+  const t = useTranslations("colecaoDetalhe");
   const params = useParams<{ id: string }>();
   const id = params.id;
   const router = useRouter();
@@ -87,9 +83,9 @@ export default function ColecaoPage() {
       .then((d) => {
         if (d) setColecao(d);
       })
-      .catch(() => setErro("Falha ao carregar a coleção."))
+      .catch(() => setErro(t("erroCarregar")))
       .finally(() => setCarregando(false));
-  }, [id]);
+  }, [id, t]);
 
   /* Rota separada da coleção de propósito: a grade tem que aparecer sem
      esperar o cálculo das melhorias, e uma troca não precisa recarregar as
@@ -115,39 +111,39 @@ export default function ColecaoPage() {
 
   async function excluir() {
     if (!colecao) return;
-    const confirmado = window.confirm(
-      `Excluir a coleção "${colecao.nome}"? As cópias do inventário não são apagadas — só voltam a ficar livres.`,
-    );
+    const confirmado = window.confirm(t("confirmarExcluir", { nome: colecao.nome }));
     if (!confirmado) return;
     const resp = await fetch(`/api/colecoes/${id}`, { method: "DELETE" });
     if (resp.ok) {
       router.push("/colecoes");
     } else {
-      setErro("Falha ao excluir a coleção.");
+      setErro(t("erroExcluir"));
     }
   }
 
   async function desalocar(vaga: VagaDaColecaoDTO) {
     const confirmado = window.confirm(
-      `Desalocar ${vaga.cartaNome ?? `a vaga #${vaga.chave}`}? A cópia volta ao inventário livre.`,
+      t("confirmarDesalocar", {
+        alvo: vaga.cartaNome ?? t("aVagaNumero", { chave: vaga.chave }),
+      }),
     );
     if (!confirmado) return;
     const resp = await fetch(`/api/vagas/${vaga.id}/alocar`, { method: "DELETE" });
     if (resp.ok) {
-      setMensagem("Vaga desalocada.");
+      setMensagem(t("vagaDesalocada"));
       recarregar();
     } else {
       const dados = await resp.json().catch(() => null);
-      setErro(dados?.erro ?? "Falha ao desalocar.");
+      setErro(dados?.erro ?? t("erroDesalocar"));
     }
   }
 
   if (naoEncontrada) {
     return (
       <main className="mx-auto flex max-w-6xl flex-col gap-3 p-4 sm:p-8">
-        <p className="text-sm text-danger">Coleção não encontrada.</p>
+        <p className="text-sm text-danger">{t("naoEncontrada")}</p>
         <Link href="/colecoes" className="text-sm text-accent hover:underline">
-          Voltar para coleções
+          {t("voltarParaColecoes")}
         </Link>
       </main>
     );
@@ -156,7 +152,7 @@ export default function ColecaoPage() {
   if (!colecao) {
     return (
       <main className="mx-auto max-w-6xl p-4 sm:p-8">
-        <p className="text-sm text-muted">Carregando…</p>
+        <p className="text-sm text-muted">{t("carregando")}</p>
       </main>
     );
   }
@@ -183,7 +179,7 @@ export default function ColecaoPage() {
     <main className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-8">
       <div>
         <Link href="/colecoes" className="text-sm text-accent hover:underline">
-          ← Coleções
+          {t("voltar")}
         </Link>
       </div>
 
@@ -191,13 +187,15 @@ export default function ColecaoPage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-semibold text-foreground">{colecao.nome}</h1>
-            <Distintivo tom="neutro">{ROTULO_TIPO[colecao.tipo] ?? colecao.tipo}</Distintivo>
+            <Distintivo tom="neutro">
+              {t.has(`tipo.${colecao.tipo}`) ? t(`tipo.${colecao.tipo}`) : colecao.tipo}
+            </Distintivo>
           </div>
           <p className="text-sm text-muted">
             {customizada
-              ? `${vagasPreenchidas} carta(s)`
-              : `${vagasPreenchidas}/${totalVagas} preenchida(s)`}
-            {colecao.idiomaExigido ? ` · idioma exigido: ${colecao.idiomaExigido}` : ""}
+              ? t("cartas", { total: vagasPreenchidas })
+              : t("preenchidas", { preenchidas: vagasPreenchidas, total: totalVagas })}
+            {colecao.idiomaExigido ? t("idiomaExigido", { idioma: colecao.idiomaExigido }) : ""}
           </p>
           {colecao.notas && <p className="mt-1 text-sm text-muted">{colecao.notas}</p>}
         </div>
@@ -209,36 +207,35 @@ export default function ColecaoPage() {
               href={`/colecoes/${colecao.id}/opcoes-compra`}
               className={classesBotao("primario", "sm")}
             >
-              Verificar opções faltantes
+              {t("verificarOpcoes")}
             </Link>
           )}
           {/* Download de arquivo (rota de API, não página) — <a> normal. */}
           <a href={`/api/colecoes/${colecao.id}/exportar`} className={classesBotao("secundario", "sm")}>
-            Baixar CSV
+            {t("baixarCsv")}
           </a>
           <Botao type="button" variante="secundario" tamanho="sm" onClick={() => setEditando((v) => !v)}>
-            {editando ? "Fechar edição" : "Editar"}
+            {editando ? t("fecharEdicao") : t("editar")}
           </Botao>
           <Botao type="button" variante="perigo" tamanho="sm" onClick={excluir}>
-            Excluir
+            {t("excluir")}
           </Botao>
         </div>
       </div>
 
       {colecao.avisoCatalogoIncompleto && (
         <Alerta tom="aviso">
-          O catálogo local só conhece {colecao.avisoCatalogoIncompleto.vagasMaterializadas} de{" "}
-          {colecao.avisoCatalogoIncompleto.vagasEsperadas} cartas deste set no upstream — faltam{" "}
-          {colecao.avisoCatalogoIncompleto.vagasFaltantes}. A coleção não finge estar completa: o
-          progresso acima reflete só o que o catálogo local tem hoje.
+          {t("avisoCatalogoIncompleto", {
+            materializadas: colecao.avisoCatalogoIncompleto.vagasMaterializadas,
+            esperadas: colecao.avisoCatalogoIncompleto.vagasEsperadas,
+            faltantes: colecao.avisoCatalogoIncompleto.vagasFaltantes,
+          })}
         </Alerta>
       )}
 
       {colecao.avisoSemNumeracaoOficial && (
         <Alerta tom="aviso">
-          Este set não tem numeração oficial separada no upstream (é uma coleção promocional). O
-          universo desta coleção usa as {colecao.avisoSemNumeracaoOficial.qtdTotal} cartas
-          conhecidas do set inteiro, no lugar da contagem oficial.
+          {t("avisoSemNumeracaoOficial", { total: colecao.avisoSemNumeracaoOficial.qtdTotal })}
         </Alerta>
       )}
 
@@ -284,7 +281,7 @@ export default function ColecaoPage() {
 
       {pokedex && colecao.progressoPorRegiao && colecao.progressoPorRegiao.length > 0 && (
         <div className="flex flex-wrap items-center gap-3 rounded border border-line p-3 text-sm">
-          <span className="text-muted">Progresso por região:</span>
+          <span className="text-muted">{t("progressoPorRegiao")}</span>
           <div className="flex flex-wrap gap-x-3 gap-y-1">
             {colecao.progressoPorRegiao.map((p) => (
               <span key={p.regiao}>
@@ -294,13 +291,13 @@ export default function ColecaoPage() {
           </div>
           {colecao.progressoPorRegiao.length > 1 && (
             <label className="ml-auto flex items-center gap-2">
-              <span className="text-muted">Filtrar</span>
+              <span className="text-muted">{t("filtrar")}</span>
               <select
                 value={regiaoFiltro}
                 onChange={(e) => setRegiaoFiltro(e.target.value as Regiao | "todas")}
                 className={`${classesEntrada} p-1`}
               >
-                <option value="todas">Todas as regiões</option>
+                <option value="todas">{t("todasAsRegioes")}</option>
                 {colecao.progressoPorRegiao.map((p) => (
                   <option key={p.regiao} value={p.regiao}>
                     {NOME_REGIAO[p.regiao]}
@@ -332,8 +329,7 @@ export default function ColecaoPage() {
               checked={somenteVazias}
               onChange={(e) => setSomenteVazias(e.target.checked)}
             />
-            Mostrar só vagas vazias ({totalVagas - vagasPreenchidas}) — o que falta
-            desta coleção
+            {t("filtroSoVazias", { total: totalVagas - vagasPreenchidas })}
           </label>
           {/* Só aparece quando há o que mostrar: um filtro que sempre
               resulta em zero é ruído permanente na tela. */}
@@ -344,14 +340,13 @@ export default function ColecaoPage() {
                 checked={somenteMelhorias}
                 onChange={(e) => setSomenteMelhorias(e.target.checked)}
               />
-              Mostrar só vagas com melhoria ({melhorias.length}) — você tem cópia melhor
-              que a alocada
+              {t("filtroSoMelhorias", { total: melhorias.length })}
             </label>
           )}
         </div>
       )}
 
-      {carregando && <p className="text-sm text-muted">Atualizando…</p>}
+      {carregando && <p className="text-sm text-muted">{t("atualizando")}</p>}
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2">
         {vagasExibidas.map((v) => (
@@ -371,12 +366,12 @@ export default function ColecaoPage() {
         {vagasExibidas.length === 0 && (
           <EstadoVazio className="col-span-full py-6">
             {customizada
-              ? "Nenhuma cópia adicionada ainda."
+              ? t("vazioCustomizada")
               : somenteVazias
-                ? "Nada falta — todas as vagas estão preenchidas."
+                ? t("vazioSoVazias")
                 : somenteMelhorias
-                  ? "Nenhuma vaga com melhoria disponível."
-                  : "Nenhuma vaga ainda."}
+                  ? t("vazioSoMelhorias")
+                  : t("vazioSemVagas")}
           </EstadoVazio>
         )}
       </div>
@@ -429,6 +424,8 @@ function VagaCard({
   onDesalocar: () => void;
   onMelhorar: () => void;
 }) {
+  const t = useTranslations("colecaoDetalhe");
+  const tc = useTranslations("comum");
   const preenchida = vaga.copiaId !== null;
   const nomeExibido = vaga.cartaNome ?? vaga.nomeEspecie;
 
@@ -470,9 +467,9 @@ function VagaCard({
         acao={
           <div className="flex flex-col items-center gap-1">
             {melhoria && (
-              <span title={rotuloMelhoria(melhoria.candidatas.length)}>
+              <span title={tc("rotuloMelhoria", { total: melhoria.candidatas.length })}>
                 <Botao type="button" variante="secundario" tamanho="xs" onClick={onMelhorar}>
-                  ↑ Melhorar ({melhoria.candidatas.length})
+                  {t("melhorar", { total: melhoria.candidatas.length })}
                 </Botao>
               </span>
             )}
@@ -481,7 +478,7 @@ function VagaCard({
               onClick={onDesalocar}
               className="text-[11px] text-danger hover:underline"
             >
-              Desalocar
+              {t("desalocar")}
             </button>
           </div>
         }
@@ -517,7 +514,7 @@ function VagaCard({
          recebe hover e a tooltip nunca apareceria — justamente no caso em
          que ela é necessária. Cinza sem explicação vira suspeita de bug. */
       acao={
-        <span title={rotuloAlocacao(vaga.candidatosDisponiveis)}>
+        <span title={tc("rotuloAlocacao", { total: vaga.candidatosDisponiveis })}>
           <Botao
             type="button"
             variante="primario"
@@ -526,8 +523,8 @@ function VagaCard({
             disabled={vaga.candidatosDisponiveis === 0}
           >
             {vaga.candidatosDisponiveis === 0
-              ? "Alocar"
-              : `Alocar (${vaga.candidatosDisponiveis})`}
+              ? t("alocar")
+              : t("alocarComTotal", { total: vaga.candidatosDisponiveis })}
           </Botao>
         </span>
       }
@@ -546,6 +543,7 @@ function EdicaoColecao({
   onSalvo: (msg: string) => void;
   onErro: (msg: string) => void;
 }) {
+  const t = useTranslations("colecaoDetalhe");
   const [nome, setNome] = useState(colecao.nome);
   const [notas, setNotas] = useState(colecao.notas ?? "");
   const [idiomaExigido, setIdiomaExigido] = useState<Idioma | "">(colecao.idiomaExigido ?? "");
@@ -566,12 +564,12 @@ function EdicaoColecao({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        onErro(dados.erro ?? "Falha ao salvar.");
+        onErro(dados.erro ?? t("erroSalvar"));
         return;
       }
-      onSalvo("Coleção atualizada.");
+      onSalvo(t("colecaoAtualizada"));
     } catch {
-      onErro("Falha de rede ao salvar.");
+      onErro(t("erroRedeSalvar"));
     } finally {
       setSalvando(false);
     }
@@ -579,16 +577,16 @@ function EdicaoColecao({
 
   return (
     <form onSubmit={salvar} className="flex flex-col gap-3 rounded border border-line p-4 text-sm">
-      <Campo rotulo="Nome">
+      <Campo rotulo={t("campoNome")}>
         <input value={nome} onChange={(e) => setNome(e.target.value)} className={classesEntrada} />
       </Campo>
-      <Campo rotulo="Idioma exigido">
+      <Campo rotulo={t("campoIdiomaExigido")}>
         <select
           value={idiomaExigido}
           onChange={(e) => setIdiomaExigido(e.target.value as Idioma | "")}
           className={`w-40 ${classesEntrada}`}
         >
-          <option value="">Qualquer</option>
+          <option value="">{t("qualquer")}</option>
           {IDIOMAS.map((i) => (
             <option key={i} value={i}>
               {i}
@@ -596,15 +594,15 @@ function EdicaoColecao({
           ))}
         </select>
       </Campo>
-      <Campo rotulo="Notas">
+      <Campo rotulo={t("campoNotas")}>
         <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} className={classesEntrada} />
       </Campo>
       <div className="flex gap-2">
         <Botao type="submit" variante="primario" disabled={salvando}>
-          {salvando ? "Salvando…" : "Salvar"}
+          {salvando ? t("salvando") : t("salvar")}
         </Botao>
         <Botao type="button" variante="secundario" onClick={onFechar}>
-          Cancelar
+          {t("cancelar")}
         </Botao>
       </div>
     </form>
@@ -622,14 +620,13 @@ function ToggleSecretas({
   onAlterado: (msg: string) => void;
   onErro: (msg: string) => void;
 }) {
+  const t = useTranslations("colecaoDetalhe");
   const [enviando, setEnviando] = useState(false);
 
   async function alternar(novoValor: boolean) {
     if (novoValor === incluirSecretas) return;
     if (!novoValor) {
-      const confirmado = window.confirm(
-        "Desligar secretas remove as vagas secretas ainda vazias. Se alguma já estiver preenchida, a operação é recusada. Continuar?",
-      );
+      const confirmado = window.confirm(t("confirmarDesligarSecretas"));
       if (!confirmado) return;
     }
     setEnviando(true);
@@ -641,12 +638,12 @@ function ToggleSecretas({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        onErro(dados.erro ?? "Falha ao alterar secretas.");
+        onErro(dados.erro ?? t("erroSecretas"));
         return;
       }
-      onAlterado(novoValor ? "Secretas incluídas." : "Secretas removidas.");
+      onAlterado(novoValor ? t("secretasIncluidas") : t("secretasRemovidas"));
     } catch {
-      onErro("Falha de rede ao alterar secretas.");
+      onErro(t("erroRedeSecretas"));
     } finally {
       setEnviando(false);
     }
@@ -660,7 +657,7 @@ function ToggleSecretas({
         disabled={enviando}
         onChange={(e) => alternar(e.target.checked)}
       />
-      Incluir secretas (numeração além da oficial)
+      {t("incluirSecretas")}
     </label>
   );
 }
@@ -676,13 +673,14 @@ function EdicaoEscopoPokedex({
   onAlterado: (msg: string) => void;
   onErro: (msg: string) => void;
 }) {
+  const t = useTranslations("colecaoDetalhe");
   const [enviando, setEnviando] = useState(false);
   const regioesAtuais: Regiao[] = parametro.escopo === "nacional" ? [...REGIOES] : parametro.regioes;
 
   async function alternar(regiao: Regiao, incluir: boolean) {
     if (!incluir) {
       const confirmado = window.confirm(
-        `Remover ${NOME_REGIAO[regiao]} do escopo? Só é permitido se nenhuma vaga desta região estiver preenchida — a operação é recusada e diz quantas, se houver.`,
+        t("confirmarRemoverRegiao", { regiao: NOME_REGIAO[regiao] }),
       );
       if (!confirmado) return;
     }
@@ -703,15 +701,15 @@ function EdicaoEscopoPokedex({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        onErro(dados.erro ?? "Falha ao alterar o escopo.");
+        onErro(dados.erro ?? t("erroEscopo"));
         return;
       }
       const partes: string[] = [];
-      if (dados.adicionadas > 0) partes.push(`${dados.adicionadas} vaga(s) adicionada(s)`);
-      if (dados.removidas > 0) partes.push(`${dados.removidas} vaga(s) removida(s)`);
-      onAlterado(partes.length > 0 ? `${partes.join(", ")}.` : "Escopo já estava assim.");
+      if (dados.adicionadas > 0) partes.push(t("vagasAdicionadas", { total: dados.adicionadas }));
+      if (dados.removidas > 0) partes.push(t("vagasRemovidas", { total: dados.removidas }));
+      onAlterado(partes.length > 0 ? `${partes.join(", ")}.` : t("escopoInalterado"));
     } catch {
-      onErro("Falha de rede ao alterar o escopo.");
+      onErro(t("erroRedeEscopo"));
     } finally {
       setEnviando(false);
     }
@@ -719,12 +717,12 @@ function EdicaoEscopoPokedex({
 
   return (
     <GradeEscopo
-      legenda="Escopo — adicione ou remova região sem afetar as vagas já existentes"
+      legenda={t("legendaEscopo")}
       opcoes={OPCOES_REGIAO.map(
         (o): OpcaoEscopo => ({
           ...o,
           travada: enviando,
-          motivoTravada: enviando ? "Alterando o escopo…" : undefined,
+          motivoTravada: enviando ? t("alterandoEscopo") : undefined,
         }),
       )}
       selecionadas={regioesAtuais}
@@ -747,6 +745,7 @@ function AdicionarCopiaCustomizada({
   onAdicionado: (msg: string) => void;
   onErro: (msg: string) => void;
 }) {
+  const t = useTranslations("colecaoDetalhe");
   const [q, setQ] = useState("");
   const [resultados, setResultados] = useState<CopiaDoInventarioDTO[] | null>(null);
   const [buscando, setBuscando] = useState(false);
@@ -767,7 +766,7 @@ function AdicionarCopiaCustomizada({
       const dados = await resp.json();
       setResultados(dados.itens ?? []);
     } catch {
-      onErro("Falha ao buscar cópias livres.");
+      onErro(t("erroBuscarLivres"));
     } finally {
       setBuscando(false);
     }
@@ -783,19 +782,17 @@ function AdicionarCopiaCustomizada({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        onErro(dados.erro ?? "Falha ao adicionar.");
+        onErro(dados.erro ?? t("erroAdicionar"));
         return;
       }
-      const partes = [`${copia.cartaNome} adicionada à coleção.`];
+      const partes = [t("adicionadaAColecao", { carta: copia.cartaNome })];
       if (dados.dividida) {
-        partes.push(
-          "O lote foi dividido: 1 unidade foi para a coleção, o restante segue livre no inventário.",
-        );
+        partes.push(t("loteDivididoColecao"));
       }
       onAdicionado(partes.join(" "));
       setResultados((r) => r?.filter((c) => c.id !== copia.id) ?? null);
     } catch {
-      onErro("Falha de rede ao adicionar.");
+      onErro(t("erroRedeAdicionar"));
     } finally {
       setEnviandoId(null);
       setConfirmandoId(null);
@@ -805,16 +802,16 @@ function AdicionarCopiaCustomizada({
   return (
     <div className="flex flex-col gap-2 rounded border border-line p-3">
       <form onSubmit={buscar} className="flex flex-wrap items-end gap-2 text-sm">
-        <Campo rotulo="Adicionar cópia livre do inventário">
+        <Campo rotulo={t("campoAdicionarLivre")}>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar por nome…"
+            placeholder={t("placeholderBusca")}
             className={`w-64 ${classesEntrada}`}
           />
         </Campo>
         <Botao type="submit" variante="secundario" disabled={buscando}>
-          {buscando ? "Buscando…" : "Buscar"}
+          {buscando ? t("buscando") : t("buscar")}
         </Botao>
       </form>
 
@@ -837,22 +834,22 @@ function AdicionarCopiaCustomizada({
                     {c.cartaNome} <span className="text-muted">#{c.cartaLocalId}</span>
                     {foraDePadrao && (
                       <Distintivo tom="aviso" className="ml-2">
-                        fora de padrão ({c.idioma})
+                        {t("foraDePadrao", { idioma: c.idioma })}
                       </Distintivo>
                     )}
                   </div>
                   <div className="text-xs text-muted">
-                    {c.setNome} · {c.idioma} · {c.variante} · qtd {c.quantidade}
+                    {c.setNome} · {c.idioma} · {c.variante} · {t("qtd", { total: c.quantidade })}
                   </div>
                 </div>
                 {confirmandoId === c.id ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-warning-fg">Confirma fora de padrão?</span>
+                    <span className="text-xs text-warning-fg">{t("confirmaForaDePadrao")}</span>
                     <Botao type="button" variante="secundario" tamanho="xs" onClick={() => adicionar(c, true)}>
-                      Confirmar
+                      {t("confirmar")}
                     </Botao>
                     <button type="button" onClick={() => setConfirmandoId(null)} className="text-xs text-muted">
-                      Cancelar
+                      {t("cancelar")}
                     </button>
                   </div>
                 ) : (
@@ -863,7 +860,7 @@ function AdicionarCopiaCustomizada({
                     disabled={enviandoId === c.id}
                     onClick={() => (foraDePadrao ? setConfirmandoId(c.id) : adicionar(c, false))}
                   >
-                    Adicionar
+                    {t("adicionar")}
                   </Botao>
                 )}
               </li>
@@ -871,7 +868,7 @@ function AdicionarCopiaCustomizada({
           })}
           {resultados.length === 0 && (
             <EstadoVazio as="li" className="py-2">
-              Nenhuma cópia livre encontrada.
+              {t("nenhumaLivre")}
             </EstadoVazio>
           )}
         </ul>
@@ -889,6 +886,7 @@ function ModalAlocarVaga({
   onFechar: () => void;
   onAlocado: (msg: string) => void;
 }) {
+  const t = useTranslations("colecaoDetalhe");
   const [candidatos, setCandidatos] = useState<CandidatoVagaDTO[] | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -899,9 +897,9 @@ function ModalAlocarVaga({
     fetch(`/api/vagas/${vaga.id}/candidatos`)
       .then((r) => r.json())
       .then((d) => setCandidatos(d.itens ?? []))
-      .catch(() => setErro("Falha ao carregar candidatos."))
+      .catch(() => setErro(t("erroCandidatos")))
       .finally(() => setCarregando(false));
-  }, [vaga.id]);
+  }, [vaga.id, t]);
 
   async function alocar(candidato: CandidatoVagaDTO, permitirForaDePadrao: boolean) {
     setEnviandoId(candidato.id);
@@ -914,18 +912,16 @@ function ModalAlocarVaga({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? "Falha ao alocar.");
+        setErro(dados.erro ?? t("erroAlocar"));
         return;
       }
-      const partes = [`${candidato.cartaNome} alocada na vaga #${vaga.chave}.`];
+      const partes = [t("alocadaNaVaga", { carta: candidato.cartaNome, vaga: vaga.chave })];
       if (dados.dividida) {
-        partes.push(
-          "O lote foi dividido: 1 unidade foi para a vaga, o restante segue livre no inventário.",
-        );
+        partes.push(t("loteDivididoVaga"));
       }
       onAlocado(partes.join(" "));
     } catch {
-      setErro("Falha de rede ao alocar.");
+      setErro(t("erroRedeAlocar"));
     } finally {
       setEnviandoId(null);
       setConfirmandoId(null);
@@ -937,12 +933,12 @@ function ModalAlocarVaga({
   return (
     <Modal>
       <h2 className="font-medium text-foreground">
-        Alocar vaga #{vaga.chave}
+        {t("modalAlocarTitulo", { vaga: vaga.chave })}
         {nomeVaga ? ` — ${nomeVaga}` : ""}
       </h2>
-      <p className="text-muted">O sistema sugere candidatos; a escolha é sempre sua.</p>
+      <p className="text-muted">{t("modalAlocarExplicacao")}</p>
 
-      {carregando && <p className="text-muted">Carregando candidatos…</p>}
+      {carregando && <p className="text-muted">{t("carregandoCandidatos")}</p>}
       {erro && <p className="text-danger">{erro}</p>}
 
       <ul className="flex flex-col divide-y divide-hairline">
@@ -961,22 +957,23 @@ function ModalAlocarVaga({
                 {c.cartaNome} <span className="text-muted">#{c.cartaLocalId}</span>
                 {c.foraDePadrao && (
                   <Distintivo tom="aviso" className="ml-2">
-                    fora de padrão ({c.idioma})
+                    {t("foraDePadrao", { idioma: c.idioma })}
                   </Distintivo>
                 )}
               </div>
               <div className="text-xs text-muted">
-                {c.setNome} · {c.idioma} · {c.variante} · {c.condicao} · qtd {c.quantidade}
+                {c.setNome} · {c.idioma} · {c.variante} · {c.condicao} ·{" "}
+                {t("qtd", { total: c.quantidade })}
               </div>
             </div>
             {confirmandoId === c.id ? (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-warning-fg">Confirma fora de padrão?</span>
+                <span className="text-xs text-warning-fg">{t("confirmaForaDePadrao")}</span>
                 <Botao type="button" variante="secundario" tamanho="xs" onClick={() => alocar(c, true)}>
-                  Confirmar
+                  {t("confirmar")}
                 </Botao>
                 <button type="button" onClick={() => setConfirmandoId(null)} className="text-xs text-muted">
-                  Cancelar
+                  {t("cancelar")}
                 </button>
               </div>
             ) : (
@@ -987,21 +984,21 @@ function ModalAlocarVaga({
                 disabled={enviandoId === c.id}
                 onClick={() => (c.foraDePadrao ? setConfirmandoId(c.id) : alocar(c, false))}
               >
-                Alocar
+                {t("alocar")}
               </Botao>
             )}
           </li>
         ))}
         {candidatos && candidatos.length === 0 && (
           <EstadoVazio as="li" className="py-4">
-            Nenhum candidato livre no inventário para esta vaga.
+            {t("semCandidatos")}
           </EstadoVazio>
         )}
       </ul>
 
       <div className="flex justify-end pt-2">
         <Botao type="button" variante="secundario" onClick={onFechar}>
-          Fechar
+          {t("fechar")}
         </Botao>
       </div>
     </Modal>
@@ -1009,27 +1006,31 @@ function ModalAlocarVaga({
 }
 
 /**
- * O eixo que fez a candidata ganhar, escrito com os dois valores lado a
- * lado. Sem isto a sugestão chega sem justificativa — e sugestão sem
- * motivo vira ruído que ele aprende a ignorar.
+ * Os dois valores que fizeram a candidata ganhar no eixo. Sem isto a
+ * sugestão chega sem justificativa — e sugestão sem motivo vira ruído que
+ * ele aprende a ignorar.
  *
  * Usa o texto de raridade CRU do catálogo (56 valores, dois idiomas), não
  * a classe visual: mapear "Ilustração Rara Especial" para "secreta" na
- * explicação esconderia justamente o dado que ele quer ver.
+ * explicação esconderia justamente o dado que ele quer ver. `null` de
+ * raridade sobe como `null` — quem monta a frase é que sabe como dizer
+ * "sem raridade" no idioma da interface.
+ *
+ * Devolve valores, não frase pronta: o nome do eixo e a seta vivem no
+ * catálogo de mensagens (`colecaoDetalhe.eixo.*`).
  */
-function resumoDoEixo(
+function valoresDoEixo(
   eixo: CandidataMelhoriaDTO["eixo"],
   atual: CopiaAlocadaNaVagaDTO,
   candidata: CandidataMelhoriaDTO,
-) {
-  const seta = " → ";
+): { de: string | null; para: string | null } {
   if (eixo === "raridade") {
-    return `raridade: ${atual.raridade ?? "sem raridade"}${seta}${candidata.raridade ?? "sem raridade"}`;
+    return { de: atual.raridade, para: candidata.raridade };
   }
   if (eixo === "idioma") {
-    return `idioma: ${atual.idioma}${seta}${candidata.idioma}`;
+    return { de: atual.idioma, para: candidata.idioma };
   }
-  return `variante: ${atual.variante}${seta}${candidata.variante}`;
+  return { de: atual.variante, para: candidata.variante };
 }
 
 /**
@@ -1054,6 +1055,7 @@ function ModalMelhoriaVaga({
   onFechar: () => void;
   onTrocado: (msg: string) => void;
 }) {
+  const t = useTranslations("colecaoDetalhe");
   const [erro, setErro] = useState<string | null>(null);
   const [enviandoId, setEnviandoId] = useState<string | null>(null);
   const [confirmandoId, setConfirmandoId] = useState<string | null>(null);
@@ -1072,20 +1074,24 @@ function ModalMelhoriaVaga({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? "Falha ao trocar.");
+        setErro(dados.erro ?? t("erroTrocar"));
         return;
       }
       const partes = [
-        `Vaga #${melhoria.chave}: ${candidata.cartaNome} (${candidata.setNome}) entrou no lugar de ${atual.cartaNome} (${atual.setNome}), que voltou ao inventário livre.`,
+        t("trocaFeita", {
+          vaga: melhoria.chave,
+          entrou: candidata.cartaNome,
+          setEntrou: candidata.setNome,
+          saiu: atual.cartaNome,
+          setSaiu: atual.setNome,
+        }),
       ];
       if (dados.dividida) {
-        partes.push(
-          "O lote foi dividido: 1 unidade foi para a vaga, o restante segue livre no inventário.",
-        );
+        partes.push(t("loteDivididoVaga"));
       }
       onTrocado(partes.join(" "));
     } catch {
-      setErro("Falha de rede ao trocar.");
+      setErro(t("erroRedeTrocar"));
     } finally {
       setEnviandoId(null);
       setConfirmandoId(null);
@@ -1102,24 +1108,23 @@ function ModalMelhoriaVaga({
       });
       if (!resp.ok) {
         const dados = await resp.json().catch(() => null);
-        setErro(dados?.erro ?? "Falha ao descartar a sugestão.");
+        setErro(dados?.erro ?? t("erroDescartar"));
         return;
       }
       setDescartadas((atuais) =>
         descartar ? [...atuais, candidata.id] : atuais.filter((id) => id !== candidata.id),
       );
     } catch {
-      setErro("Falha de rede ao descartar a sugestão.");
+      setErro(t("erroRedeDescartar"));
     }
   }
 
   return (
     <Modal>
-      <h2 className="font-medium text-foreground">Melhorar a vaga #{melhoria.chave}</h2>
-      <p className="text-muted">
-        Estas cópias livres suas são melhores que a alocada. O sistema sugere e ordena; a troca é
-        sempre sua.
-      </p>
+      <h2 className="font-medium text-foreground">
+        {t("modalMelhoriaTitulo", { vaga: melhoria.chave })}
+      </h2>
+      <p className="text-muted">{t("modalMelhoriaExplicacao")}</p>
 
       <div className="flex items-center gap-3 rounded-slot border border-line p-2">
         <ImagemCartaComZoom
@@ -1132,11 +1137,11 @@ function ModalMelhoriaVaga({
         />
         <div className="flex-1">
           <div>
-            <span className="text-muted">Na vaga hoje:</span> {atual.cartaNome}{" "}
+            <span className="text-muted">{t("naVagaHoje")}</span> {atual.cartaNome}{" "}
             <span className="text-muted">#{atual.cartaLocalId}</span>
           </div>
           <div className="flex flex-wrap items-center gap-1 text-xs text-muted">
-            {atual.setNome} · {atual.raridade ?? "sem raridade"} · {atual.idioma} ·{" "}
+            {atual.setNome} · {atual.raridade ?? t("semRaridade")} · {atual.idioma} ·{" "}
             {atual.condicao}
             <ChipVariante variante={atual.variante} tamanho="sm" />
           </div>
@@ -1162,12 +1167,18 @@ function ModalMelhoriaVaga({
                 <div>
                   {c.cartaNome} <span className="text-muted">#{c.cartaLocalId}</span>
                   <Distintivo tom="sucesso" className="ml-2">
-                    {resumoDoEixo(c.eixo, atual, c)}
+                    {(() => {
+                      const { de, para } = valoresDoEixo(c.eixo, atual, c);
+                      return t(`eixo.${c.eixo}`, {
+                        de: de ?? t("semRaridade"),
+                        para: para ?? t("semRaridade"),
+                      });
+                    })()}
                   </Distintivo>
                 </div>
                 <div className="flex flex-wrap items-center gap-1 text-xs text-muted">
-                  {c.setNome} · {c.raridade ?? "sem raridade"} · {c.idioma} · {c.condicao} · qtd{" "}
-                  {c.quantidade}
+                  {c.setNome} · {c.raridade ?? t("semRaridade")} · {c.idioma} · {c.condicao} ·{" "}
+                  {t("qtd", { total: c.quantidade })}
                   <ChipVariante variante={c.variante} tamanho="sm" />
                 </div>
               </div>
@@ -1178,11 +1189,11 @@ function ModalMelhoriaVaga({
                   onClick={() => alternarDescarte(c, false)}
                   className="text-xs text-accent hover:underline"
                 >
-                  Restaurar
+                  {t("restaurar")}
                 </button>
               ) : confirmandoId === c.id ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-warning-fg">Confirma a troca?</span>
+                  <span className="text-xs text-warning-fg">{t("confirmaTroca")}</span>
                   <Botao
                     type="button"
                     variante="primario"
@@ -1190,14 +1201,14 @@ function ModalMelhoriaVaga({
                     disabled={enviandoId === c.id}
                     onClick={() => trocar(c)}
                   >
-                    Trocar
+                    {t("trocar")}
                   </Botao>
                   <button
                     type="button"
                     onClick={() => setConfirmandoId(null)}
                     className="text-xs text-muted"
                   >
-                    Cancelar
+                    {t("cancelar")}
                   </button>
                 </div>
               ) : (
@@ -1209,15 +1220,15 @@ function ModalMelhoriaVaga({
                     disabled={enviandoId !== null}
                     onClick={() => setConfirmandoId(c.id)}
                   >
-                    Trocar
+                    {t("trocar")}
                   </Botao>
                   <button
                     type="button"
                     onClick={() => alternarDescarte(c, true)}
                     className="text-xs text-muted hover:underline"
-                    title="Some com esta sugestão, só para esta vaga. Uma cópia melhor que apareça depois volta a sinalizar."
+                    title={t("descartarTitulo")}
                   >
-                    Descartar
+                    {t("descartar")}
                   </button>
                 </div>
               )}
@@ -1228,7 +1239,7 @@ function ModalMelhoriaVaga({
 
       <div className="flex justify-end pt-2">
         <Botao type="button" variante="secundario" onClick={onFechar}>
-          Fechar
+          {t("fechar")}
         </Botao>
       </div>
     </Modal>

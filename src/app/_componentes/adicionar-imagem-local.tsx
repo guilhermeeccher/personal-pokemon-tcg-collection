@@ -26,6 +26,7 @@
  * download de tudo o que falta nele. Ver `lib/dominio/mypcards.ts`.
  */
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import type { Idioma } from "@/lib/dominio/enums";
@@ -62,6 +63,7 @@ export function AdicionarImagemLocal({
    */
   jaTemImagemPropria?: boolean;
 }) {
+  const t = useTranslations("imagemLocal");
   const [aberto, setAberto] = useState(false);
 
   return (
@@ -72,11 +74,11 @@ export function AdicionarImagemLocal({
         className="whitespace-nowrap text-xs text-accent hover:underline"
         title={
           jaTemImagemPropria
-            ? `Trocar ou remover a imagem de ${cartaNome}`
-            : `Sem imagem no catálogo — adicionar foto de ${cartaNome}`
+            ? t("gatilhoTrocarTitulo", { carta: cartaNome })
+            : t("gatilhoAdicionarTitulo", { carta: cartaNome })
         }
       >
-        {jaTemImagemPropria ? "trocar" : "+ foto"}
+        {jaTemImagemPropria ? t("gatilhoTrocar") : t("gatilhoAdicionar")}
       </button>
       {aberto && (
         <ModalAdicionarImagem
@@ -113,6 +115,7 @@ function ModalAdicionarImagem({
   onFechar: () => void;
   onEnviada: () => void;
 }) {
+  const t = useTranslations("imagemLocal");
   const [modo, setModo] = useState<Modo>("arquivo");
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [url, setUrl] = useState("");
@@ -131,12 +134,12 @@ function ModalAdicionarImagem({
       );
       if (!resp.ok) {
         const dados = await resp.json().catch(() => ({}));
-        setErro(dados.erro ?? "Falha ao remover a imagem.");
+        setErro(dados.erro ?? t("erroRemover"));
         return;
       }
       onEnviada();
     } catch {
-      setErro("Falha de rede ao remover a imagem.");
+      setErro(t("erroRedeRemover"));
     } finally {
       setRemovendo(false);
     }
@@ -153,7 +156,7 @@ function ModalAdicionarImagem({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? "Falha ao mapear o set.");
+        setErro(dados.erro ?? t("erroMapear"));
         return;
       }
       // O download roda em segundo plano (ver a rota): dizer "pronto"
@@ -161,11 +164,11 @@ function ModalAdicionarImagem({
       // quando olhar de novo.
       setAviso(
         dados.cartasNaFila > 0
-          ? `Set mapeado. Baixando ${dados.cartasNaFila} foto(s) em segundo plano — recarregue em instantes.`
-          : "Set mapeado. Nenhuma carta deste set estava sem foto.",
+          ? t("setMapeadoComFila", { total: dados.cartasNaFila })
+          : t("setMapeadoSemFila"),
       );
     } catch {
-      setErro("Falha de rede ao mapear o set.");
+      setErro(t("erroRedeMapear"));
     } finally {
       setEnviando(false);
     }
@@ -178,7 +181,7 @@ function ModalAdicionarImagem({
 
     if (modo === "mypcards") {
       if (!url.trim()) {
-        setErro("Cole o endereço de uma imagem do set no mypcards.");
+        setErro(t("erroColeMypcards"));
         return;
       }
       await mapearSet();
@@ -188,13 +191,13 @@ function ModalAdicionarImagem({
     const formData = new FormData();
     if (modo === "arquivo") {
       if (!arquivo) {
-        setErro("Escolha um arquivo de imagem.");
+        setErro(t("erroEscolhaArquivo"));
         return;
       }
       formData.set("arquivo", arquivo);
     } else {
       if (!url.trim()) {
-        setErro("Cole o link da imagem.");
+        setErro(t("erroColeLink"));
         return;
       }
       formData.set("url", url.trim());
@@ -208,12 +211,12 @@ function ModalAdicionarImagem({
       );
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? "Falha ao enviar a imagem.");
+        setErro(dados.erro ?? t("erroEnviar"));
         return;
       }
       onEnviada();
     } catch {
-      setErro("Falha de rede ao enviar a imagem.");
+      setErro(t("erroRedeEnviar"));
     } finally {
       setEnviando(false);
     }
@@ -222,12 +225,10 @@ function ModalAdicionarImagem({
   return (
     <Modal as="form" onSubmit={enviar}>
       <h2 className="font-medium text-foreground">
-        {jaTemImagemPropria ? "Trocar imagem" : "Adicionar imagem"} — {cartaNome}
+        {jaTemImagemPropria ? t("tituloTrocar") : t("tituloAdicionar")} — {cartaNome}
       </h2>
       <p className="text-muted">
-        {jaTemImagemPropria
-          ? "Esta carta usa uma imagem que você enviou. Envie outra para substituir, ou remova para voltar ao que o catálogo oferece."
-          : "Esta carta não tem imagem no catálogo. Envie um arquivo ou cole um link — a imagem fica salva no sistema e passa a valer para toda cópia desta carta."}
+        {jaTemImagemPropria ? t("explicacaoTrocar") : t("explicacaoAdicionar")}
       </p>
 
       <div className="flex gap-4 text-sm">
@@ -238,7 +239,7 @@ function ModalAdicionarImagem({
             checked={modo === "arquivo"}
             onChange={() => setModo("arquivo")}
           />
-          Arquivo
+          {t("modoArquivo")}
         </label>
         <label className="flex items-center gap-2">
           <input
@@ -247,7 +248,7 @@ function ModalAdicionarImagem({
             checked={modo === "link"}
             onChange={() => setModo("link")}
           />
-          Link (URL)
+          {t("modoLink")}
         </label>
         {setId && (
           <label className="flex items-center gap-2">
@@ -257,15 +258,15 @@ function ModalAdicionarImagem({
               checked={modo === "mypcards"}
               onChange={() => setModo("mypcards")}
             />
-            Set inteiro (mypcards)
+            {t("modoMypcards")}
           </label>
         )}
       </div>
 
       {modo === "mypcards" ? (
         <Campo
-          rotulo={`Link de qualquer imagem do set ${setId} no mypcards`}
-          ajuda="Abra o set no mypcards, clique com o botão direito numa carta e copie o endereço da imagem. Um link resolve o set inteiro: o sistema lê o id do set e baixa todas as fotos que faltam nele."
+          rotulo={t("campoMypcards", { set: setId ?? "" })}
+          ajuda={t("ajudaMypcards")}
         >
           <input
             type="url"
@@ -276,7 +277,7 @@ function ModalAdicionarImagem({
           />
         </Campo>
       ) : modo === "arquivo" ? (
-        <Campo rotulo="Arquivo de imagem" ajuda="JPEG, PNG ou WEBP, até 8 MB.">
+        <Campo rotulo={t("campoArquivo")} ajuda={t("ajudaArquivo")}>
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"
@@ -285,7 +286,7 @@ function ModalAdicionarImagem({
           />
         </Campo>
       ) : (
-        <Campo rotulo="Link da imagem" ajuda="O servidor baixa e guarda o arquivo — não só o link.">
+        <Campo rotulo={t("campoLink")} ajuda={t("ajudaLink")}>
           <input
             type="url"
             value={url}
@@ -311,20 +312,20 @@ function ModalAdicionarImagem({
             disabled={removendo || enviando}
             className="mr-auto"
           >
-            {removendo ? "Removendo…" : "Remover imagem"}
+            {removendo ? t("removendo") : t("remover")}
           </Botao>
         )}
         <Botao type="button" variante="secundario" onClick={onFechar}>
-          Cancelar
+          {t("cancelar")}
         </Botao>
         <Botao type="submit" variante="primario" disabled={enviando}>
           {enviando
             ? modo === "mypcards"
-              ? "Mapeando…"
-              : "Enviando…"
+              ? t("mapeando")
+              : t("enviando")
             : modo === "mypcards"
-              ? "Mapear set"
-              : "Salvar imagem"}
+              ? t("mapearSet")
+              : t("salvarImagem")}
         </Botao>
       </div>
     </Modal>

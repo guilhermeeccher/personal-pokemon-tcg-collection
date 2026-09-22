@@ -1,62 +1,27 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
 import { Icone, type NomeIcone } from "@/app/_componentes/icone";
 import { Painel } from "@/app/_componentes/painel";
 
 /* Os mesmos glifos da barra lateral, para o atalho e o item de navegação
-   serem reconhecíveis como a mesma coisa. */
-const ATALHOS: readonly { href: string; titulo: string; descricao: string; icone: NomeIcone }[] = [
-  {
-    href: "/inventario/visao-geral",
-    icone: "chart-pie",
-    titulo: "Visão geral",
-    descricao:
-      "Quanto você tem e como está distribuído: totais, expansão, raridade, idioma, condição, variante e progresso das coleções.",
-  },
-  {
-    href: "/cadastro/set",
-    icone: "grid-2x2",
-    titulo: "Cadastro rápido por set",
-    descricao:
-      "Escolha uma expansão e marque a grade inteira de cartas em uma única submissão.",
-  },
-  {
-    href: "/cadastro/busca",
-    icone: "search",
-    titulo: "Cadastro por busca",
-    descricao: "Para carta avulsa: busque por nome, set ou número.",
-  },
-  {
-    href: "/inventario",
-    icone: "library",
-    titulo: "Inventário",
-    descricao:
-      "Lista com busca e filtros: set, idioma, raridade, variante, condição, graded, localização, alocada/livre.",
-  },
-  {
-    href: "/inventario/repetidas",
-    icone: "copy",
-    titulo: "Repetidas",
-    descricao:
-      "O que sobra para troca: total, alocadas e livres por carta, com o idioma físico de cada cópia.",
-  },
-  {
-    href: "/colecoes",
-    icone: "layers",
-    titulo: "Coleções",
-    descricao:
-      "Pokédex, set ou customizada: grade de vagas, alocação de cópias e a lista do que falta.",
-  },
+   serem reconhecíveis como a mesma coisa. O título e a descrição de cada
+   atalho vivem no catálogo de mensagens, sob a chave que está aqui. */
+const ATALHOS: readonly { href: string; chave: string; icone: NomeIcone }[] = [
+  { href: "/inventario/visao-geral", icone: "chart-pie", chave: "visaoGeral" },
+  { href: "/cadastro/set", icone: "grid-2x2", chave: "cadastroSet" },
+  { href: "/cadastro/busca", icone: "search", chave: "cadastroBusca" },
+  { href: "/inventario", icone: "library", chave: "inventario" },
+  { href: "/inventario/repetidas", icone: "copy", chave: "repetidas" },
+  { href: "/colecoes", icone: "layers", chave: "colecoes" },
 ] as const;
 
 export default function Home() {
+  const t = useTranslations("home");
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 p-4 sm:p-8">
-      <CabecalhoPagina
-        titulo="Coleção Pokémon"
-        descricao="Inventário e coleções — cadastro rápido por set é o ponto de partida para digitar a coleção física."
-      />
+      <CabecalhoPagina titulo={t("titulo")} descricao={t("descricao")} />
       <div className="grid gap-4 sm:grid-cols-3">
         {ATALHOS.map((a) => (
           <Painel
@@ -69,9 +34,9 @@ export default function Home() {
               <span className="text-accent">
                 <Icone nome={a.icone} tamanho={17} />
               </span>
-              {a.titulo}
+              {t(`atalhos.${a.chave}.titulo`)}
             </h2>
-            <p className="mt-1 text-sm text-muted">{a.descricao}</p>
+            <p className="mt-1 text-sm text-muted">{t(`atalhos.${a.chave}.descricao`)}</p>
           </Painel>
         ))}
       </div>

@@ -9,36 +9,42 @@
 
 import type { NomeIcone } from "./icone";
 
+/*
+ * O mapa guarda CHAVE de tradução, não texto: a barra lateral e a trilha
+ * resolvem o rótulo no idioma da vez (namespace `nav` dos catálogos em
+ * `messages/`). O `href` continua sendo o caminho real, em português e
+ * inalterado — a tradução não mexe em rota.
+ */
 export interface ItemNav {
   href: string;
-  label: string;
+  chaveLabel: string;
   icone: NomeIcone;
 }
 
 export interface GrupoNav {
-  titulo: string;
+  chaveTitulo: string;
   itens: readonly ItemNav[];
 }
 
 export const GRUPOS: readonly GrupoNav[] = [
   {
-    titulo: "Cadastro",
+    chaveTitulo: "grupos.cadastro",
     itens: [
-      { href: "/cadastro/set", label: "Por set", icone: "grid-2x2" },
-      { href: "/cadastro/busca", label: "Por busca", icone: "search" },
+      { href: "/cadastro/set", chaveLabel: "itens.porSet", icone: "grid-2x2" },
+      { href: "/cadastro/busca", chaveLabel: "itens.porBusca", icone: "search" },
     ],
   },
   {
-    titulo: "Inventário",
+    chaveTitulo: "grupos.inventario",
     itens: [
-      { href: "/inventario/visao-geral", label: "Visão geral", icone: "chart-pie" },
-      { href: "/inventario", label: "Inventário", icone: "library" },
-      { href: "/inventario/repetidas", label: "Repetidas", icone: "copy" },
+      { href: "/inventario/visao-geral", chaveLabel: "itens.visaoGeral", icone: "chart-pie" },
+      { href: "/inventario", chaveLabel: "itens.inventario", icone: "library" },
+      { href: "/inventario/repetidas", chaveLabel: "itens.repetidas", icone: "copy" },
     ],
   },
   {
-    titulo: "Coleções",
-    itens: [{ href: "/colecoes", label: "Coleções", icone: "layers" }],
+    chaveTitulo: "grupos.colecoes",
+    itens: [{ href: "/colecoes", chaveLabel: "itens.colecoes", icone: "layers" }],
   },
 ] as const;
 

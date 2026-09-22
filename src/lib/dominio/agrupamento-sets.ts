@@ -214,15 +214,38 @@ export function formatarIdiomasDisponiveis(idiomas: readonly Idioma[]): string {
 }
 
 /**
+ * Os dois únicos pedaços do rótulo que dependem do idioma da INTERFACE: a
+ * palavra "cartas" e o formato da data. Tudo o mais no rótulo é dado do
+ * catálogo (sigla, nome, códigos de idioma), que não se traduz.
+ *
+ * Entram como parâmetro em vez de o módulo resolver sozinho porque este é
+ * um módulo puro e testado sem React: quem sabe o idioma da interface é a
+ * tela. O padrão é o texto que o rótulo sempre teve — nenhum chamador
+ * antigo muda de comportamento por não passar nada.
+ */
+export interface TextosRotuloSet {
+  cartas: (quantidade: number) => string;
+  data: (lancamento: string) => string | null;
+}
+
+export const TEXTOS_ROTULO_SET_PADRAO: TextosRotuloSet = {
+  cartas: (quantidade) => `${quantidade} cartas`,
+  data: formatarDataLancamento,
+};
+
+/**
  * Rótulo do `<option>`: sigla, nome, quantidade de cartas, data de
  * lançamento (quando existir) e, por fim, os idiomas em que o catálogo
  * tem o set — marca uniforme que aparece em TODOS os sets (substitui o
  * antigo "(catálogo EN)", que só marcava a ausência de pt). Set sem data
  * não ganha "sem data" nem qualquer marcador — só não mostra o trecho.
  */
-export function formatarRotuloSet(set: SetRotulavel): string {
+export function formatarRotuloSet(
+  set: SetRotulavel,
+  textos: TextosRotuloSet = TEXTOS_ROTULO_SET_PADRAO,
+): string {
   const prefixoSigla = `${set.setSigla ?? set.setId} — `;
-  const data = formatarDataLancamento(set.setLancamento);
+  const data = set.setLancamento === null ? null : textos.data(set.setLancamento);
   const sufixoData = data ? ` — ${data}` : "";
   const sufixoIdioma = ` — ${formatarIdiomasDisponiveis(set.idiomasDisponiveis)}`;
   // Mesma resolução de universo da criação de coleção (achado do
@@ -237,5 +260,5 @@ export function formatarRotuloSet(set: SetRotulavel): string {
     incluirSecretas: false,
     qtdCartasNoCatalogo: set.qtdCartasNoCatalogo,
   });
-  return `${prefixoSigla}${set.setNome} — ${vagasEsperadas} cartas${sufixoData}${sufixoIdioma}`;
+  return `${prefixoSigla}${set.setNome} — ${textos.cartas(vagasEsperadas)}${sufixoData}${sufixoIdioma}`;
 }

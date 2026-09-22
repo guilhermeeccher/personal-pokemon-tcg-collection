@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { ImagemVagaVazia } from "@/app/_componentes/imagem-vaga-vazia";
 import { Painel } from "@/app/_componentes/painel";
-import { rotuloAlocacao } from "@/lib/dominio/alocacao-disponivel";
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
 import type { ColecaoComVagasDTO, ColecaoListaDTO } from "@/lib/dominio/tipos-cliente";
 
@@ -53,6 +53,10 @@ interface GrupoFalta {
  * (nasce preenchida, spec §3.3) e por isso não entra aqui.
  */
 export default function OQueFaltaPage() {
+  const t = useTranslations("colecoesFalta");
+  /* A tooltip da vaga é a mesma frase da tela da coleção — namespace
+     compartilhado, para as duas nunca divergirem. */
+  const tc = useTranslations("comum");
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [grupos, setGrupos] = useState<GrupoFalta[]>([]);
@@ -89,13 +93,13 @@ export default function OQueFaltaPage() {
           })),
         );
       } catch {
-        setErro("Falha ao carregar o que falta.");
+        setErro(t("erroCarregar"));
       } finally {
         setCarregando(false);
       }
     }
     carregar();
-  }, []);
+  }, [t]);
 
   const totalFaltando = grupos.reduce((soma, g) => soma + g.itens.length, 0);
   const totalAlocavel = grupos.reduce(
@@ -106,14 +110,14 @@ export default function OQueFaltaPage() {
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-4 p-4 sm:p-8">
       <Link href="/colecoes" className="text-sm text-accent hover:underline">
-        ← Coleções
+        {t("voltar")}
       </Link>
       <CabecalhoPagina
-        titulo="O que falta"
+        titulo={t("titulo")}
         descricao={
           carregando
-            ? "Carregando…"
-            : `${totalFaltando} vaga(s) vazia(s) em ${grupos.length} coleção(ões).`
+            ? t("carregando")
+            : t("resumo", { vagas: totalFaltando, colecoes: grupos.length })
         }
       />
 
@@ -128,15 +132,12 @@ export default function OQueFaltaPage() {
             checked={somenteAlocaveis}
             onChange={(e) => setSomenteAlocaveis(e.target.checked)}
           />
-          Mostrar só o que já posso alocar ({totalAlocavel}) — cópia sua livre serve na vaga
+          {t("filtroAlocaveis", { total: totalAlocavel })}
         </label>
       )}
 
       {!carregando && grupos.length === 0 && !erro && (
-        <p className="text-sm text-muted">
-          Nada falta — todas as coleções Pokédex e Set estão completas (ou nenhuma foi criada
-          ainda).
-        </p>
+        <p className="text-sm text-muted">{t("nadaFalta")}</p>
       )}
 
       {grupos.map(({ colecao, itens }) => {
@@ -156,10 +157,10 @@ export default function OQueFaltaPage() {
               </Link>
               <span className="flex items-center gap-2">
                 {alocaveis > 0 && (
-                  <Distintivo tom="sucesso">{alocaveis} já dá para alocar</Distintivo>
+                  <Distintivo tom="sucesso">{t("jaDaParaAlocar", { total: alocaveis })}</Distintivo>
                 )}
                 <span className="font-mono text-sm tabular-nums text-muted">
-                  {itens.length} faltando
+                  {t("faltando", { total: itens.length })}
                 </span>
               </span>
             </div>
@@ -169,7 +170,11 @@ export default function OQueFaltaPage() {
                 return (
                   <li
                     key={item.chave}
-                    title={alocavel ? rotuloAlocacao(item.candidatosDisponiveis) : undefined}
+                    title={
+                      alocavel
+                        ? tc("rotuloAlocacao", { total: item.candidatosDisponiveis })
+                        : undefined
+                    }
                     /* A vaga com cópia disponível ganha moldura sólida e
                        cor de sucesso: na grade toda tracejada do "falta",
                        ela é a única que exige ação diferente de comprar. */
@@ -191,7 +196,7 @@ export default function OQueFaltaPage() {
                       {item.nome ? ` — ${item.nome}` : ""}
                       {alocavel && (
                         <span className="mt-0.5 block font-medium text-success-fg">
-                          {item.candidatosDisponiveis} cópia(s) sua(s)
+                          {t("copiasSuas", { total: item.candidatosDisponiveis })}
                         </span>
                       )}
                     </span>

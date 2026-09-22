@@ -23,9 +23,14 @@
  * aparece na lista de expansões.
  */
 
+import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
-import { agruparSetsPorSerie, formatarRotuloSet } from "@/lib/dominio/agrupamento-sets";
+import {
+  agruparSetsPorSerie,
+  formatarRotuloSet,
+  type TextosRotuloSet,
+} from "@/lib/dominio/agrupamento-sets";
 import {
   FILTRO_IDIOMA_TODOS,
   derivarOpcoesFiltroIdiomaComContagem,
@@ -42,7 +47,30 @@ export function SeletorExpansao({
   /** `null` quando o valor selecionado é "" (nenhum set). */
   onSelecionar: (set: SetParaCadastroDTO | null) => void;
 }) {
+  const t = useTranslations("seletorExpansao");
+  const formatador = useFormatter();
   const [sets, setSets] = useState<SetParaCadastroDTO[] | null>(null);
+
+  /* Os dois pedaços do rótulo do `<option>` que falam com o usuário. A
+     data sai do `Intl` no idioma da interface (dd/mm/aaaa em pt-BR,
+     mm/dd/yyyy em en) — o resto do rótulo é dado do catálogo. */
+  const textosRotuloSet = useMemo<TextosRotuloSet>(
+    () => ({
+      cartas: (quantidade) => t("cartas", { total: quantidade }),
+      data: (lancamento) => {
+        const partes = lancamento.split("-").map(Number);
+        if (partes.length !== 3 || partes.some((n) => !Number.isFinite(n))) return null;
+        const [ano, mes, dia] = partes;
+        return formatador.dateTime(new Date(Date.UTC(ano, mes - 1, dia)), {
+          timeZone: "UTC",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        });
+      },
+    }),
+    [t, formatador],
+  );
   const [erro, setErro] = useState<string | null>(null);
   const [filtro, setFiltro] = useState("");
   // Padrão "Todos" — nunca começa filtrado (pedido explícito da tarefa).
@@ -52,8 +80,8 @@ export function SeletorExpansao({
     fetch("/api/sets")
       .then((r) => r.json())
       .then((d) => setSets(d.sets))
-      .catch(() => setErro("Falha ao carregar a lista de expansões."));
-  }, []);
+      .catch(() => setErro(t("erroCarregar")));
+  }, [t]);
 
   // Opções derivadas dos dados que já chegaram, com a contagem de cada
   // uma — nunca de uma lista fixa no código, e a contagem é sempre sobre
@@ -98,7 +126,7 @@ export function SeletorExpansao({
   return (
     <div className="flex flex-col gap-2">
       <fieldset className="flex flex-wrap items-center gap-1 text-sm">
-        <legend className="mb-1 font-medium">Idioma do catálogo</legend>
+        <legend className="mb-1 font-medium">{t("idiomaCatalogo")}</legend>
         {opcoesIdioma.map((opcao) => (
           <button
             key={opcao.filtro}
@@ -111,22 +139,22 @@ export function SeletorExpansao({
                 : "border-line text-muted"
             }`}
           >
-            {opcao.rotulo} ({opcao.quantidade})
+            {t(`idioma.${opcao.filtro}`)} ({opcao.quantidade})
           </button>
         ))}
       </fieldset>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Buscar expansão (nome ou sigla)</span>
+          <span className="font-medium">{t("buscar")}</span>
           <input
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
-            placeholder="ex.: 151 ou MEW"
+            placeholder={t("placeholderBuscar")}
             className="w-full max-w-xs rounded border border-line bg-transparent p-2"
           />
         </label>
         <label className="flex flex-1 flex-col gap-1 text-sm">
-          <span className="font-medium">Expansão</span>
+          <span className="font-medium">{t("expansao")}</span>
           <select
             className="w-full max-w-xl rounded border border-line bg-transparent p-2"
             value={setSelecionadoId}
@@ -137,15 +165,13 @@ export function SeletorExpansao({
             }}
           >
             <option value="">
-              {setsFiltrados.length === 0
-                ? "Nenhum set casa com a busca…"
-                : "Selecione um set…"}
+              {setsFiltrados.length === 0 ? t("nenhumSet") : t("selecione")}
             </option>
             {gruposFiltrados.map((grupo) => (
               <optgroup key={grupo.serieId} label={grupo.serie}>
                 {grupo.sets.map((s) => (
                   <option key={s.setId} value={s.setId}>
-                    {formatarRotuloSet(s)}
+                    {formatarRotuloSet(s, textosRotuloSet)}
                   </option>
                 ))}
               </optgroup>

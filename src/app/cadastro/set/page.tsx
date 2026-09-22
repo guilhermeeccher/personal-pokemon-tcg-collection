@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMemo, useReducer, useRef, useState } from "react";
 
 import { CONDICOES, IDIOMAS } from "@/lib/dominio/enums";
@@ -33,6 +34,7 @@ function flagsDaCarta(carta: CartaParaGradeDTO) {
 }
 
 export default function CadastroPorSetPage() {
+  const t = useTranslations("cadastroSet");
   const [setSelecionado, setSetSelecionado] = useState("");
   const [grade, setGrade] = useState<GradeDoSetDTO | null>(null);
   const [carregandoGrade, setCarregandoGrade] = useState(false);
@@ -63,7 +65,7 @@ export default function CadastroPorSetPage() {
     fetch(`/api/sets/${encodeURIComponent(novoSetId)}/cartas`)
       .then((r) => r.json())
       .then((d: GradeDoSetDTO) => setGrade(d))
-      .catch(() => setErro("Falha ao carregar a grade do set."))
+      .catch(() => setErro(t("erroGrade")))
       .finally(() => setCarregandoGrade(false));
   }
 
@@ -106,17 +108,21 @@ export default function CadastroPorSetPage() {
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? "Falha ao gravar o lote.");
+        setErro(dados.erro ?? t("erroLote"));
         return;
       }
       setMensagem(
         dados.fundidas > 0
-          ? `${dados.inseridas} cópia(s) gravada(s) e ${dados.fundidas} somada(s) a cópia(s) existente(s) de ${gradeAtual.setNome}.`
-          : `${dados.inseridas} cópia(s) gravada(s) de ${gradeAtual.setNome}.`,
+          ? t("loteComFusao", {
+              inseridas: dados.inseridas,
+              fundidas: dados.fundidas,
+              set: gradeAtual.setNome,
+            })
+          : t("loteGravado", { inseridas: dados.inseridas, set: gradeAtual.setNome }),
       );
       dispatch({ tipo: "reset" });
     } catch {
-      setErro("Falha de rede ao gravar o lote.");
+      setErro(t("erroRede"));
     } finally {
       setEnviando(false);
     }
@@ -125,8 +131,8 @@ export default function CadastroPorSetPage() {
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-8">
       <CabecalhoPagina
-        titulo="Cadastro rápido por set"
-        descricao="Marque a quantidade das cartas que você tem. Tab avança para a próxima carta. Variante, idioma e condição de cada carta começam no padrão do lote, definido na barra abaixo; mudar numa carta vale só para ela. O seletor de variante só oferece o que a carta de fato tem no catálogo."
+        titulo={t("titulo")}
+        descricao={t("descricao")}
       />
 
       <SeletorExpansao
@@ -134,7 +140,7 @@ export default function CadastroPorSetPage() {
         onSelecionar={(set) => selecionarSet(set?.setId ?? "")}
       />
 
-      {carregandoGrade && <p className="text-sm text-muted">Carregando grade…</p>}
+      {carregandoGrade && <p className="text-sm text-muted">{t("carregandoGrade")}</p>}
       {erro && <p className="text-sm text-danger">{erro}</p>}
       {mensagem && <p className="text-sm text-success-fg">{mensagem}</p>}
 
@@ -142,20 +148,22 @@ export default function CadastroPorSetPage() {
         <>
           {!gradeAtual.temPt ? (
             <Alerta tom="aviso">
-              <strong>Catálogo: EN</strong> — este set não tem carta a carta em português no upstream. A
-              identidade de cada carta usa a ficha em inglês; o idioma abaixo é o da SUA cópia física (ex.:
-              escolha <code>pt</code> se for a edição brasileira).
+              {t.rich("catalogoEn", {
+                forte: (partes) => <strong>{partes}</strong>,
+                codigo: (partes) => <code>{partes}</code>,
+              })}
             </Alerta>
           ) : (
             <Alerta tom="neutro">
-              <strong>Catálogo: PT</strong> — {gradeAtual.setNome}
+              {t.rich("catalogoPt", { forte: (partes) => <strong>{partes}</strong> })} —{" "}
+              {gradeAtual.setNome}
             </Alerta>
           )}
 
           <div className="sticky top-0 z-10 rounded-card flex flex-wrap items-end gap-4 rounded border border-line bg-surface/95 p-3 backdrop-blur">
-            <span className="text-sm font-medium">Padrão do lote:</span>
+            <span className="text-sm font-medium">{t("padraoLote")}</span>
             <CampoSelect
-              rotulo="Variante"
+              rotulo={t("colunaVariante")}
               valor={estado.defaults.variante}
               opcoes={variantesDisponiveis({
                 varianteNormalDisponivel: true,
@@ -167,35 +175,35 @@ export default function CadastroPorSetPage() {
               onChange={(v) => dispatch({ tipo: "campoDefault", campo: "variante", valor: v })}
             />
             <CampoSelect
-              rotulo="Idioma"
+              rotulo={t("colunaIdioma")}
               valor={estado.defaults.idioma}
               opcoes={IDIOMAS}
               onChange={(v) => dispatch({ tipo: "campoDefault", campo: "idioma", valor: v })}
             />
             <CampoSelect
-              rotulo="Condição"
+              rotulo={t("colunaCondicao")}
               valor={estado.defaults.condicao}
               opcoes={CONDICOES}
               onChange={(v) => dispatch({ tipo: "campoDefault", campo: "condicao", valor: v })}
             />
             <div className="ml-auto flex items-center gap-3">
-              <span className="text-sm text-muted">{totalMarcadas} marcada(s)</span>
+              <span className="text-sm text-muted">{t("marcadas", { total: totalMarcadas })}</span>
               <Botao
                 type="button"
                 variante="primario"
                 onClick={enviar}
                 disabled={enviando || totalMarcadas === 0}
               >
-                {enviando ? "Gravando…" : "Gravar lote"}
+                {enviando ? t("gravando") : t("gravarLote")}
               </Botao>
             </div>
           </div>
 
-          <Campo rotulo="Filtrar por número (carta avulsa — tolera zero à esquerda)" className="max-w-xs">
+          <Campo rotulo={t("filtrarNumero")} className="max-w-xs">
             <input
               value={filtroNumero}
               onChange={(e) => setFiltroNumero(e.target.value)}
-              placeholder="ex.: 4, 04 ou 004"
+              placeholder={t("placeholderNumero")}
               className={classesEntrada}
             />
           </Campo>
@@ -205,11 +213,11 @@ export default function CadastroPorSetPage() {
               <tr className={classesLinhaCabecalho}>
                 <th className={classesCelulaCabecalho}></th>
                 <th className={classesCelulaCabecalho}>#</th>
-                <th className={classesCelulaCabecalho}>Nome</th>
-                <th className={classesCelulaCabecalho}>Qtd.</th>
-                <th className={classesCelulaCabecalho}>Variante</th>
-                <th className={classesCelulaCabecalho}>Idioma</th>
-                <th className={classesCelulaCabecalho}>Condição</th>
+                <th className={classesCelulaCabecalho}>{t("colunaNome")}</th>
+                <th className={classesCelulaCabecalho}>{t("colunaQtd")}</th>
+                <th className={classesCelulaCabecalho}>{t("colunaVariante")}</th>
+                <th className={classesCelulaCabecalho}>{t("colunaIdioma")}</th>
+                <th className={classesCelulaCabecalho}>{t("colunaCondicao")}</th>
               </tr>
             </thead>
             <tbody>
@@ -235,7 +243,7 @@ export default function CadastroPorSetPage() {
                       <NomeCarta nome={carta.nome} nomeEspecie={carta.nomeEspecie} />
                       {carta.qtdPossuida > 0 && (
                         <Distintivo tom="aviso" className="ml-2">
-                          já tem {carta.qtdPossuida}
+                          {t("jaTem", { total: carta.qtdPossuida })}
                         </Distintivo>
                       )}
                     </td>
@@ -303,7 +311,7 @@ export default function CadastroPorSetPage() {
               {cartasFiltradas.length === 0 && (
                 <tr>
                   <td colSpan={7} className="p-4 text-center text-sm text-muted">
-                    Nenhuma carta com esse número neste set.
+                    {t("nenhumaCarta")}
                   </td>
                 </tr>
               )}

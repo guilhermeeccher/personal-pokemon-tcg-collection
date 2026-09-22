@@ -14,6 +14,7 @@
  * alocável em vaga de Pokédex, exportável — e o sync nunca a remove.
  */
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
@@ -33,12 +34,13 @@ export function CadastrarCartaManual({
   nomeSugerido?: string;
   onCriada: (cartaId: string, idioma: Idioma) => void;
 }) {
+  const t = useTranslations("cartaManual");
   const [aberto, setAberto] = useState(false);
 
   return (
     <>
       <Botao type="button" variante="secundario" onClick={() => setAberto(true)}>
-        Cadastrar carta que não está no catálogo
+        {t("abrir")}
       </Botao>
       {aberto && (
         <ModalCartaManual
@@ -69,6 +71,7 @@ function ModalCartaManual({
   onFechar: () => void;
   onCriada: (cartaId: string, idioma: Idioma) => void;
 }) {
+  const t = useTranslations("cartaManual");
   const [setId, setSetId] = useState(siglaSugerida);
   const [nomeDoSet, setNomeDoSet] = useState("");
   const [localId, setLocalId] = useState(numeroSugerido);
@@ -99,12 +102,12 @@ function ModalCartaManual({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErros(dados.erros ?? [dados.erro ?? "Falha ao cadastrar a carta."]);
+        setErros(dados.erros ?? [dados.erro ?? t("erroCadastrar")]);
         return;
       }
       onCriada(dados.cartaId, idioma);
     } catch {
-      setErros(["Falha de rede ao cadastrar a carta."]);
+      setErros([t("erroRede")]);
     } finally {
       setEnviando(false);
     }
@@ -112,15 +115,13 @@ function ModalCartaManual({
 
   return (
     <Modal as="form" onSubmit={enviar}>
-      <h2 className="font-medium text-foreground">Carta fora do catálogo</h2>
+      <h2 className="font-medium text-foreground">{t("titulo")}</h2>
       <p className="text-muted">
-        Para carta que a TCGdex não tem — como o set <strong>SMH</strong> (GX Starter Decks
-        japonês). Copie o que está impresso na carta. Depois de cadastrada, ela funciona como
-        qualquer outra, e a atualização semanal do catálogo nunca a remove.
+        {t.rich("explicacao", { forte: (partes) => <strong>{partes}</strong> })}
       </p>
 
       <div className="flex flex-wrap gap-3">
-        <Campo rotulo="Sigla do set">
+        <Campo rotulo={t("campoSigla")}>
           <input
             value={setId}
             onChange={(e) => setSetId(e.target.value)}
@@ -128,7 +129,7 @@ function ModalCartaManual({
             className={`w-32 ${classesEntrada}`}
           />
         </Campo>
-        <Campo rotulo="Número">
+        <Campo rotulo={t("campoNumero")}>
           <input
             value={localId}
             onChange={(e) => setLocalId(e.target.value)}
@@ -136,7 +137,7 @@ function ModalCartaManual({
             className={`w-28 ${classesEntrada}`}
           />
         </Campo>
-        <Campo rotulo="Total do set (opcional)">
+        <Campo rotulo={t("campoTotalSet")}>
           <input
             value={qtdSet}
             onChange={(e) => setQtdSet(e.target.value)}
@@ -146,7 +147,7 @@ function ModalCartaManual({
         </Campo>
       </div>
 
-      <Campo rotulo="Nome da carta">
+      <Campo rotulo={t("campoNomeCarta")}>
         <input
           value={nome}
           onChange={(e) => setNome(e.target.value)}
@@ -155,7 +156,7 @@ function ModalCartaManual({
         />
       </Campo>
 
-      <Campo rotulo="Nome do set (opcional)">
+      <Campo rotulo={t("campoNomeSet")}>
         <input
           value={nomeDoSet}
           onChange={(e) => setNomeDoSet(e.target.value)}
@@ -165,7 +166,7 @@ function ModalCartaManual({
       </Campo>
 
       <div className="flex flex-wrap gap-3">
-        <Campo rotulo="Idioma do catálogo">
+        <Campo rotulo={t("campoIdiomaCatalogo")}>
           <select
             value={idioma}
             onChange={(e) => setIdioma(e.target.value as Idioma)}
@@ -178,7 +179,7 @@ function ModalCartaManual({
             ))}
           </select>
         </Campo>
-        <Campo rotulo="Nº da Pokédex (só Pokémon)">
+        <Campo rotulo={t("campoDexId")}>
           <input
             value={dexId}
             onChange={(e) => setDexId(e.target.value)}
@@ -187,10 +188,7 @@ function ModalCartaManual({
           />
         </Campo>
       </div>
-      <p className="text-xs text-muted">
-        O número da Pokédex é o que permite a carta ocupar vaga numa coleção Pokédex. Treinador e
-        Energia não têm — deixe em branco.
-      </p>
+      <p className="text-xs text-muted">{t("ajudaDexId")}</p>
 
       {erros.length > 0 && (
         <ul className="text-danger">
@@ -202,10 +200,10 @@ function ModalCartaManual({
 
       <div className="flex justify-end gap-2 pt-2">
         <Botao type="button" variante="secundario" onClick={onFechar}>
-          Cancelar
+          {t("cancelar")}
         </Botao>
         <Botao type="submit" variante="primario" disabled={enviando}>
-          {enviando ? "Cadastrando…" : "Cadastrar carta"}
+          {enviando ? t("cadastrando") : t("cadastrar")}
         </Botao>
       </div>
     </Modal>

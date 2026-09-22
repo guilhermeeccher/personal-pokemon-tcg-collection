@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import {
@@ -38,6 +39,7 @@ const FORM_INICIAL: FormularioCopia = {
 };
 
 export default function CadastroPorBuscaPage() {
+  const t = useTranslations("cadastroBusca");
   const [nome, setNome] = useState("");
   const [setId, setSetId] = useState("");
   const [numero, setNumero] = useState("");
@@ -60,7 +62,7 @@ export default function CadastroPorBuscaPage() {
   async function buscar(e: React.FormEvent) {
     e.preventDefault();
     if (!nome.trim() && !setId.trim() && !numero.trim()) {
-      setErro("Informe ao menos um critério: nome, set ou número.");
+      setErro(t("erroCriterio"));
       return;
     }
     setBuscando(true);
@@ -75,7 +77,7 @@ export default function CadastroPorBuscaPage() {
       const dados = await resp.json();
       setResultados(dados.cartas);
     } catch {
-      setErro("Falha na busca.");
+      setErro(t("erroBusca"));
     } finally {
       setBuscando(false);
     }
@@ -85,7 +87,7 @@ export default function CadastroPorBuscaPage() {
     e.preventDefault();
     const parseado = parseSiglaNumero(siglaNumero);
     if (!parseado) {
-      setErro('Não entendi como "sigla + número" — ex.: "MEW 151" ou "mew151".');
+      setErro(t("erroSiglaNumero"));
       return;
     }
     setBuscandoRapido(true);
@@ -107,7 +109,7 @@ export default function CadastroPorBuscaPage() {
         setResultados(encontradas);
       }
     } catch {
-      setErro("Falha na busca.");
+      setErro(t("erroBusca"));
     } finally {
       setBuscandoRapido(false);
     }
@@ -147,7 +149,7 @@ export default function CadastroPorBuscaPage() {
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? "Falha ao gravar a cópia.");
+        setErro(dados.erro ?? t("erroGravar"));
         return;
       }
       // "somada" e "gravada" são resultados diferentes: esconder a
@@ -155,12 +157,12 @@ export default function CadastroPorBuscaPage() {
       // linha que já existia.
       setMensagem(
         dados.fundida
-          ? `Somada à cópia que você já tinha de ${cartaSelecionada.nome} — agora são ${dados.quantidadeFinal}.`
-          : `Cópia de ${cartaSelecionada.nome} gravada.`,
+          ? t("somada", { carta: cartaSelecionada.nome, total: dados.quantidadeFinal })
+          : t("gravada", { carta: cartaSelecionada.nome }),
       );
       setCartaSelecionada(null);
     } catch {
-      setErro("Falha de rede ao gravar.");
+      setErro(t("erroRede"));
     } finally {
       setSalvando(false);
     }
@@ -168,49 +170,49 @@ export default function CadastroPorBuscaPage() {
 
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-6 p-4 sm:p-8">
-      <CabecalhoPagina titulo="Cadastro por busca" descricao="Para carta avulsa: busque por nome, set ou número." />
+      <CabecalhoPagina titulo={t("titulo")} descricao={t("descricao")} />
 
       <form onSubmit={buscar} className="flex flex-wrap items-end gap-3">
-        <Campo rotulo="Nome">
+        <Campo rotulo={t("campoNome")}>
           <input
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            placeholder="ex.: Charizard"
+            placeholder={t("placeholderNome")}
             className={classesEntrada}
           />
         </Campo>
-        <Campo rotulo="Set (id ou nome)">
+        <Campo rotulo={t("campoSet")}>
           <input
             value={setId}
             onChange={(e) => setSetId(e.target.value)}
-            placeholder="ex.: base1 ou Base Set"
+            placeholder={t("placeholderSet")}
             className={classesEntrada}
           />
         </Campo>
-        <Campo rotulo="Número">
+        <Campo rotulo={t("campoNumero")}>
           <input
             value={numero}
             onChange={(e) => setNumero(e.target.value)}
-            placeholder="ex.: 4"
+            placeholder={t("placeholderNumero")}
             className={`w-24 ${classesEntrada}`}
           />
         </Campo>
         <Botao type="submit" variante="primario" disabled={buscando}>
-          {buscando ? "Buscando…" : "Buscar"}
+          {buscando ? t("buscando") : t("buscar")}
         </Botao>
       </form>
 
       <form onSubmit={buscarRapidoPorSigla} className="flex flex-wrap items-end gap-3">
-        <Campo rotulo="Ou direto pela sigla impressa na carta + número">
+        <Campo rotulo={t("campoSigla")}>
           <input
             value={siglaNumero}
             onChange={(e) => setSiglaNumero(e.target.value)}
-            placeholder='ex.: "MEW 151" ou "mew151"'
+            placeholder={t("placeholderSigla")}
             className={`w-56 ${classesEntrada}`}
           />
         </Campo>
         <Botao type="submit" variante="secundario" disabled={buscandoRapido}>
-          {buscandoRapido ? "Buscando…" : "Resolver"}
+          {buscandoRapido ? t("buscando") : t("resolver")}
         </Botao>
       </form>
 
@@ -224,12 +226,8 @@ export default function CadastroPorBuscaPage() {
       {resultados && resultados.length === 0 && (
         <div className="flex flex-col items-start gap-3 rounded border border-line bg-surface p-4">
           <div>
-            <p className="font-medium text-foreground">Nenhuma carta encontrada.</p>
-            <p className="text-sm text-muted">
-              Confira a sigla e o número impressos na carta. Se ela realmente não estiver no
-              catálogo — acontece com sets japoneses e promocionais que a TCGdex não cataloga —
-              cadastre à mão.
-            </p>
+            <p className="font-medium text-foreground">{t("nenhumaCarta")}</p>
+            <p className="text-sm text-muted">{t("nenhumaCartaAjuda")}</p>
           </div>
           <CadastrarCartaManual
             siglaSugerida={parseSiglaNumero(siglaNumero)?.sigla ?? setId}
@@ -248,7 +246,7 @@ export default function CadastroPorBuscaPage() {
 
       {resultados && resultados.length > 0 && (
         <div className="flex flex-col gap-2">
-          <p className="text-sm text-muted">{resultados.length} resultado(s).</p>
+          <p className="text-sm text-muted">{t("resultados", { total: resultados.length })}</p>
           <ul className="divide-y divide-hairline">
             {resultados.map((carta) => {
               return (
@@ -266,17 +264,18 @@ export default function CadastroPorBuscaPage() {
                       <NomeCarta nome={carta.nome} nomeEspecie={carta.nomeEspecie} />
                       {carta.qtdPossuida > 0 && (
                         <Distintivo tom="aviso" className="ml-2">
-                          já tem {carta.qtdPossuida}
+                          {t("jaTem", { total: carta.qtdPossuida })}
                         </Distintivo>
                       )}
                     </div>
                     <div className="text-muted">
-                      {carta.setNome} · #{carta.localId} · catálogo {carta.idiomaCatalogo}
+                      {carta.setNome} · #{carta.localId} ·{" "}
+                      {t("catalogo", { idioma: carta.idiomaCatalogo })}
                       {carta.raridade ? ` · ${carta.raridade}` : ""}
                     </div>
                   </div>
                   <Botao type="button" variante="secundario" tamanho="sm" onClick={() => escolherCarta(carta)}>
-                    Cadastrar cópia
+                    {t("cadastrarCopia")}
                   </Botao>
                 </li>
               );
@@ -291,7 +290,7 @@ export default function CadastroPorBuscaPage() {
             {cartaSelecionada.nome} — {cartaSelecionada.setNome} #{cartaSelecionada.localId}
           </h2>
           <div className="flex flex-wrap gap-4">
-            <Campo rotulo="Quantidade">
+            <Campo rotulo={t("campoQuantidade")}>
               <input
                 type="number"
                 min={1}
@@ -300,7 +299,7 @@ export default function CadastroPorBuscaPage() {
                 className={`w-20 ${classesEntrada}`}
               />
             </Campo>
-            <Campo rotulo="Variante">
+            <Campo rotulo={t("campoVariante")}>
               <select
                 value={form.variante}
                 onChange={(e) => setForm({ ...form, variante: e.target.value as VarianteCopia })}
@@ -313,7 +312,7 @@ export default function CadastroPorBuscaPage() {
                 ))}
               </select>
             </Campo>
-            <Campo rotulo="Idioma (físico)">
+            <Campo rotulo={t("campoIdiomaFisico")}>
               <select
                 value={form.idioma}
                 onChange={(e) => setForm({ ...form, idioma: e.target.value as Idioma })}
@@ -326,7 +325,7 @@ export default function CadastroPorBuscaPage() {
                 ))}
               </select>
             </Campo>
-            <Campo rotulo="Condição">
+            <Campo rotulo={t("campoCondicao")}>
               <select
                 value={form.condicao}
                 onChange={(e) => setForm({ ...form, condicao: e.target.value as Condicao })}
@@ -339,21 +338,21 @@ export default function CadastroPorBuscaPage() {
                 ))}
               </select>
             </Campo>
-            <Campo rotulo="Localização">
+            <Campo rotulo={t("campoLocalizacao")}>
               <input
                 value={form.localizacao}
                 onChange={(e) => setForm({ ...form, localizacao: e.target.value })}
-                placeholder="ex.: Fichário 1, pág. 3"
+                placeholder={t("placeholderLocalizacao")}
                 className={classesEntrada}
               />
             </Campo>
           </div>
           <div className="flex gap-2">
             <Botao type="submit" variante="primario" disabled={salvando}>
-              {salvando ? "Gravando…" : "Gravar cópia"}
+              {salvando ? t("gravando") : t("gravarCopia")}
             </Botao>
             <Botao type="button" variante="secundario" onClick={() => setCartaSelecionada(null)}>
-              Cancelar
+              {t("cancelar")}
             </Botao>
           </div>
         </Painel>
