@@ -266,7 +266,7 @@ export async function sincronizarCatalogo(
         // demais sets so renova o bloqueio do IP.
         if (err instanceof ErroBloqueioUpstream) throw err;
         setsComFalha.push(setBreve.id);
-        console.error(`[sync:${idioma}] falha ao obter set ${setBreve.id}:`, err);
+        console.error(`[sync:${idioma}] failed to fetch set ${setBreve.id}:`, err);
         return null;
       }
     },
@@ -341,7 +341,7 @@ export async function sincronizarCatalogo(
         if (err instanceof ErroBloqueioUpstream) throw err;
         cartasComErro.push(ref.cardId);
         cartasComErroPorSet.push({ setId: ref.setDetail.id });
-        console.error(`[sync:${idioma}] falha ao obter carta ${ref.cardId}:`, err);
+        console.error(`[sync:${idioma}] failed to fetch card ${ref.cardId}:`, err);
         return null;
       }
     },
