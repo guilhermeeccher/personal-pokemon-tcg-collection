@@ -1,25 +1,25 @@
-# NOTICE — trabalhos de terceiros
+# NOTICE — third-party work
 
-Este arquivo registra o que, dentro deste repositório, não foi produzido aqui. O código é MIT
-(ver [`LICENSE`](./LICENSE)); o que está abaixo tem dono próprio e condição própria.
+This file records what, inside this repository, was not produced here. The code is MIT (see
+[`LICENSE`](./LICENSE)); what is below has an owner of its own and a condition of its own.
 
-A isenção de marca — Nintendo, Creatures, GAME FREAK, The Pokémon Company — está no
-[README](./README.md#disclaimer) e vale para o projeto inteiro.
+The trademark disclaimer — Nintendo, Creatures, GAME FREAK, The Pokémon Company — is in the
+[README](./README.md#disclaimer) and applies to the whole project.
 
 ---
 
 ## TCGdex — `seed/carta-catalogo.csv.gz`
 
-O arquivo de catálogo versionado em `seed/` é **obra derivada** do repositório de dados
-[`tcgdex/cards-database`](https://github.com/tcgdex/cards-database), distribuído sob licença MIT.
-Ele foi montado a partir da API pública da TCGdex (`api.tcgdex.net`) e carrega, carta a carta,
-metadado que é deles: id, set, série, nome, categoria, raridade, números da Pokédex, ilustrador,
-contagens do set e variantes disponíveis.
+The catalog file versioned in `seed/` is a **derivative work** of the data repository
+[`tcgdex/cards-database`](https://github.com/tcgdex/cards-database), distributed under the MIT
+license. It was assembled from TCGdex's public API (`api.tcgdex.net`) and carries, card by card,
+metadata that is theirs: id, set, series, name, category, rarity, Pokédex numbers, illustrator, set
+counts and available variants.
 
-A licença MIT permite redistribuir e permite obra derivada, e **cobra uma coisa em troca**: que o
-aviso de copyright e o aviso de permissão acompanhem a cópia. É por isso que o texto abaixo está
-reproduzido aqui inteiro, e não resumido — resumir seria descumprir exatamente a condição que nos
-permite distribuir o catálogo junto com o projeto.
+The MIT license permits redistribution and permits derivative work, and **charges one thing in
+return**: that the copyright notice and the permission notice travel with the copy. That is why the
+text below is reproduced here in full, not summarized — summarizing it would break exactly the
+condition that lets us distribute the catalog together with the project.
 
 ```
 MIT License
@@ -45,33 +45,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-**O que não vem junto: as imagens.** O catálogo guarda a URL da arte no CDN da TCGdex
-(`assets.tcgdex.net`), nunca o arquivo. A imagem é carregada pelo navegador de quem instalou, na
-hora de exibir, direto da fonte. Nenhum byte de arte de carta está versionado neste repositório, e
-isso é decisão, não acaso: redistribuir o arquivo de imagem é uma responsabilidade diferente de
-redistribuir metadado sob MIT.
+**What does not come with it: the images.** The catalog stores the URL of the art on the TCGdex CDN
+(`assets.tcgdex.net`), never the file. The image is loaded by the browser of whoever installed the
+system, at display time, straight from the source. Not one byte of card art is versioned in this
+repository, and that is a decision, not an accident: redistributing the image file is a different
+responsibility from redistributing metadata under MIT.
 
 ## mypcards — `seed/set-mypcards.csv`
 
-Uma minoria das cartas do catálogo não tem foto em fonte nenhuma da TCGdex — sets inteiros de
-energia, promos e galerias que nunca foram digitalizados lá. Para essas, o projeto usa o
-[mypcards](https://www.mypcards.com/) como fonte secundária, e a tela marca a foto como tal.
+A minority of the cards in the catalog have no photo in any TCGdex source — whole energy sets, promos
+and galleries that were never digitized there. For those, the project uses
+[mypcards](https://www.mypcards.com/) as a secondary source, and the screen marks the photo as such.
 
-O que está versionado é **só o mapeamento** `set → id interno do set no mypcards`: um número por
-expansão, levantado a mão, sem o qual não é possível montar a URL da imagem. Esse número é interno
-deles e não é derivável do nosso catálogo (`src/lib/dominio/mypcards.ts` documenta o formato da
-URL e como ele foi decomposto).
+What is versioned is **only the mapping** `set → mypcards internal set id`: one number per expansion,
+collected by hand, without which the image URL cannot be assembled. That number is internal to them
+and cannot be derived from our catalog (`src/lib/dominio/mypcards.ts` documents the URL format and
+how it was taken apart).
 
-O mapeamento é fato de interoperabilidade, não conteúdo deles — mas o crédito é devido do mesmo
-jeito, porque sem o trabalho de catalogação do site ele não existiria. **Nenhuma imagem do mypcards
-está neste repositório.** Cada instalação baixa as suas, da fonte, para um volume Docker local
+The mapping is a fact of interoperability, not their content — but the credit is owed all the same,
+because without the site's cataloging work it would not exist. **No mypcards image is in this
+repository.** Each installation downloads its own, from the source, into a local Docker volume
 (`pnpm baixar:imagens-mypcards`).
 
 ## LigaPokemon
 
-O coletor de preço lê páginas públicas da [LigaPokemon](https://www.ligapokemon.com.br/). Nada do
-site deles é redistribuído aqui: o que fica no repositório é o código que lê, e o que fica na
-instalação de cada um é o preço que aquela instalação consultou.
+The price collector reads public pages of [LigaPokemon](https://www.ligapokemon.com.br/). Nothing
+from their site is redistributed here: what stays in the repository is the code that reads, and what
+stays in each installation is the price that installation looked up.
 
-O acesso obedece o `robots.txt` deles por padrão, lido ao vivo — o porquê e o custo disso estão no
-[README](./README.md#preços-da-ligapokemon).
+Access obeys their `robots.txt` by default, read live — the why and the cost of that are in the
+[README](./README.md#ligapokemon-prices).

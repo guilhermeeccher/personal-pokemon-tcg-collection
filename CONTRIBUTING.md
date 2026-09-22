@@ -1,21 +1,73 @@
-# Como contribuir
+# How to contribute
 
-Obrigado pelo interesse. Este é um projeto pessoal aberto: não há SLA nem garantia de resposta, mas
-PR bem feito é bem-vindo.
+Thanks for the interest. This is an open personal project: there is no SLA and no guarantee of a
+reply, but a well-made PR is welcome.
 
-## Antes de escrever código
+## Before writing code
 
-Leia o [`AGENTS.md`](./AGENTS.md). Ele é o contrato de estilo e de engenharia do repositório — regras
-de negócio invioláveis, convenções, contratos do sync e do coletor de preço, e a lista de decisões
-que **não** se reabrem dentro de um PR. Se você usa um assistente de código, aponte-o para lá antes
-de pedir a mudança.
+Read [`AGENTS.md`](./AGENTS.md). It is the repository's style and engineering contract — inviolable
+business rules, conventions, the sync and price collector contracts, and the list of decisions that
+are **not** reopened inside a PR. If you use a coding assistant, point it there before asking for the
+change.
 
-Para mudança grande, mudança de stack ou qualquer coisa que a seção "Pontos de parada" do
-`AGENTS.md` cobre: **abra uma issue antes**. É mais barato discordar em texto do que em diff.
+For a large change, a stack change or anything the "Stopping points" section of `AGENTS.md` covers:
+**open an issue first**. Disagreeing in text is cheaper than disagreeing in a diff.
 
-## Ambiente
+## The code is in Portuguese
 
-Node.js 22 ou mais novo, e Docker com o plugin Compose v2 se você for subir a aplicação.
+The documentation is in English; the code is not, and translating it is not a contribution the
+project accepts. Domain identifiers, database columns, enum values, route paths and the comments
+stay in Portuguese, for the reasons in `AGENTS.md`. A PR whose diff is a translation of comments or
+identifiers is closed.
+
+The glossary below is the key. Read it once and the code reads fine.
+
+### Glossary — domain vocabulary
+
+| Portuguese | English | What it means |
+|---|---|---|
+| `copia` | copy | One physical card you own: language, variant, condition, quantity, location. Table `copia`. |
+| `colecao` | collection | A set of slots you are filling: a Pokédex, a complete set or a custom list. Table `colecao`, kinds `pokedex`, `set`, `customizada`. |
+| `vaga` | slot | One position inside a collection, filled by at most one copy. Table `vaga`; an empty slot is what the whole system exists to report. |
+| `carta_catalogo` | catalog card | A row of the TCGdex catalog, keyed by (`id`, `idioma`). It answers "which card is this", never "what is mine like". |
+| `escolha_compra` | buy choice | A card you decided to buy for a slot. Table `escolha_compra`; it survives price rounds and is never deleted by one. |
+| `varredura` | scan | One price-collecting run against LigaPokemon, slot by slot. Table `liga_varredura`. |
+| `raridade` | rarity | The card's rarity, as the catalog publishes it. Column `raridade`. |
+| `idioma` | language | Enum `idioma`: `pt`, `en`, `jp`. A copy's language is the language of the physical card; the catalog row has its own. |
+| `variante` | variant | Enum `variante_copia`: `normal`, `reverse`, `holo`, `primeira_edicao` (first edition), `promo`. |
+| `condicao` | condition | Enum `condicao`: `NM`, `LP`, `MP`, `HP`, `DMG`. |
+| `inventario` | inventory | Every copy you own, with search and filters. |
+| `repetidas` | duplicates | Copies beyond the first of the same card — what is left over for trading. |
+| `falta` | missing | The list of empty slots in a collection: what you still need. |
+| `cadastro` | card entry | Adding copies to the inventory, either by set grid or by search. |
+| `opcoes-compra` | buy options | The offers found by a scan for a slot, with price, edition and number. Table `liga_opcao`. |
+| `ritmo` | pace | The interval between two requests to LigaPokemon, read live from their `Crawl-delay`. `lib/liga/ritmo.ts`. |
+| `frescor` | freshness | How recently a slot was queried. A slot queried in the last 24 h is skipped by a new scan. `lib/dominio/frescor-consulta.ts`. |
+| `set` | set | An expansion, in the TCGdex sense. The word is the same in both languages and is used as-is in the code. |
+| `liga` | Liga | Short for LigaPokemon, the Brazilian marketplace the price collector reads. |
+| `melhoria` | upgrade | A copy better than the one currently in the slot (rarity > language > variant). It is flagged, never applied on its own. |
+| `forma` | form | Regional or special form derived from the card name: `alola`, `galar`, `hisui`, `paldea`, `mega`, `gigantamax`, `normal`. |
+| `especie` | species | The Pokémon itself, which is what a Pokédex slot represents. |
+| `edicao` | edition | LigaPokemon's name for a set. `edicao_sigla` is their set code, `edid` their internal id. |
+| `identidade` | identity | Edition plus number, no leading zero: the bridge between a scan result and a buy choice. `lib/dominio/identidade-carta.ts`. |
+| `chave` | key | The identifier of a slot inside its collection (a Pokédex number, a card number in a set). |
+| `secretas` | secret cards | Cards numbered above the official count of a set. A collection flag decides whether they get slots. |
+| `alocacao` | allocation | Attaching a copy to a slot. A copy is allocated to at most one slot, ever. |
+| `dominio` | domain | `src/lib/dominio/`: the pure, tested business-rule modules. |
+
+Route paths are in Portuguese too:
+
+| Path | What it is |
+|---|---|
+| `/colecoes` | collections; `/colecoes/nova` creates one, `/colecoes/falta` is the missing list across collections |
+| `/colecoes/[id]/opcoes-compra` | the buy options and the buy list for one collection |
+| `/inventario` | the inventory; `/inventario/repetidas` is duplicates, `/inventario/visao-geral` is the overview |
+| `/cadastro` | card entry; `/cadastro/set` is the grid for a whole set, `/cadastro/busca` is one card by search |
+
+## Environment
+
+Node.js 22 or newer, and Docker with the Compose v2 plugin if you are going to bring the application
+up.
 
 ```bash
 corepack enable pnpm
@@ -23,63 +75,66 @@ pnpm install --frozen-lockfile
 pnpm exec next typegen
 ```
 
-Se o `corepack enable` der `EACCES` apontando para `/usr/bin/pnpm`, o seu Node está instalado para o
-sistema inteiro: use `sudo corepack enable pnpm` ou
+If `corepack enable` gives you `EACCES` pointing at `/usr/bin/pnpm`, your Node is installed
+system-wide: use `sudo corepack enable pnpm` or
 `corepack enable --install-directory ~/.local/bin pnpm`.
 
-O `next typegen` não é opcional: `LayoutProps` e os outros tipos de rota são gerados em `.next/types/`,
-que é gitignorado. Sem ele o `typecheck` falha num checkout limpo.
+`next typegen` is not optional: `LayoutProps` and the other route types are generated into
+`.next/types/`, which is gitignored. Without it, `typecheck` fails on a clean checkout.
 
-## Rodando os testes
+## Running the tests
 
 ```bash
-pnpm test        # Vitest, uma vez
-pnpm test:watch  # em watch
+pnpm test        # Vitest, once
+pnpm test:watch  # in watch mode
 pnpm typecheck
 pnpm lint
 ```
 
-**Os testes não precisam de banco.** As regras de negócio vivem em módulos puros em
-`src/lib/dominio/`, e é lá que o teste novo deve entrar. Se o seu teste precisa de um Postgres no ar,
-provavelmente a lógica está no lugar errado.
+**The tests need no database.** The business rules live in pure modules in `src/lib/dominio/`, and
+that is where a new test belongs. If your test needs a running Postgres, the logic is probably in the
+wrong place.
 
-Para exercitar a aplicação inteira, suba o Compose seguindo o [README](./README.md#instalação-do-zero).
+To exercise the whole application, bring up Compose following the
+[README](./README.md#installing-from-scratch).
 
-## O que um PR precisa passar
+## What a PR has to pass
 
-O CI roda em todo PR e precisa estar verde:
+CI runs on every PR and has to be green:
 
 - `pnpm lint`
-- `pnpm exec next typegen` e depois `pnpm typecheck`
+- `pnpm exec next typegen` and then `pnpm typecheck`
 - `pnpm test`
-- `docker build .` — pega quebra de empacotamento que o build local não pega
+- `docker build .` — catches packaging breakage that the local build does not catch
 
-Além do CI, para o PR ser aceito:
+Beyond CI, for the PR to be accepted:
 
-- **regra de negócio tocada tem teste**, e o teste roda sem banco;
-- **nenhum dado de coleção no diff** — nem agregado, nem como fixture "só para testar";
-- **nenhum byte de imagem de carta**;
-- **nenhum nome de pessoa, e-mail, IP, hostname ou caminho de máquina** em código, comentário ou
-  mensagem de commit;
-- **comentário atualizado junto do código.** Quase toda decisão não óbvia deste repositório tem um
-  parágrafo explicando o que foi medido e o que foi descartado. Se você muda a decisão, muda o
-  parágrafo.
+- **a business rule that was touched has a test**, and the test runs without a database;
+- **no collection data in the diff** — not aggregated, not as a fixture "just for testing";
+- **no card image bytes**;
+- **no person's name, e-mail, IP, hostname or machine path** in code, comment or commit message;
+- **the comment updated along with the code.** Almost every non-obvious decision in this repository
+  has a paragraph explaining what was measured and what was discarded. If you change the decision,
+  change the paragraph.
 
 ## Commits
 
-Pequenos, mensagem em português, no imperativo, sem ponto final:
+Small, message in English, imperative, no final period:
 
 ```
-adiciona filtro de idioma no inventário
-corrige contagem de vagas em set com secretas
+add language filter to the inventory
+fix slot count in a set with secret cards
 ```
 
-## O que não vai ser aceito
+The history before this convention is in Portuguese and is not being rewritten.
 
-- PR que aumente a cadência de requisições contra a LigaPokemon ou a TCGdex, ou que afrouxe a
-  checagem de rota permitida. O ritmo padrão é conformidade com o `robots.txt` deles, não
-  preferência.
-- PR que "enxugue" a imagem Docker com `--prod`, `standalone` ou multi-stage que descarte
-  `node_modules` — o entrypoint depende de `tsx` em runtime, e isso quebra o seed e o sync em
-  silêncio. O `AGENTS.md` explica.
-- PR que implemente autenticação, multiusuário ou exposição pública. Não é lacuna; é escopo.
+## What will not be accepted
+
+- A PR that raises the request rate against LigaPokemon or TCGdex, or that loosens the allowed-route
+  check. The default pace is compliance with their `robots.txt`, not a preference.
+- A PR that "slims down" the Docker image with `--prod`, `standalone` or a multi-stage that throws
+  `node_modules` away — the entrypoint depends on `tsx` at runtime, and that breaks the seed and the
+  sync silently. `AGENTS.md` explains it.
+- A PR that translates the code's comments or domain identifiers into English. See the glossary
+  above.
+- A PR that implements authentication, multi-user or public exposure. It is not a gap; it is scope.

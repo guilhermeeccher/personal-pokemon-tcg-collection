@@ -1,26 +1,26 @@
 ---
 name: Bug
-about: Algo não funciona como deveria
+about: Something does not work the way it should
 labels: bug
 ---
 
-**O que aconteceu, e o que você esperava**
+**What happened, and what you expected**
 
-**Como reproduzir**
+**How to reproduce**
 
 1.
 2.
 
-**Ambiente**
+**Environment**
 
-- Como está rodando: Docker Compose / `pnpm dev`
-- Versão ou commit:
-- Navegador, se for problema de tela:
+- How you are running it: Docker Compose / `pnpm dev`
+- Version or commit:
+- Browser, if it is a screen problem:
 
 **Log**
 
-<!-- `docker compose logs app` costuma bastar. NÃO cole conteúdo da sua
-     coleção, nem a sua senha do .env. -->
+<!-- `docker compose logs app` is usually enough. Do NOT paste content from your
+     collection, or your .env password. -->
 
 ```
 ```

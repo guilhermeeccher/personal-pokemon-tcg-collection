@@ -1,46 +1,49 @@
-# seed/ — catálogo de cartas versionado
+# seed/ — versioned card catalog
 
-Estes arquivos são o que faz uma instalação nova nascer útil. Sem eles, quem clona o projeto sobe com
-banco vazio e precisaria rodar horas de sync contra a `api.tcgdex.net` — que já bloqueou o IP deste
-projeto uma vez (ver `AGENTS.md`) — ou baixar o clone de ~220 MB do repositório de dados deles.
+These files are what make a fresh install useful from birth. Without them, whoever clones the project
+comes up with an empty database and would have to run hours of syncing against `api.tcgdex.net` —
+which has already blocked this project's IP once (see `AGENTS.md`) — or download the ~220 MB clone of
+their data repository.
 
-| Arquivo | Tabela | Conteúdo |
+| File | Table | Contents |
 |---|---|---|
-| `carta-catalogo.csv.gz` | `carta_catalogo` | O catálogo inteiro, nos três idiomas (`pt`, `en`, `jp`) |
-| `set-mypcards.csv` | `set_mypcards` | Mapeamento set → id interno do set no mypcards |
+| `carta-catalogo.csv.gz` | `carta_catalogo` | The entire catalog, in the three languages (`pt`, `en`, `jp`) |
+| `set-mypcards.csv` | `set_mypcards` | Mapping of set → mypcards internal set id |
 
-**O `.gz` é versionado de propósito.** São ~1 MB comprimido contra ~12 MB de texto; é dado estático que
-muda algumas vezes por ano, não código. Git LFS resolveria um problema que este tamanho não cria, e
-custaria a quem clona um passo a mais de configuração — exatamente o que este diretório existe para
-evitar.
+**The `.gz` is versioned on purpose.** It is ~1 MB compressed against ~12 MB of text; it is static
+data that changes a few times a year, not code. Git LFS would solve a problem this size does not
+create, and would cost whoever clones one more configuration step — exactly what this directory
+exists to avoid.
 
-## Como carregar
+## How to load it
 
 ```bash
-pnpm seed:catalogo              # carrega sempre
-pnpm seed:catalogo --se-vazio   # carrega só se carta_catalogo estiver vazia
+pnpm seed:catalogo              # always loads
+pnpm seed:catalogo --se-vazio   # loads only if carta_catalogo is empty
 ```
 
-O `--se-vazio` é o que o `docker/entrypoint.sh` roda no boot, depois das migrations: instalação que já
-tem catálogo não é tocada. O carregamento é idempotente (upsert por `id` + `idioma`), nunca apaga e
-nunca marca carta como inativa — o contrato está no cabeçalho de `scripts/seed-catalogo.ts`.
+`--se-vazio` is what `docker/entrypoint.sh` runs at boot, after the migrations: an install that
+already has a catalog is left alone. The load is idempotent (upsert by `id` + `idioma`), never
+deletes and never marks a card inactive — the contract is in the header of
+`scripts/seed-catalogo.ts`.
 
-## O que NÃO entra aqui
+## What does NOT go in here
 
-- **Nenhum dado de coleção.** `copia`, `colecao`, `vaga` e as tabelas de compra são de quem instalou o
-  sistema, e não vão para o repositório em forma nenhuma — nem agregada, nem como exemplo.
-- **Nenhum byte de imagem de carta**, e **nenhuma referência de imagem por carta**. A URL da imagem no
-  mypcards é montada a partir do mapeamento de set mais o código do set e o número da carta
-  (`lib/dominio/mypcards.ts`), então `set-mypcards.csv` sozinho já basta para qualquer instalação baixar
-  as imagens das cartas dela com `pnpm baixar:imagens-mypcards`. Mandar a lista de imagens já baixadas
-  não acrescentaria nada e diria quais cartas quem gerou o seed tem em casa.
+- **No collection data.** `copia`, `colecao`, `vaga` and the purchase tables belong to whoever
+  installed the system, and they do not go into the repository in any form — not aggregated, not as
+  an example.
+- **No card image bytes**, and **no per-card image reference**. The image URL on mypcards is
+  assembled from the set mapping plus the set code and the card number (`lib/dominio/mypcards.ts`),
+  so `set-mypcards.csv` on its own is already enough for any installation to download the images of
+  its own cards with `pnpm baixar:imagens-mypcards`. Shipping the list of already downloaded images
+  would add nothing and would say which cards whoever generated the seed has at home.
 
-## Como regerar
+## How to regenerate it
 
-Vale a pena quando o upstream lança sets novos e a comunidade merece um catálogo mais recente. O ponto
-de partida é um banco com o catálogo sincronizado (`pnpm sync:catalogo`).
+It is worth doing when upstream releases new sets and the community deserves a more recent catalog.
+The starting point is a database with the catalog synced (`pnpm sync:catalogo`).
 
-Da raiz do projeto, com o Compose no ar:
+From the project root, with Compose running:
 
 ```bash
 docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<'SQL' | gzip -9 -n > seed/carta-catalogo.csv.gz
@@ -69,22 +72,23 @@ COPY (
 SQL
 ```
 
-Confira antes de commitar: `zcat seed/carta-catalogo.csv.gz | wc -l` (cabeçalho + uma linha por carta) e
-um `git diff --stat` que mostre só estes arquivos.
+Check before committing: `zcat seed/carta-catalogo.csv.gz | wc -l` (header plus one line per card)
+and a `git diff --stat` that shows only these files.
 
-Cada detalhe do comando acima existe por um motivo, e mudá-los quebra a leitura:
+Every detail of the command above exists for a reason, and changing it breaks the read:
 
-- **`ORDER BY` fixo.** Sem ordem determinística, cada regeração produziria um arquivo completamente
-  diferente e o diff não diria nada.
-- **`gzip -9 -n`.** O `-n` descarta nome e timestamp do cabeçalho do gzip — sem ele, regerar o mesmo
-  conteúdo geraria bytes diferentes.
-- **`to_json` nos arrays.** `dex_ids` e `tipos` saem em JSON, não no literal `{a,b}` do Postgres: JSON tem
-  uma regra de escape só, e o literal de array tem três.
-- **`to_char(... AT TIME ZONE 'UTC', ...)`.** Devolve a data/hora em ISO 8601 com `Z`, que o JavaScript
-  lê sem ambiguidade — o formato padrão do `COPY` (`2026-08-29 12:34:56.789+00`) não é ISO.
-- **`criado_em` e `atualizado_em` ficam de fora.** São o relógio de quem gerou o arquivo; quem carrega
-  grava o próprio.
+- **A fixed `ORDER BY`.** With no deterministic order, every regeneration would produce a completely
+  different file and the diff would say nothing.
+- **`gzip -9 -n`.** The `-n` drops the name and the timestamp from the gzip header — without it,
+  regenerating the same content would produce different bytes.
+- **`to_json` on the arrays.** `dex_ids` and `tipos` come out as JSON, not as Postgres's `{a,b}`
+  literal: JSON has one escaping rule, and the array literal has three.
+- **`to_char(... AT TIME ZONE 'UTC', ...)`.** It returns the date and time in ISO 8601 with `Z`,
+  which JavaScript reads without ambiguity — `COPY`'s default format
+  (`2026-08-29 12:34:56.789+00`) is not ISO.
+- **`criado_em` and `atualizado_em` stay out.** They are the clock of whoever generated the file;
+  whoever loads it writes their own.
 
-A ordem das colunas no arquivo é livre — o leitor casa por nome —, mas o conjunto tem que ser exatamente
-esse: coluna a mais, a menos ou renomeada aborta o carregamento em vez de gravar dado torto em silêncio.
-O formato completo, e o porquê de cada regra, estão em `lib/dominio/seed-catalogo.ts`.
+The column order in the file is free — the reader matches by name — but the set has to be exactly
+that one: a column too many, too few or renamed aborts the load instead of quietly writing crooked
+data. The full format, and the reason for every rule, is in `lib/dominio/seed-catalogo.ts`.
