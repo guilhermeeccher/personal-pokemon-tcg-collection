@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { inserirLoteCopias, obterVariantesDisponiveisPorCarta } from "@/lib/db/consultas";
 import { validarLoteCopias } from "@/lib/dominio/lote-copias";
+import { corpoRecusa } from "@/lib/dominio/recusa";
 import { validarVariantesContraCatalogo } from "@/lib/dominio/variantes-catalogo";
 
 /**
@@ -36,7 +37,10 @@ export async function POST(
 
   const resultado = validarLoteCopias(corpo as Record<string, unknown>);
   if (!resultado.ok) {
-    return NextResponse.json({ erro: "Lote inválido.", detalhes: resultado.erros }, { status: 400 });
+    return NextResponse.json(
+      { ...corpoRecusa("loteInvalido"), detalhes: resultado.erros },
+      { status: 400 },
+    );
   }
 
   const cartaIds = [...new Set(resultado.copias.map((c) => c.cartaId))];
@@ -48,7 +52,7 @@ export async function POST(
   const errosVariante = validarVariantesContraCatalogo(resultado.copias, variantesPorCarta);
   if (errosVariante.length > 0) {
     return NextResponse.json(
-      { erro: "Variante fora do catálogo em uma ou mais cartas.", detalhes: errosVariante },
+      { ...corpoRecusa("varianteForaDoCatalogoNoLote"), detalhes: errosVariante },
       { status: 400 },
     );
   }
@@ -59,7 +63,7 @@ export async function POST(
   } catch (err) {
     console.error("[POST /api/sets/:setId/copias] falha ao inserir lote:", err);
     return NextResponse.json(
-      { erro: "Falha ao gravar o lote — verifique se todas as cartas existem no catálogo informado." },
+      corpoRecusa("falhaAoGravarLote"),
       { status: 400 },
     );
   }

@@ -22,6 +22,7 @@ import { SeletorExpansao } from "@/app/_componentes/seletor-expansao";
 import { classesCelulaCabecalho, classesLinha, classesLinhaCabecalho, Tabela } from "@/app/_componentes/tabela";
 import type { CartaParaGradeDTO, GradeDoSetDTO } from "@/lib/dominio/tipos-cliente";
 import { NomeCarta } from "@/app/_componentes/nome-carta";
+import { textoDaRecusa } from "@/app/_componentes/recusa";
 
 function flagsDaCarta(carta: CartaParaGradeDTO) {
   return {
@@ -35,6 +36,7 @@ function flagsDaCarta(carta: CartaParaGradeDTO) {
 
 export default function CadastroPorSetPage() {
   const t = useTranslations("cadastroSet");
+  const tr = useTranslations("recusas");
   const [setSelecionado, setSetSelecionado] = useState("");
   const [grade, setGrade] = useState<GradeDoSetDTO | null>(null);
   const [carregandoGrade, setCarregandoGrade] = useState(false);
@@ -108,7 +110,7 @@ export default function CadastroPorSetPage() {
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? t("erroLote"));
+        setErro(textoDaRecusa(tr, dados, t("erroLote")));
         return;
       }
       setMensagem(

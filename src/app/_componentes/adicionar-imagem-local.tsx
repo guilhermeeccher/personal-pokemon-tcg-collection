@@ -33,6 +33,7 @@ import type { Idioma } from "@/lib/dominio/enums";
 import { Botao } from "./botao";
 import { Campo, classesEntrada } from "./campo";
 import { Modal } from "./modal";
+import { textoDaRecusa } from "./recusa";
 
 type Modo = "arquivo" | "link" | "mypcards";
 
@@ -116,6 +117,7 @@ function ModalAdicionarImagem({
   onEnviada: () => void;
 }) {
   const t = useTranslations("imagemLocal");
+  const tr = useTranslations("recusas");
   const [modo, setModo] = useState<Modo>("arquivo");
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [url, setUrl] = useState("");
@@ -134,7 +136,7 @@ function ModalAdicionarImagem({
       );
       if (!resp.ok) {
         const dados = await resp.json().catch(() => ({}));
-        setErro(dados.erro ?? t("erroRemover"));
+        setErro(textoDaRecusa(tr, dados, t("erroRemover")));
         return;
       }
       onEnviada();
@@ -156,7 +158,7 @@ function ModalAdicionarImagem({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? t("erroMapear"));
+        setErro(textoDaRecusa(tr, dados, t("erroMapear")));
         return;
       }
       // O download roda em segundo plano (ver a rota): dizer "pronto"
@@ -211,7 +213,7 @@ function ModalAdicionarImagem({
       );
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? t("erroEnviar"));
+        setErro(textoDaRecusa(tr, dados, t("erroEnviar")));
         return;
       }
       onEnviada();

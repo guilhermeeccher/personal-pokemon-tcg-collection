@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db/client";
 import { alocarCopiaNaVaga, desalocarVaga } from "@/lib/db/consultas";
+import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
 import { ehUuid } from "@/lib/dominio/uuid";
 
 /**
@@ -10,10 +11,12 @@ import { ehUuid } from "@/lib/dominio/uuid";
  *
  * Erros de regra de negócio (elegibilidade — regras 2, 3, 7 —, vaga já
  * preenchida, cópia já alocada em outra vaga, idioma fora de padrão sem
- * o sinalizador) voltam 400 com motivo legível em português — nunca 500,
- * nunca sucesso silencioso. 404 só quando a própria vaga da URL não
- * existe — inclusive quando `:id` nem tem formato de UUID (achado do
- * coordenador, 2026-08-25: sintaxe inválida nunca vira 500 do Postgres).
+ * o sinalizador) voltam 400 com a RECUSA em `recusa` — chave estável e
+ * valores, que a tela traduz para o idioma da interface
+ * (`lib/dominio/recusa.ts`) — nunca 500, nunca sucesso silencioso. 404 só
+ * quando a própria vaga da URL não existe — inclusive quando `:id` nem
+ * tem formato de UUID (achado do coordenador, 2026-08-25: sintaxe
+ * inválida nunca vira 500 do Postgres).
  */
 export async function POST(
   req: Request,
@@ -21,7 +24,7 @@ export async function POST(
 ) {
   const { id } = await params;
   if (!ehUuid(id)) {
-    return NextResponse.json({ erro: "Vaga não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("vagaNaoEncontrada"), { status: 404 });
   }
 
   let corpo: unknown;
@@ -41,8 +44,8 @@ export async function POST(
 
   const resultado = await alocarCopiaNaVaga(db, id, copiaId, { permitirForaDePadrao });
   if (!resultado.ok) {
-    const status = resultado.motivo === "Vaga não encontrada." ? 404 : 400;
-    return NextResponse.json({ erro: resultado.motivo }, { status });
+    const status = resultado.motivo.chave === "vagaNaoEncontrada" ? 404 : 400;
+    return NextResponse.json(corpoDaRecusa(resultado.motivo), { status });
   }
 
   return NextResponse.json({
@@ -72,11 +75,11 @@ export async function DELETE(
 ) {
   const { id } = await params;
   if (!ehUuid(id)) {
-    return NextResponse.json({ erro: "Vaga não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("vagaNaoEncontrada"), { status: 404 });
   }
   const resultado = await desalocarVaga(db, id);
   if (!resultado.ok) {
-    return NextResponse.json({ erro: resultado.motivo }, { status: 404 });
+    return NextResponse.json(corpoDaRecusa(resultado.motivo), { status: 404 });
   }
   return NextResponse.json({ ok: true });
 }

@@ -18,6 +18,7 @@ import {
   type Idioma,
   ehIdioma,
 } from "./enums";
+import { type Recusa, recusa } from "./recusa";
 
 export interface CartaManualBruta {
   setId?: unknown;
@@ -43,9 +44,12 @@ export interface CartaManualValida {
   qtdSet: number | null;
 }
 
+/* Os erros saem como RECUSA (chave + valores), não como frase: esta é
+   a única validação cuja lista inteira aparece na tela, item a item, e
+   ela tem que aparecer no idioma da interface — ver `recusa.ts`. */
 export type ResultadoCartaManual =
   | { ok: true; carta: CartaManualValida }
-  | { ok: false; erros: string[] };
+  | { ok: false; erros: Recusa[] };
 
 /** Maior número da Pokédex Nacional hoje (Geração 9). */
 const DEX_MAXIMO = 1025;
@@ -57,23 +61,23 @@ function texto(v: unknown): string | undefined {
 export function validarCartaManual(
   bruto: CartaManualBruta,
 ): ResultadoCartaManual {
-  const erros: string[] = [];
+  const erros: Recusa[] = [];
 
   const setId = texto(bruto.setId);
   const localId = texto(bruto.localId);
   const nome = texto(bruto.nome);
   const setNome = texto(bruto.setNome);
 
-  if (!setId) erros.push("Informe a sigla do set (ex.: SMH).");
-  if (!localId) erros.push("Informe o número da carta (ex.: 011).");
-  if (!nome) erros.push("Informe o nome da carta.");
+  if (!setId) erros.push(recusa("informeSiglaDoSet"));
+  if (!localId) erros.push(recusa("informeNumeroDaCarta"));
+  if (!nome) erros.push(recusa("informeNomeDaCarta"));
 
   const idiomaBruto = texto(bruto.idioma);
   let idioma: Idioma | undefined;
   if (!idiomaBruto) {
-    erros.push("Informe o idioma do catálogo.");
+    erros.push(recusa("informeIdiomaDoCatalogo"));
   } else if (!ehIdioma(idiomaBruto)) {
-    erros.push(`Idioma inválido: ${idiomaBruto}`);
+    erros.push(recusa("idiomaInvalido", { idioma: idiomaBruto }));
   } else {
     idioma = idiomaBruto;
   }
@@ -85,7 +89,12 @@ export function validarCartaManual(
   if (bruto.dexId !== undefined && bruto.dexId !== null && bruto.dexId !== "") {
     const n = Number(bruto.dexId);
     if (!Number.isInteger(n) || n < 1 || n > DEX_MAXIMO) {
-      erros.push(`Número da Pokédex inválido (1–${DEX_MAXIMO}): ${String(bruto.dexId)}`);
+      erros.push(
+        recusa("numeroPokedexInvalido", {
+          maximo: String(DEX_MAXIMO),
+          valor: String(bruto.dexId),
+        }),
+      );
     } else {
       dexIds.push(n);
     }
@@ -95,7 +104,7 @@ export function validarCartaManual(
   if (bruto.qtdSet !== undefined && bruto.qtdSet !== null && bruto.qtdSet !== "") {
     const n = Number(bruto.qtdSet);
     if (!Number.isInteger(n) || n < 1) {
-      erros.push(`Total de cartas do set inválido: ${String(bruto.qtdSet)}`);
+      erros.push(recusa("totalDeCartasDoSetInvalido", { valor: String(bruto.qtdSet) }));
     } else {
       qtdSet = n;
     }

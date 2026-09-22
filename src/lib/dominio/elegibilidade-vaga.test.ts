@@ -21,7 +21,10 @@ describe("pertenceAoUniversoDaVaga — pokedex", () => {
       { setId: "sv1", localId: "1", dexIds: [25, 133] },
     );
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.motivo).toMatch(/mais de um número de Pokédex/);
+    // A asserção é sobre a CHAVE, não sobre a frase: a frase vive nos
+    // catálogos de mensagem e muda com o idioma da interface; o contrato
+    // entre servidor e tela é a chave.
+    if (!r.ok) expect(r.motivo.chave).toBe("multiplosNumerosPokedex");
   });
 
   it("recusa carta com dexId único mas diferente do número da vaga", () => {

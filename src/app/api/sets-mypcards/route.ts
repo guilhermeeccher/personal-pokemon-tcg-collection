@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db/client";
+import { corpoDaRecusa } from "@/lib/dominio/recusa";
 import { baixarImagensDeSets } from "@/lib/download-mypcards";
 import {
   listarCartasSemFotoDeSetMapeado,
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
 
   const validacao = validarLinkMapeamentoSet(url, setId);
   if (!validacao.ok) {
-    return NextResponse.json({ erro: validacao.erro }, { status: 400 });
+    return NextResponse.json(corpoDaRecusa(validacao.erro), { status: 400 });
   }
 
   const { numeroSet } = validacao.referencia;

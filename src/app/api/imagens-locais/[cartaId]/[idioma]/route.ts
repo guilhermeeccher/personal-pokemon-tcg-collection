@@ -8,6 +8,7 @@ import {
   upsertImagemLocal,
 } from "@/lib/db/imagens-locais";
 import { ehIdioma } from "@/lib/dominio/enums";
+import { corpoDaRecusa, corpoRecusa, recusa } from "@/lib/dominio/recusa";
 import {
   extensaoParaMime,
   validarArquivoImagem,
@@ -73,7 +74,7 @@ export async function POST(req: Request, { params }: { params: Promise<Params> }
   const existeNoCatalogo = await obterVariantesDisponiveisDaCarta(db, cartaId, idioma);
   if (existeNoCatalogo === null) {
     return NextResponse.json(
-      { erro: `Carta ${cartaId} (${idioma}) não encontrada no catálogo.` },
+      corpoRecusa("cartaNaoEncontradaNoCatalogo", { cartaId, idioma }),
       { status: 404 },
     );
   }
@@ -111,7 +112,10 @@ export async function POST(req: Request, { params }: { params: Promise<Params> }
     const urlBruta = (url as string).trim();
     const validacaoUrl = validarUrlOrigem(urlBruta);
     if (!validacaoUrl.ok) {
-      return NextResponse.json({ erro: validacaoUrl.erro }, { status: 400 });
+      // `erro` é opcional no tipo só porque `ok` e `erro` são campos
+      // independentes ali; recusa sem recusa não existe (ver
+      // `validarUrlOrigem`), daí o `!`.
+      return NextResponse.json(corpoDaRecusa(validacaoUrl.erro!), { status: 400 });
     }
     origem = "url";
     origemUrl = urlBruta;
@@ -119,14 +123,16 @@ export async function POST(req: Request, { params }: { params: Promise<Params> }
       const resultado = await baixarImagemDeUrl(urlBruta);
       bytes = resultado.bytes;
     } catch (err) {
-      const mensagem = err instanceof ErroDownloadImagem ? err.message : "Falha ao baixar a imagem da URL.";
-      return NextResponse.json({ erro: mensagem }, { status: 400 });
+      const recusaDoDownload =
+        err instanceof ErroDownloadImagem ? err.recusa : recusa("falhaAoBaixarImagemDaUrl");
+      return NextResponse.json(corpoDaRecusa(recusaDoDownload), { status: 400 });
     }
   }
 
   const validacaoArquivo = validarArquivoImagem(bytes);
   if (!validacaoArquivo.ok || !validacaoArquivo.tipo) {
-    return NextResponse.json({ erro: validacaoArquivo.erro }, { status: 400 });
+    // Mesmo caso do `!` acima: recusa de arquivo sempre traz a recusa.
+    return NextResponse.json(corpoDaRecusa(validacaoArquivo.erro!), { status: 400 });
   }
   const tipo = validacaoArquivo.tipo;
 
@@ -151,7 +157,7 @@ export async function POST(req: Request, { params }: { params: Promise<Params> }
   } catch (err) {
     await apagarArquivoImagemSeExistir(arquivoNome);
     console.error("[POST /api/imagens-locais] falha ao gravar registro:", err);
-    return NextResponse.json({ erro: "Falha ao gravar a imagem." }, { status: 500 });
+    return NextResponse.json(corpoRecusa("falhaAoGravarImagem"), { status: 500 });
   }
 
   // Substituição: apaga o arquivo antigo só depois que o novo já está
@@ -219,7 +225,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<Params
 
   const removido = await removerImagemLocal(db, cartaId, idioma);
   if (!removido) {
-    return NextResponse.json({ erro: "Imagem não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("imagemNaoEncontrada"), { status: 404 });
   }
   await apagarArquivoImagemSeExistir(removido.arquivoNome);
 

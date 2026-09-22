@@ -21,6 +21,7 @@ import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
 import { Botao } from "./botao";
 import { Campo, classesEntrada } from "./campo";
 import { Modal } from "./modal";
+import { textosDasRecusas } from "./recusa";
 
 export function CadastrarCartaManual({
   siglaSugerida = "",
@@ -72,6 +73,7 @@ function ModalCartaManual({
   onCriada: (cartaId: string, idioma: Idioma) => void;
 }) {
   const t = useTranslations("cartaManual");
+  const tr = useTranslations("recusas");
   const [setId, setSetId] = useState(siglaSugerida);
   const [nomeDoSet, setNomeDoSet] = useState("");
   const [localId, setLocalId] = useState(numeroSugerido);
@@ -102,7 +104,7 @@ function ModalCartaManual({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErros(dados.erros ?? [dados.erro ?? t("erroCadastrar")]);
+        setErros(textosDasRecusas(tr, dados, t("erroCadastrar")));
         return;
       }
       onCriada(dados.cartaId, idioma);

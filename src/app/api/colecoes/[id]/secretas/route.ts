@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db/client";
 import { alternarSecretasDaColecao } from "@/lib/db/consultas";
+import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
 import { ehUuid } from "@/lib/dominio/uuid";
 
 /**
@@ -20,7 +21,7 @@ export async function PATCH(
   // Postgres rejeitar a sintaxe e virar 500 (achado do coordenador,
   // 2026-08-25).
   if (!ehUuid(id)) {
-    return NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("colecaoNaoEncontrada"), { status: 404 });
   }
 
   let corpo: unknown;
@@ -40,8 +41,8 @@ export async function PATCH(
 
   const resultado = await alternarSecretasDaColecao(db, id, incluirSecretas);
   if (!resultado.ok) {
-    const status = resultado.motivo === "Coleção não encontrada." ? 404 : 400;
-    return NextResponse.json({ erro: resultado.motivo }, { status });
+    const status = resultado.motivo.chave === "colecaoNaoEncontrada" ? 404 : 400;
+    return NextResponse.json(corpoDaRecusa(resultado.motivo), { status });
   }
   return NextResponse.json({ ok: true });
 }

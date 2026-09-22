@@ -21,6 +21,7 @@ import { ImagemCartaComZoom } from "@/app/_componentes/imagem-carta-zoom";
 import { Painel } from "@/app/_componentes/painel";
 import type { CartaEncontradaDTO } from "@/lib/dominio/tipos-cliente";
 import { NomeCarta } from "@/app/_componentes/nome-carta";
+import { textoDaRecusa } from "@/app/_componentes/recusa";
 
 interface FormularioCopia {
   quantidade: number;
@@ -40,6 +41,7 @@ const FORM_INICIAL: FormularioCopia = {
 
 export default function CadastroPorBuscaPage() {
   const t = useTranslations("cadastroBusca");
+  const tr = useTranslations("recusas");
   const [nome, setNome] = useState("");
   const [setId, setSetId] = useState("");
   const [numero, setNumero] = useState("");
@@ -149,7 +151,7 @@ export default function CadastroPorBuscaPage() {
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? t("erroGravar"));
+        setErro(textoDaRecusa(tr, dados, t("erroGravar")));
         return;
       }
       // "somada" e "gravada" são resultados diferentes: esconder a

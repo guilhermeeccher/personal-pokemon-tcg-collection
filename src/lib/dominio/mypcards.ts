@@ -48,6 +48,7 @@
  */
 
 import type { Idioma } from "./enums";
+import { type Recusa, recusa } from "./recusa";
 
 /** Host do CDN de imagens deles. O site (`www`) não é usado por nós. */
 export const HOST_IMAGENS_MYPCARDS = "img.mypcards.com";
@@ -143,7 +144,7 @@ export function urlImagemMypcards({
 }
 
 export type ErroMapeamentoSet =
-  | { ok: false; erro: string }
+  | { ok: false; erro: Recusa }
   | { ok: true; referencia: ReferenciaMypcards };
 
 /**
@@ -160,15 +161,15 @@ export function validarLinkMapeamentoSet(
 ): ErroMapeamentoSet {
   const referencia = lerUrlMypcards(valor.trim());
   if (!referencia) {
-    return {
-      ok: false,
-      erro: "Não parece um link de imagem do mypcards. Copie o endereço da imagem de uma carta (img.mypcards.com/...).",
-    };
+    return { ok: false, erro: recusa("linkNaoEhMypcards") };
   }
   if (referencia.setId !== setIdEsperado) {
     return {
       ok: false,
-      erro: `O link é do set "${referencia.setId}", e não de "${setIdEsperado}".`,
+      erro: recusa("linkDeOutroSet", {
+        link: referencia.setId,
+        esperado: setIdEsperado,
+      }),
     };
   }
   return { ok: true, referencia };

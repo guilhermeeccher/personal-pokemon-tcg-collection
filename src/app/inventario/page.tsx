@@ -27,6 +27,7 @@ import { Painel } from "@/app/_componentes/painel";
 import { classesCelulaCabecalho, classesLinha, classesLinhaCabecalho, Tabela } from "@/app/_componentes/tabela";
 import type { CopiaDoInventarioDTO, DestinoElegivelDaCopiaDTO } from "@/lib/dominio/tipos-cliente";
 import { NomeCarta } from "@/app/_componentes/nome-carta";
+import { textoDaRecusa } from "@/app/_componentes/recusa";
 
 interface Opcoes {
   sets: { setId: string; setNome: string }[];
@@ -576,6 +577,7 @@ function ModalEdicao({
   // Nunca oferece uma variante que a carta não tem no catálogo (mesma
   // regra do cadastro por set/busca).
   const t = useTranslations("inventario");
+  const tr = useTranslations("recusas");
   const opcoesVariante = variantesDisponiveis(copia);
   const [quantidade, setQuantidade] = useState(copia.quantidade);
   const [variante, setVariante] = useState<VarianteCopia>(copia.variante);
@@ -617,7 +619,7 @@ function ModalEdicao({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? t("erroSalvar"));
+        setErro(textoDaRecusa(tr, dados, t("erroSalvar")));
         return;
       }
       onSalvo();
@@ -776,6 +778,7 @@ function ModalAlocarDestino({
   onAlocado: (msg: string) => void;
 }) {
   const t = useTranslations("inventario");
+  const tr = useTranslations("recusas");
   const [destinos, setDestinos] = useState<DestinoElegivelDaCopiaDTO[] | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -811,7 +814,7 @@ function ModalAlocarDestino({
       );
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? t("erroAlocar"));
+        setErro(textoDaRecusa(tr, dados, t("erroAlocar")));
         return;
       }
       const partes = [
@@ -937,6 +940,7 @@ function ModalEdicaoMassa({
   onSalvo: (msg: string) => void;
 }) {
   const t = useTranslations("inventario");
+  const tr = useTranslations("recusas");
   const [alterarCondicao, setAlterarCondicao] = useState(false);
   const [condicao, setCondicao] = useState<Condicao>("NM");
   const [alterarLocalizacao, setAlterarLocalizacao] = useState(false);
@@ -973,7 +977,7 @@ function ModalEdicaoMassa({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? t("erroMassa"));
+        setErro(textoDaRecusa(tr, dados, t("erroMassa")));
         setConfirmando(false);
         return;
       }

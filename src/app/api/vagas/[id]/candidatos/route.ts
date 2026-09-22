@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db/client";
 import { listarCandidatosDaVaga } from "@/lib/db/consultas";
+import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
 import { ehUuid } from "@/lib/dominio/uuid";
 
 /**
@@ -25,11 +26,11 @@ export async function GET(
 ) {
   const { id } = await params;
   if (!ehUuid(id)) {
-    return NextResponse.json({ erro: "Vaga não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("vagaNaoEncontrada"), { status: 404 });
   }
   const resultado = await listarCandidatosDaVaga(db, id);
   if (!resultado.ok) {
-    return NextResponse.json({ erro: resultado.motivo }, { status: 404 });
+    return NextResponse.json(corpoDaRecusa(resultado.motivo), { status: 404 });
   }
   return NextResponse.json({ itens: resultado.candidatos });
 }

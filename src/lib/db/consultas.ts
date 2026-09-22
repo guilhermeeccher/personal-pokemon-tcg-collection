@@ -12,6 +12,7 @@ import type { Database, Transacao } from "./client";
 import { cartaCatalogo, colecao, copia, imagemLocal, melhoriaDescartada, vaga } from "./schema";
 import type { Condicao, Idioma, VarianteCopia } from "@/lib/dominio/enums";
 import { compararLocalId } from "@/lib/dominio/ordenacao";
+import { type Recusa, recusa } from "@/lib/dominio/recusa";
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
 import { casaNumeroCarta } from "@/lib/dominio/busca-carta";
 import { resolverIdiomaCatalogoDoSet } from "@/lib/dominio/idioma-catalogo";
@@ -1957,7 +1958,7 @@ export async function excluirColecao(db: Database, id: string): Promise<boolean>
 
 export type ResultadoToggleSecretas =
   | { ok: true }
-  | { ok: false; motivo: string };
+  | { ok: false; motivo: Recusa };
 
 /**
  * Liga/desliga "incluir secretas" numa coleção de set — a única edição
@@ -1972,9 +1973,9 @@ export async function alternarSecretasDaColecao(
 ): Promise<ResultadoToggleSecretas> {
   return db.transaction(async (tx) => {
     const [c] = await tx.select().from(colecao).where(eq(colecao.id, id)).limit(1);
-    if (!c) return { ok: false, motivo: "Coleção não encontrada." };
+    if (!c) return { ok: false, motivo: recusa("colecaoNaoEncontrada") };
     if (c.tipo !== "set") {
-      return { ok: false, motivo: "Só coleções de set têm a flag incluir secretas." };
+      return { ok: false, motivo: recusa("secretasSoEmSet") };
     }
 
     const parametro = c.parametro as ParametroSet;
@@ -1992,7 +1993,7 @@ export async function alternarSecretasDaColecao(
         ),
       );
     if (linhasSet.length === 0) {
-      return { ok: false, motivo: "Set não encontrado no catálogo." };
+      return { ok: false, motivo: recusa("setNaoEncontradoNoCatalogo") };
     }
 
     // Precisa das contagens oficiais/total — vêm denormalizadas em toda
@@ -2017,11 +2018,7 @@ export async function alternarSecretasDaColecao(
     // reabriria em silêncio a mesma coleção vazia que a criação já evita.
     // Não há distinção oficial/secreta pra alternar nesse caso.
     if (qtdOficial === 0) {
-      return {
-        ok: false,
-        motivo:
-          "Este set não tem numeração oficial separada no upstream — não há distinção entre oficiais e secretas para alternar.",
-      };
+      return { ok: false, motivo: recusa("setSemNumeracaoOficialSeparada") };
     }
 
     const ordenados = linhasSet.map((l) => l.localId).sort(compararLocalId);
@@ -2041,7 +2038,7 @@ export async function alternarSecretasDaColecao(
       if (preenchidas.length > 0) {
         return {
           ok: false,
-          motivo: `Não é possível desligar: ${preenchidas.length} vaga(s) secreta(s) já preenchida(s).`,
+          motivo: recusa("secretasPreenchidas", { total: String(preenchidas.length) }),
         };
       }
       if (chavesSecretas.length > 0) {
@@ -2070,7 +2067,7 @@ export async function alternarSecretasDaColecao(
 
 export type ResultadoAlterarEscopo =
   | { ok: true; adicionadas: number; removidas: number }
-  | { ok: false; motivo: string };
+  | { ok: false; motivo: Recusa };
 
 /**
  * Adiciona e/ou remove região do escopo de uma coleção `pokedex` — a
@@ -2093,9 +2090,9 @@ export async function alterarEscopoDaColecaoPokedex(
 ): Promise<ResultadoAlterarEscopo> {
   return db.transaction(async (tx) => {
     const [c] = await tx.select().from(colecao).where(eq(colecao.id, id)).limit(1);
-    if (!c) return { ok: false, motivo: "Coleção não encontrada." };
+    if (!c) return { ok: false, motivo: recusa("colecaoNaoEncontrada") };
     if (c.tipo !== "pokedex") {
-      return { ok: false, motivo: "Só coleções Pokédex têm escopo editável." };
+      return { ok: false, motivo: recusa("escopoSoEmPokedex") };
     }
 
     const parametroAtual = c.parametro as ParametroPokedex;
@@ -2123,7 +2120,10 @@ export async function alterarEscopoDaColecaoPokedex(
         const contagens = agruparChavesPorRegiao(preenchidas.map((p) => p.chave));
         return {
           ok: false,
-          motivo: `Não é possível remover: ${preenchidas.length} vaga(s) preenchida(s) — ${formatarContagemPorRegiao(contagens)}.`,
+          motivo: recusa("escopoVagasPreenchidas", {
+            total: String(preenchidas.length),
+            porRegiao: formatarContagemPorRegiao(contagens),
+          }),
         };
       }
       await tx
@@ -2159,7 +2159,7 @@ function violaUnicidadeVagaCopiaId(err: unknown): boolean {
 
 export type ResultadoAlocacao =
   | { ok: true; copiaAlocadaId: string; dividida: boolean; foraDePadrao: boolean }
-  | { ok: false; motivo: string };
+  | { ok: false; motivo: Recusa };
 
 /**
  * Aloca uma cópia a uma vaga: valida elegibilidade (regras 2, 3, 5, 7 do
@@ -2186,7 +2186,7 @@ export async function alocarCopiaNaVaga(
     return await db.transaction((tx) => alocarNaTransacao(tx, vagaId, copiaId, opcoes));
   } catch (err) {
     if (violaUnicidadeVagaCopiaId(err)) {
-      return { ok: false, motivo: "Esta cópia já está alocada em outra vaga." };
+      return { ok: false, motivo: recusa("copiaJaAlocada") };
     }
     throw err;
   }
@@ -2210,9 +2210,9 @@ async function alocarNaTransacao(
   opcoes: { permitirForaDePadrao?: boolean } = {},
 ): Promise<ResultadoAlocacao> {
   const [vagaLinha] = await tx.select().from(vaga).where(eq(vaga.id, vagaId)).limit(1);
-  if (!vagaLinha) return { ok: false, motivo: "Vaga não encontrada." };
+  if (!vagaLinha) return { ok: false, motivo: recusa("vagaNaoEncontrada") };
   if (vagaLinha.copiaId !== null) {
-    return { ok: false, motivo: "Vaga já está preenchida." };
+    return { ok: false, motivo: recusa("vagaJaPreenchida") };
   }
 
   const [colecaoLinha] = await tx
@@ -2220,7 +2220,7 @@ async function alocarNaTransacao(
     .from(colecao)
     .where(eq(colecao.id, vagaLinha.colecaoId))
     .limit(1);
-  if (!colecaoLinha) return { ok: false, motivo: "Coleção da vaga não encontrada." };
+  if (!colecaoLinha) return { ok: false, motivo: recusa("colecaoDaVagaNaoEncontrada") };
 
   const [copiaLinha] = await tx
     .select()
@@ -2228,7 +2228,7 @@ async function alocarNaTransacao(
     .where(eq(copia.id, copiaId))
     .for("update")
     .limit(1);
-  if (!copiaLinha) return { ok: false, motivo: "Cópia não encontrada." };
+  if (!copiaLinha) return { ok: false, motivo: recusa("copiaNaoEncontrada") };
 
   const jaAlocada = await tx
     .select({ id: vaga.id })
@@ -2236,7 +2236,7 @@ async function alocarNaTransacao(
     .where(eq(vaga.copiaId, copiaId))
     .limit(1);
   if (jaAlocada.length > 0) {
-    return { ok: false, motivo: "Esta cópia já está alocada em outra vaga." };
+    return { ok: false, motivo: recusa("copiaJaAlocada") };
   }
 
   const [cartaLinha] = await tx
@@ -2254,7 +2254,7 @@ async function alocarNaTransacao(
     )
     .limit(1);
   if (!cartaLinha) {
-    return { ok: false, motivo: "Carta de catálogo da cópia não encontrada." };
+    return { ok: false, motivo: recusa("cartaDeCatalogoDaCopiaNaoEncontrada") };
   }
 
   const elegibilidade = avaliarElegibilidade(
@@ -2323,7 +2323,7 @@ async function alocarNaTransacao(
   };
 }
 
-export type ResultadoDesalocacao = { ok: true } | { ok: false; motivo: string };
+export type ResultadoDesalocacao = { ok: true } | { ok: false; motivo: Recusa };
 
 /**
  * Libera uma vaga. A cópia volta ao inventário livre e NUNCA é apagada —
@@ -2352,7 +2352,7 @@ export type ResultadoDesalocacao = { ok: true } | { ok: false; motivo: string };
 export async function desalocarVaga(db: Database, vagaId: string): Promise<ResultadoDesalocacao> {
   return db.transaction(async (tx) => {
     const [vagaLinha] = await tx.select().from(vaga).where(eq(vaga.id, vagaId)).limit(1);
-    if (!vagaLinha) return { ok: false, motivo: "Vaga não encontrada." };
+    if (!vagaLinha) return { ok: false, motivo: recusa("vagaNaoEncontrada") };
 
     const [colecaoLinha] = await tx
       .select({ tipo: colecao.tipo })
@@ -2390,7 +2390,7 @@ export type ResultadoAdicionarCopiaCustomizada =
       dividida: boolean;
       foraDePadrao: boolean;
     }
-  | { ok: false; motivo: string };
+  | { ok: false; motivo: Recusa };
 
 /**
  * Adiciona uma cópia a uma coleção CUSTOMIZADA: cria a vaga (chave
@@ -2426,13 +2426,9 @@ export async function adicionarCopiaEmColecaoCustomizada(
         .where(eq(colecao.id, colecaoId))
         .for("update")
         .limit(1);
-      if (!colecaoLinha) return { ok: false, motivo: "Coleção não encontrada." };
+      if (!colecaoLinha) return { ok: false, motivo: recusa("colecaoNaoEncontrada") };
       if (colecaoLinha.tipo !== "customizada") {
-        return {
-          ok: false,
-          motivo:
-            "Só coleções customizadas usam este fluxo — pokedex e set alocam numa vaga já existente (POST /api/vagas/:id/alocar).",
-        };
+        return { ok: false, motivo: recusa("fluxoSoParaCustomizada") };
       }
 
       const [copiaLinha] = await tx
@@ -2441,7 +2437,7 @@ export async function adicionarCopiaEmColecaoCustomizada(
         .where(eq(copia.id, copiaId))
         .for("update")
         .limit(1);
-      if (!copiaLinha) return { ok: false, motivo: "Cópia não encontrada." };
+      if (!copiaLinha) return { ok: false, motivo: recusa("copiaNaoEncontrada") };
 
       const jaAlocada = await tx
         .select({ id: vaga.id })
@@ -2449,7 +2445,7 @@ export async function adicionarCopiaEmColecaoCustomizada(
         .where(eq(vaga.copiaId, copiaId))
         .limit(1);
       if (jaAlocada.length > 0) {
-        return { ok: false, motivo: "Esta cópia já está alocada em outra vaga." };
+        return { ok: false, motivo: recusa("copiaJaAlocada") };
       }
 
       // Coleção customizada não tem universo fixo (qualquer cópia serve) —
@@ -2458,7 +2454,12 @@ export async function adicionarCopiaEmColecaoCustomizada(
       if (foraDePadrao && !opcoes.permitirForaDePadrao) {
         return {
           ok: false,
-          motivo: `Esta coleção exige cópias em '${colecaoLinha.idiomaExigido}'; esta cópia é em '${copiaLinha.idioma}'. Envie permitirForaDePadrao para aceitar mesmo assim.`,
+          // Mesmo raciocínio de `avaliarElegibilidade`: `foraDePadrao`
+          // só é true com `idiomaExigido` preenchido.
+          motivo: recusa("idiomaExigido", {
+            exigido: colecaoLinha.idiomaExigido!,
+            copia: copiaLinha.idioma,
+          }),
         };
       }
 
@@ -2514,10 +2515,10 @@ export async function adicionarCopiaEmColecaoCustomizada(
     });
   } catch (err) {
     if (violaUnicidadeVagaCopiaId(err)) {
-      return { ok: false, motivo: "Esta cópia já está alocada em outra vaga." };
+      return { ok: false, motivo: recusa("copiaJaAlocada") };
     }
     if (violaUnicidadeVagaChave(err)) {
-      return { ok: false, motivo: "Conflito ao gerar a próxima vaga — tente novamente." };
+      return { ok: false, motivo: recusa("conflitoAoGerarProximaVaga") };
     }
     throw err;
   }
@@ -2547,7 +2548,7 @@ export interface CopiaCandidataDaVaga {
 
 export type ResultadoCandidatosVaga =
   | { ok: true; candidatos: CopiaCandidataDaVaga[] }
-  | { ok: false; motivo: string };
+  | { ok: false; motivo: Recusa };
 
 /**
  * Lista as cópias do inventário elegíveis para preencher uma vaga:
@@ -2564,10 +2565,10 @@ export async function listarCandidatosDaVaga(
   vagaId: string,
 ): Promise<ResultadoCandidatosVaga> {
   const [vagaLinha] = await db.select().from(vaga).where(eq(vaga.id, vagaId)).limit(1);
-  if (!vagaLinha) return { ok: false, motivo: "Vaga não encontrada." };
+  if (!vagaLinha) return { ok: false, motivo: recusa("vagaNaoEncontrada") };
 
   const colecaoLinha = await obterColecaoPorId(db, vagaLinha.colecaoId);
-  if (!colecaoLinha) return { ok: false, motivo: "Coleção da vaga não encontrada." };
+  if (!colecaoLinha) return { ok: false, motivo: recusa("colecaoDaVagaNaoEncontrada") };
 
   const vagaCopiaIds = db.select({ copiaId: vaga.copiaId }).from(vaga).where(isNotNull(vaga.copiaId));
 
@@ -2785,7 +2786,7 @@ export interface DestinoElegivelDaCopia {
 
 export type ResultadoDestinosDaCopia =
   | { ok: true; destinos: DestinoElegivelDaCopia[] }
-  | { ok: false; motivo: string };
+  | { ok: false; motivo: Recusa };
 
 /**
  * Fluxo inverso do "alocar pela vaga" (item 1): dada uma cópia do
@@ -2818,7 +2819,7 @@ export async function listarDestinosElegiveisDaCopia(
     .from(copia)
     .where(eq(copia.id, copiaId))
     .limit(1);
-  if (!copiaLinha) return { ok: false, motivo: "Cópia não encontrada." };
+  if (!copiaLinha) return { ok: false, motivo: recusa("copiaNaoEncontrada") };
 
   const [cartaLinha] = await db
     .select({ setId: cartaCatalogo.setId, localId: cartaCatalogo.localId, dexIds: cartaCatalogo.dexIds })
@@ -2827,7 +2828,7 @@ export async function listarDestinosElegiveisDaCopia(
       and(eq(cartaCatalogo.id, copiaLinha.cartaId), eq(cartaCatalogo.idioma, copiaLinha.idiomaCatalogo)),
     )
     .limit(1);
-  if (!cartaLinha) return { ok: false, motivo: "Carta de catálogo da cópia não encontrada." };
+  if (!cartaLinha) return { ok: false, motivo: recusa("cartaDeCatalogoDaCopiaNaoEncontrada") };
 
   // Regra 2: só carta com EXATAMENTE um dexId é candidata a vaga de
   // pokedex — a forma (regra 3) nunca entra aqui, de propósito, igual
@@ -2889,7 +2890,7 @@ export async function listarDestinosElegiveisDaCopia(
 
 export type ResultadoEdicaoMassa =
   | { ok: true; atualizadas: number }
-  | { ok: false; motivo: string; detalhes?: ErroVarianteCatalogo[] };
+  | { ok: false; motivo: Recusa; detalhes?: ErroVarianteCatalogo[] };
 
 /**
  * Aplica o mesmo patch (condição, localização, idioma físico, variante)
@@ -2935,7 +2936,7 @@ export async function atualizarCopiasEmMassa(
       const faltando = copiaIds.filter((id) => !encontrados.has(id));
       return {
         ok: false,
-        motivo: `Cópia(s) não encontrada(s), nada foi alterado: ${faltando.join(", ")}`,
+        motivo: recusa("copiasNaoEncontradasNadaAlterado", { ids: faltando.join(", ") }),
       };
     }
 
@@ -2966,7 +2967,10 @@ export async function atualizarCopiasEmMassa(
       if (erros.length > 0) {
         return {
           ok: false,
-          motivo: `A variante '${patch.variante}' não existe no catálogo para ${erros.length} carta(s) da seleção — nenhuma cópia foi alterada.`,
+          motivo: recusa("varianteForaDoCatalogoNaSelecao", {
+            variante: patch.variante!,
+            total: String(erros.length),
+          }),
           detalhes: erros.map((e) => ({ ...e, cartaId: linhas[e.indice].id })),
         };
       }
@@ -3518,7 +3522,7 @@ export interface MelhoriaDaVaga {
 
 export type ResultadoMelhorias =
   | { ok: true; itens: MelhoriaDaVaga[] }
-  | { ok: false; motivo: string };
+  | { ok: false; motivo: Recusa };
 
 /**
  * As vagas PREENCHIDAS desta coleção para as quais existe uma cópia livre
@@ -3561,7 +3565,7 @@ export async function listarMelhoriasDaColecao(
   colecaoId: string,
 ): Promise<ResultadoMelhorias> {
   const colecaoLinha = await obterColecaoPorId(db, colecaoId);
-  if (!colecaoLinha) return { ok: false, motivo: "Coleção não encontrada." };
+  if (!colecaoLinha) return { ok: false, motivo: recusa("colecaoNaoEncontrada") };
   if (colecaoLinha.tipo !== "pokedex" && colecaoLinha.tipo !== "set") {
     return { ok: true, itens: [] };
   }
@@ -3712,12 +3716,12 @@ export async function descartarMelhoria(
   db: Database,
   vagaId: string,
   copiaId: string,
-): Promise<{ ok: true } | { ok: false; motivo: string }> {
+): Promise<{ ok: true } | { ok: false; motivo: Recusa }> {
   const [vagaLinha] = await db.select({ id: vaga.id }).from(vaga).where(eq(vaga.id, vagaId)).limit(1);
-  if (!vagaLinha) return { ok: false, motivo: "Vaga não encontrada." };
+  if (!vagaLinha) return { ok: false, motivo: recusa("vagaNaoEncontrada") };
 
   const [copiaLinha] = await db.select({ id: copia.id }).from(copia).where(eq(copia.id, copiaId)).limit(1);
-  if (!copiaLinha) return { ok: false, motivo: "Cópia não encontrada." };
+  if (!copiaLinha) return { ok: false, motivo: recusa("copiaNaoEncontrada") };
 
   await db.insert(melhoriaDescartada).values({ vagaId, copiaId }).onConflictDoNothing();
   return { ok: true };
@@ -3742,15 +3746,18 @@ export async function restaurarMelhoria(
  * 500 e esconderia o motivo.
  */
 class ErroTrocaRecusada extends Error {
-  constructor(readonly motivo: string) {
-    super(motivo);
+  readonly motivo: Recusa;
+
+  constructor(m: Recusa) {
+    super(m.chave);
+    this.motivo = m;
     this.name = "ErroTrocaRecusada";
   }
 }
 
 export type ResultadoTroca =
   | { ok: true; copiaAlocadaId: string; copiaLiberadaId: string; dividida: boolean; foraDePadrao: boolean }
-  | { ok: false; motivo: string };
+  | { ok: false; motivo: Recusa };
 
 /**
  * Troca a cópia de uma vaga preenchida pela melhor: libera a que está lá
@@ -3782,12 +3789,12 @@ export async function trocarCopiaDaVaga(
   try {
     return await db.transaction(async (tx) => {
       const [vagaLinha] = await tx.select().from(vaga).where(eq(vaga.id, vagaId)).limit(1);
-      if (!vagaLinha) return { ok: false, motivo: "Vaga não encontrada." };
+      if (!vagaLinha) return { ok: false, motivo: recusa("vagaNaoEncontrada") };
       if (vagaLinha.copiaId === null) {
-        return { ok: false, motivo: "Vaga está vazia — use a alocação, não a troca." };
+        return { ok: false, motivo: recusa("vagaVaziaUseAlocacao") };
       }
       if (vagaLinha.copiaId === copiaId) {
-        return { ok: false, motivo: "Esta cópia já está nesta vaga." };
+        return { ok: false, motivo: recusa("copiaJaNestaVaga") };
       }
 
       const [colecaoLinha] = await tx
@@ -3798,10 +3805,7 @@ export async function trocarCopiaDaVaga(
       if (colecaoLinha?.tipo === "customizada") {
         // Lá a vaga nasce com a cópia e morre com ela (spec §3.3): trocar
         // seria remover uma e adicionar outra, duas ações que já existem.
-        return {
-          ok: false,
-          motivo: "Coleção customizada não tem troca — remova a cópia e adicione a outra.",
-        };
+        return { ok: false, motivo: recusa("customizadaNaoTemTroca") };
       }
 
       const copiaLiberadaId = vagaLinha.copiaId;
@@ -3832,7 +3836,7 @@ export async function trocarCopiaDaVaga(
       return { ok: false, motivo: err.motivo };
     }
     if (violaUnicidadeVagaCopiaId(err)) {
-      return { ok: false, motivo: "Esta cópia já está alocada em outra vaga." };
+      return { ok: false, motivo: recusa("copiaJaAlocada") };
     }
     throw err;
   }

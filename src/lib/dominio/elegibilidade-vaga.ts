@@ -40,6 +40,7 @@
 
 import type { Idioma } from "./enums";
 import type { ParametroPokedex, ParametroSet, TipoColecao } from "./parametro-colecao";
+import { type Recusa, recusa } from "./recusa";
 
 export interface InfoVagaParaElegibilidade {
   tipo: TipoColecao;
@@ -67,11 +68,13 @@ export interface OpcoesElegibilidade {
   permitirForaDePadrao?: boolean;
 }
 
-export type ResultadoUniverso = { ok: true } | { ok: false; motivo: string };
+/* O `motivo` é uma RECUSA (chave + valores), nunca a frase: quem exibe
+   é a tela, no idioma da interface — ver `recusa.ts`. */
+export type ResultadoUniverso = { ok: true } | { ok: false; motivo: Recusa };
 
 export type ResultadoElegibilidade =
   | { elegivel: true; foraDePadrao: boolean }
-  | { elegivel: false; motivo: string };
+  | { elegivel: false; motivo: Recusa };
 
 /** Regra 2 (Pokédex) + regra 3 (forma nunca desdobra a vaga). */
 function pertenceAoUniversoPokedex(
@@ -81,17 +84,19 @@ function pertenceAoUniversoPokedex(
   if (dexIds.length !== 1) {
     return {
       ok: false,
-      motivo:
-        dexIds.length === 0
-          ? "Carta sem número de Pokédex (Treinador/Energia) não ocupa vaga de Pokédex."
-          : "Carta com mais de um número de Pokédex (tag team / carta multi-Pokémon) não ocupa vaga de Pokédex — inelegível sem exceção.",
+      motivo: recusa(
+        dexIds.length === 0 ? "semNumeroPokedex" : "multiplosNumerosPokedex",
+      ),
     };
   }
   const numeroVaga = Number(chave);
   if (dexIds[0] !== numeroVaga) {
     return {
       ok: false,
-      motivo: `Esta carta é do Pokémon nº ${dexIds[0]}; a vaga é do nº ${numeroVaga}.`,
+      motivo: recusa("outroNumeroPokedex", {
+        carta: String(dexIds[0]),
+        vaga: String(numeroVaga),
+      }),
     };
   }
   return { ok: true };
@@ -106,13 +111,13 @@ function pertenceAoUniversoSet(
   if (carta.setId !== parametro.setId) {
     return {
       ok: false,
-      motivo: `Esta carta é do set '${carta.setId}'; a vaga é do set '${parametro.setId}'.`,
+      motivo: recusa("outroSet", { carta: carta.setId, vaga: parametro.setId }),
     };
   }
   if (carta.localId !== chave) {
     return {
       ok: false,
-      motivo: `Esta carta é o número '${carta.localId}' do set; a vaga é o número '${chave}'.`,
+      motivo: recusa("outroNumeroDoSet", { carta: carta.localId, vaga: chave }),
     };
   }
   return { ok: true };
@@ -161,7 +166,12 @@ export function avaliarElegibilidade(
   if (foraDePadrao && !opcoes.permitirForaDePadrao) {
     return {
       elegivel: false,
-      motivo: `Esta coleção exige cópias em '${vaga.idiomaExigido}'; esta cópia é em '${copia.idioma}'. Envie permitirForaDePadrao para aceitar mesmo assim.`,
+      // `foraDePadrao` só é true com `idiomaExigido` preenchido
+      // (`ehForaDePadrao`), então o `!` aqui não esconde nada.
+      motivo: recusa("idiomaExigido", {
+        exigido: vaga.idiomaExigido!,
+        copia: copia.idioma,
+      }),
     };
   }
 

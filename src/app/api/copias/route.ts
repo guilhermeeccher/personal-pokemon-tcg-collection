@@ -9,6 +9,7 @@ import {
   obterVariantesDisponiveisDaCarta,
 } from "@/lib/db/consultas";
 import { validarCriacaoCopia } from "@/lib/dominio/copia";
+import { corpoRecusa } from "@/lib/dominio/recusa";
 import { validarFiltrosInventario } from "@/lib/dominio/filtros-inventario";
 import { validarVariantesContraCatalogo } from "@/lib/dominio/variantes-catalogo";
 
@@ -66,7 +67,10 @@ export async function POST(req: Request) {
 
   const resultado = validarCriacaoCopia(corpo as Record<string, unknown>);
   if (!resultado.ok) {
-    return NextResponse.json({ erro: "Cópia inválida.", detalhes: resultado.erros }, { status: 400 });
+    return NextResponse.json(
+      { ...corpoRecusa("copiaInvalida"), detalhes: resultado.erros },
+      { status: 400 },
+    );
   }
 
   // Mesma restrição do cadastro por set (mesma decisão): a
@@ -82,7 +86,7 @@ export async function POST(req: Request) {
   );
   if (errosVariante.length > 0) {
     return NextResponse.json(
-      { erro: "Variante fora do catálogo para esta carta.", detalhes: errosVariante },
+      { ...corpoRecusa("varianteForaDoCatalogoDaCarta"), detalhes: errosVariante },
       { status: 400 },
     );
   }
@@ -99,7 +103,7 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("[POST /api/copias] falha ao inserir:", err);
     return NextResponse.json(
-      { erro: "Falha ao gravar — verifique se a carta existe no catálogo informado." },
+      corpoRecusa("falhaAoGravarCopia"),
       { status: 400 },
     );
   }

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { alterarEscopoDaColecaoPokedex } from "@/lib/db/consultas";
 import { validarParametroPokedex } from "@/lib/dominio/parametro-colecao";
+import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
 import { ehUuid } from "@/lib/dominio/uuid";
 
 /**
@@ -35,7 +36,7 @@ export async function PATCH(
   // Postgres rejeitar a sintaxe e virar 500 (mesmo padrão das outras
   // rotas de coleção, achado do coordenador, 2026-08-25).
   if (!ehUuid(id)) {
-    return NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("colecaoNaoEncontrada"), { status: 404 });
   }
 
   let corpo: unknown;
@@ -48,15 +49,15 @@ export async function PATCH(
   const resultadoValidacao = validarParametroPokedex(corpo);
   if (!resultadoValidacao.ok) {
     return NextResponse.json(
-      { erro: "Escopo inválido.", detalhes: resultadoValidacao.erros },
+      { ...corpoRecusa("escopoInvalido"), detalhes: resultadoValidacao.erros },
       { status: 400 },
     );
   }
 
   const resultado = await alterarEscopoDaColecaoPokedex(db, id, resultadoValidacao.parametro);
   if (!resultado.ok) {
-    const status = resultado.motivo === "Coleção não encontrada." ? 404 : 400;
-    return NextResponse.json({ erro: resultado.motivo }, { status });
+    const status = resultado.motivo.chave === "colecaoNaoEncontrada" ? 404 : 400;
+    return NextResponse.json(corpoDaRecusa(resultado.motivo), { status });
   }
   return NextResponse.json({ ok: true, adicionadas: resultado.adicionadas, removidas: resultado.removidas });
 }

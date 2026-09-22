@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db/client";
 import { adicionarCopiaEmColecaoCustomizada } from "@/lib/db/consultas";
+import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
 import { ehUuid } from "@/lib/dominio/uuid";
 
 /**
@@ -15,8 +16,10 @@ import { ehUuid } from "@/lib/dominio/uuid";
  *
  * Body: `{ copiaId: string, permitirForaDePadrao?: boolean }`.
  * Erros de regra (coleção não customizada, cópia já alocada, idioma
- * fora de padrão sem o sinalizador) voltam 400 com motivo legível em
- * português. 404 só quando a própria coleção da URL não existe —
+ * fora de padrão sem o sinalizador) voltam 400 com a RECUSA em `recusa`
+ * — chave estável e valores, que a tela traduz para o idioma da
+ * interface (`lib/dominio/recusa.ts`). 404 só quando a própria coleção
+ * da URL não existe —
  * inclusive quando `:id` nem tem formato de UUID (achado do
  * coordenador, 2026-08-25: nunca deixa o Postgres virar isso em 500).
  */
@@ -26,7 +29,7 @@ export async function POST(
 ) {
   const { id } = await params;
   if (!ehUuid(id)) {
-    return NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("colecaoNaoEncontrada"), { status: 404 });
   }
 
   let corpo: unknown;
@@ -48,8 +51,8 @@ export async function POST(
     permitirForaDePadrao,
   });
   if (!resultado.ok) {
-    const status = resultado.motivo === "Coleção não encontrada." ? 404 : 400;
-    return NextResponse.json({ erro: resultado.motivo }, { status });
+    const status = resultado.motivo.chave === "colecaoNaoEncontrada" ? 404 : 400;
+    return NextResponse.json(corpoDaRecusa(resultado.motivo), { status });
   }
 
   return NextResponse.json(

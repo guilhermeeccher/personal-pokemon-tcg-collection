@@ -23,6 +23,7 @@ import {
   previsaoDeTermino,
   segundosDeVarredura,
 } from "@/lib/dominio/estimativa-varredura";
+import { corpoDaRecusa, corpoRecusa, recusa } from "@/lib/dominio/recusa";
 import { ritmoLigaPadrao } from "@/lib/liga/ritmo";
 import {
   FILTROS_PADRAO,
@@ -143,20 +144,17 @@ async function vagasParaAgrupar(
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!ehUuid(id)) {
-    return NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("colecaoNaoEncontrada"), { status: 404 });
   }
 
   const colecao = await obterColecaoPorId(db, id);
   if (!colecao) {
-    return NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("colecaoNaoEncontrada"), { status: 404 });
   }
   if (colecao.tipo !== "pokedex" && colecao.tipo !== "set") {
     // Coleção customizada não tem vaga vazia no sentido de "carta que falta":
     // a vaga dela nasce ao alocar. Não há o que buscar.
-    return NextResponse.json(
-      { erro: "Opções de compra existem para coleção do tipo Pokédex ou set." },
-      { status: 400 },
-    );
+    return NextResponse.json(corpoRecusa("opcoesDeCompraSoPokedexOuSet"), { status: 400 });
   }
   const tipo: TipoComVaga = colecao.tipo;
 
@@ -198,7 +196,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     // com dois cliques no botão.
     return NextResponse.json(
       {
-        erro: "Já existe uma varredura em andamento nesta coleção. Espere ela terminar.",
+        ...corpoRecusa("varreduraEmAndamento"),
         varreduraId: emAndamento.id,
         vagasConsultadas: emAndamento.vagasConsultadas,
       },
@@ -217,12 +215,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (pendentes.length === 0) {
     const nadaAConsultar =
       puladas.length > 0
-        ? `As ${puladas.length} vaga(s) desta coleção já foram consultadas nas últimas ` +
-          `${validacao.validadeHoras} horas. Mande validadeHoras: 0 para consultar tudo de novo.`
+        ? recusa("vagasJaConsultadas", {
+            total: String(puladas.length),
+            horas: String(validacao.validadeHoras),
+          })
         : tipo === "set"
-          ? "Nenhuma vaga vazia com carta identificável nesta coleção."
-          : "Nenhuma vaga vazia com espécie identificável nesta coleção.";
-    return NextResponse.json({ erro: nadaAConsultar, vagasPuladas: puladas.length }, { status: 400 });
+          ? recusa("semVagaVaziaComCartaIdentificavel")
+          : recusa("semVagaVaziaComEspecieIdentificavel");
+    return NextResponse.json(
+      { ...corpoDaRecusa(nadaAConsultar), vagasPuladas: puladas.length },
+      { status: 400 },
+    );
   }
 
   const estimativaSegundos = segundosDeVarredura({
@@ -255,12 +258,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!ehUuid(id)) {
-    return NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("colecaoNaoEncontrada"), { status: 404 });
   }
 
   const colecao = await obterColecaoPorId(db, id);
   if (!colecao) {
-    return NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("colecaoNaoEncontrada"), { status: 404 });
   }
 
   // Estado do ritmo SEM I/O: a tela se atualiza a cada 5 segundos, e ler o

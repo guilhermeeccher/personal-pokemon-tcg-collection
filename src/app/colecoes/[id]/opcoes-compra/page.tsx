@@ -23,6 +23,7 @@ import { formatarDuracao } from "@/lib/dominio/estimativa-varredura";
 import { VALIDADE_CONSULTA_HORAS } from "@/lib/dominio/frescor-consulta";
 import { compararLocalId } from "@/lib/dominio/ordenacao";
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
+import { textoDaRecusa } from "@/app/_componentes/recusa";
 
 /**
  * Tela de opções de compra das vagas vazias — a Fase 6 em uso, nas coleções
@@ -154,6 +155,7 @@ function menorPreco(vaga: VagaDTO): number | null {
 
 export default function OpcoesCompraPage() {
   const t = useTranslations("opcoesCompra");
+  const tr = useTranslations("recusas");
   const locale = useLocale();
   const { id } = useParams<{ id: string }>();
 
@@ -305,7 +307,7 @@ export default function OpcoesCompraPage() {
     setDisparando(false);
 
     if (!resposta.ok) {
-      setErro(corpo.erro ?? t("erroIniciar"));
+      setErro(textoDaRecusa(tr, corpo, t("erroIniciar")));
       return;
     }
 

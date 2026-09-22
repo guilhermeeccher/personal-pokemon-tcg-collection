@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { atualizarCopia, obterCopiaPorId, obterVariantesDisponiveisDaCarta, removerCopia } from "@/lib/db/consultas";
 import { validarEdicaoCopia } from "@/lib/dominio/copia";
+import { corpoRecusa } from "@/lib/dominio/recusa";
 import { validarVariantesContraCatalogo } from "@/lib/dominio/variantes-catalogo";
 
 /** PATCH /api/copias/:id — edita campos de uma cópia (spec §5 Fase 1). */
@@ -21,7 +22,10 @@ export async function PATCH(
 
   const resultado = validarEdicaoCopia(corpo as Record<string, unknown>);
   if (!resultado.ok) {
-    return NextResponse.json({ erro: "Edição inválida.", detalhes: resultado.erros }, { status: 400 });
+    return NextResponse.json(
+      { ...corpoRecusa("edicaoInvalida"), detalhes: resultado.erros },
+      { status: 400 },
+    );
   }
 
   // Trocar a variante na edição está sujeito à mesma restrição do
@@ -31,7 +35,7 @@ export async function PATCH(
   if (resultado.patch.variante !== undefined) {
     const existente = await obterCopiaPorId(db, id);
     if (!existente) {
-      return NextResponse.json({ erro: "Cópia não encontrada." }, { status: 404 });
+      return NextResponse.json(corpoRecusa("copiaNaoEncontrada"), { status: 404 });
     }
     const disponiveis = await obterVariantesDisponiveisDaCarta(
       db,
@@ -44,7 +48,7 @@ export async function PATCH(
     );
     if (errosVariante.length > 0) {
       return NextResponse.json(
-        { erro: "Variante fora do catálogo para esta carta.", detalhes: errosVariante },
+        { ...corpoRecusa("varianteForaDoCatalogoDaCarta"), detalhes: errosVariante },
         { status: 400 },
       );
     }
@@ -52,7 +56,7 @@ export async function PATCH(
 
   const atualizou = await atualizarCopia(db, id, resultado.patch);
   if (!atualizou) {
-    return NextResponse.json({ erro: "Cópia não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("copiaNaoEncontrada"), { status: 404 });
   }
   return NextResponse.json({ ok: true });
 }

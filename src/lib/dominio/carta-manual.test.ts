@@ -50,7 +50,16 @@ describe("validarCartaManual", () => {
   it("exige set, número, nome e idioma", () => {
     const r = validarCartaManual({});
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.erros.length).toBeGreaterThanOrEqual(4);
+    // As quatro recusas são identificadas pela chave, que é o contrato com
+    // a tela — a frase de cada uma está nos catálogos de mensagem.
+    if (!r.ok) {
+      expect(r.erros.map((e) => e.chave)).toEqual([
+        "informeSiglaDoSet",
+        "informeNumeroDaCarta",
+        "informeNomeDaCarta",
+        "informeIdiomaDoCatalogo",
+      ]);
+    }
   });
 
   it("recusa idioma fora do enum", () => {

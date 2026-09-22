@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db/client";
 import { descartarMelhoria, restaurarMelhoria } from "@/lib/db/consultas";
+import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
 import { ehUuid } from "@/lib/dominio/uuid";
 
 /** Lê `copiaId` do corpo — mesmo formato nos dois métodos. */
@@ -31,7 +32,7 @@ export async function POST(
 ) {
   const { id } = await params;
   if (!ehUuid(id)) {
-    return NextResponse.json({ erro: "Vaga não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("vagaNaoEncontrada"), { status: 404 });
   }
 
   const copiaId = await lerCopiaId(req);
@@ -39,12 +40,12 @@ export async function POST(
     return NextResponse.json({ erro: "copiaId ausente ou vazio." }, { status: 400 });
   }
   if (!ehUuid(copiaId)) {
-    return NextResponse.json({ erro: "Cópia não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("copiaNaoEncontrada"), { status: 404 });
   }
 
   const resultado = await descartarMelhoria(db, id, copiaId);
   if (!resultado.ok) {
-    return NextResponse.json({ erro: resultado.motivo }, { status: 404 });
+    return NextResponse.json(corpoDaRecusa(resultado.motivo), { status: 404 });
   }
   return NextResponse.json({ ok: true });
 }
@@ -60,7 +61,7 @@ export async function DELETE(
 ) {
   const { id } = await params;
   if (!ehUuid(id)) {
-    return NextResponse.json({ erro: "Vaga não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("vagaNaoEncontrada"), { status: 404 });
   }
 
   const copiaId = await lerCopiaId(req);
@@ -68,7 +69,7 @@ export async function DELETE(
     return NextResponse.json({ erro: "copiaId ausente ou vazio." }, { status: 400 });
   }
   if (!ehUuid(copiaId)) {
-    return NextResponse.json({ erro: "Cópia não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("copiaNaoEncontrada"), { status: 404 });
   }
 
   await restaurarMelhoria(db, id, copiaId);

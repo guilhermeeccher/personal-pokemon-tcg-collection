@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { atualizarCopiasEmMassa } from "@/lib/db/consultas";
 import { validarEdicaoEmMassa } from "@/lib/dominio/edicao-massa";
+import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
 
 /**
  * PATCH /api/copias/massa — item 2 do incremento pós-Fase 3: edição em
@@ -29,14 +30,17 @@ export async function PATCH(req: Request) {
 
   const resultado = validarEdicaoEmMassa(corpo as Record<string, unknown>);
   if (!resultado.ok) {
-    return NextResponse.json({ erro: "Edição em massa inválida.", detalhes: resultado.erros }, { status: 400 });
+    return NextResponse.json(
+      { ...corpoRecusa("edicaoEmMassaInvalida"), detalhes: resultado.erros },
+      { status: 400 },
+    );
   }
 
   const { copiaIds, patch } = resultado.edicao;
   const aplicado = await atualizarCopiasEmMassa(db, copiaIds, patch);
   if (!aplicado.ok) {
     return NextResponse.json(
-      { erro: aplicado.motivo, detalhes: aplicado.detalhes },
+      { ...corpoDaRecusa(aplicado.motivo), detalhes: aplicado.detalhes },
       { status: 400 },
     );
   }

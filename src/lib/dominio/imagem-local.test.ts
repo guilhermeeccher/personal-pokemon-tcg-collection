@@ -81,7 +81,10 @@ describe("validarArquivoImagem", () => {
     grande[2] = 0xff;
     const resultado = validarArquivoImagem(grande);
     expect(resultado.ok).toBe(false);
-    expect(resultado.erro).toMatch(/8 MB/);
+    // Chave + valores, não a frase: quem monta a frase é a tela, no idioma
+    // da interface. O limite continua sendo verificado — agora no valor.
+    expect(resultado.erro?.chave).toBe("arquivoAcimaDoLimite");
+    expect(resultado.erro?.valores).toEqual({ mb: "8" });
   });
 
   it("recusa conteúdo que não é imagem, mesmo pequeno", () => {

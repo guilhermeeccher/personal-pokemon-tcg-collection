@@ -28,6 +28,7 @@ import type {
   MelhoriaDaVagaDTO,
   VagaDaColecaoDTO,
 } from "@/lib/dominio/tipos-cliente";
+import { textoDaRecusa } from "@/app/_componentes/recusa";
 
 /* Nome de região é nome próprio do universo Pokémon — não traduz, e por
    isso fica aqui e não no catálogo de mensagens. */
@@ -53,6 +54,7 @@ const OPCOES_REGIAO = REGIOES.map((regiao) => ({
 
 export default function ColecaoPage() {
   const t = useTranslations("colecaoDetalhe");
+  const tr = useTranslations("recusas");
   const params = useParams<{ id: string }>();
   const id = params.id;
   const router = useRouter();
@@ -134,7 +136,7 @@ export default function ColecaoPage() {
       recarregar();
     } else {
       const dados = await resp.json().catch(() => null);
-      setErro(dados?.erro ?? t("erroDesalocar"));
+      setErro(textoDaRecusa(tr, dados, t("erroDesalocar")));
     }
   }
 
@@ -544,6 +546,7 @@ function EdicaoColecao({
   onErro: (msg: string) => void;
 }) {
   const t = useTranslations("colecaoDetalhe");
+  const tr = useTranslations("recusas");
   const [nome, setNome] = useState(colecao.nome);
   const [notas, setNotas] = useState(colecao.notas ?? "");
   const [idiomaExigido, setIdiomaExigido] = useState<Idioma | "">(colecao.idiomaExigido ?? "");
@@ -564,7 +567,7 @@ function EdicaoColecao({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        onErro(dados.erro ?? t("erroSalvar"));
+        onErro(textoDaRecusa(tr, dados, t("erroSalvar")));
         return;
       }
       onSalvo(t("colecaoAtualizada"));
@@ -621,6 +624,7 @@ function ToggleSecretas({
   onErro: (msg: string) => void;
 }) {
   const t = useTranslations("colecaoDetalhe");
+  const tr = useTranslations("recusas");
   const [enviando, setEnviando] = useState(false);
 
   async function alternar(novoValor: boolean) {
@@ -638,7 +642,7 @@ function ToggleSecretas({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        onErro(dados.erro ?? t("erroSecretas"));
+        onErro(textoDaRecusa(tr, dados, t("erroSecretas")));
         return;
       }
       onAlterado(novoValor ? t("secretasIncluidas") : t("secretasRemovidas"));
@@ -674,6 +678,7 @@ function EdicaoEscopoPokedex({
   onErro: (msg: string) => void;
 }) {
   const t = useTranslations("colecaoDetalhe");
+  const tr = useTranslations("recusas");
   const [enviando, setEnviando] = useState(false);
   const regioesAtuais: Regiao[] = parametro.escopo === "nacional" ? [...REGIOES] : parametro.regioes;
 
@@ -701,7 +706,7 @@ function EdicaoEscopoPokedex({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        onErro(dados.erro ?? t("erroEscopo"));
+        onErro(textoDaRecusa(tr, dados, t("erroEscopo")));
         return;
       }
       const partes: string[] = [];
@@ -746,6 +751,7 @@ function AdicionarCopiaCustomizada({
   onErro: (msg: string) => void;
 }) {
   const t = useTranslations("colecaoDetalhe");
+  const tr = useTranslations("recusas");
   const [q, setQ] = useState("");
   const [resultados, setResultados] = useState<CopiaDoInventarioDTO[] | null>(null);
   const [buscando, setBuscando] = useState(false);
@@ -782,7 +788,7 @@ function AdicionarCopiaCustomizada({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        onErro(dados.erro ?? t("erroAdicionar"));
+        onErro(textoDaRecusa(tr, dados, t("erroAdicionar")));
         return;
       }
       const partes = [t("adicionadaAColecao", { carta: copia.cartaNome })];
@@ -887,6 +893,7 @@ function ModalAlocarVaga({
   onAlocado: (msg: string) => void;
 }) {
   const t = useTranslations("colecaoDetalhe");
+  const tr = useTranslations("recusas");
   const [candidatos, setCandidatos] = useState<CandidatoVagaDTO[] | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -912,7 +919,7 @@ function ModalAlocarVaga({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? t("erroAlocar"));
+        setErro(textoDaRecusa(tr, dados, t("erroAlocar")));
         return;
       }
       const partes = [t("alocadaNaVaga", { carta: candidato.cartaNome, vaga: vaga.chave })];
@@ -1056,6 +1063,7 @@ function ModalMelhoriaVaga({
   onTrocado: (msg: string) => void;
 }) {
   const t = useTranslations("colecaoDetalhe");
+  const tr = useTranslations("recusas");
   const [erro, setErro] = useState<string | null>(null);
   const [enviandoId, setEnviandoId] = useState<string | null>(null);
   const [confirmandoId, setConfirmandoId] = useState<string | null>(null);
@@ -1074,7 +1082,7 @@ function ModalMelhoriaVaga({
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? t("erroTrocar"));
+        setErro(textoDaRecusa(tr, dados, t("erroTrocar")));
         return;
       }
       const partes = [
@@ -1108,7 +1116,7 @@ function ModalMelhoriaVaga({
       });
       if (!resp.ok) {
         const dados = await resp.json().catch(() => null);
-        setErro(dados?.erro ?? t("erroDescartar"));
+        setErro(textoDaRecusa(tr, dados, t("erroDescartar")));
         return;
       }
       setDescartadas((atuais) =>

@@ -5,7 +5,13 @@
  * pela extensão do nome enviado nem pelo `Content-Type` declarado, os
  * dois são fáceis de forjar. Módulo puro, sem I/O — testável sem disco
  * nem rede.
+ *
+ * O que a validação recusa vai para a tela, então a recusa é chave +
+ * valores (`recusa.ts`), nunca frase — quem pega o arquivo errado lê a
+ * explicação no idioma da interface.
  */
+
+import { type Recusa, recusa } from "./recusa";
 
 export const TIPOS_MIME_IMAGEM_PERMITIDOS = [
   "image/jpeg",
@@ -24,6 +30,16 @@ const EXTENSAO_POR_MIME: Record<TipoMimeImagemPermitido, string> = {
   "image/png": "png",
   "image/webp": "webp",
 };
+
+/**
+ * O limite em MB como a frase o diz. Exportado porque o download por URL
+ * (`lib/armazenamento-imagens.ts`) recusa pelo MESMO limite e precisa do
+ * mesmo número no argumento da mensagem — duas contas iguais em lugares
+ * diferentes é como elas passam a divergir.
+ */
+export function limiteEmMegabytes(): number {
+  return Math.round(TAMANHO_MAXIMO_BYTES / 1024 / 1024);
+}
 
 export function extensaoParaMime(mime: TipoMimeImagemPermitido): string {
   return EXTENSAO_POR_MIME[mime];
@@ -78,7 +94,7 @@ export function detectarTipoImagemPorAssinatura(
 
 export interface ResultadoValidacaoArquivoImagem {
   ok: boolean;
-  erro?: string;
+  erro?: Recusa;
   tipo?: TipoMimeImagemPermitido;
 }
 
@@ -90,27 +106,24 @@ export interface ResultadoValidacaoArquivoImagem {
  */
 export function validarArquivoImagem(bytes: Uint8Array): ResultadoValidacaoArquivoImagem {
   if (bytes.length === 0) {
-    return { ok: false, erro: "Arquivo vazio." };
+    return { ok: false, erro: recusa("arquivoVazio") };
   }
   if (bytes.length > TAMANHO_MAXIMO_BYTES) {
     return {
       ok: false,
-      erro: `Arquivo maior que o limite de ${Math.round(TAMANHO_MAXIMO_BYTES / 1024 / 1024)} MB.`,
+      erro: recusa("arquivoAcimaDoLimite", { mb: String(limiteEmMegabytes()) }),
     };
   }
   const tipo = detectarTipoImagemPorAssinatura(bytes);
   if (!tipo) {
-    return {
-      ok: false,
-      erro: "Arquivo não reconhecido como imagem JPEG, PNG ou WEBP (checado pelo conteúdo, não pela extensão).",
-    };
+    return { ok: false, erro: recusa("arquivoNaoEhImagem") };
   }
   return { ok: true, tipo };
 }
 
 export interface ResultadoValidacaoUrlOrigem {
   ok: boolean;
-  erro?: string;
+  erro?: Recusa;
 }
 
 /**
@@ -123,10 +136,10 @@ export function validarUrlOrigem(valor: string): ResultadoValidacaoUrlOrigem {
   try {
     url = new URL(valor);
   } catch {
-    return { ok: false, erro: "URL inválida." };
+    return { ok: false, erro: recusa("urlInvalida") };
   }
   if (url.protocol !== "http:" && url.protocol !== "https:") {
-    return { ok: false, erro: "Só URLs http:// ou https:// são aceitas." };
+    return { ok: false, erro: recusa("urlEsquemaNaoAceito") };
   }
   return { ok: true };
 }

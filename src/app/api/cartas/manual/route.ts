@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { criarCartaManual } from "@/lib/db/consultas";
 import { validarCartaManual } from "@/lib/dominio/carta-manual";
+import { corpoDasRecusas } from "@/lib/dominio/recusa";
 
 /**
  * POST /api/cartas/manual — cria uma linha de catálogo à mão, para carta
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
     (corpo ?? {}) as Record<string, unknown>,
   );
   if (!validacao.ok) {
-    return NextResponse.json({ erros: validacao.erros }, { status: 400 });
+    return NextResponse.json(corpoDasRecusas(validacao.erros), { status: 400 });
   }
 
   const { cartaId, jaExistia } = await criarCartaManual(db, validacao.carta);

@@ -7,6 +7,7 @@ import {
   obterInfoSetParaVagas,
 } from "@/lib/db/consultas";
 import { validarCriacaoColecao } from "@/lib/dominio/colecao";
+import { corpoRecusa } from "@/lib/dominio/recusa";
 import type { ParametroPokedex, ParametroSet } from "@/lib/dominio/parametro-colecao";
 import { resolverChavesVagas } from "@/lib/dominio/vagas-colecao";
 import { detectarCatalogoIncompleto } from "@/lib/dominio/catalogo-incompleto";
@@ -41,7 +42,10 @@ export async function POST(req: Request) {
 
   const resultado = validarCriacaoColecao(corpo as Record<string, unknown>);
   if (!resultado.ok) {
-    return NextResponse.json({ erro: "Coleção inválida.", detalhes: resultado.erros }, { status: 400 });
+    return NextResponse.json(
+      { ...corpoRecusa("colecaoInvalida"), detalhes: resultado.erros },
+      { status: 400 },
+    );
   }
 
   const { colecao } = resultado;
@@ -66,7 +70,10 @@ export async function POST(req: Request) {
     const info = await obterInfoSetParaVagas(db, parametroSet.setId, parametroSet.idiomaCatalogo);
     if (!info) {
       return NextResponse.json(
-        { erro: `Set '${parametroSet.setId}' não encontrado no catálogo em '${parametroSet.idiomaCatalogo}'.` },
+        corpoRecusa("setNaoEncontradoNoCatalogoEmIdioma", {
+          setId: parametroSet.setId,
+          idioma: parametroSet.idiomaCatalogo,
+        }),
         { status: 400 },
       );
     }
@@ -82,9 +89,10 @@ export async function POST(req: Request) {
     // Nunca cria coleção vazia em silêncio (regra 6 do AGENTS.md).
     if (universo.vagasEsperadas === 0) {
       return NextResponse.json(
-        {
-          erro: `Set '${parametroSet.setId}' não tem nenhuma carta utilizável no catálogo em '${parametroSet.idiomaCatalogo}'.`,
-        },
+        corpoRecusa("setSemCartaUtilizavel", {
+          setId: parametroSet.setId,
+          idioma: parametroSet.idiomaCatalogo,
+        }),
         { status: 400 },
       );
     }
@@ -113,6 +121,6 @@ export async function POST(req: Request) {
     );
   } catch (err) {
     console.error("[POST /api/colecoes] falha ao criar:", err);
-    return NextResponse.json({ erro: "Falha ao gravar a coleção." }, { status: 400 });
+    return NextResponse.json(corpoRecusa("falhaAoGravarColecao"), { status: 400 });
   }
 }

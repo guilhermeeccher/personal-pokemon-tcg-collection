@@ -19,9 +19,11 @@ import path from "node:path";
 
 import {
   TAMANHO_MAXIMO_BYTES,
+  limiteEmMegabytes,
   validarUrlOrigem,
   type TipoMimeImagemPermitido,
 } from "@/lib/dominio/imagem-local";
+import { type Recusa, recusa } from "@/lib/dominio/recusa";
 
 /**
  * 30s, não 10s. Medido em 2026-08-26: o próprio CDN da TCGdex levou ~10s
@@ -34,7 +36,25 @@ const TIMEOUT_DOWNLOAD_MS = 30_000;
 const MAX_REDIRECTS = 5;
 const USER_AGENT = "colecao-pokemon/1.0 (uso pessoal; imagem-local)";
 
-export class ErroDownloadImagem extends Error {}
+/**
+ * Falha do download que o usuário precisa ler. Carrega a RECUSA (chave
+ * + valores, `lib/dominio/recusa.ts`), não a frase: a rota devolve a
+ * chave e a tela monta a frase no idioma da interface.
+ *
+ * O `message` fica sendo a própria chave. Ele só serve a log e a stack
+ * trace aqui dentro, e repetir o texto em português neste arquivo
+ * criaria uma segunda cópia da mensagem, fora do catálogo, que
+ * ninguém lembraria de manter junto.
+ */
+export class ErroDownloadImagem extends Error {
+  readonly recusa: Recusa;
+
+  constructor(r: Recusa) {
+    super(r.chave);
+    this.recusa = r;
+    this.name = "ErroDownloadImagem";
+  }
+}
 
 function diretorioBase(): string {
   // Documentado em .env.example. Default pensado para o volume declarado
@@ -113,7 +133,7 @@ export async function lerArquivoImagem(arquivoNome: string): Promise<Buffer | nu
 async function fetchUmHop(url: string, sinal: AbortSignal): Promise<Response> {
   const validacao = validarUrlOrigem(url);
   if (!validacao.ok) {
-    throw new ErroDownloadImagem(validacao.erro ?? "URL inválida.");
+    throw new ErroDownloadImagem(validacao.erro ?? recusa("urlInvalida"));
   }
   return fetch(url, {
     redirect: "manual",
@@ -131,15 +151,15 @@ async function seguirRedirectsEBuscar(urlInicial: string, sinal: AbortSignal): P
     }
     const local = resposta.headers.get("location");
     if (!local) {
-      throw new ErroDownloadImagem("A URL redirecionou sem indicar destino.");
+      throw new ErroDownloadImagem(recusa("downloadRedirecionamentoSemDestino"));
     }
     if (hop === MAX_REDIRECTS) {
-      throw new ErroDownloadImagem("Excesso de redirecionamentos ao baixar a imagem.");
+      throw new ErroDownloadImagem(recusa("downloadExcessoRedirecionamentos"));
     }
     urlAtual = new URL(local, urlAtual).toString();
   }
   // Inatingível (o loop sempre retorna ou lança), só para o TypeScript.
-  throw new ErroDownloadImagem("Falha inesperada ao seguir redirecionamentos.");
+  throw new ErroDownloadImagem(recusa("downloadFalhaInesperadaRedirecionamento"));
 }
 
 export interface ResultadoDownloadImagem {
@@ -151,8 +171,8 @@ export interface ResultadoDownloadImagem {
  * 10s, no máximo 5 redirects, e — o ponto mais importante — o tamanho é
  * limitado LENDO o corpo aos pedaços e contando os bytes conforme
  * chegam, nunca confiando no cabeçalho `Content-Length` (que pode faltar
- * ou mentir). Estoura `ErroDownloadImagem` com mensagem apresentável ao
- * usuário em qualquer falha.
+ * ou mentir). Estoura `ErroDownloadImagem` com uma recusa apresentável
+ * ao usuário em qualquer falha — chave e valores, que a tela traduz.
  */
 export async function baixarImagemDeUrl(url: string): Promise<ResultadoDownloadImagem> {
   const controlador = new AbortController();
@@ -164,16 +184,18 @@ export async function baixarImagemDeUrl(url: string): Promise<ResultadoDownloadI
     } catch (err) {
       if (err instanceof ErroDownloadImagem) throw err;
       if (err instanceof Error && err.name === "AbortError") {
-        throw new ErroDownloadImagem("Tempo esgotado ao baixar a imagem.");
+        throw new ErroDownloadImagem(recusa("downloadTempoEsgotado"));
       }
-      throw new ErroDownloadImagem("Falha de rede ao baixar a imagem.");
+      throw new ErroDownloadImagem(recusa("downloadFalhaDeRede"));
     }
 
     if (!resposta.ok) {
-      throw new ErroDownloadImagem(`A URL respondeu com erro (HTTP ${resposta.status}).`);
+      throw new ErroDownloadImagem(
+        recusa("downloadRespostaComErro", { status: String(resposta.status) }),
+      );
     }
     if (!resposta.body) {
-      throw new ErroDownloadImagem("A resposta não trouxe conteúdo.");
+      throw new ErroDownloadImagem(recusa("downloadSemConteudo"));
     }
 
     const leitor = resposta.body.getReader();
@@ -186,7 +208,7 @@ export async function baixarImagemDeUrl(url: string): Promise<ResultadoDownloadI
       if (total > TAMANHO_MAXIMO_BYTES) {
         await leitor.cancel().catch(() => {});
         throw new ErroDownloadImagem(
-          `A imagem excede o limite de ${Math.round(TAMANHO_MAXIMO_BYTES / 1024 / 1024)} MB.`,
+          recusa("downloadAcimaDoLimite", { mb: String(limiteEmMegabytes()) }),
         );
       }
       pedacos.push(value);

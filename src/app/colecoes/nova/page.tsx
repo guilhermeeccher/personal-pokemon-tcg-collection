@@ -14,6 +14,7 @@ import { Campo, classesEntrada } from "@/app/_componentes/campo";
 import { GradeEscopo } from "@/app/_componentes/ds/grade-escopo";
 import { SeletorExpansao } from "@/app/_componentes/seletor-expansao";
 import type { SetParaCadastroDTO } from "@/lib/dominio/tipos-cliente";
+import { textoDaRecusa } from "@/app/_componentes/recusa";
 
 /* Nome de região é nome próprio do universo Pokémon: igual nos dois
    idiomas, e por isso fica no código, não no catálogo de mensagens. A
@@ -36,6 +37,7 @@ const TIPOS: readonly TipoColecao[] = ["pokedex", "set", "customizada"] as const
 
 export default function NovaColecaoPage() {
   const t = useTranslations("colecaoNova");
+  const tr = useTranslations("recusas");
   const router = useRouter();
 
   const [tipo, setTipo] = useState<TipoColecao>("pokedex");
@@ -110,7 +112,7 @@ export default function NovaColecaoPage() {
       });
       const dados = await resp.json();
       if (!resp.ok) {
-        setErro(dados.erro ?? t("erroCriar"));
+        setErro(textoDaRecusa(tr, dados, t("erroCriar")));
         setDetalhesErro(dados.detalhes ?? []);
         return;
       }

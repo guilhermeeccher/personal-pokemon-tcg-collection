@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { excluirColecao, obterColecaoComVagas, atualizarColecao } from "@/lib/db/consultas";
 import { validarEdicaoColecao } from "@/lib/dominio/colecao";
+import { corpoRecusa } from "@/lib/dominio/recusa";
 import { ehUuid } from "@/lib/dominio/uuid";
 
 /** GET /api/colecoes/:id — lê uma coleção com suas vagas. */
@@ -37,7 +38,7 @@ export async function PATCH(
 ) {
   const { id } = await params;
   if (!ehUuid(id)) {
-    return NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("colecaoNaoEncontrada"), { status: 404 });
   }
 
   let corpo: unknown;
@@ -49,12 +50,15 @@ export async function PATCH(
 
   const resultado = validarEdicaoColecao(corpo as Record<string, unknown>);
   if (!resultado.ok) {
-    return NextResponse.json({ erro: "Edição inválida.", detalhes: resultado.erros }, { status: 400 });
+    return NextResponse.json(
+      { ...corpoRecusa("edicaoInvalida"), detalhes: resultado.erros },
+      { status: 400 },
+    );
   }
 
   const atualizou = await atualizarColecao(db, id, resultado.patch);
   if (!atualizou) {
-    return NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
+    return NextResponse.json(corpoRecusa("colecaoNaoEncontrada"), { status: 404 });
   }
   return NextResponse.json({ ok: true });
 }

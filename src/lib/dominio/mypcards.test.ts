@@ -127,7 +127,10 @@ describe("validarLinkMapeamentoSet", () => {
     // depois, como "o set inteiro ficou sem foto".
     const r = validarLinkMapeamentoSet(URL_ORIGINAL, "mep");
     expect(r.ok).toBe(false);
-    expect(r.ok === false && r.erro).toContain("mee");
+    // "dizendo qual veio" agora é um valor da recusa, não um pedaço de
+    // frase — a tela é que monta a frase, no idioma da interface.
+    expect(r.ok === false && r.erro.chave).toBe("linkDeOutroSet");
+    expect(r.ok === false && r.erro.valores).toEqual({ link: "mee", esperado: "mep" });
   });
 
   it("recusa o que não é link do mypcards", () => {
