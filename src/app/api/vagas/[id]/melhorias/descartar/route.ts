@@ -21,7 +21,7 @@ async function lerCopiaId(req: Request): Promise<string | null> {
  * POST /api/vagas/:id/melhorias/descartar — cala a sugestão desta cópia
  * NESTA vaga (spec §5, Fase 9). Body: `{ copiaId: string }`.
  *
- * O escopo do silêncio é o par, não a vaga (decisão dele, 2026-09-05):
+ * O escopo do silêncio é o par, não a vaga (decisão de 2026-09-05):
  * se amanhã entrar no inventário outra cópia melhor, a vaga volta a
  * sinalizar. Nada é apagado — o descarte é ausência de aviso, não
  * remoção de dado. Idempotente.

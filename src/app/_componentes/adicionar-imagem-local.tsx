@@ -21,9 +21,10 @@
  * (as 8 energias de Megaevolução, os 88 promos de MEP). O mypcards tem
  * essas fotos, mas o id do set é interno deles e as páginas estão atrás
  * do challenge do Cloudflare — nenhum cliente que não seja navegador lê
- * de lá. Então o gesto é: ele abre o set no navegador, copia o endereço
- * de qualquer imagem e cola aqui. Um paste mapeia o set e dispara o
- * download de tudo o que falta nele. Ver `lib/dominio/mypcards.ts`.
+ * de lá. Então o gesto é: o usuário abre o set no navegador, copia o
+ * endereço de qualquer imagem e cola aqui. Um paste mapeia o set e
+ * dispara o download de tudo o que falta nele. Ver
+ * `lib/dominio/mypcards.ts`.
  */
 
 import { useTranslations } from "next-intl";
@@ -162,7 +163,7 @@ function ModalAdicionarImagem({
         return;
       }
       // O download roda em segundo plano (ver a rota): dizer "pronto"
-      // aqui seria mentira, e dizer só "ok" deixaria ele sem saber
+      // aqui seria mentira, e dizer só "ok" deixaria o usuário sem saber
       // quando olhar de novo.
       setAviso(
         dados.cartasNaFila > 0

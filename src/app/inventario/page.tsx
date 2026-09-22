@@ -434,8 +434,8 @@ export default function InventarioPage() {
                       />
                     }
                   />
-                  {/* A imagem que ELE enviou pode ser trocada ou removida;
-                      a do catálogo não é dele para mexer. */}
+                  {/* A imagem que O USUÁRIO enviou pode ser trocada ou
+                      removida; a do catálogo não é dele para mexer. */}
                   {ehOrigemPropria(c.imagemOrigem) && (
                     <AdicionarImagemLocal
                       cartaId={c.cartaId}

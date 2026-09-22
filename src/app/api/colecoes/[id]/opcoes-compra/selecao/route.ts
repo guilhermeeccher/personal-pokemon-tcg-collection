@@ -22,14 +22,14 @@ import { ehUuid } from "@/lib/dominio/uuid";
  * **Desde 2026-09-17 a marcação não vive mais na linha da varredura.** Ela vai
  * para `escolha_compra`, presa à vaga, e por isso sobrevive a uma varredura
  * nova — que passa a atualizar o preço da triagem em vez de apagá-la. O motivo
- * está no cabeçalho da tabela: ele marcou 126 cartas da Pokédex, uma por vaga
- * vazia, e a próxima atualização de preço apagaria as 126.
+ * está no cabeçalho da tabela: o usuário marcou 126 cartas da Pokédex, uma
+ * por vaga vazia, e a próxima atualização de preço apagaria as 126.
  *
  * Corpo: `{ ids: string[], selecionada: boolean }`. Ao **marcar**, os ids são
  * de `liga_opcao` — é de lá que vêm os dados que a escolha guarda. Ao
  * **desmarcar**, valem ids de `liga_opcao` ou de `escolha_compra`: a lista de
- * compras existe sem varredura nenhuma, e ele precisa poder tirar carta dela
- * sem rodar uma busca antes.
+ * compras existe sem varredura nenhuma, e o usuário precisa poder tirar carta
+ * dela sem rodar uma busca antes.
  */
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

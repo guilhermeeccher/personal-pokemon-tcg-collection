@@ -59,8 +59,8 @@ function comBom(bytes: Uint8Array): Uint8Array {
  *
  * O resumo do que ficou de fora vai em cabeçalho HTTP (`X-Excluidas`), e
  * também dentro do ZIP num `LEIA-ME.txt` — cabeçalho some quando o
- * navegador salva o arquivo, e é justamente depois de salvar que ele vai
- * querer saber o que faltou.
+ * navegador salva o arquivo, e é justamente depois de salvar que o usuário
+ * vai querer saber o que faltou.
  */
 export async function GET() {
   const { itens, excluidas } = await listarInventarioParaLiga(db);
@@ -105,7 +105,7 @@ export async function GET() {
   ].join("\n");
 
   // O LEIA-ME é NOSSO, não deles: vai em UTF-8. Em Latin-1 os nomes das
-  // cartas japonesas viravam "?????" — justamente a informação que ele
+  // cartas japonesas viravam "?????" — justamente a informação que o usuário
   // precisa para saber o que ficou de fora. A restrição de Latin-1 vale
   // só para os CSVs, que o site deles vai ler.
   entradas.push({

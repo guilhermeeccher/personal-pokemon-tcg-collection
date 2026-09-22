@@ -223,7 +223,7 @@ export default function CadastroPorBuscaPage() {
 
       {/* Busca sem resultado ficava MUDA (achado do redesign, no backlog
           desde 2026-08-25). Agora diz que não achou e oferece a saída:
-          cadastrar a carta à mão, pré-preenchida com o que ele digitou —
+          cadastrar a carta à mão, pré-preenchida com o que o usuário digitou —
           é exatamente aqui que se descobre que a TCGdex não tem a carta. */}
       {resultados && resultados.length === 0 && (
         <div className="flex flex-col items-start gap-3 rounded border border-line bg-surface p-4">

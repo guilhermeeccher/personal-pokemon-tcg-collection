@@ -17,7 +17,7 @@ export function urlImagemCarta(
   // o sufixo de qualidade nela gera 404 e a carta some da tela, mostrando
   // ao mesmo tempo "+ foto" (a imagem falhou) e "trocar" (a imagem
   // existe). Foi exatamente o que aconteceu em 2026-08-26, na primeira
-  // foto que ele subiu de verdade: o sufixo só vale para as URLs do CDN
+  // foto que o usuário subiu de verdade: o sufixo só vale para as URLs do CDN
   // da TCGdex, que são um prefixo e não um arquivo.
   if (ehImagemPropria(imagemUrl)) return imagemUrl;
   return `${imagemUrl}/${qualidade}.webp`;

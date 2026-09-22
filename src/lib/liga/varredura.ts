@@ -9,7 +9,8 @@
  * ## Dois tipos de vaga, um só motor
  *
  * - **Pokédex**: a vaga é uma espécie. Uma busca pelo nome dela devolve
- *   dezenas de cartas, e todas são opção legítima — ele escolhe qual quer.
+ *   dezenas de cartas, e todas são opção legítima — o usuário escolhe qual
+ *   quer.
  * - **Set**: a vaga é uma carta específica. A busca é pelo nome da carta e o
  *   que sobra é uma linha só, a da edição e número certos; o resto do
  *   resultado é reimpressão em outras edições, que não preenche a vaga.
@@ -185,7 +186,7 @@ export async function executarVarredura(
   let opcoesEncontradas = 0;
   let erro: string | undefined;
   const falhas: Array<{ vaga: string; motivo: string }> = [];
-  // Guardadas para refrescar o preço da triagem dele no fim da rodada.
+  // Guardadas para refrescar o preço da triagem do usuário no fim da rodada.
   const vistas: Array<{
     chave: string;
     edid: number | null;
@@ -246,7 +247,7 @@ export async function executarVarredura(
       ? undefined
       : `${falhas.length} vaga(s) falharam. Primeira: ${falhas[0].vaga} — ${falhas[0].motivo}`;
 
-  // Refresca o preço da triagem dele com o que esta rodada viu.
+  // Refresca o preço da triagem do usuário com o que esta rodada viu.
   //
   // É isto que torna útil rodar de novo: desde 2026-09-17 a escolha sobrevive
   // à varredura (`escolha_compra`), então uma rodada nova **atualiza** a lista

@@ -19,7 +19,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
  * dizer nada.
  *
  * Regra 5 do AGENTS.md: isto sugere e ordena — a troca é sempre um
- * clique dele, em `POST /api/vagas/:id/trocar`.
+ * clique do usuário, em `POST /api/vagas/:id/trocar`.
  */
 export async function GET(
   _req: Request,

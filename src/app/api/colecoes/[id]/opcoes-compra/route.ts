@@ -289,13 +289,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json(vazio);
   }
 
-  // A triagem dele vem PRIMEIRO e independe de varredura — é o que faz o bloco
-  // para colar estar pronto quando ele abre a tela, sem rodar nada (decisão
-  // dele em 2026-09-17).
+  // A triagem do usuário vem PRIMEIRO e independe de varredura — é o que faz
+  // o bloco para colar estar pronto quando ele abre a tela, sem rodar nada
+  // (decisão de 2026-09-17).
   const escolhas = await listarEscolhas(db, id);
-  // `vagaVazia` é o filtro que faz a lista encolher sozinha conforme ele
-  // cadastra as cartas. A escolha de vaga já preenchida não some do banco —
-  // fica guardada, e volta se a cópia sair da vaga.
+  // `vagaVazia` é o filtro que faz a lista encolher sozinha conforme o
+  // usuário cadastra as cartas. A escolha de vaga já preenchida não some
+  // do banco — fica guardada, e volta se a cópia sair da vaga.
   const daLista = escolhas.filter((e) => e.vagaVazia);
   const linhas = daLista.map(linhaDaEscolha);
 
@@ -356,8 +356,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   // que é "quais Pokémon não têm carta comprável por esse preço?". Regra 6:
   // vaga vazia é saída de primeira classe.
   //
-  // Efeito colateral desejado: vaga que ele preencheu depois da varredura sai
-  // da lista sozinha, em vez de oferecer compra do que já é dele.
+  // Efeito colateral desejado: vaga que o usuário preencheu depois da
+  // varredura sai da lista sozinha, em vez de oferecer compra do que já é
+  // dele.
   const vagasDaRodada = await vagasParaAgrupar(id, colecao.tipo);
   const agrupadas = montarOpcoesPorVaga(opcoesComMarcacao, vagasDaRodada, varredura.filtros);
 

@@ -132,10 +132,10 @@ export const cartaCatalogo = pgTable(
      * mão (`manual`).
      *
      * Existe porque a TCGdex não catalogou tudo: o `SMH` (GX Starter
-     * Decks japonês, 131 cartas) não está lá em fonte nenhuma, e ele tem
-     * um Charmander desse set — mais 68 sets japoneses sem carta a carta
-     * e os sets em pt na mesma situação. Sem uma linha de catálogo, a
-     * carta não pode nem ser cadastrada.
+     * Decks japonês, 131 cartas) não está lá em fonte nenhuma, e o
+     * usuário tem um Charmander desse set — mais 68 sets japoneses sem
+     * carta a carta e os sets em pt na mesma situação. Sem uma linha de
+     * catálogo, a carta não pode nem ser cadastrada.
      *
      * **A linha manual mora na própria `carta_catalogo`, de propósito.**
      * Assim alocação, vaga de Pokédex, exportação, busca e imagem local
@@ -567,8 +567,9 @@ export const ligaOpcao = pgTable(
     cartaId: text("carta_id"),
     idiomaCatalogo: idiomaEnum("idioma_catalogo"),
 
-    // A marcação NÃO vive mais aqui. Ela é dele e sobrevive à rodada, então
-    // mora em `escolha_compra`, presa à vaga. Ver o cabeçalho daquela tabela.
+    // A marcação NÃO vive mais aqui. Ela é do usuário e sobrevive à rodada,
+    // então mora em `escolha_compra`, presa à vaga. Ver o cabeçalho daquela
+    // tabela.
 
     criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -578,17 +579,17 @@ export const ligaOpcao = pgTable(
   ],
 );
 
-// --- melhoria_descartada — sugestão de troca que ele mandou calar --------
+// --- melhoria_descartada — sugestão de troca que o usuário mandou calar ---
 
 /**
  * Uma sugestão de melhoria descartada pelo usuário: "esta cópia, nesta
  * vaga, não me interessa" (spec §5, Fase 9).
  *
- * **O escopo do silêncio é o par, não a vaga** — decisão dele em
- * 2026-09-05. Descartar o Ampharos `CRI 90/86` na vaga 181 cala aquela
- * cópia ali para sempre; se amanhã entrar no inventário outro Ampharos
- * melhor, a vaga volta a sinalizar. O outro desenho (calar a vaga
- * inteira) esconderia sugestão que ele nunca viu.
+ * **O escopo do silêncio é o par, não a vaga** — decisão de 2026-09-05.
+ * Descartar o Ampharos `CRI 90/86` na vaga 181 cala aquela cópia ali para
+ * sempre; se amanhã entrar no inventário outro Ampharos melhor, a vaga
+ * volta a sinalizar. O outro desenho (calar a vaga inteira) esconderia
+ * sugestão que o usuário nunca viu.
  *
  * Nada aqui apaga cópia nem toca em `vaga` — o descarte é só ausência de
  * aviso. Os dois `cascade` são consequência natural: sumindo a vaga ou a
@@ -617,38 +618,38 @@ export const melhoriaDescartada = pgTable(
  *
  * Até 2026-09-17 a marcação vivia em `liga_opcao.selecionada`, ou seja, **na
  * linha da varredura**. Varredura nova nascia com a seleção zerada, e a
- * justificativa era razoável ("preço mudou, a escolha se refaz") — até ele
- * marcar 126 cartas da Pokédex, uma por vaga vazia, e a próxima atualização de
- * preço ameaçar apagar as 126.
+ * justificativa era razoável ("preço mudou, a escolha se refaz") — até o
+ * usuário marcar 126 cartas da Pokédex, uma por vaga vazia, e a próxima
+ * atualização de preço ameaçar apagar as 126.
  *
- * A escolha não é sobre preço, é sobre **qual carta ele quer ter**. Preço
- * muda; a escolha não. Então ela passou a viver aqui, presa à vaga e não à
- * rodada.
+ * A escolha não é sobre preço, é sobre **qual carta o usuário quer ter**.
+ * Preço muda; a escolha não. Então ela passou a viver aqui, presa à vaga e
+ * não à rodada.
  *
  * ## Por que os dados da carta ficam repetidos aqui
  *
  * Denormalização deliberada. Apontar para `liga_opcao` prenderia o durável ao
  * descartável: aquela linha some com a varredura (cascade), e a escolha
  * precisa sobreviver a **não existir varredura nenhuma** — é isso que faz o
- * bloco para colar estar pronto quando ele abre a tela, sem rodar nada.
+ * bloco para colar estar pronto quando o usuário abre a tela, sem rodar nada.
  *
  * O vínculo entre as duas é `identidade`, calculada por
  * `lib/dominio/identidade-carta.ts` a partir de edição + número. Não é o nosso
  * `carta_id` porque ~30% das opções baratas não existem no nosso catálogo, e a
  * decisão de 2026-09-02 foi que elas podem ser compradas mesmo assim.
  *
- * ## Várias por vaga é permitido, por decisão dele (2026-09-17)
+ * ## Várias por vaga é permitido, por decisão de 2026-09-17
  *
- * Na Pokédex a vaga é uma espécie, e ele pode estar de olho em mais de uma
- * carta do mesmo Pokémon. A unicidade é por (coleção, vaga, carta), não por
- * (coleção, vaga).
+ * Na Pokédex a vaga é uma espécie, e o usuário pode estar de olho em mais
+ * de uma carta do mesmo Pokémon. A unicidade é por (coleção, vaga, carta),
+ * não por (coleção, vaga).
  *
  * ## Vaga preenchida não apaga a escolha
  *
  * A lista para colar filtra pelas vagas ainda vazias — é o que faz a string
- * encolher sozinha conforme ele cadastra as cartas. Mas a linha fica: se a
- * cópia sair da vaga, a escolha volta a valer. Apagar seria perder decisão
- * dele por efeito colateral de outra ação.
+ * encolher sozinha conforme o usuário cadastra as cartas. Mas a linha fica:
+ * se a cópia sair da vaga, a escolha volta a valer. Apagar seria perder
+ * decisão do usuário por efeito colateral de outra ação.
  */
 export const escolhaCompra = pgTable(
   "escolha_compra",
@@ -682,8 +683,8 @@ export const escolhaCompra = pgTable(
      *
      * **Preço sem data é armadilha** (mesma regra da `liga_varredura`). A
      * carta que sumiu da varredura seguinte continua na lista com o preço da
-     * última vez, marcado com a data — decisão dele em 2026-09-17: sumir
-     * calada tiraria da lista uma carta que ele decidiu comprar.
+     * última vez, marcado com a data — decisão de 2026-09-17: sumir calada
+     * tiraria da lista uma carta que o usuário decidiu comprar.
      */
     preco: numeric("preco", { precision: 10, scale: 2 }),
     precoEm: timestamp("preco_em", { withTimezone: true }),

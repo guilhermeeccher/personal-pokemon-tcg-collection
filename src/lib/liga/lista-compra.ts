@@ -12,11 +12,11 @@ import type { EscolhaSalva } from "@/lib/db/escolhas";
 import type { LinhaListaCompra } from "@/lib/dominio/exportacao-lista-compra";
 
 /**
- * Uma escolha dele, no formato da lista de compras.
+ * Uma escolha do usuário, no formato da lista de compras.
  *
  * **Escolha sem preço conhecido entra como zero no total**, e a tela conta
  * essas à parte. É o caso da carta que sumiu da varredura seguinte: ela
- * continua na lista com o preço da última vez (decisão dele em 2026-09-17), e
+ * continua na lista com o preço da última vez (decisão de 2026-09-17), e
  * quando nem isso existe, inventar um número seria pior que somar zero e
  * dizer quantas ficaram sem.
  *

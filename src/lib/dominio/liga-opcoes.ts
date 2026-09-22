@@ -28,16 +28,18 @@
  * carta — inviável nas ~25 opções de cada uma das 161 vagas.
  *
  * Então a camada 1 (esta) ordena pelo que sabemos de graça: a **raridade**,
- * que já está no nosso catálogo. A variante entra na camada 2, quando ele abre
- * uma carta específica e o sistema busca as ofertas reais daquela carta.
+ * que já está no nosso catálogo. A variante entra na camada 2, quando o
+ * usuário abre uma carta específica e o sistema busca as ofertas reais
+ * daquela carta.
  *
  * ## A escala de raridade
  *
  * Derivada do vocabulário real do catálogo em 2026-09-02, nos dois idiomas
  * (`select raridade, count(*) from carta_catalogo group by 1`). Não é uma
- * escala de valor de mercado — é a ordem de desejo declarada por ele: quanto
- * mais especial a carta, mais alto. Raridade que não casar com nenhum padrão
- * cai em `COMUM` em vez de sumir: carta sem classificação continua comprável.
+ * escala de valor de mercado — é a ordem de desejo declarada pelo usuário:
+ * quanto mais especial a carta, mais alto. Raridade que não casar com nenhum
+ * padrão cai em `COMUM` em vez de sumir: carta sem classificação continua
+ * comprável.
  */
 
 import type { LinhaBuscaLiga } from "./liga-busca";

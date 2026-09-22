@@ -159,7 +159,8 @@ export function ordenarCandidatas<T extends CopiaComparavel>(candidatas: readonl
  *
  * Devolver o eixo é o que permite a tela dizer POR QUE aquilo apareceu
  * ("sobe de rara para secreta") em vez de exibir uma sugestão sem
- * justificativa — que é como uma sugestão vira ruído e ele para de olhar.
+ * justificativa — que é como uma sugestão vira ruído e o usuário para de
+ * olhar.
  */
 export function selecionarMelhorias<T extends CopiaComparavel>(
   alocada: CopiaComparavel,

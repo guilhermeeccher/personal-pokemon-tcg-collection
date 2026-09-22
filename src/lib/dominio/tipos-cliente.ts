@@ -344,7 +344,7 @@ export interface CandidataMelhoriaDTO {
   /**
    * Primeiro eixo em que esta candidata supera a alocada. É o que a tela
    * usa para dizer POR QUE a sugestão apareceu — sugestão sem
-   * justificativa vira ruído e ele para de olhar.
+   * justificativa vira ruído e o usuário para de olhar.
    */
   eixo: EixoMelhoria;
 }

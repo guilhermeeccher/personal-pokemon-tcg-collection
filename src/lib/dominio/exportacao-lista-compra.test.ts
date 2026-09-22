@@ -69,7 +69,7 @@ describe("gerarListaTexto", () => {
   });
 
   it("repete a linha em vez de agrupar quantidade", () => {
-    // Duas vagas distintas são duas decisões dele; agrupar em "2 ..."
+    // Duas vagas distintas são duas decisões do usuário; agrupar em "2 ..."
     // esconderia isso.
     const texto = gerarListaTexto([linha({ chave: "1" }), linha({ chave: "2", especie: "Ivysaur" })]);
     expect(texto.trim().split("\n")).toHaveLength(2);

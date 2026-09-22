@@ -112,7 +112,7 @@ export function reduzirGrade(estado: EstadoGrade, acao: AcaoGrade): EstadoGrade 
         // carta reescrevia o default e, com ele, o valor exibido em toda
         // carta ainda não marcada — parecia que a grade inteira mudava
         // sozinha. Pior: a carta marcada DEPOIS era gravada com a
-        // variante herdada, sem ele ter tocado nela. As já marcadas
+        // variante herdada, sem o usuário ter tocado nela. As já marcadas
         // sempre estiveram protegidas (correção de 2026-08-24); o buraco
         // era o das não marcadas.
         //

@@ -17,9 +17,9 @@ import { linhaDaEscolha } from "@/lib/liga/lista-compra";
 /**
  * GET /api/colecoes/:id/opcoes-compra/exportar?formato=csv|texto|liga
  *
- * Exporta **só o que ele marcou** na última varredura. Exportar a varredura
- * inteira seria devolver centenas de linhas que ele não escolheu — o oposto do
- * pedido, que é sair da tela com a lista de compra decidida.
+ * Exporta **só o que o usuário marcou** na última varredura. Exportar a
+ * varredura inteira seria devolver centenas de linhas que ele não escolheu —
+ * o oposto do pedido, que é sair da tela com a lista de compra decidida.
  *
  * - `csv` — documento de conferência nosso, com edição, raridade, extra e
  *   quantas lojas têm cada carta.
@@ -41,9 +41,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   // A mesma montagem que alimenta a tela — e, como ela, **não depende de
-  // varredura**: a triagem dele vive em `escolha_compra` desde 2026-09-17.
-  // Só entram as escolhas de vaga ainda vazia; o que ele já cadastrou sai da
-  // lista sozinho.
+  // varredura**: a triagem do usuário vive em `escolha_compra` desde
+  // 2026-09-17. Só entram as escolhas de vaga ainda vazia; o que ele já
+  // cadastrou sai da lista sozinho.
   const linhas: LinhaListaCompra[] = (await listarEscolhas(db, id))
     .filter((e) => e.vagaVazia)
     .map(linhaDaEscolha);

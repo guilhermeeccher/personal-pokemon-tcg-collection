@@ -200,7 +200,7 @@ describe("Extras — vocabulário deles", () => {
   const extras = (variante: CopiaParaExportar["variante"]) =>
     linhaLiga({ ...GENGAR, variante })[10];
 
-  it("holo é Foil — confirmado na exportação da coleção dele", () => {
+  it("holo é Foil — confirmado na exportação da coleção do usuário", () => {
     expect(extras("holo")).toBe("Foil");
   });
 
@@ -229,7 +229,7 @@ describe("dividirEmArquivos", () => {
     expect(blocos[1]).toHaveLength(1);
   });
 
-  it("o exemplo que ele deu: 1100 cartas viram dois arquivos", () => {
+  it("o exemplo que o usuário deu: 1100 cartas viram dois arquivos", () => {
     const blocos = dividirEmArquivos(itens(1100));
     expect(blocos).toHaveLength(2);
     expect(blocos[0]).toHaveLength(995);

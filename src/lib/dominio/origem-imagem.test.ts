@@ -19,7 +19,7 @@ describe("ehOrigemPropria", () => {
   it("não confunde mypcards com foto própria", () => {
     // As duas são servidas por /api/imagens-locais/, então a URL não as
     // distingue — é exatamente por isso que a origem existe. A do
-    // mypcards não é dele para trocar ou remover pela tela.
+    // mypcards não é do usuário para trocar ou remover pela tela.
     expect(ehOrigemPropria("mypcards")).toBe(false);
   });
 });

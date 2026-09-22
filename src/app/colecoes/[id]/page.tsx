@@ -1015,11 +1015,11 @@ function ModalAlocarVaga({
 /**
  * Os dois valores que fizeram a candidata ganhar no eixo. Sem isto a
  * sugestão chega sem justificativa — e sugestão sem motivo vira ruído que
- * ele aprende a ignorar.
+ * o usuário aprende a ignorar.
  *
  * Usa o texto de raridade CRU do catálogo (56 valores, dois idiomas), não
  * a classe visual: mapear "Ilustração Rara Especial" para "secreta" na
- * explicação esconderia justamente o dado que ele quer ver. `null` de
+ * explicação esconderia justamente o dado que o usuário quer ver. `null` de
  * raridade sobe como `null` — quem monta a frase é que sabe como dizer
  * "sem raridade" no idioma da interface.
  *
@@ -1042,7 +1042,7 @@ function valoresDoEixo(
 
 /**
  * Lista as cópias livres que superam a que está na vaga, e oferece as
- * duas ações que ele pediu: **trocar** ou **descartar a sinalização**.
+ * duas ações que o usuário pediu: **trocar** ou **descartar a sinalização**.
  *
  * A troca vai numa transação só no servidor (`POST /api/vagas/:id/trocar`)
  * — nunca desalocar aqui e alocar depois, que deixaria a vaga vazia se o

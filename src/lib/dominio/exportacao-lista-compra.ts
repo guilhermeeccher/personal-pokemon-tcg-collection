@@ -120,7 +120,7 @@ export const adapterListaCompra: AdapterExportacaoCsv<LinhaListaCompra> = {
  * A quantidade é sempre 1 — uma cópia ocupa no máximo uma vaga (regra 1), e a
  * lista nasce de vagas vazias distintas. Carta repetida na seleção significa
  * vagas diferentes, então a linha aparece repetida em vez de virar `2 ...`:
- * agrupar aqui esconderia que são duas decisões dele, não uma.
+ * agrupar aqui esconderia que são duas decisões do usuário, não uma.
  */
 export function gerarListaTexto(linhas: readonly LinhaListaCompra[]): string {
   return (
@@ -133,7 +133,9 @@ export function gerarListaTexto(linhas: readonly LinhaListaCompra[]): string {
   );
 }
 
-/** Soma da seleção — o número que ele quer ver antes de decidir comprar. */
+/**
+ * Soma da seleção — o número que o usuário quer ver antes de decidir comprar.
+ */
 export function totalDaLista(linhas: readonly LinhaListaCompra[]): number {
   return Number(linhas.reduce((soma, l) => soma + l.preco, 0).toFixed(2));
 }
@@ -156,8 +158,8 @@ export function linhaFormatoLiga(l: LinhaListaCompra): string {
  * A quantidade é sempre 1 — uma cópia ocupa no máximo uma vaga (regra 1), e a
  * lista nasce de vagas vazias distintas.
  *
- * Preserva a ordem de entrada, que é a ordem da tela: sem isso ele perde a
- * correspondência entre o que marcou e o que vai colar.
+ * Preserva a ordem de entrada, que é a ordem da tela: sem isso o usuário
+ * perde a correspondência entre o que marcou e o que vai colar.
  */
 export function gerarListaLiga(linhas: readonly LinhaListaCompra[]): string {
   if (linhas.length === 0) return "";

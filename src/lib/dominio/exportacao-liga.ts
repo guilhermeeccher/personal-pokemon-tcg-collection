@@ -19,7 +19,7 @@
  *
  * ## O segundo arquivo, e o que ele resolveu
  *
- * Em 2026-08-29 ele mandou um segundo export
+ * Em 2026-08-29 o usuário mandou um segundo export
  * (`export_e38e0957…csv`): **760 linhas cobrindo quatro sets inteiros**
  * (ASC, MEW, PFL, PBL). Cruzando linha a linha com o nosso catálogo por
  * sigla + número da carta, as tabelas deixaram de ser palpite:
@@ -48,7 +48,7 @@
  *
  * Preencher por palpite marcaria a carta como outra coisa no site dele.
  * Em branco, o site usa o que ele já tiver ou pede a informação; errado,
- * ele só descobre depois.
+ * o usuário só descobre depois.
  *
  * ## Diferença conhecida e aceita
  *
@@ -163,9 +163,9 @@ const IDIOMA_LIGA: Record<Idioma, string> = {
  * O vocabulário deles, extraído do segundo export: `Foil`,
  * `Reverse Foil`, `Promo`, `Master Ball`, `Pokeball Foil`.
  *
- * `holo → Foil` está **confirmado**: é o que a exportação da coleção dele
- * trouxe numa carta holo. `Reverse Foil` e `Promo` são termos DELES, com
- * correspondência exata com as nossas variantes — não são invenção
+ * `holo → Foil` está **confirmado**: é o que a exportação da coleção do
+ * usuário trouxe numa carta holo. `Reverse Foil` e `Promo` são termos DELES,
+ * com correspondência exata com as nossas variantes — não são invenção
  * nossa. `Master Ball` e `Pokeball Foil` são acabamentos exclusivos do
  * set 151 que o nosso modelo não representa.
  *
@@ -349,7 +349,7 @@ export function dividirEmArquivos<T>(
 
 /**
  * Nome do arquivo dentro do ZIP. Numerado com o total à vista
- * (`1-de-3`), para ele saber na hora se baixou tudo e em que ordem
+ * (`1-de-3`), para o usuário saber na hora se baixou tudo e em que ordem
  * importar.
  */
 export function nomeArquivoLiga(indice: number, total: number, data: string): string {

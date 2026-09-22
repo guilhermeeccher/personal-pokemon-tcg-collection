@@ -49,10 +49,11 @@ export interface EscolhaSalva extends Omit<EscolhaNova, "preco"> {
 /**
  * As escolhas de uma coleção, já sabendo quais ainda valem.
  *
- * O `LEFT JOIN` com `vaga` é o que faz a lista encolher sozinha conforme ele
- * cadastra as cartas: a escolha de uma vaga preenchida continua guardada, mas
- * marcada como fora da lista. A vaga que nem existe mais (coleção que mudou de
- * escopo) também cai em `vagaVazia = false` — não há o que comprar para ela.
+ * O `LEFT JOIN` com `vaga` é o que faz a lista encolher sozinha conforme o
+ * usuário cadastra as cartas: a escolha de uma vaga preenchida continua
+ * guardada, mas marcada como fora da lista. A vaga que nem existe mais
+ * (coleção que mudou de escopo) também cai em `vagaVazia = false` — não há o
+ * que comprar para ela.
  */
 export async function listarEscolhas(
   db: Database,
@@ -112,8 +113,8 @@ export async function listarEscolhas(
  *
  * Idempotente: marcar de novo a mesma carta atualiza os dados dela (preço novo,
  * nome corrigido) em vez de duplicar. **Não mexe em `criado_em`** — a data em
- * que ele decidiu comprar aquela carta é informação, e uma remarcação não
- * deveria apagá-la.
+ * que o usuário decidiu comprar aquela carta é informação, e uma remarcação
+ * não deveria apagá-la.
  */
 export async function marcarEscolhas(
   db: Database,
@@ -171,7 +172,9 @@ export async function marcarEscolhas(
   return inseridas.length;
 }
 
-/** Desmarca cartas. Apagar aqui é o gesto dele, não efeito colateral. */
+/**
+ * Desmarca cartas. Apagar aqui é o gesto do usuário, não efeito colateral.
+ */
 export async function desmarcarEscolhas(
   db: Database,
   colecaoId: string,
@@ -208,8 +211,8 @@ export async function desmarcarEscolhas(
  *
  * Roda no fim da rodada, e é o que torna útil rodar de novo: a triagem fica,
  * os números se refrescam. A carta que **não** apareceu nesta varredura não é
- * tocada — continua com o preço e a data da última vez, que é a decisão dele
- * de 2026-09-17 (sumir calada tiraria da lista uma carta que ele quer).
+ * tocada — continua com o preço e a data da última vez, que é a decisão de
+ * 2026-09-17 (sumir calada tiraria da lista uma carta que o usuário quer).
  */
 export async function atualizarPrecosDasEscolhas(
   db: Database,

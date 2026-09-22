@@ -9,9 +9,9 @@
  * mudam o que o usuário está vendo sem mudar a carta: a foto é da
  * carta certa, impressa em outro idioma ou digitalizada por outra gente.
  *
- * Regra de produto (decidida com ele em 2026-08-29): **foto emprestada é
- * marcada na tela**. O sistema não pode deixar ele achar que tem a
- * versão inglesa quando a cópia dele é a portuguesa.
+ * Regra de produto (decidida em 2026-08-29): **foto emprestada é marcada
+ * na tela**. O sistema não pode deixar o usuário achar que tem a versão
+ * inglesa quando a cópia dele é a portuguesa.
  */
 
 import type { Idioma } from "./enums";

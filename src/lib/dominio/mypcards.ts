@@ -10,7 +10,7 @@
  *
  * ## O formato da URL
  *
- * Decomposto a partir de um link que ele mandou, e conferido campo a
+ * Decomposto a partir de um link que o usuário mandou, e conferido campo a
  * campo contra o CDN deles em 2026-08-29:
  *
  *     https://img.mypcards.com/img/2/2370/pokemon_mee_004/pokemon_mee_004_pt.jpg

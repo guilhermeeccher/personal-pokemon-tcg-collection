@@ -59,9 +59,9 @@ import {
  *                 para identificação: em pt/en o id é o mesmo, então é a
  *                 mesma arte, o mesmo número e o mesmo set — só muda a
  *                 língua impressa. Vai marcada com selo na tela
- *                 (`seloOrigemImagem`), a pedido dele: o sistema não pode
- *                 deixá-lo achar que tem a versão inglesa quando a cópia
- *                 é a portuguesa.
+ *                 (`seloOrigemImagem`), a pedido do usuário: o sistema não
+ *                 pode deixá-lo achar que tem a versão inglesa quando a
+ *                 cópia é a portuguesa.
  * 5. `cdn`      — palpite montado direto no CDN de assets da TCGdex.
  *
  * **O degrau 5 vale só para `jp`, e esse corte é o ponto desta mudança.**
@@ -530,7 +530,7 @@ async function nomesEspeciePara(
     .where(
       and(
         eq(cartaCatalogo.ativa, true),
-        // Só pt/en: são as linhas que têm o nome que ele reconhece.
+        // Só pt/en: são as linhas que têm o nome que o usuário reconhece.
         inArray(cartaCatalogo.idioma, ["pt", "en"]),
         sql`array_length(${cartaCatalogo.dexIds}, 1) = 1`,
         sql`${cartaCatalogo.dexIds} && ${sql.raw(`ARRAY[${unicos.join(",")}]::integer[]`)}`,
@@ -633,7 +633,7 @@ async function dexIdsDoNome(db: Database, nome: string): Promise<number[]> {
  *
  * Variantes: libera todas. O catálogo real diz quais existem, mas aqui
  * não há catálogo — restringir seria inventar uma limitação sobre uma
- * carta que só ele está vendo.
+ * carta que só o usuário está vendo.
  */
 export async function criarCartaManual(
   db: Database,
@@ -1903,8 +1903,8 @@ export async function obterColecaoComVagas(
         setNome: preenchida ? v.setNome : (esperada?.setNome ?? null),
         imagemUrl: preenchida ? v.imagemUrl : (esperada?.imagemUrl ?? null),
         // Segue a MESMA condicional da url acima: vaga preenchida mostra a
-        // foto da cópia dele, vaga vazia mostra a da carta esperada — o
-        // selo tem que falar da foto que está sendo exibida, não da outra.
+        // foto da cópia do usuário, vaga vazia mostra a da carta esperada —
+        // o selo tem que falar da foto que está sendo exibida, não da outra.
         imagemOrigem: preenchida ? v.imagemOrigem : (esperada?.imagemOrigem ?? null),
         // Vaga preenchida nao tem o que alocar; vazia sem candidata da 0
         // (a consulta so devolve as que tem alguma).
@@ -3542,7 +3542,7 @@ export type ResultadoMelhorias =
  * `pertenceAoUniversoPokedex`/`...Set`: pokedex casa a espécie
  * (`dex_ids` com exatamente um elemento igual à chave — regra 2; a forma
  * nunca entra, regra 3) e ignora o set, que é o ponto ("mais raridade
- * independente do set", pedido dele); set casa `set_id` + `local_id`, a
+ * independente do set", pedido do usuário); set casa `set_id` + `local_id`, a
  * mesma carta, onde só a variante pode diferir.
  *
  * **`customizada` não tem melhoria e devolve lista vazia.** Lá a vaga não
@@ -3552,13 +3552,13 @@ export type ResultadoMelhorias =
  * **Coleção com `idiomaExigido` só recebe candidata dentro do padrão.** A
  * escada de idioma (en > jp > pt) não passa por cima da exigência da
  * coleção: numa Pokédex "toda em português", uma inglesa melhor não é
- * melhoria, é violação do que ele pediu. Aqui é diferente da alocação de
+ * melhoria, é violação do que o usuário pediu. Aqui é diferente da alocação de
  * vaga VAZIA, onde a fora de padrão aparece marcada — preencher buraco
  * com o que há é útil; trocar o que já está certo pelo fora de padrão,
  * não.
  *
  * Regra 5 do AGENTS.md intacta: isto lista e ordena — a troca é sempre um
- * clique dele (`trocarCopiaDaVaga`).
+ * clique do usuário (`trocarCopiaDaVaga`).
  */
 export async function listarMelhoriasDaColecao(
   db: Database,
@@ -3635,7 +3635,7 @@ export async function listarMelhoriasDaColecao(
         // Só cópia LIVRE: roubar carta alocada em outra coleção quebraria
         // a regra 1 (alocação exclusiva) por sugestão do próprio sistema.
         sql`not exists (select 1 from vaga v2 where v2.copia_id = ${copiaCandidata.id})`,
-        // Sugestão que ele já mandou calar, para ESTE par.
+        // Sugestão que o usuário já mandou calar, para ESTE par.
         sql`not exists (
           select 1 from melhoria_descartada md
           where md.vaga_id = ${vaga.id} and md.copia_id = ${copiaCandidata.id}
@@ -3773,8 +3773,8 @@ export type ResultadoTroca =
  * A validação da nova cópia é a de sempre (`alocarNaTransacao`, que
  * chama `avaliarElegibilidade`): a troca não é um atalho para burlar
  * regra nenhuma. Ela não checa se a nova é MELHOR — a escada decide o que
- * o sistema sugere, não o que ele permite; se ele quiser trocar por outra
- * coisa, a decisão é dele (regra 5).
+ * o sistema sugere, não o que ele permite; se o usuário quiser trocar por
+ * outra coisa, a decisão é dele (regra 5).
  *
  * A cópia liberada volta ao inventário livre e **não refunde o lote**,
  * igual a `desalocarVaga` — fragmentação deliberada, mesma decisão de

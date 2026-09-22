@@ -26,13 +26,13 @@ const LIMPA: DadosAquisicaoCopia & { quantidade: number } = {
 };
 
 describe("chaveFusaoCopia", () => {
-  it("as duas linhas do Ambipom reverse dele têm a mesma chave", () => {
+  it("as duas linhas do Ambipom reverse do usuário têm a mesma chave", () => {
     expect(chaveFusaoCopia(AMBIPOM)).toBe(chaveFusaoCopia({ ...AMBIPOM }));
   });
 
   it("variante diferente é cópia diferente", () => {
-    // O caso real das energias dele: mee-002 normal e mee-002 reverse são
-    // duas cartas, e somá-las seria erro.
+    // O caso real das energias do usuário: mee-002 normal e mee-002
+    // reverse são duas cartas, e somá-las seria erro.
     expect(chaveFusaoCopia({ ...AMBIPOM, variante: "normal" })).not.toBe(
       chaveFusaoCopia(AMBIPOM),
     );
@@ -46,7 +46,7 @@ describe("chaveFusaoCopia", () => {
     );
   });
 
-  it("localização separa — é onde ele vai procurar a carta", () => {
+  it("localização separa — é onde o usuário vai procurar a carta", () => {
     expect(chaveFusaoCopia({ ...AMBIPOM, localizacao: "Fichário 2" })).not.toBe(
       chaveFusaoCopia(AMBIPOM),
     );

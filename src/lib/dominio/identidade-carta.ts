@@ -6,11 +6,11 @@
  *
  * ## Por que isto precisa existir
  *
- * A escolha de compra dele (`escolha_compra`) é durável: ele faz a triagem uma
- * vez e ela sobrevive a varredura nenhuma existir. Mas a linha da varredura
- * (`liga_opcao`) é descartável — nasce e morre com a rodada. Ligar as duas por
- * `liga_opcao.id` seria prender o durável ao descartável, que é exatamente o
- * defeito que esta tabela veio corrigir.
+ * A escolha de compra do usuário (`escolha_compra`) é durável: ele faz a
+ * triagem uma vez e ela sobrevive a varredura nenhuma existir. Mas a linha da
+ * varredura (`liga_opcao`) é descartável — nasce e morre com a rodada. Ligar
+ * as duas por `liga_opcao.id` seria prender o durável ao descartável, que é
+ * exatamente o defeito que esta tabela veio corrigir.
  *
  * Então a ponte é a identidade da carta no catálogo **deles**.
  *

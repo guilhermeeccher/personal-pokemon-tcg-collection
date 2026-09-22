@@ -27,7 +27,7 @@ export async function GET() {
  * Cloudflare (nenhum cliente que não seja navegador passa). Descobrir por
  * varredura custaria ~2.400 requisições por set — foi martelando assim
  * que este servidor levou bloqueio de IP da TCGdex em agosto. Um paste
- * resolve o set inteiro, e só para set que ele de fato quer.
+ * resolve o set inteiro, e só para set que o usuário de fato quer.
  *
  * O download roda **em segundo plano**, não dentro da resposta: um set de
  * promos tem ~180 linhas e, no teto de 4 req/s, isso é ~45 s — tempo

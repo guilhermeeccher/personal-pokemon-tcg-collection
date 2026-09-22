@@ -1,9 +1,10 @@
--- A triagem dele passa a sobreviver à varredura (2026-09-17).
+-- A triagem do usuário passa a sobreviver à varredura (2026-09-17).
 --
 -- Antes, a marcação vivia em `liga_opcao.selecionada`, ou seja, na linha da
--- rodada: varredura nova nascia com a seleção zerada. Ele marcou 126 cartas da
--- Pokédex, uma por vaga vazia, e a próxima atualização de preço apagaria as
--- 126. A escolha não é sobre preço, é sobre qual carta ele quer ter.
+-- rodada: varredura nova nascia com a seleção zerada. O usuário marcou 126
+-- cartas da Pokédex, uma por vaga vazia, e a próxima atualização de preço
+-- apagaria as 126. A escolha não é sobre preço, é sobre qual carta o usuário
+-- quer ter.
 --
 -- ESTA MIGRATION NÃO PODE PERDER ESSAS MARCAÇÕES. Por isso o INSERT abaixo
 -- roda ANTES do DROP COLUMN, na mesma transação: ou as duas coisas acontecem,

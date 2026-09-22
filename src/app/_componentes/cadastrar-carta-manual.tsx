@@ -29,7 +29,7 @@ export function CadastrarCartaManual({
   nomeSugerido = "",
   onCriada,
 }: {
-  /** Pré-preenche com o que ele acabou de procurar sem sucesso. */
+  /** Pré-preenche com o que o usuário acabou de procurar sem sucesso. */
   siglaSugerida?: string;
   numeroSugerido?: string;
   nomeSugerido?: string;

@@ -210,7 +210,7 @@ export default function OpcoesCompraPage() {
 
   // O padrão da coleção de set é outro (sem teto, ordenado por preço), e o
   // tipo só se sabe depois da primeira resposta — então os padrões são
-  // aplicados na chegada dela, uma vez só e nunca por cima do que ele já
+  // aplicados na chegada dela, uma vez só e nunca por cima do que o usuário já
   // tiver mexido.
   const padraoAplicado = useRef(false);
 
@@ -357,15 +357,15 @@ export default function OpcoesCompraPage() {
     // baixado — então a marcação otimista o deixa defasado até a próxima
     // consulta. Recarregar a cada clique desfaria a razão de ser otimista, e
     // marcar 31 cartas viraria 31 idas ao servidor; o atraso junta a rajada
-    // numa consulta só, depois que ele para de clicar.
+    // numa consulta só, depois que o usuário para de clicar.
     agendarAtualizacao();
   }
 
   /**
    * Marca a primeira opção de cada vaga que ainda não tem nada marcado.
    *
-   * A ordem da lista já é a preferência dele (raridade dentro do teto, ou
-   * preço), então "a primeira" é "a melhor pelo critério que ele escolheu".
+   * A ordem da lista já é a preferência do usuário (raridade dentro do teto,
+   * ou preço), então "a primeira" é "a melhor pelo critério que ele escolheu".
    * Continua sendo clique dele — a regra 5 fala de o sistema não escolher
    * sozinho, e aqui quem aperta é ele. Sem isto, marcar as 31 vagas de um set
    * são 31 cliques, e a camada 2 fica cara de alcançar.

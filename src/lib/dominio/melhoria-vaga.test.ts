@@ -23,7 +23,7 @@ describe("pontuarCopia", () => {
     expect(pontuarCopia(copia({ raridade: "Ilustração Rara Especial" }))!.raridade).toBe(4);
   });
 
-  it("ordena o idioma como ele pediu: en > jp > pt", () => {
+  it("ordena o idioma como o usuário pediu: en > jp > pt", () => {
     const pt = pontuarCopia(copia({ idioma: "pt" }))!.idioma;
     const jp = pontuarCopia(copia({ idioma: "jp" }))!.idioma;
     const en = pontuarCopia(copia({ idioma: "en" }))!.idioma;
@@ -80,7 +80,7 @@ describe("eixoDaMelhoria", () => {
   });
 
   it("com raridade e idioma iguais, a variante decide — o caso da coleção de set", () => {
-    // "tenho a normal alocada e uma reverse disponível" (ele, 2026-09-05).
+    // "tenho a normal alocada e uma reverse disponível" (2026-09-05).
     const alocada = copia({ variante: "normal" });
     const candidata = copia({ variante: "reverse" });
     expect(eixoDaMelhoria(alocada, candidata)).toBe("variante");
