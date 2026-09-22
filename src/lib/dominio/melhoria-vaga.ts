@@ -174,14 +174,3 @@ export function selecionarMelhorias<T extends CopiaComparavel>(
 
   return ordenarCandidatas(melhorias);
 }
-
-/**
- * Texto da tooltip do botão de melhoria, irmão de `rotuloAlocacao`
- * (`lib/dominio/alocacao-disponivel.ts`) — a mesma frase curta que
- * explica o botão antes do clique, no mesmo lugar da vaga.
- */
-export function rotuloMelhoria(candidatas: number): string {
-  if (candidatas <= 0) return "Nenhuma cópia livre sua é melhor que esta.";
-  if (candidatas === 1) return "1 cópia livre sua é melhor que a alocada aqui.";
-  return `${candidatas} cópias livres suas são melhores que a alocada aqui.`;
-}

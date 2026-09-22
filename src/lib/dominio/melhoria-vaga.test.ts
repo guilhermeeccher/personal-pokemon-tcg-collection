@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import type { CopiaComparavel } from "./melhoria-vaga";
 import {
   ehMelhoria,
-  rotuloMelhoria,
   eixoDaMelhoria,
   ordenarCandidatas,
   pontuarCopia,
@@ -159,17 +158,5 @@ describe("selecionarMelhorias", () => {
   it("devolve lista vazia quando nada supera a alocada", () => {
     const alocada = copia({ raridade: "Ultra Rara", idioma: "en", variante: "primeira_edicao" });
     expect(selecionarMelhorias(alocada, [copia(), copia({ raridade: "Rara" })])).toEqual([]);
-  });
-});
-
-describe("rotuloMelhoria", () => {
-  it("concorda no singular e no plural", () => {
-    expect(rotuloMelhoria(1)).toBe("1 cópia livre sua é melhor que a alocada aqui.");
-    expect(rotuloMelhoria(4)).toBe("4 cópias livres suas são melhores que a alocada aqui.");
-  });
-
-  it("trata zero e negativo sem gerar frase sem sentido", () => {
-    expect(rotuloMelhoria(0)).toBe("Nenhuma cópia livre sua é melhor que esta.");
-    expect(rotuloMelhoria(-1)).toBe("Nenhuma cópia livre sua é melhor que esta.");
   });
 });

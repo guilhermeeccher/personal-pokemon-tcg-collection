@@ -2,6 +2,12 @@ import createNextIntlPlugin from "next-intl/plugin";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // O Next 16 escreve um bloco `<!-- BEGIN:nextjs-agent-rules -->` no
+  // AGENTS.md a cada `next dev`. Este repositório mantém o AGENTS.md à
+  // mão, como contrato de contribuição, e o bloco reaparecia no diff de
+  // todo PR de quem rodasse o modo de desenvolvimento. Desligado aqui em
+  // vez de removido a cada vez.
+  agentRules: false,
   images: {
     // Imagens de carta vêm direto da TCGdex (spec §7) — sem cache local
     // nesta fase. Sufixo obrigatório na URL (`/low.webp`, `/high.webp`,
