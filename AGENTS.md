@@ -186,7 +186,7 @@ A "slim down the image" PR with `pnpm install --prod`, with `output: "standalone
 stage that copies only `.next` **breaks the seed and the sync**, and breaks them in the worst way:
 the build passes, the container comes up, and the first boot of a fresh install ends with an empty
 catalog. If you want to touch this, the test is bringing up a Compose from scratch, with a new
-volume, and counting the 47,720 cards in the database — not `docker build` passing.
+volume, and counting the 48,169 cards in the database — not `docker build` passing.
 
 ---
 

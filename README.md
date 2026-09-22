@@ -1,7 +1,7 @@
 # Pokémon Collection
 
 A catalog of your **physical** Pokémon card collection, running on your own machine. You start two
-containers, open the browser and begin typing in what is in the box — the 47,720-card catalog comes
+containers, open the browser and begin typing in what is in the box — the 48,169-card catalog comes
 with it and loads by itself on the first boot.
 
 The question it exists to answer is not "how much do I have", it is **"what is missing"**.
@@ -164,7 +164,7 @@ only place that needs to change:
 PORTA_HOST=3011
 ```
 
-On startup the container applies the migrations and, **if the catalog is empty, loads the 47,720
+On startup the container applies the migrations and, **if the catalog is empty, loads the 48,169
 cards from the file versioned in `seed/`** — with no network request at all. To follow along:
 
 ```bash
@@ -196,7 +196,7 @@ docker compose up -d     # back up
 
 ## The catalog comes ready
 
-What makes a fresh install useful from birth is the `seed/` directory: the entire catalog — 47,720
+What makes a fresh install useful from birth is the `seed/` directory: the entire catalog — 48,169
 rows in Portuguese, English and Japanese — versioned as a compressed CSV of ~1 MB.
 
 **That is the point of the project.** Without it, a fresh install would start with an empty database
