@@ -21,6 +21,9 @@
  * Contrato (mesmo do sync da API, `lib/sync/catalogo.ts`):
  *  - Idempotente — upsert por (id, idioma) via PK, rodar de novo não
  *    duplica nem altera a contagem de linhas.
+ *  - Nunca troca o que já sabemos pelo vazio do upstream: número de
+ *    Pokédex derivado, imagem e `ativa` sobrevivem à reimportação (ver o
+ *    `set` do upsert, abaixo).
  *  - Nunca apaga e nunca marca `ativa = false` — este importador só
  *    escreve, nunca inativa. Diferente do sync da API, não há aqui uma
  *    noção de "sumiu do upstream": o clone é uma foto estática, e decidir
@@ -127,19 +130,43 @@ async function upsertLoteCatalogo(linhas: LinhaCatalogo[]): Promise<void> {
         nome: sql`excluded.nome`,
         categoria: sql`excluded.categoria`,
         raridade: sql`excluded.raridade`,
-        dexIds: sql`excluded.dex_ids`,
+        // Número conhecido NUNCA é apagado por um upstream que veio vazio —
+        // a mesma guarda do sync da API (`lib/sync/catalogo.ts`). O
+        // repositório publica sem `dexId` boa parte das ex/Mega japonesas, e
+        // `pnpm derivar:dex-ids` preenche essas por dedução do nome. Sem esta
+        // guarda, cada reimportação desfazia a dedução em silêncio: foi o que
+        // aconteceu em 2026-09-22, com 433 cartas, e só foi visto porque o
+        // seed regenerado foi comparado linha a linha com o anterior. Quando
+        // o upstream PASSA a trazer o número, ele vence.
+        dexIds: sql`case
+          when cardinality(excluded.dex_ids) > 0 then excluded.dex_ids
+          else ${cartaCatalogo.dexIds}
+        end`,
+        // A marca de dedução acompanha o número: antes, este upsert nem
+        // tocava nela, e a linha ficava marcada como deduzida com o número
+        // vazio.
+        dexIdsDerivado: sql`case
+          when cardinality(excluded.dex_ids) > 0 then false
+          else ${cartaCatalogo.dexIdsDerivado}
+        end`,
         forma: sql`excluded.forma`,
         varianteNormalDisponivel: sql`excluded.variante_normal_disponivel`,
         varianteReverseDisponivel: sql`excluded.variante_reverse_disponivel`,
         varianteHoloDisponivel: sql`excluded.variante_holo_disponivel`,
         variantePrimeiraEdicaoDisponivel: sql`excluded.variante_primeira_edicao_disponivel`,
         variantePromoDisponivel: sql`excluded.variante_promo_disponivel`,
-        imagemUrl: sql`excluded.imagem_url`,
+        // O repositório não traz imagem: o que chega aqui é sempre `null`.
+        // Gravar isso por cima apagaria a imagem que a linha tiver ganhado de
+        // outra fonte (o sync da API traz URL de imagem para o japonês).
+        imagemUrl: sql`coalesce(excluded.imagem_url, ${cartaCatalogo.imagemUrl})`,
         ilustrador: sql`excluded.ilustrador`,
         setQtdOficial: sql`excluded.set_qtd_oficial`,
         setQtdTotal: sql`excluded.set_qtd_total`,
-        ativa: sql`excluded.ativa`,
         atualizadoEm: sql`excluded.atualizado_em`,
+        // `ativa` fica fora do UPDATE de propósito, pela mesma regra do seed:
+        // carta que o sync desativou continua desativada. Este importador
+        // não sabe decidir que uma carta sumiu — e, pelo mesmo motivo, não
+        // tem como saber que ela voltou.
       },
     });
 }
