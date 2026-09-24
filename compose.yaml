@@ -9,6 +9,9 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       NODE_ENV: production
+      # Intervalo entre requisições à LigaPokemon (ver `.env.example` e
+      # `lib/liga/ritmo.ts`). Vazio = segue o Crawl-delay do robots.txt deles.
+      LIGA_INTERVALO_SEGUNDOS: ${LIGA_INTERVALO_SEGUNDOS:-}
       # Caminho DENTRO do container onde ficam os arquivos de imagem local
       # (tarefa "carta sem foto", 2026-08-26), lido por
       # `lib/armazenamento-imagens.ts`. Configurável via .env; precisa
