@@ -12,7 +12,9 @@
  *      porque ambos têm `dexIds = [26]` — este módulo nem recebe a
  *      forma como entrada, de propósito, então não há como ela virar
  *      critério de recusa.
- *    - `set`: exige que a carta seja daquele `local_id` naquele set.
+ *    - `set`: exige que a carta seja daquele `local_id` naquele set — os
+ *      dois vêm da chave da vaga (`chave-vaga-set.ts`: `30th/001`), porque
+ *      uma coleção pode juntar sets e receber carta avulsa de qualquer um.
  *      Comparado por identidade da carta (`setId`/`localId`, resolvidos
  *      por quem chama a partir do par (cartaId, idiomaCatalogo) da
  *      própria cópia — ver `lib/db/consultas.ts`), nunca pelo idioma de
@@ -39,6 +41,7 @@
  */
 
 import type { Idioma } from "./enums";
+import { lerChaveVagaSet } from "./chave-vaga-set";
 import type { ParametroPokedex, ParametroSet, TipoColecao } from "./parametro-colecao";
 import { type Recusa, recusa } from "./recusa";
 
@@ -102,22 +105,25 @@ function pertenceAoUniversoPokedex(
   return { ok: true };
 }
 
-/** Set: mesma carta (setId + localId), por identidade — nunca por idioma de catálogo. */
+/**
+ * Set: mesma carta (setId + localId), por identidade — nunca por idioma de
+ * catálogo. O set e o número esperados estão na chave da vaga.
+ */
 function pertenceAoUniversoSet(
   chave: string,
-  parametro: ParametroSet,
   carta: InfoCartaParaElegibilidade,
 ): ResultadoUniverso {
-  if (carta.setId !== parametro.setId) {
+  const esperada = lerChaveVagaSet(chave);
+  if (!esperada || carta.setId !== esperada.setId) {
     return {
       ok: false,
-      motivo: recusa("outroSet", { carta: carta.setId, vaga: parametro.setId }),
+      motivo: recusa("outroSet", { carta: carta.setId, vaga: esperada?.setId ?? chave }),
     };
   }
-  if (carta.localId !== chave) {
+  if (carta.localId !== esperada.localId) {
     return {
       ok: false,
-      motivo: recusa("outroNumeroDoSet", { carta: carta.localId, vaga: chave }),
+      motivo: recusa("outroNumeroDoSet", { carta: carta.localId, vaga: esperada.localId }),
     };
   }
   return { ok: true };
@@ -131,7 +137,7 @@ export function pertenceAoUniversoDaVaga(
     case "pokedex":
       return pertenceAoUniversoPokedex(vaga.chave, carta.dexIds);
     case "set":
-      return pertenceAoUniversoSet(vaga.chave, vaga.parametro as ParametroSet, carta);
+      return pertenceAoUniversoSet(vaga.chave, carta);
     case "customizada":
       return { ok: true };
   }

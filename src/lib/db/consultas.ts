@@ -16,6 +16,16 @@ import { type Recusa, recusa } from "@/lib/dominio/recusa";
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
 import { casaNumeroCarta } from "@/lib/dominio/busca-carta";
 import {
+  chaveVagaSet,
+  compararChavesVaga,
+  lerChaveVagaSet,
+  rotuloChaveVaga,
+} from "@/lib/dominio/chave-vaga-set";
+import {
+  avisosDaReceita,
+  type EntradaSetDaReceita,
+} from "@/lib/dominio/vagas-colecao";
+import {
   contagensDoSet,
   escolherLinhaPorCarta,
   ordemIdiomasPorCarta,
@@ -198,14 +208,8 @@ export function origemDaImagem(t: ColunasImagem) {
 }
 import type { ColecaoCriadaValida, PatchColecaoValido } from "@/lib/dominio/colecao";
 import type { ParametroPokedex, ParametroSet, TipoColecao } from "@/lib/dominio/parametro-colecao";
-import {
-  detectarCatalogoIncompleto,
-  type AvisoCatalogoIncompleto,
-} from "@/lib/dominio/catalogo-incompleto";
-import {
-  resolverUniversoVagasSet,
-  type AvisoSemNumeracaoOficial,
-} from "@/lib/dominio/numeracao-oficial-set";
+import type { AvisoCatalogoIncompleto } from "@/lib/dominio/catalogo-incompleto";
+import type { AvisoSemNumeracaoOficial } from "@/lib/dominio/numeracao-oficial-set";
 import {
   resolverNomeEspecie,
   type LinhaCatalogoParaNome,
@@ -1457,7 +1461,8 @@ export async function listarVagasPreenchidasParaExportacao(
     )
     .where(eq(vaga.colecaoId, colecaoId));
 
-  return linhas.slice().sort((a, b) => compararLocalId(a.vagaChave, b.vagaChave));
+  const comparar = compararChavesVaga();
+  return linhas.slice().sort((a, b) => comparar(a.vagaChave, b.vagaChave));
 }
 
 // --- Valores distintos para popular os selects de filtro -------------------
@@ -1577,25 +1582,65 @@ export async function obterAvisosDeSet(
   db: Database,
   tipo: TipoColecao,
   parametro: unknown,
-  vagasMaterializadas: number,
 ): Promise<AvisosDeSet> {
   if (tipo !== "set") return SEM_AVISOS;
   const p = parametro as ParametroSet;
-  const info = await obterInfoSetParaVagas(db, p.setId, p.idiomaCatalogo);
-  if (!info) return SEM_AVISOS;
-  const universo = resolverUniversoVagasSet({
-    qtdOficial: info.qtdOficial,
-    qtdTotal: info.qtdTotal,
-    incluirSecretas: p.incluirSecretas,
-    qtdCartasNoCatalogo: info.localIds.length,
-  });
-  return {
-    avisoCatalogoIncompleto: detectarCatalogoIncompleto(
-      vagasMaterializadas,
-      universo.vagasEsperadas,
-    ),
-    avisoSemNumeracaoOficial: universo.avisoSemNumeracaoOficial,
-  };
+  const { sets } = await lerReceitaNoCatalogo(db, p);
+  return avisosDaReceita(sets, p.incluirSecretas);
+}
+
+/**
+ * Cada set da receita de uma coleção de set, como o catálogo o conhece
+ * (`obterInfoSetParaVagas`, carta a carta). `faltando` lista os sets que o
+ * catálogo não tem em nenhum idioma da ordem — a criação recusa por isso;
+ * a leitura só os deixa de fora.
+ */
+export async function lerReceitaNoCatalogo(
+  db: Database | Transacao,
+  parametro: ParametroSet,
+): Promise<{ sets: EntradaSetDaReceita[]; faltando: string[] }> {
+  const sets: EntradaSetDaReceita[] = [];
+  const faltando: string[] = [];
+  for (const setId of parametro.sets ?? []) {
+    const info = await obterInfoSetParaVagas(db, setId, parametro.idiomaCatalogo);
+    if (!info) {
+      faltando.push(setId);
+      continue;
+    }
+    sets.push({
+      setId,
+      localIdsDoSet: info.localIds,
+      qtdOficial: info.qtdOficial,
+      qtdTotal: info.qtdTotal,
+    });
+  }
+  return { sets, faltando };
+}
+
+/**
+ * Nome de cada set, no idioma preferido quando o catálogo o tem nele, senão
+ * no primeiro que houver. Para rótulo — um set sem linha nenhuma fica fora
+ * do mapa, e quem chama mostra o id.
+ */
+export async function nomesDosSets(
+  db: Database,
+  setIds: readonly string[],
+  idiomaPreferido: Idioma,
+): Promise<Map<string, string>> {
+  if (setIds.length === 0) return new Map();
+  const linhas = await db
+    .selectDistinct({
+      setId: cartaCatalogo.setId,
+      idioma: cartaCatalogo.idioma,
+      nome: cartaCatalogo.setNome,
+    })
+    .from(cartaCatalogo)
+    .where(inArray(cartaCatalogo.setId, [...setIds]));
+  const nomes = new Map<string, string>();
+  for (const l of linhas) {
+    if (l.idioma === idiomaPreferido || !nomes.has(l.setId)) nomes.set(l.setId, l.nome);
+  }
+  return nomes;
 }
 
 /**
@@ -1697,7 +1742,7 @@ export async function listarColecoes(db: Database): Promise<ColecaoComProgresso[
 
   return Promise.all(
     linhas.map(async (linha) => {
-      const avisos = await obterAvisosDeSet(db, linha.tipo, linha.parametro, linha.totalVagas);
+      const avisos = await obterAvisosDeSet(db, linha.tipo, linha.parametro);
       return {
         ...linha,
         ...(avisos.avisoCatalogoIncompleto
@@ -1825,6 +1870,11 @@ export interface ColecaoComVagas extends ColecaoBasica {
   avisoSemNumeracaoOficial?: AvisoSemNumeracaoOficial;
   /** Só presente em coleção `pokedex` (item 2): progresso por região. */
   progressoPorRegiao?: ProgressoRegiao[];
+  /**
+   * As vagas pedem cartas de mais de um set (coleção que junta sets, ou com
+   * carta avulsa) — a tela passa a mostrar o set de cada vaga.
+   */
+  multiplosSets: boolean;
 }
 
 /**
@@ -1873,21 +1923,19 @@ export async function obterColecaoComVagas(
     )
     .where(eq(vaga.colecaoId, id));
 
-  const ordenadas = vagasLinhas
-    .slice()
-    .sort((a, b) => compararLocalId(a.chave, b.chave));
+  // Coleção de set: pela ordem da receita e, dentro do set, pela impressa;
+  // carta avulsa de set fora da receita vai depois (`compararChavesVaga`).
+  const comparar = compararChavesVaga(
+    colecaoLinha.tipo === "set" ? ((colecaoLinha.parametro as ParametroSet).sets ?? []) : [],
+  );
+  const ordenadas = vagasLinhas.slice().sort((a, b) => comparar(a.chave, b.chave));
 
   // Uma consulta para a coleção inteira, não uma por vaga.
-  const candidatosPorVaga = await contarCandidatosPorVagaVazia(
-    db,
-    id,
-    colecaoLinha.tipo,
-    colecaoLinha.parametro,
-  );
+  const candidatosPorVaga = await contarCandidatosPorVagaVazia(db, id, colecaoLinha.tipo);
 
   // Vaga vazia de coleção `set`: busca o universo de cartas do set uma
   // vez só (não por vaga) e casa por `local_id` em memória.
-  let cartasEsperadasPorLocalId: Map<
+  const cartasEsperadasPorLocalId: Map<
     string,
     {
       nome: string;
@@ -1897,10 +1945,15 @@ export async function obterColecaoComVagas(
       imagemOrigem: OrigemImagem | null;
     }
   > = new Map();
-  if (colecaoLinha.tipo === "set") {
+  // Os sets que as vagas pedem — os da receita e os das cartas avulsas.
+  const setsDasVagas = [
+    ...new Set(ordenadas.flatMap((v) => lerChaveVagaSet(v.chave)?.setId ?? [])),
+  ];
+  if (colecaoLinha.tipo === "set" && setsDasVagas.length > 0) {
     const parametro = colecaoLinha.parametro as ParametroSet;
     const linhasSet = await db
       .select({
+        setId: cartaCatalogo.setId,
         localId: cartaCatalogo.localId,
         idioma: cartaCatalogo.idioma,
         nome: cartaCatalogo.nome,
@@ -1912,15 +1965,19 @@ export async function obterColecaoComVagas(
       .from(cartaCatalogo)
       .where(
         and(
-          eq(cartaCatalogo.setId, parametro.setId),
+          inArray(cartaCatalogo.setId, setsDasVagas),
           inArray(cartaCatalogo.idioma, [...ordemIdiomasPorCarta(parametro.idiomaCatalogo)]),
         ),
       );
-    // Carta a carta: a vaga vazia mostra a carta no idioma preferido da
-    // coleção quando existe, e na outra ficha ocidental quando não.
-    cartasEsperadasPorLocalId = new Map(
-      escolherLinhaPorCarta(linhasSet, parametro.idiomaCatalogo).map((l) => [l.localId, l]),
-    );
+    // Carta a carta, set a set: a vaga vazia mostra a carta no idioma
+    // preferido da coleção quando existe, e na outra ficha ocidental quando
+    // não. A escolha é por set porque o número se repete entre sets.
+    for (const setId of setsDasVagas) {
+      const doSet = linhasSet.filter((l) => l.setId === setId);
+      for (const l of escolherLinhaPorCarta(doSet, parametro.idiomaCatalogo)) {
+        cartasEsperadasPorLocalId.set(chaveVagaSet(setId, l.localId), l);
+      }
+    }
   }
 
   let nomesPorNumero: Map<number, string | null> = new Map();
@@ -1931,12 +1988,7 @@ export async function obterColecaoComVagas(
     nomesPorNumero = await obterNomesEspeciePorNumero(db, numeros);
   }
 
-  const avisos = await obterAvisosDeSet(
-    db,
-    colecaoLinha.tipo,
-    colecaoLinha.parametro,
-    ordenadas.length,
-  );
+  const avisos = await obterAvisosDeSet(db, colecaoLinha.tipo, colecaoLinha.parametro);
 
   // Progresso por região (item 2) — cálculo puro sobre as vagas já
   // carregadas acima, sem consulta própria (evita duplicar o LEFT JOIN
@@ -1962,7 +2014,11 @@ export async function obterColecaoComVagas(
             ? (nomesPorNumero.get(Number(v.chave)) ?? null)
             : null,
         cartaNome: preenchida ? v.cartaNome : (esperada?.nome ?? null),
-        cartaLocalId: preenchida ? v.cartaLocalId : (esperada ? v.chave : null),
+        cartaLocalId: preenchida
+          ? v.cartaLocalId
+          : esperada
+            ? rotuloChaveVaga(v.chave)
+            : null,
         setNome: preenchida ? v.setNome : (esperada?.setNome ?? null),
         imagemUrl: preenchida ? v.imagemUrl : (esperada?.imagemUrl ?? null),
         // Segue a MESMA condicional da url acima: vaga preenchida mostra a
@@ -1985,6 +2041,7 @@ export async function obterColecaoComVagas(
       ? { avisoSemNumeracaoOficial: avisos.avisoSemNumeracaoOficial }
       : {}),
     ...(progressoPorRegiao ? { progressoPorRegiao } : {}),
+    multiplosSets: setsDasVagas.length > 1,
   };
 }
 
@@ -2046,26 +2103,35 @@ export async function alternarSecretasDaColecao(
       return { ok: true }; // já está nesse estado — no-op idempotente
     }
 
-    // Mesmo universo da criação, carta a carta (`obterInfoSetParaVagas`):
-    // lendo só o idioma preferido, o toggle de um set traduzido pela metade
-    // cortaria a numeração no lugar errado.
-    const info = await obterInfoSetParaVagas(tx, parametro.setId, parametro.idiomaCatalogo);
-    if (!info) {
+    // Mesmo universo da criação, carta a carta e set a set
+    // (`lerReceitaNoCatalogo`): lendo só o idioma preferido, o toggle de um
+    // set traduzido pela metade cortaria a numeração no lugar errado.
+    const { sets } = await lerReceitaNoCatalogo(tx, parametro);
+    if (sets.length === 0) {
       return { ok: false, motivo: recusa("setNaoEncontradoNoCatalogo") };
     }
-    const { qtdOficial, qtdTotal } = info;
 
-    // Set sem numeração oficial (`numeracao-oficial-set.ts`, caso `mep`):
-    // `qtdOficial = 0` faria `chavesSecretas` abaixo cobrir o set INTEIRO
-    // (slice(0, qtdTotal)), e desligar secretas apagaria todas as vagas —
-    // reabriria em silêncio a mesma coleção vazia que a criação já evita.
-    // Não há distinção oficial/secreta pra alternar nesse caso.
-    if (qtdOficial === 0) {
+    // Set sem numeração oficial (`numeracao-oficial-set.ts`, caso `mep`, e a
+    // Coleção Clássica do 30th): `qtdOficial = 0` faria as "secretas" dele
+    // cobrirem o set INTEIRO, e desligar secretas apagaria todas as suas
+    // vagas. Não há distinção oficial/secreta nele; numa receita que junta
+    // sets, o toggle vale para os outros. Só recusa quando nenhum a tem.
+    const comNumeracao = sets.filter((set) => set.qtdOficial > 0);
+    if (comNumeracao.length === 0) {
       return { ok: false, motivo: recusa("setSemNumeracaoOficialSeparada") };
     }
 
-    const ordenados = info.localIds.slice().sort(compararLocalId);
-    const chavesSecretas = ordenados.slice(qtdOficial, qtdTotal);
+    // A carta que o usuário tirou não volta com o toggle.
+    const excluidas = new Set(parametro.excluidas ?? []);
+    const chavesSecretas = comNumeracao
+      .flatMap((set) =>
+        set.localIdsDoSet
+          .slice()
+          .sort(compararLocalId)
+          .slice(set.qtdOficial, set.qtdTotal)
+          .map((localId) => chaveVagaSet(set.setId, localId)),
+      )
+      .filter((chave) => !excluidas.has(chave));
 
     if (!incluirSecretas) {
       const preenchidas = await tx
@@ -2105,6 +2171,151 @@ export async function alternarSecretasDaColecao(
       .where(eq(colecao.id, id));
 
     return { ok: true };
+  });
+}
+
+export type ResultadoIncluirCarta =
+  | { ok: true; vagaId: string }
+  | { ok: false; motivo: Recusa };
+
+/**
+ * Inclui uma carta avulsa numa coleção de SET, como vaga vazia — ela passa a
+ * aparecer no que falta (regra 6) e na Compra por Lista. Pedido do usuário
+ * em 2026-09-30: criar a coleção a partir de um set e depois editá-la do
+ * jeito dele. A carta pode ser de qualquer set, desde que o catálogo a
+ * conheça num idioma da ordem da coleção (`ordemIdiomasPorCarta`) — sem
+ * isso a vaga não teria nome nem foto, e a Liga não teria o que buscar.
+ *
+ * Se a carta tinha sido excluída da receita, sai de `excluidas`: incluir de
+ * novo é desfazer a exclusão.
+ */
+export async function incluirCartaNaColecao(
+  db: Database,
+  colecaoId: string,
+  setId: string,
+  localId: string,
+): Promise<ResultadoIncluirCarta> {
+  return db.transaction(async (tx) => {
+    // Trava a coleção: `excluidas` é lido e reescrito aqui e na exclusão.
+    const [c] = await tx
+      .select()
+      .from(colecao)
+      .where(eq(colecao.id, colecaoId))
+      .for("update");
+    if (!c) return { ok: false, motivo: recusa("colecaoNaoEncontrada") };
+    if (c.tipo !== "set") return { ok: false, motivo: recusa("edicaoDeCartasSoEmSet") };
+    const parametro = c.parametro as ParametroSet;
+
+    const [carta] = await tx
+      .select({ id: cartaCatalogo.id })
+      .from(cartaCatalogo)
+      .where(
+        and(
+          eq(cartaCatalogo.setId, setId),
+          eq(cartaCatalogo.localId, localId),
+          inArray(cartaCatalogo.idioma, [...ordemIdiomasPorCarta(parametro.idiomaCatalogo)]),
+        ),
+      )
+      .limit(1);
+    if (!carta) {
+      return {
+        ok: false,
+        motivo: recusa("cartaForaDoCatalogoDaColecao", {
+          carta: `${setId} ${localId}`,
+          idioma: parametro.idiomaCatalogo,
+        }),
+      };
+    }
+
+    const chave = chaveVagaSet(setId, localId);
+    const [existente] = await tx
+      .select({ id: vaga.id })
+      .from(vaga)
+      .where(and(eq(vaga.colecaoId, colecaoId), eq(vaga.chave, chave)))
+      .limit(1);
+    if (existente) return { ok: false, motivo: recusa("cartaJaNaColecao") };
+
+    const [nova] = await tx
+      .insert(vaga)
+      .values({ colecaoId, chave })
+      .returning({ id: vaga.id });
+
+    const excluidas = parametro.excluidas ?? [];
+    if (excluidas.includes(chave)) {
+      const restantes = excluidas.filter((e) => e !== chave);
+      const { excluidas: _antigas, ...semExcluidas } = parametro;
+      void _antigas;
+      await tx
+        .update(colecao)
+        .set({
+          parametro: restantes.length > 0 ? { ...semExcluidas, excluidas: restantes } : semExcluidas,
+          atualizadoEm: new Date(),
+        })
+        .where(eq(colecao.id, colecaoId));
+    } else {
+      await tx.update(colecao).set({ atualizadoEm: new Date() }).where(eq(colecao.id, colecaoId));
+    }
+
+    return { ok: true, vagaId: nova.id };
+  });
+}
+
+export type ResultadoExcluirVaga =
+  | { ok: true; copiaLiberada: boolean }
+  | { ok: false; motivo: Recusa };
+
+/**
+ * Exclui uma vaga de uma coleção de SET — a carta sai da coleção.
+ *
+ * **Vaga preenchida é excluída junto com a alocação** (decisão do usuário
+ * em 2026-09-30, com confirmação na tela): a cópia NÃO é apagada, só volta
+ * a ficar livre no inventário (`vaga.copia_id` é a única ligação entre as
+ * duas, regra 1). A triagem de compra daquela vaga não é apagada — sai da
+ * lista sozinha por não ter vaga (`listarEscolhas`) e volta se a carta for
+ * incluída de novo, o mesmo comportamento da mudança de escopo da Pokédex.
+ *
+ * Carta de um set da receita vai para `excluidas`, senão o toggle de
+ * secretas a traria de volta. Carta avulsa não precisa: nenhuma receita a
+ * recria.
+ */
+export async function excluirVagaDaColecao(
+  db: Database,
+  colecaoId: string,
+  vagaId: string,
+): Promise<ResultadoExcluirVaga> {
+  return db.transaction(async (tx) => {
+    const [c] = await tx
+      .select()
+      .from(colecao)
+      .where(eq(colecao.id, colecaoId))
+      .for("update");
+    if (!c) return { ok: false, motivo: recusa("colecaoNaoEncontrada") };
+    if (c.tipo !== "set") return { ok: false, motivo: recusa("edicaoDeCartasSoEmSet") };
+    const parametro = c.parametro as ParametroSet;
+
+    const [alvo] = await tx
+      .select({ chave: vaga.chave, copiaId: vaga.copiaId })
+      .from(vaga)
+      .where(and(eq(vaga.id, vagaId), eq(vaga.colecaoId, colecaoId)))
+      .limit(1);
+    if (!alvo) return { ok: false, motivo: recusa("vagaNaoEncontrada") };
+
+    await tx.delete(vaga).where(eq(vaga.id, vagaId));
+
+    const setDaCarta = lerChaveVagaSet(alvo.chave)?.setId;
+    const excluidas = parametro.excluidas ?? [];
+    const daReceita = setDaCarta !== undefined && parametro.sets.includes(setDaCarta);
+    await tx
+      .update(colecao)
+      .set({
+        ...(daReceita && !excluidas.includes(alvo.chave)
+          ? { parametro: { ...parametro, excluidas: [...excluidas, alvo.chave] } }
+          : {}),
+        atualizadoEm: new Date(),
+      })
+      .where(eq(colecao.id, colecaoId));
+
+    return { ok: true, copiaLiberada: alvo.copiaId !== null };
   });
 }
 
@@ -2622,9 +2833,11 @@ export async function listarCandidatosDaVaga(
       sql`array_length(${cartaCatalogo.dexIds}, 1) = 1 AND ${cartaCatalogo.dexIds}[1] = ${numero}`,
     );
   } else if (colecaoLinha.tipo === "set") {
-    const parametro = colecaoLinha.parametro as ParametroSet;
-    condicoesUniverso.push(eq(cartaCatalogo.setId, parametro.setId));
-    condicoesUniverso.push(eq(cartaCatalogo.localId, vagaLinha.chave));
+    // O set e o número esperados estão na chave da vaga (`chave-vaga-set.ts`).
+    const esperada = lerChaveVagaSet(vagaLinha.chave);
+    if (!esperada) return { ok: true, candidatos: [] };
+    condicoesUniverso.push(eq(cartaCatalogo.setId, esperada.setId));
+    condicoesUniverso.push(eq(cartaCatalogo.localId, esperada.localId));
   }
   // customizada: sem filtro de universo — qualquer cópia livre serve.
 
@@ -2685,8 +2898,8 @@ export async function listarCandidatosDaVaga(
  *
  * O tipo entra por parâmetro, e não por `OR` cobrindo os dois casos, para
  * que `chave::int` só seja avaliado em coleção `pokedex`. Em coleção
- * `set` a chave é o `local_id` impresso ("SM84", "SV001") e o cast
- * quebraria.
+ * `set` a chave é `set/local_id` ("30th/SV001", `chave-vaga-set.ts`) e o
+ * cast quebraria.
  *
  * Devolve só as vagas com pelo menos uma candidata; quem chama assume
  * zero para o resto. Regra 5 do AGENTS.md: isto só conta — nunca aloca.
@@ -2695,7 +2908,6 @@ async function contarCandidatosPorVagaVazia(
   db: Database,
   colecaoId: string,
   tipo: TipoColecao,
-  parametro: unknown,
 ): Promise<Map<string, number>> {
   // `customizada` nunca tem vaga vazia (spec §3.3) — nada a contar.
   if (tipo !== "pokedex" && tipo !== "set") return new Map();
@@ -2703,7 +2915,8 @@ async function contarCandidatosPorVagaVazia(
   const universo =
     tipo === "pokedex"
       ? sql`array_length(cc.dex_ids, 1) = 1 AND cc.dex_ids[1] = vv.chave::int`
-      : sql`cc.set_id = ${(parametro as ParametroSet).setId} AND cc.local_id = vv.chave`;
+      : // A chave da vaga de set é `set/local_id` (`chave-vaga-set.ts`).
+        sql`vv.chave = cc.set_id || '/' || cc.local_id`;
 
   const linhas = await db.execute<{ vaga_id: string; total: number | string }>(sql`
     WITH vagas_vazias AS (
@@ -2792,7 +3005,7 @@ export async function contarCopiasElegiveisParaVagasVazias(
       JOIN carta_catalogo cc ON cc.id = cl.carta_id AND cc.idioma = cl.idioma_catalogo
       JOIN vagas_vazias vv ON (
            (vv.tipo = 'pokedex' AND array_length(cc.dex_ids, 1) = 1 AND cc.dex_ids[1] = vv.chave::int)
-        OR (vv.tipo = 'set' AND (vv.parametro ->> 'setId') = cc.set_id AND vv.chave = cc.local_id)
+        OR (vv.tipo = 'set' AND vv.chave = cc.set_id || '/' || cc.local_id)
       )
       GROUP BY cl.id
     )
@@ -2879,7 +3092,7 @@ export async function listarDestinosElegiveisDaCopia(
   const numeroDex = cartaLinha.dexIds.length === 1 ? String(cartaLinha.dexIds[0]) : null;
 
   const condicoesUniverso = [
-    and(eq(colecao.tipo, "set"), sql`(${colecao.parametro} ->> 'setId') = ${cartaLinha.setId}`, eq(vaga.chave, cartaLinha.localId)),
+    and(eq(colecao.tipo, "set"), eq(vaga.chave, chaveVagaSet(cartaLinha.setId, cartaLinha.localId))),
   ];
   if (numeroDex !== null) {
     condicoesUniverso.unshift(and(eq(colecao.tipo, "pokedex"), eq(vaga.chave, numeroDex)));
@@ -3621,10 +3834,7 @@ export async function listarMelhoriasDaColecao(
   const universo =
     colecaoLinha.tipo === "pokedex"
       ? sql`array_length(${cartaCandidata.dexIds}, 1) = 1 and ${cartaCandidata.dexIds}[1] = ${vaga.chave}::int`
-      : and(
-          eq(cartaCandidata.setId, (colecaoLinha.parametro as ParametroSet).setId),
-          eq(cartaCandidata.localId, vaga.chave),
-        );
+      : sql`${vaga.chave} = ${cartaCandidata.setId} || '/' || ${cartaCandidata.localId}`;
 
   const linhas = await db
     .select({
@@ -3744,7 +3954,10 @@ export async function listarMelhoriasDaColecao(
     }
   }
 
-  return { ok: true, itens: itens.sort((a, b) => compararLocalId(a.chave, b.chave)) };
+  const comparar = compararChavesVaga(
+    colecaoLinha.tipo === "set" ? ((colecaoLinha.parametro as ParametroSet).sets ?? []) : [],
+  );
+  return { ok: true, itens: itens.sort((a, b) => comparar(a.chave, b.chave)) };
 }
 
 /**

@@ -221,7 +221,10 @@
     "erroRegiao": "Pick at least one region.",
     "erroExpansao": "Pick a set.",
     "erroCriar": "Failed to create the collection.",
-    "erroRede": "Network failure while creating the collection."
+    "erroRede": "Network failure while creating the collection.",
+    "removerSet": "Take {set} out of the collection",
+    "remover": "remove",
+    "ajudaVariosSets": "The collection joins the chosen sets, in the order of the list. Once created, single cards can be added and removed."
   },
   "colecoesFalta": {
     "voltar": "← Collections",
@@ -531,7 +534,23 @@
     "confirmaTroca": "Confirm the swap?",
     "trocar": "Swap",
     "descartar": "Dismiss",
-    "descartarTitulo": "Hides this suggestion, for this slot only. A better copy that shows up later will flag it again."
+    "descartarTitulo": "Hides this suggestion, for this slot only. A better copy that shows up later will flag it again.",
+    "tirarDaColecao": "remove from collection",
+    "confirmarTirarVazia": "Remove {alvo} from the collection? The card leaves the missing list.",
+    "confirmarTirarPreenchida": "Remove {alvo} from the collection? The copy allocated to this slot becomes free in the inventory again — it is not deleted.",
+    "cartaTirada": "{alvo} left the collection.",
+    "cartaTiradaCopiaLivre": "{alvo} left the collection; the copy is free in the inventory again.",
+    "erroTirar": "Could not remove the card from the collection.",
+    "incluirCartaAvulsa": "Add a single card",
+    "campoNomeCarta": "Name",
+    "campoSetCarta": "Set",
+    "campoNumeroCarta": "Number",
+    "erroBuscarCartas": "Could not search cards.",
+    "erroIncluir": "Could not add the card.",
+    "cartaIncluida": "{carta} joined the collection.",
+    "jaNaColecao": "already in the collection",
+    "incluir": "Add",
+    "nenhumaCartaEncontrada": "No card found."
   },
   "opcoesCompra": {
     "voltar": "← Back to the collection",
@@ -652,6 +671,8 @@
     "arquivoNaoEhImagem": "File not recognized as a JPEG, PNG or WEBP image (checked by its content, not by its extension).",
     "arquivoVazio": "Empty file.",
     "cartaDeCatalogoDaCopiaNaoEncontrada": "The copy's catalog card was not found.",
+    "cartaForaDoCatalogoDaColecao": "Card {carta} is not in the catalog in this collection's languages ({idioma} and the other Western one).",
+    "cartaJaNaColecao": "This card is already in the collection.",
     "cartaNaoEncontradaNoCatalogo": "Card {cartaId} ({idioma}) not found in the catalog.",
     "colecaoDaVagaNaoEncontrada": "The slot's collection was not found.",
     "colecaoInvalida": "Invalid collection.",
@@ -671,6 +692,7 @@
     "downloadRespostaComErro": "The URL answered with an error (HTTP {status}).",
     "downloadSemConteudo": "The response carried no content.",
     "downloadTempoEsgotado": "Timed out while downloading the image.",
+    "edicaoDeCartasSoEmSet": "Adding and removing single cards only applies to a set collection.",
     "edicaoEmMassaInvalida": "Invalid bulk edit.",
     "edicaoInvalida": "Invalid edit.",
     "escopoInvalido": "Invalid scope.",

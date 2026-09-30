@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
 import type { ParametroPokedex, TipoColecao } from "@/lib/dominio/parametro-colecao";
+import { chaveVagaSet, rotuloChaveVaga } from "@/lib/dominio/chave-vaga-set";
 import {
   FAIXA_REGIAO,
   NOME_REGIAO,
@@ -28,6 +29,7 @@ import { Modal } from "@/app/_componentes/modal";
 import type {
   CandidataMelhoriaDTO,
   CandidatoVagaDTO,
+  CartaEncontradaDTO,
   ColecaoComVagasDTO,
   CopiaAlocadaNaVagaDTO,
   CopiaDoInventarioDTO,
@@ -118,7 +120,7 @@ export default function ColecaoPage() {
   async function desalocar(vaga: VagaDaColecaoDTO) {
     const confirmado = window.confirm(
       t("confirmarDesalocar", {
-        alvo: vaga.cartaNome ?? t("aVagaNumero", { chave: vaga.chave }),
+        alvo: vaga.cartaNome ?? t("aVagaNumero", { chave: rotuloChaveVaga(vaga.chave) }),
       }),
     );
     if (!confirmado) return;
@@ -129,6 +131,30 @@ export default function ColecaoPage() {
     } else {
       const dados = await resp.json().catch(() => null);
       setErro(textoDaRecusa(tr, dados, t("erroDesalocar")));
+    }
+  }
+
+  /**
+   * Tira a carta da coleção (só coleção de set). Vaga preenchida sai junto
+   * com a alocação — a cópia volta livre para o inventário, nunca é apagada
+   * (decisão de 2026-09-30); a confirmação diz isso com todas as letras.
+   */
+  async function excluirVaga(vaga: VagaDaColecaoDTO) {
+    const alvo = vaga.cartaNome ?? t("aVagaNumero", { chave: rotuloChaveVaga(vaga.chave) });
+    const confirmado = window.confirm(
+      vaga.copiaId !== null
+        ? t("confirmarTirarPreenchida", { alvo })
+        : t("confirmarTirarVazia", { alvo }),
+    );
+    if (!confirmado) return;
+    const resp = await fetch(`/api/colecoes/${id}/vagas/${vaga.id}`, { method: "DELETE" });
+    if (resp.ok) {
+      const dados = await resp.json().catch(() => null);
+      setMensagem(dados?.copiaLiberada ? t("cartaTiradaCopiaLivre", { alvo }) : t("cartaTirada", { alvo }));
+      recarregar();
+    } else {
+      const dados = await resp.json().catch(() => null);
+      setErro(textoDaRecusa(tr, dados, t("erroTirar")));
     }
   }
 
@@ -152,7 +178,10 @@ export default function ColecaoPage() {
   }
 
   const customizada = colecao.tipo === "customizada";
-  const parametroSet = colecao.parametro as { incluirSecretas?: boolean } | null;
+  const parametroSet = colecao.parametro as
+    | { incluirSecretas?: boolean; idiomaCatalogo?: Idioma }
+    | null;
+  const colecaoDeSet = colecao.tipo === "set";
   // GET /api/colecoes/:id não traz totalVagas/vagasPreenchidas (esses só
   // vêm pré-agregados em GET /api/colecoes, a lista) — deriva do próprio
   // array de vagas já carregado, sem round-trip extra.
@@ -315,6 +344,19 @@ export default function ColecaoPage() {
         />
       )}
 
+      {colecaoDeSet && (
+        <IncluirCartaAvulsa
+          colecaoId={id}
+          idiomaCatalogo={parametroSet?.idiomaCatalogo ?? "pt"}
+          chavesNaColecao={new Set(colecao.vagas.map((v) => v.chave))}
+          onIncluida={(msg) => {
+            setMensagem(msg);
+            recarregar();
+          }}
+          onErro={setErro}
+        />
+      )}
+
       {!customizada && (
         <div className="flex flex-col gap-2 text-sm">
           <label className="flex items-center gap-2">
@@ -348,6 +390,8 @@ export default function ColecaoPage() {
             key={v.id}
             vaga={v}
             tipo={colecao.tipo}
+            mostrarSet={colecao.multiplosSets}
+            onExcluir={colecaoDeSet ? () => excluirVaga(v) : undefined}
             melhoria={melhoriaPorVaga.get(v.id)}
             onAlocar={() => setVagaParaAlocar(v)}
             onDesalocar={() => desalocar(v)}
@@ -405,6 +449,8 @@ export default function ColecaoPage() {
 function VagaCard({
   vaga,
   tipo,
+  mostrarSet,
+  onExcluir,
   melhoria,
   onAlocar,
   onDesalocar,
@@ -412,6 +458,10 @@ function VagaCard({
 }: {
   vaga: VagaDaColecaoDTO;
   tipo: TipoColecao;
+  /** A coleção pede cartas de mais de um set: cada vaga diz o seu. */
+  mostrarSet: boolean;
+  /** Tirar a carta da coleção — só em coleção de set. */
+  onExcluir?: () => void;
   /** Presente só quando existe cópia livre melhor que a alocada aqui. */
   melhoria?: MelhoriaDaVagaDTO;
   onAlocar: () => void;
@@ -422,6 +472,22 @@ function VagaCard({
   const tc = useTranslations("comum");
   const preenchida = vaga.copiaId !== null;
   const nomeExibido = vaga.cartaNome ?? vaga.nomeEspecie;
+  const numero = rotuloChaveVaga(vaga.chave);
+  const seloSet =
+    mostrarSet && vaga.setNome ? (
+      <span className="block truncate text-[10px] text-muted" title={vaga.setNome}>
+        {vaga.setNome}
+      </span>
+    ) : null;
+  const botaoTirar = onExcluir ? (
+    <button
+      type="button"
+      onClick={onExcluir}
+      className="text-[11px] text-muted hover:text-danger hover:underline"
+    >
+      {t("tirarDaColecao")}
+    </button>
+  ) : null;
 
   if (preenchida) {
     return (
@@ -432,19 +498,24 @@ function VagaCard({
           <ImagemCartaComZoom
             imagemUrl={vaga.imagemUrl}
             origem={vaga.imagemOrigem}
-            alt={nomeExibido ?? vaga.chave}
+            alt={nomeExibido ?? numero}
             width={64}
             height={88}
             className="rounded-tcg"
           />
         }
-        titulo={nomeExibido ?? `#${vaga.chave}`}
+        titulo={
+          <>
+            {nomeExibido ?? `#${numero}`}
+            {seloSet}
+          </>
+        }
         meta={
           /* Cada pedaço é indivisível: a vaga tem 96px, e deixar o texto
              quebrar sozinho órfanava o "·" no começo da linha de baixo. */
           <span className="flex flex-wrap items-center justify-center gap-1">
             <span className="whitespace-nowrap">
-              #{vaga.cartaLocalId ?? vaga.chave} · {vaga.idiomaFisico}
+              #{vaga.cartaLocalId ?? numero} · {vaga.idiomaFisico}
             </span>
             {/* Variante é nulável no DTO; sem ela a linha só não mostra o
                 chip, como o código anterior já fazia. */}
@@ -474,6 +545,7 @@ function VagaCard({
             >
               {t("desalocar")}
             </button>
+            {botaoTirar}
           </div>
         }
       />
@@ -490,13 +562,14 @@ function VagaCard({
           imagemUrl={vaga.imagemUrl}
           imagemOrigem={vaga.imagemOrigem}
           chave={vaga.chave}
-          alt={nomeExibido ?? vaga.chave}
+          alt={nomeExibido ?? numero}
         />
       }
       titulo={
         <>
-          #{vaga.chave}
+          #{numero}
           {nomeExibido ? ` — ${nomeExibido}` : ""}
+          {seloSet}
         </>
       }
       /* Botão desabilitado continua VISÍVEL, cinza: vaga vazia é saída de
@@ -508,19 +581,22 @@ function VagaCard({
          recebe hover e a tooltip nunca apareceria — justamente no caso em
          que ela é necessária. Cinza sem explicação vira suspeita de bug. */
       acao={
-        <span title={tc("rotuloAlocacao", { total: vaga.candidatosDisponiveis })}>
-          <Botao
-            type="button"
-            variante="primario"
-            tamanho="xs"
-            onClick={onAlocar}
-            disabled={vaga.candidatosDisponiveis === 0}
-          >
-            {vaga.candidatosDisponiveis === 0
-              ? t("alocar")
-              : t("alocarComTotal", { total: vaga.candidatosDisponiveis })}
-          </Botao>
-        </span>
+        <div className="flex flex-col items-center gap-1">
+          <span title={tc("rotuloAlocacao", { total: vaga.candidatosDisponiveis })}>
+            <Botao
+              type="button"
+              variante="primario"
+              tamanho="xs"
+              onClick={onAlocar}
+              disabled={vaga.candidatosDisponiveis === 0}
+            >
+              {vaga.candidatosDisponiveis === 0
+                ? t("alocar")
+                : t("alocarComTotal", { total: vaga.candidatosDisponiveis })}
+            </Botao>
+          </span>
+          {botaoTirar}
+        </div>
       }
     />
   );
@@ -731,6 +807,172 @@ function EdicaoEscopoPokedex({
   );
 }
 
+/**
+ * Inclui uma carta avulsa numa coleção de set (2026-09-30): busca no
+ * catálogo — qualquer set — e a carta entra como vaga vazia, no que falta.
+ * É a CARTA que entra, não uma cópia: alocar continua sendo o passo de
+ * sempre, na vaga.
+ */
+function IncluirCartaAvulsa({
+  colecaoId,
+  idiomaCatalogo,
+  chavesNaColecao,
+  onIncluida,
+  onErro,
+}: {
+  colecaoId: string;
+  idiomaCatalogo: Idioma;
+  chavesNaColecao: ReadonlySet<string>;
+  onIncluida: (msg: string) => void;
+  onErro: (msg: string) => void;
+}) {
+  const t = useTranslations("colecaoDetalhe");
+  const tr = useTranslations("recusas");
+  const [aberto, setAberto] = useState(false);
+  const [nome, setNome] = useState("");
+  const [setId, setSetId] = useState("");
+  const [numero, setNumero] = useState("");
+  const [resultados, setResultados] = useState<CartaEncontradaDTO[] | null>(null);
+  const [buscando, setBuscando] = useState(false);
+  const [enviando, setEnviando] = useState<string | null>(null);
+
+  async function buscar(e: React.FormEvent) {
+    e.preventDefault();
+    if (!nome.trim() && !setId.trim() && !numero.trim()) return;
+    setBuscando(true);
+    try {
+      const params = new URLSearchParams();
+      if (nome.trim()) params.set("nome", nome.trim());
+      if (setId.trim()) params.set("set", setId.trim());
+      if (numero.trim()) params.set("numero", numero.trim());
+      const resp = await fetch(`/api/cartas?${params.toString()}`);
+      const dados = await resp.json();
+      const cartas: CartaEncontradaDTO[] = dados.cartas ?? [];
+      // A busca devolve uma linha por idioma de catálogo; a coleção quer a
+      // CARTA (set + número). Fica uma por carta, a do idioma da coleção
+      // quando existe. Japonês fora: não entra numa coleção ocidental.
+      const porCarta = new Map<string, CartaEncontradaDTO>();
+      for (const c of cartas) {
+        if (c.idiomaCatalogo === "jp" && idiomaCatalogo !== "jp") continue;
+        const chave = chaveVagaSet(c.setId, c.localId);
+        const atual = porCarta.get(chave);
+        if (!atual || c.idiomaCatalogo === idiomaCatalogo) porCarta.set(chave, c);
+      }
+      setResultados([...porCarta.values()]);
+    } catch {
+      onErro(t("erroBuscarCartas"));
+    } finally {
+      setBuscando(false);
+    }
+  }
+
+  async function incluir(carta: CartaEncontradaDTO) {
+    const chave = chaveVagaSet(carta.setId, carta.localId);
+    setEnviando(chave);
+    try {
+      const resp = await fetch(`/api/colecoes/${colecaoId}/cartas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ setId: carta.setId, localId: carta.localId }),
+      });
+      const dados = await resp.json().catch(() => null);
+      if (!resp.ok) {
+        onErro(textoDaRecusa(tr, dados, t("erroIncluir")));
+        return;
+      }
+      onIncluida(t("cartaIncluida", { carta: `${carta.nome} (${carta.setNome} #${carta.localId})` }));
+    } catch {
+      onErro(t("erroIncluir"));
+    } finally {
+      setEnviando(null);
+    }
+  }
+
+  if (!aberto) {
+    return (
+      <div>
+        <Botao type="button" variante="secundario" tamanho="xs" onClick={() => setAberto(true)}>
+          {t("incluirCartaAvulsa")}
+        </Botao>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded border border-line p-3">
+      <form onSubmit={buscar} className="flex flex-wrap items-end gap-2 text-sm">
+        <Campo rotulo={t("campoNomeCarta")}>
+          <input value={nome} onChange={(e) => setNome(e.target.value)} className={`w-48 ${classesEntrada}`} />
+        </Campo>
+        <Campo rotulo={t("campoSetCarta")}>
+          <input
+            value={setId}
+            onChange={(e) => setSetId(e.target.value)}
+            placeholder="30th"
+            className={`w-28 ${classesEntrada}`}
+          />
+        </Campo>
+        <Campo rotulo={t("campoNumeroCarta")}>
+          <input value={numero} onChange={(e) => setNumero(e.target.value)} className={`w-20 ${classesEntrada}`} />
+        </Campo>
+        <Botao type="submit" variante="secundario" disabled={buscando}>
+          {buscando ? t("buscando") : t("buscar")}
+        </Botao>
+        <button type="button" onClick={() => setAberto(false)} className="text-xs text-muted">
+          {t("cancelar")}
+        </button>
+      </form>
+
+      {resultados && (
+        <ul className="flex flex-col divide-y divide-hairline text-sm">
+          {resultados.map((c) => {
+            const chave = chaveVagaSet(c.setId, c.localId);
+            const jaEsta = chavesNaColecao.has(chave);
+            return (
+              <li key={chave} className="flex items-center gap-3 py-2">
+                <ImagemCartaComZoom
+                  imagemUrl={c.imagemUrl}
+                  origem={c.imagemOrigem}
+                  alt={c.nome}
+                  width={32}
+                  height={44}
+                  className="rounded-sm"
+                />
+                <div className="flex-1">
+                  <div>
+                    {c.nome} <span className="text-muted">#{c.localId}</span>
+                  </div>
+                  <div className="text-xs text-muted">
+                    {c.setNome} · {c.setId}
+                  </div>
+                </div>
+                {jaEsta ? (
+                  <span className="text-xs text-muted">{t("jaNaColecao")}</span>
+                ) : (
+                  <Botao
+                    type="button"
+                    variante="primario"
+                    tamanho="xs"
+                    disabled={enviando === chave}
+                    onClick={() => incluir(c)}
+                  >
+                    {t("incluir")}
+                  </Botao>
+                )}
+              </li>
+            );
+          })}
+          {resultados.length === 0 && (
+            <EstadoVazio as="li" className="py-2">
+              {t("nenhumaCartaEncontrada")}
+            </EstadoVazio>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function AdicionarCopiaCustomizada({
   colecaoId,
   idiomaExigido,
@@ -914,7 +1156,7 @@ function ModalAlocarVaga({
         setErro(textoDaRecusa(tr, dados, t("erroAlocar")));
         return;
       }
-      const partes = [t("alocadaNaVaga", { carta: candidato.cartaNome, vaga: vaga.chave })];
+      const partes = [t("alocadaNaVaga", { carta: candidato.cartaNome, vaga: rotuloChaveVaga(vaga.chave) })];
       if (dados.dividida) {
         partes.push(t("loteDivididoVaga"));
       }
@@ -932,7 +1174,7 @@ function ModalAlocarVaga({
   return (
     <Modal>
       <h2 className="font-medium text-foreground">
-        {t("modalAlocarTitulo", { vaga: vaga.chave })}
+        {t("modalAlocarTitulo", { vaga: rotuloChaveVaga(vaga.chave) })}
         {nomeVaga ? ` — ${nomeVaga}` : ""}
       </h2>
       <p className="text-muted">{t("modalAlocarExplicacao")}</p>
@@ -1079,7 +1321,7 @@ function ModalMelhoriaVaga({
       }
       const partes = [
         t("trocaFeita", {
-          vaga: melhoria.chave,
+          vaga: rotuloChaveVaga(melhoria.chave),
           entrou: candidata.cartaNome,
           setEntrou: candidata.setNome,
           saiu: atual.cartaNome,
@@ -1122,7 +1364,7 @@ function ModalMelhoriaVaga({
   return (
     <Modal>
       <h2 className="font-medium text-foreground">
-        {t("modalMelhoriaTitulo", { vaga: melhoria.chave })}
+        {t("modalMelhoriaTitulo", { vaga: rotuloChaveVaga(melhoria.chave) })}
       </h2>
       <p className="text-muted">{t("modalMelhoriaExplicacao")}</p>
 

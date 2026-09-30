@@ -2,10 +2,15 @@
  * Tipagem e validação do parâmetro de `colecao` por tipo (spec §3.3):
  *
  * - `pokedex`: `{ escopo: "nacional" }` ou `{ escopo: "regioes", regioes: [...] }`.
- * - `set`: `{ setId, idiomaCatalogo, incluirSecretas }`. `idiomaCatalogo` é
- *   em qual idioma de catálogo a grade é renderizada (decisão fechada —
- *   independente do `idiomaExigido` da coleção, que é o idioma da carta
- *   FÍSICA, AGENTS.md regra 7).
+ * - `set`: `{ sets, idiomaCatalogo, incluirSecretas, excluidas }`. `sets` é
+ *   a RECEITA da coleção: os sets cujas vagas nasceram na criação, na ordem
+ *   escolhida (2026-09-30 — antes era um `setId` só; a entrada ainda aceita
+ *   `setId` e o converte). Depois de criada, a coleção é a lista das vagas
+ *   dela, que o usuário edita carta a carta; `excluidas` lembra as cartas
+ *   da receita que ele tirou, para o toggle de secretas não trazê-las de
+ *   volta. `idiomaCatalogo` é o idioma PREFERIDO da ficha, carta a carta
+ *   (`escolherLinhaPorCarta`) — independente do `idiomaExigido` da
+ *   coleção, que é o idioma da carta FÍSICA (AGENTS.md regra 7).
  * - `customizada`: sem parâmetro (null).
  *
  * Parâmetro inválido para o tipo é rejeitado com erro claro — nunca
@@ -29,10 +34,20 @@ export type ParametroPokedex =
   | { escopo: "regioes"; regioes: Regiao[] };
 
 export interface ParametroSet {
-  setId: string;
+  /** A receita: sets cujas vagas nasceram na criação, na ordem escolhida. Nunca vazia. */
+  sets: string[];
   idiomaCatalogo: IdiomaCatalogo;
   incluirSecretas: boolean;
+  /**
+   * Chaves de vaga (`chaveVagaSet`) de cartas da receita que o usuário tirou
+   * da coleção. Ausente = nenhuma. Não vem do corpo da criação: é gravada
+   * pela exclusão de vaga.
+   */
+  excluidas?: string[];
 }
+
+/** Limite de sets numa receita — folgado para o caso real (2), e um teto contra erro de digitação na API. */
+export const MAXIMO_SETS_POR_COLECAO = 10;
 
 /** `customizada` não tem parâmetro estrutural. */
 export type ParametroCustomizada = null;
@@ -91,13 +106,30 @@ export function validarParametroPokedex(bruto: unknown): { ok: true; parametro: 
 
 function validarParametroSet(bruto: unknown): { ok: true; parametro: ParametroSet } | { ok: false; erros: string[] } {
   if (typeof bruto !== "object" || bruto === null) {
-    return { ok: false, erros: ["parametro de set precisa ser um objeto com setId, idiomaCatalogo e incluirSecretas"] };
+    return { ok: false, erros: ["parametro de set precisa ser um objeto com sets, idiomaCatalogo e incluirSecretas"] };
   }
   const obj = bruto as Record<string, unknown>;
   const erros: string[] = [];
 
-  const setId = typeof obj.setId === "string" && obj.setId.trim() !== "" ? obj.setId : null;
-  if (!setId) erros.push("setId ausente ou vazio");
+  // `setId` (um set só) é o formato de antes de 2026-09-30 — ainda aceito,
+  // e convertido. `sets` vence quando vierem os dois.
+  const brutos: unknown[] = Array.isArray(obj.sets)
+    ? obj.sets
+    : obj.setId !== undefined
+      ? [obj.setId]
+      : [];
+  const sets: string[] = [];
+  for (const s of brutos) {
+    if (typeof s !== "string" || s.trim() === "") {
+      erros.push(`set inválido: ${String(s)}`);
+    } else if (!sets.includes(s)) {
+      sets.push(s);
+    }
+  }
+  if (brutos.length === 0) erros.push("sets ausente ou vazio (ao menos um set)");
+  if (sets.length > MAXIMO_SETS_POR_COLECAO) {
+    erros.push(`no máximo ${MAXIMO_SETS_POR_COLECAO} sets por coleção (vieram ${sets.length})`);
+  }
 
   if (!ehIdiomaCatalogo(obj.idiomaCatalogo)) {
     erros.push(`idiomaCatalogo inválido: ${String(obj.idiomaCatalogo)} (esperado 'pt' ou 'en')`);
@@ -112,7 +144,7 @@ function validarParametroSet(bruto: unknown): { ok: true; parametro: ParametroSe
   return {
     ok: true,
     parametro: {
-      setId: setId!,
+      sets,
       idiomaCatalogo: obj.idiomaCatalogo as IdiomaCatalogo,
       incluirSecretas: obj.incluirSecretas as boolean,
     },

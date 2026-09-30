@@ -28,6 +28,7 @@ import { classesCelulaCabecalho, classesLinha, classesLinhaCabecalho, Tabela } f
 import type { CopiaDoInventarioDTO, DestinoElegivelDaCopiaDTO } from "@/lib/dominio/tipos-cliente";
 import { NomeCarta } from "@/app/_componentes/nome-carta";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { rotuloChaveVaga } from "@/lib/dominio/chave-vaga-set";
 
 interface Opcoes {
   sets: { setId: string; setNome: string }[];
@@ -206,7 +207,7 @@ export default function InventarioPage() {
       t("confirmarDesalocar", {
         carta: copia.cartaNome,
         colecao: copia.colecaoNome ?? "",
-        vaga: copia.vagaChave ?? "",
+        vaga: copia.vagaChave ? rotuloChaveVaga(copia.vagaChave) : "",
       }),
     );
     if (!confirmado) return;
@@ -470,7 +471,7 @@ export default function InventarioPage() {
                 <td className="p-2">
                   {c.alocada ? (
                     <Distintivo tom="acento">
-                      {c.colecaoNome} #{c.vagaChave}
+                      {c.colecaoNome} #{c.vagaChave ? rotuloChaveVaga(c.vagaChave) : ""}
                     </Distintivo>
                   ) : (
                     <Distintivo tom="neutro">{t("livre")}</Distintivo>
@@ -822,7 +823,7 @@ function ModalAlocarDestino({
           ? t("alocadaEmVaga", {
               carta: copia.cartaNome,
               colecao: destino.colecaoNome,
-              vaga: destino.chave ?? "",
+              vaga: destino.chave ? rotuloChaveVaga(destino.chave) : "",
             })
           : t("adicionadaAColecao", { carta: copia.cartaNome, colecao: destino.colecaoNome }),
       ];
@@ -869,7 +870,7 @@ function ModalAlocarDestino({
                   )}
                 </div>
                 <div className="text-xs text-muted">
-                  {d.vagaId ? t("vagaNumero", { vaga: d.chave ?? "" }) : t("semVagaFixa")}
+                  {d.vagaId ? t("vagaNumero", { vaga: d.chave ? rotuloChaveVaga(d.chave) : "" }) : t("semVagaFixa")}
                 </div>
               </div>
               {confirmandoChave === chave ? (

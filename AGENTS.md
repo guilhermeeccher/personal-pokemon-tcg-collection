@@ -287,6 +287,32 @@ cards. `pnpm importar:catalogo-repo --idioma pt` (or `en`) reads a local clone a
 - Without `--idioma` the importer keeps its original job: the Japanese catalog from `data-asia/`, by
   upsert.
 
+### Set collections: a recipe, then a list of slots you edit
+
+Since 2026-09-30 a Set collection is created from a **recipe** — one or more sets
+(`parametro.sets`, in the chosen order) — and from then on it **is its list of slots**, which the
+user edits card by card: `POST /api/colecoes/:id/cartas` adds a single card from any set as an empty
+slot, `DELETE /api/colecoes/:id/vagas/:vagaId` takes one out. Rule 4 still applies to each set of the
+recipe at creation and in the secrets toggle.
+
+- **The slot key carries the set: `set/local_id`** (`30th/001`, `lib/dominio/chave-vaga-set.ts`).
+  Two sets in one collection both have a card `001`, and a single card may come from anywhere. The
+  set lives in the key, and not in a column of its own, because `liga_opcao` and `escolha_compra`
+  identify a slot by `(collection, chave)` too: qualified, the three stay unique and correct with no
+  schema change. Whoever needs the printed number (a label, the Liga search, the order) reads it with
+  `lerChaveVagaSet`/`rotuloChaveVaga` — **never parse the key by hand, and never show it raw**.
+  Pokédex keys are still the national number, custom ones the sequence.
+- **Removing a filled slot takes the allocation with it** (the user's decision, with a confirmation
+  on screen): the copy is never deleted, it only becomes free in the inventory again. The buy triage
+  of that slot is kept and drops off the list on its own, as with a Pokédex scope change.
+- **A removed recipe card is remembered in `parametro.excluidas`**, so the secrets toggle does not
+  bring it back. Adding it again clears it.
+- **The missing-catalog warning measures the catalog, not the slots** (`avisosDaReceita`): with an
+  editable collection, a removal would read as a false "incomplete catalog" and a single card would
+  hide a real gap.
+- **The Buy by List gets one tab per set** when the collection joins sets, like one per region in a
+  Pokédex; a single-set collection keeps the plain tab.
+
 ### Catalog language is decided card by card
 
 A Set collection's `idiomaCatalogo` is a **preference**, not a filter. Each number in the set uses its

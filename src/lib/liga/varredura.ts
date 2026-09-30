@@ -50,7 +50,7 @@ import {
   registrarEdicoesVistas,
   tocarProgresso,
   ultimaConsultaPorChave,
-  vinculosDoSet,
+  vinculosDosSets,
   type VagaVaziaPokedex,
   type VagaVaziaSet,
 } from "@/lib/db/liga";
@@ -72,7 +72,7 @@ export type VagaParaVarrer =
 
 /** Como a vaga aparece em mensagem de erro e log. */
 function rotuloDaVaga(vaga: VagaParaVarrer): string {
-  return vaga.tipo === "pokedex" ? vaga.especie : `${vaga.chave} ${vaga.nome}`;
+  return vaga.tipo === "pokedex" ? vaga.especie : `${vaga.setId} ${vaga.numero} ${vaga.nome}`;
 }
 
 export interface ResumoVarredura {
@@ -139,7 +139,7 @@ async function consultarVagaSet(
   filtros: Filtros,
   setPorEdid: ReadonlyMap<number, string>,
 ): Promise<{ opcoes: OpcaoCompra[]; requisicoes: number }> {
-  const alvo = { numero: vaga.chave, setId: vaga.setId, setSigla: vaga.setSigla };
+  const alvo = { numero: vaga.numero, setId: vaga.setId, setSigla: vaga.setSigla };
   const achou = (linhas: readonly LinhaBuscaLiga[]) =>
     linhas.some((l) => linhaCasaComVagaSet(l, alvo, setPorEdid));
 
@@ -195,10 +195,12 @@ export async function executarVarredura(
     preco: number;
   }> = [];
 
-  // Uma consulta por rodada, e não por carta: a rodada inteira olha para o
-  // mesmo set. A Pokédex não usa o mapa.
-  const setId = vagas.find((v) => v.tipo === "set")?.setId;
-  const setPorEdid = setId ? await vinculosDoSet(db, setId) : new Map<number, string>();
+  // Uma consulta por rodada, e não por carta, para todos os sets das vagas —
+  // uma coleção pode juntar sets e ter carta avulsa de outro. A Pokédex não
+  // usa o mapa.
+  const setPorEdid = await vinculosDosSets(db, [
+    ...new Set(vagas.flatMap((v) => (v.tipo === "set" ? [v.setId] : []))),
+  ]);
 
   for (const vaga of vagas) {
     try {

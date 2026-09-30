@@ -221,7 +221,10 @@
     "erroRegiao": "Escolha ao menos uma região.",
     "erroExpansao": "Escolha uma expansão.",
     "erroCriar": "Falha ao criar a coleção.",
-    "erroRede": "Falha de rede ao criar a coleção."
+    "erroRede": "Falha de rede ao criar a coleção.",
+    "removerSet": "Tirar {set} da coleção",
+    "remover": "remover",
+    "ajudaVariosSets": "A coleção junta os sets escolhidos, na ordem da lista. Depois de criada, dá para incluir e excluir cartas avulsas."
   },
   "colecoesFalta": {
     "voltar": "← Coleções",
@@ -531,7 +534,23 @@
     "confirmaTroca": "Confirma a troca?",
     "trocar": "Trocar",
     "descartar": "Descartar",
-    "descartarTitulo": "Some com esta sugestão, só para esta vaga. Uma cópia melhor que apareça depois volta a sinalizar."
+    "descartarTitulo": "Some com esta sugestão, só para esta vaga. Uma cópia melhor que apareça depois volta a sinalizar.",
+    "tirarDaColecao": "tirar da coleção",
+    "confirmarTirarVazia": "Tirar {alvo} da coleção? A carta sai da lista do que falta.",
+    "confirmarTirarPreenchida": "Tirar {alvo} da coleção? A cópia alocada nesta vaga volta a ficar livre no inventário — ela não é apagada.",
+    "cartaTirada": "{alvo} saiu da coleção.",
+    "cartaTiradaCopiaLivre": "{alvo} saiu da coleção; a cópia voltou a ficar livre no inventário.",
+    "erroTirar": "Não foi possível tirar a carta da coleção.",
+    "incluirCartaAvulsa": "Incluir carta avulsa",
+    "campoNomeCarta": "Nome",
+    "campoSetCarta": "Set",
+    "campoNumeroCarta": "Número",
+    "erroBuscarCartas": "Não foi possível buscar cartas.",
+    "erroIncluir": "Não foi possível incluir a carta.",
+    "cartaIncluida": "{carta} entrou na coleção.",
+    "jaNaColecao": "já está na coleção",
+    "incluir": "Incluir",
+    "nenhumaCartaEncontrada": "Nenhuma carta encontrada."
   },
   "opcoesCompra": {
     "voltar": "← Voltar para a coleção",
@@ -652,6 +671,8 @@
     "arquivoNaoEhImagem": "Arquivo não reconhecido como imagem JPEG, PNG ou WEBP (checado pelo conteúdo, não pela extensão).",
     "arquivoVazio": "Arquivo vazio.",
     "cartaDeCatalogoDaCopiaNaoEncontrada": "Carta de catálogo da cópia não encontrada.",
+    "cartaForaDoCatalogoDaColecao": "A carta {carta} não existe no catálogo nos idiomas desta coleção ({idioma} e o outro idioma ocidental).",
+    "cartaJaNaColecao": "Esta carta já está na coleção.",
     "cartaNaoEncontradaNoCatalogo": "Carta {cartaId} ({idioma}) não encontrada no catálogo.",
     "colecaoDaVagaNaoEncontrada": "Coleção da vaga não encontrada.",
     "colecaoInvalida": "Coleção inválida.",
@@ -671,6 +692,7 @@
     "downloadRespostaComErro": "A URL respondeu com erro (HTTP {status}).",
     "downloadSemConteudo": "A resposta não trouxe conteúdo.",
     "downloadTempoEsgotado": "Tempo esgotado ao baixar a imagem.",
+    "edicaoDeCartasSoEmSet": "Incluir e excluir cartas avulsas só vale para coleção de set.",
     "edicaoEmMassaInvalida": "Edição em massa inválida.",
     "edicaoInvalida": "Edição inválida.",
     "escopoInvalido": "Escopo inválido.",

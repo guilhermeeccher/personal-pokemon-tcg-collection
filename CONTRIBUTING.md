@@ -50,7 +50,9 @@ The glossary below is the key. Read it once and the code reads fine.
 | `especie` | species | The Pokémon itself, which is what a Pokédex slot represents. |
 | `edicao` | edition | LigaPokemon's name for a set. `edicao_sigla` is their set code, `edid` their internal id. |
 | `identidade` | identity | Edition plus number, no leading zero: the bridge between a scan result and a buy choice. `lib/dominio/identidade-carta.ts`. |
-| `chave` | key | The identifier of a slot inside its collection (a Pokédex number, a card number in a set). |
+| `chave` | key | The identifier of a slot inside its collection: a Pokédex number, or `set/number` in a set collection (`30th/001`, see `lib/dominio/chave-vaga-set.ts`). |
+| `receita` | recipe | The sets a set collection was created from (`parametro.sets`). After creation the collection is its list of slots, edited card by card. |
+| `excluidas` | removed | Recipe cards the user took out of a set collection, so the secrets toggle does not bring them back. |
 | `secretas` | secret cards | Cards numbered above the official count of a set. A collection flag decides whether they get slots. |
 | `alocacao` | allocation | Attaching a copy to a slot. A copy is allocated to at most one slot, ever. |
 | `dominio` | domain | `src/lib/dominio/`: the pure, tested business-rule modules. |

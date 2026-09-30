@@ -29,7 +29,7 @@ import {
   type AlvoVagaSet,
 } from "@/lib/dominio/liga-set";
 import { JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS } from "@/lib/dominio/estimativa-varredura";
-import { compararLocalId } from "@/lib/dominio/ordenacao";
+import { compararChavesVaga, lerChaveVagaSet } from "@/lib/dominio/chave-vaga-set";
 import { ordemIdiomasPorCarta } from "@/lib/dominio/idioma-catalogo";
 import type { ParametroSet } from "@/lib/dominio/parametro-colecao";
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
@@ -96,8 +96,10 @@ export async function listarVagasVaziasPokedex(
  * a busca falhou de qualquer jeito.
  */
 export interface VagaVaziaSet {
-  /** `vaga.chave` — o `local_id` da carta no set. */
+  /** `vaga.chave` — `set/local_id` (`chave-vaga-set.ts`). */
   chave: string;
+  /** O `local_id` da carta: o número impresso, que é o que a Liga casa. */
+  numero: string;
   /** Nome exibido, no idioma de catálogo da coleção. */
   nome: string;
   /** Termo que vai para a busca deles — o nome em inglês, quando existe. */
@@ -124,7 +126,7 @@ export async function listarVagasVaziasSet(
   if (!dono || dono.tipo !== "set") return [];
 
   const parametro = dono.parametro as ParametroSet | null;
-  if (!parametro?.setId) return [];
+  if (!parametro?.sets?.length) return [];
 
   const vazias = await db
     .select({ chave: vaga.chave })
@@ -132,12 +134,22 @@ export async function listarVagasVaziasSet(
     .where(and(eq(vaga.colecaoId, colecaoId), isNull(vaga.copiaId)));
   if (vazias.length === 0) return [];
 
-  // As duas linhas de catálogo do set: a do idioma da coleção (exibição) e a
-  // inglesa (termo de busca). Uma consulta só — o set inteiro cabe folgado.
+  // O set e o número de cada vaga estão na chave dela (`chave-vaga-set.ts`):
+  // a coleção pode juntar sets e ter carta avulsa de outro.
+  const alvos = vazias.flatMap((v) => {
+    const partes = lerChaveVagaSet(v.chave);
+    return partes ? [{ chave: v.chave, ...partes }] : [];
+  });
+  const setIds = [...new Set(alvos.map((a) => a.setId))];
+  if (setIds.length === 0) return [];
+
+  // As linhas de catálogo dos sets: as do idioma da coleção (exibição) e as
+  // inglesas (termo de busca). Uma consulta só — os sets cabem folgados.
   const cartas = await db
     .select({
       id: cartaCatalogo.id,
       idioma: cartaCatalogo.idioma,
+      setId: cartaCatalogo.setId,
       localId: cartaCatalogo.localId,
       nome: cartaCatalogo.nome,
       raridade: cartaCatalogo.raridade,
@@ -147,7 +159,7 @@ export async function listarVagasVaziasSet(
     .from(cartaCatalogo)
     .where(
       and(
-        eq(cartaCatalogo.setId, parametro.setId),
+        inArray(cartaCatalogo.setId, setIds),
         eq(cartaCatalogo.ativa, true),
         inArray(cartaCatalogo.idioma, [
           ...new Set([...ordemIdiomasPorCarta(parametro.idiomaCatalogo), "en" as const]),
@@ -155,23 +167,28 @@ export async function listarVagasVaziasSet(
       ),
     );
 
-  const porIdiomaENumero = new Map<string, (typeof cartas)[number]>();
+  const porCarta = new Map<string, (typeof cartas)[number]>();
   for (const carta of cartas) {
-    porIdiomaENumero.set(`${carta.idioma}:${normalizarNumeroCarta(carta.localId)}`, carta);
+    porCarta.set(
+      `${carta.setId}:${carta.idioma}:${normalizarNumeroCarta(carta.localId)}`,
+      carta,
+    );
   }
 
-  const chaves = vazias.map((v) => v.chave).sort(compararLocalId);
+  const comparar = compararChavesVaga(parametro.sets);
+  alvos.sort((a, b) => comparar(a.chave, b.chave));
 
-  return chaves.flatMap((chave) => {
-    const numero = normalizarNumeroCarta(chave);
-    const daColecao = porIdiomaENumero.get(`${parametro.idiomaCatalogo}:${numero}`);
-    const emIngles = porIdiomaENumero.get(`en:${numero}`);
+  return alvos.flatMap(({ chave, setId, localId }) => {
+    const numero = normalizarNumeroCarta(localId);
+    const daCarta = (idioma: string) => porCarta.get(`${setId}:${idioma}:${numero}`);
+    const daColecao = daCarta(parametro.idiomaCatalogo);
+    const emIngles = daCarta("en");
     // A mesma ordem carta a carta da tela da coleção (`ordemIdiomasPorCarta`):
     // numa coleção en, a carta que só tem ficha pt ainda resolve.
     const principal =
       daColecao ??
       ordemIdiomasPorCarta(parametro.idiomaCatalogo)
-        .map((idioma) => porIdiomaENumero.get(`${idioma}:${numero}`))
+        .map(daCarta)
         .find((c) => c !== undefined);
     // Vaga cujo número não resolve carta no catálogo fica de fora: sem nome não
     // há o que buscar, e mandar o número puro traria qualquer carta com aquele
@@ -185,10 +202,11 @@ export async function listarVagasVaziasSet(
     return [
       {
         chave,
+        numero: localId,
         nome: principal.nome,
         nomeBusca,
         nomeAlternativo,
-        setId: parametro.setId,
+        setId,
         setSigla: principal.setSigla,
         setNome: principal.setNome,
         cartaId: principal.id,
@@ -240,14 +258,15 @@ export async function ultimaConsultaPorChave(
  * edições colhidas e nenhuma vinculada, então na prática o casamento se apoia
  * na sigla — e este mapa é a porta para quando isso mudar.
  */
-export async function vinculosDoSet(
+export async function vinculosDosSets(
   db: Database,
-  setId: string,
+  setIds: readonly string[],
 ): Promise<Map<number, string>> {
+  if (setIds.length === 0) return new Map();
   const linhas = await db
     .select({ edid: ligaEdicao.edid, setId: ligaEdicao.setId })
     .from(ligaEdicao)
-    .where(eq(ligaEdicao.setId, setId));
+    .where(inArray(ligaEdicao.setId, [...setIds]));
   return new Map(linhas.map((l) => [l.edid, l.setId as string]));
 }
 
@@ -266,7 +285,7 @@ export function casarComVagaSet(
   if (linhas.length === 0) return [];
 
   const alvo: AlvoVagaSet = {
-    numero: vagaSet.chave,
+    numero: vagaSet.numero,
     setId: vagaSet.setId,
     setSigla: vagaSet.setSigla,
   };

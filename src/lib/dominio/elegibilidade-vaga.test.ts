@@ -58,8 +58,8 @@ describe("pertenceAoUniversoDaVaga — pokedex", () => {
 describe("pertenceAoUniversoDaVaga — set", () => {
   const vagaSet = {
     tipo: "set" as const,
-    chave: "025",
-    parametro: { setId: "sv03.5", idiomaCatalogo: "pt" as const, incluirSecretas: false },
+    chave: "sv03.5/025",
+    parametro: { sets: ["sv03.5"], idiomaCatalogo: "pt" as const, incluirSecretas: false },
     idiomaExigido: null,
   };
 
@@ -80,6 +80,18 @@ describe("pertenceAoUniversoDaVaga — set", () => {
   it("recusa carta do mesmo set mas outro local_id", () => {
     const r = pertenceAoUniversoDaVaga(vagaSet, { setId: "sv03.5", localId: "026", dexIds: [] });
     expect(r.ok).toBe(false);
+  });
+
+  it("numa coleção que junta sets, o mesmo número de outro set não serve", () => {
+    // Caso real (2026-09-30): 30th e 30th-c têm, os dois, uma carta "001".
+    const vaga = { ...vagaSet, chave: "30th-c/001", parametro: { ...vagaSet.parametro, sets: ["30th", "30th-c"] } };
+    expect(pertenceAoUniversoDaVaga(vaga, { setId: "30th", localId: "001", dexIds: [] }).ok).toBe(false);
+    expect(pertenceAoUniversoDaVaga(vaga, { setId: "30th-c", localId: "001", dexIds: [] }).ok).toBe(true);
+  });
+
+  it("carta avulsa de um set fora da receita serve na vaga dela", () => {
+    const vaga = { ...vagaSet, chave: "base1/4" };
+    expect(pertenceAoUniversoDaVaga(vaga, { setId: "base1", localId: "4", dexIds: [6] }).ok).toBe(true);
   });
 });
 

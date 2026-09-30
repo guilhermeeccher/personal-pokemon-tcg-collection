@@ -181,6 +181,36 @@ describe("dividirListaCompra", () => {
     ]);
   });
 
+  it("coleção de um set só continua com a aba simples", () => {
+    const abas = dividirListaCompra(
+      [linha({ chave: "30th/002" }), linha({ chave: "30th/001" })],
+      "set",
+    );
+    expect(abas.map((a) => [a.id, a.setId, a.linhas.map((l) => l.chave)])).toEqual([
+      ["lista-1", null, ["30th/001", "30th/002"]],
+    ]);
+  });
+
+  it("coleção que junta sets: uma aba por set, na ordem da receita, avulsa depois", () => {
+    // Caso real (2026-09-30): 30th + 30th-c, com uma carta avulsa do me01.
+    const abas = dividirListaCompra(
+      [
+        linha({ chave: "me01/005" }),
+        linha({ chave: "30th-c/001" }),
+        linha({ chave: "30th/010" }),
+        linha({ chave: "30th/2" }),
+      ],
+      "set",
+      LIMITE_COMPRA_POR_LISTA,
+      ["30th", "30th-c"],
+    );
+    expect(abas.map((a) => [a.id, a.setId, a.linhas.map((l) => l.chave)])).toEqual([
+      ["set-30th-1", "30th", ["30th/2", "30th/010"]],
+      ["set-30th-c-1", "30th-c", ["30th-c/001"]],
+      ["set-me01-1", "me01", ["me01/005"]],
+    ]);
+  });
+
   it("lista vazia não tem aba", () => {
     expect(dividirListaCompra([], "pokedex")).toEqual([]);
     expect(dividirListaCompra([], "set")).toEqual([]);

@@ -141,6 +141,13 @@
       "when": 1790775258274,
       "tag": "0019_violet_kree",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790778334822,
+      "tag": "0020_receita_e_chave_de_set",
+      "breakpoints": true
     }
   ]
 }

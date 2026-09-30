@@ -49,8 +49,10 @@ export default function NovaColecaoPage() {
   const [escopo, setEscopo] = useState<"nacional" | "regioes">("nacional");
   const [regioesEscolhidas, setRegioesEscolhidas] = useState<Regiao[]>([]);
 
-  // set
-  const [setEscolhido, setSetEscolhido] = useState<SetParaCadastroDTO | null>(null);
+  // set — a RECEITA: um ou mais sets, na ordem em que foram escolhidos. O
+  // 30th Celebration e a Coleção Clássica dele são sets separados no
+  // catálogo, e o usuário quer os dois numa coleção só (2026-09-30).
+  const [setsEscolhidos, setSetsEscolhidos] = useState<SetParaCadastroDTO[]>([]);
   const [idiomaCatalogo, setIdiomaCatalogo] = useState<IdiomaCatalogo>("pt");
   const [incluirSecretas, setIncluirSecretas] = useState(false);
 
@@ -58,8 +60,11 @@ export default function NovaColecaoPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [detalhesErro, setDetalhesErro] = useState<string[]>([]);
 
-  function selecionarSet(set: SetParaCadastroDTO | null) {
-    setSetEscolhido(set);
+  function adicionarSet(set: SetParaCadastroDTO | null) {
+    if (!set) return;
+    setSetsEscolhidos((atuais) =>
+      atuais.some((s) => s.setId === set.setId) ? atuais : [...atuais, set],
+    );
     // O idioma é a PREFERÊNCIA da coleção: a ficha é escolhida carta a
     // carta (`escolherLinhaPorCarta`), e pt completa com en onde falta.
     // Por isso pt é o padrão de todo set ocidental, mesmo sem nenhuma
@@ -90,11 +95,11 @@ export default function NovaColecaoPage() {
           ? { escopo: "nacional" }
           : { escopo: "regioes", regioes: regioesEscolhidas };
     } else if (tipo === "set") {
-      if (!setEscolhido) {
+      if (setsEscolhidos.length === 0) {
         setErro(t("erroExpansao"));
         return;
       }
-      parametro = { setId: setEscolhido.setId, idiomaCatalogo, incluirSecretas };
+      parametro = { sets: setsEscolhidos.map((s) => s.setId), idiomaCatalogo, incluirSecretas };
     } else {
       parametro = null;
     }
@@ -191,11 +196,40 @@ export default function NovaColecaoPage() {
         {tipo === "set" && (
           <fieldset className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
             <legend className="px-2 text-[13px] font-bold text-strong">{t("expansao")}</legend>
+            {setsEscolhidos.length > 0 && (
+              <ul className="flex flex-col gap-1">
+                {setsEscolhidos.map((set) => (
+                  <li
+                    key={set.setId}
+                    className="flex items-center justify-between gap-2 rounded border border-line px-3 py-1.5 text-sm"
+                  >
+                    <span>
+                      {set.setNome} <span className="text-muted">· {set.setId}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSetsEscolhidos((atuais) => atuais.filter((s) => s.setId !== set.setId))
+                      }
+                      className="text-xs text-muted hover:text-danger"
+                      aria-label={t("removerSet", { set: set.setNome })}
+                    >
+                      {t("remover")}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
             <SeletorExpansao
-              setSelecionadoId={setEscolhido?.setId ?? ""}
-              onSelecionar={selecionarSet}
+              // Sempre vazio: escolher um set o acrescenta à receita, e o
+              // seletor fica livre para o próximo.
+              setSelecionadoId=""
+              onSelecionar={adicionarSet}
             />
-            {setEscolhido && (
+            {setsEscolhidos.length > 1 && (
+              <span className="text-xs text-muted">{t("ajudaVariosSets")}</span>
+            )}
+            {setsEscolhidos.length > 0 && (
               <>
                 <Campo rotulo={t("campoIdiomaCatalogo")}>
                   <select
@@ -206,7 +240,7 @@ export default function NovaColecaoPage() {
                     <option value="pt">pt</option>
                     <option value="en">en</option>
                   </select>
-                  {!setEscolhido.temPt && (
+                  {setsEscolhidos.some((s) => !s.temPt) && (
                     <span className="text-xs text-warning-fg">{t("semPt")}</span>
                   )}
                 </Campo>
@@ -217,8 +251,13 @@ export default function NovaColecaoPage() {
                     onChange={(e) => setIncluirSecretas(e.target.checked)}
                   />
                   {t("incluirSecretas", {
-                    total: setEscolhido.qtdTotal,
-                    oficiais: setEscolhido.qtdOficial,
+                    total: setsEscolhidos.reduce((soma, s) => soma + s.qtdTotal, 0),
+                    // Set sem numeração oficial (a Clássica do 30th) conta
+                    // o total dos dois lados: não tem secretas a ligar.
+                    oficiais: setsEscolhidos.reduce(
+                      (soma, s) => soma + (s.qtdOficial > 0 ? s.qtdOficial : s.qtdTotal),
+                      0,
+                    ),
                   })}
                 </label>
               </>

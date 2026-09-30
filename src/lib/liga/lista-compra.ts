@@ -50,6 +50,10 @@ export function linhaDaEscolha(e: EscolhaSalva): LinhaListaCompra {
 export interface AbaLigaDTO {
   id: string;
   regiao: Regiao | null;
+  /** Set da aba, numa coleção que junta sets; nulo nas outras. */
+  setId: string | null;
+  /** Nome do set da aba, para o rótulo. Nulo quando `setId` é nulo. */
+  setNome: string | null;
   parte: number;
   partes: number;
   /** O texto que o botão Copiar leva — só desta aba. */
@@ -66,10 +70,14 @@ export interface AbaLigaDTO {
 export function abasDaLista(
   linhas: readonly LinhaListaCompra[],
   tipo: "pokedex" | "set",
+  ordemSets: readonly string[] = [],
+  nomesSets: ReadonlyMap<string, string> = new Map(),
 ): AbaLigaDTO[] {
-  return dividirListaCompra(linhas, tipo).map((aba) => ({
+  return dividirListaCompra(linhas, tipo, undefined, ordemSets).map((aba) => ({
     id: aba.id,
     regiao: aba.regiao,
+    setId: aba.setId,
+    setNome: aba.setId === null ? null : (nomesSets.get(aba.setId) ?? aba.setId),
     parte: aba.parte,
     partes: aba.partes,
     texto: gerarListaLiga(aba.linhas),

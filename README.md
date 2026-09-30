@@ -54,7 +54,9 @@ It is not for anyone who wants a public, multi-user site, or sales and trading c
 - **Inventory** with search and filters: set, language, rarity, variant, condition, graded, location,
   allocated or free.
 - **Collections** of three kinds: Pokédex, complete set or custom. Each one has a grid of slots, copy
-  allocation and **the list of what is missing** — which is the main output of the system.
+  allocation and **the list of what is missing** — which is the main output of the system. A set
+  collection can join several sets (an expansion and its classic collection, say), and once created
+  it is yours to edit: add a single card from any set, or take one out.
 - **Duplicates** — what is left over for trading, with total, allocated and free per card.
 - **Overview** — totals and distribution by expansion, rarity, language, condition and variant, plus
   the progress of each collection.

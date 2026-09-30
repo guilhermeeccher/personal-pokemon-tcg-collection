@@ -48,7 +48,7 @@ describe("validarParametroColecao — pokedex", () => {
 });
 
 describe("validarParametroColecao — set", () => {
-  it("aceita setId, idiomaCatalogo e incluirSecretas válidos", () => {
+  it("aceita o formato antigo (setId) e o converte para a receita de um set", () => {
     const r = validarParametroColecao("set", {
       setId: "sv03.5",
       idiomaCatalogo: "en",
@@ -58,9 +58,39 @@ describe("validarParametroColecao — set", () => {
     if (r.ok) {
       expect(r.resultado).toEqual({
         tipo: "set",
-        parametro: { setId: "sv03.5", idiomaCatalogo: "en", incluirSecretas: true },
+        parametro: { sets: ["sv03.5"], idiomaCatalogo: "en", incluirSecretas: true },
       });
     }
+  });
+
+  it("aceita vários sets, na ordem dada, sem repetir", () => {
+    // Caso real (2026-09-30): o 30th Celebration e a Coleção Clássica dele.
+    const r = validarParametroColecao("set", {
+      sets: ["30th", "30th-c", "30th"],
+      idiomaCatalogo: "pt",
+      incluirSecretas: false,
+    });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.resultado.parametro).toEqual({
+        sets: ["30th", "30th-c"],
+        idiomaCatalogo: "pt",
+        incluirSecretas: false,
+      });
+    }
+  });
+
+  it("rejeita lista de sets vazia ou com item inválido", () => {
+    for (const sets of [[], [""], [42]]) {
+      const r = validarParametroColecao("set", { sets, idiomaCatalogo: "pt", incluirSecretas: false });
+      expect(r.ok).toBe(false);
+    }
+  });
+
+  it("rejeita mais sets do que o teto", () => {
+    const sets = Array.from({ length: 11 }, (_, i) => `s${i}`);
+    const r = validarParametroColecao("set", { sets, idiomaCatalogo: "pt", incluirSecretas: false });
+    expect(r.ok).toBe(false);
   });
 
   it("rejeita setId ausente", () => {

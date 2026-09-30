@@ -60,10 +60,10 @@ import {
   regiaoDoNumero,
   type Regiao,
 } from "./escopo-pokedex";
-import { compararLocalId } from "./ordenacao";
+import { compararChavesVaga, lerChaveVagaSet } from "./chave-vaga-set";
 
 export interface LinhaListaCompra {
-  /** Chave da vaga: número da Pokédex ou `local_id` do set. */
+  /** Chave da vaga: número da Pokédex ou `set/local_id` (`chave-vaga-set.ts`). */
   chave: string;
   /** Espécie da vaga de Pokédex. Nula em coleção de set, onde a vaga é a carta. */
   especie: string | null;
@@ -196,6 +196,11 @@ export interface AbaListaCompra {
    * mas sumir com ela da lista seria pior que agrupá-la à parte.
    */
   regiao: Regiao | null;
+  /**
+   * Set da aba, numa coleção que junta sets. Nulo na Pokédex e na coleção
+   * de um set só, que continua com a aba simples.
+   */
+  setId: string | null;
   /** 1-based. Com `partes` > 1, a tela escreve `Kanto (1/2)`. */
   parte: number;
   partes: number;
@@ -212,13 +217,15 @@ function regiaoDaChave(chave: string): Regiao | null {
 
 function fatiar(
   linhas: readonly LinhaListaCompra[],
-  regiao: Regiao | null,
+  grupo: { regiao: Regiao | null; setId: string | null },
   limite: number,
 ): AbaListaCompra[] {
   const partes = Math.ceil(linhas.length / limite);
+  const prefixo = grupo.regiao ?? (grupo.setId !== null ? `set-${grupo.setId}` : "lista");
   return Array.from({ length: partes }, (_, i) => ({
-    id: `${regiao ?? "lista"}-${i + 1}`,
-    regiao,
+    id: `${prefixo}-${i + 1}`,
+    regiao: grupo.regiao,
+    setId: grupo.setId,
     parte: i + 1,
     partes,
     linhas: linhas.slice(i * limite, (i + 1) * limite),
@@ -241,6 +248,10 @@ function fatiar(
  *   correspondem ao fichário. Região acima do limite vira `Kanto (1/2)`,
  *   `Kanto (2/2)`.
  * - **Set: uma aba só enquanto couber**, depois `Lista (1/2)`...
+ * - **Coleção que junta sets: uma aba por set** (2026-09-30), na ordem da
+ *   receita, pelo mesmo motivo da região — a lista corresponde ao fichário
+ *   de cada set, ao custo de uma colagem a mais. Carta avulsa de um set fora
+ *   da receita ganha a aba do set dela, depois das da receita.
  *
  * A aba **enche até o limite** e o resto vai para a próxima (130 = 110 + 20),
  * em vez de equilibrar: é o que minimiza o número de colagens.
@@ -254,10 +265,23 @@ export function dividirListaCompra(
   linhas: readonly LinhaListaCompra[],
   tipo: "pokedex" | "set",
   limite: number = LIMITE_COMPRA_POR_LISTA,
+  ordemSets: readonly string[] = [],
 ): AbaListaCompra[] {
-  const ordenadas = [...linhas].sort((a, b) => compararLocalId(a.chave, b.chave));
+  const comparar = compararChavesVaga(ordemSets);
+  const ordenadas = [...linhas].sort((a, b) => comparar(a.chave, b.chave));
 
-  if (tipo === "set") return fatiar(ordenadas, null, limite);
+  if (tipo === "set") {
+    // A ordenação já agrupa por set; cada troca de set abre um grupo.
+    const porSet: { setId: string | null; linhas: LinhaListaCompra[] }[] = [];
+    for (const l of ordenadas) {
+      const setId = lerChaveVagaSet(l.chave)?.setId ?? null;
+      const ultimo = porSet.at(-1);
+      if (ultimo && ultimo.setId === setId) ultimo.linhas.push(l);
+      else porSet.push({ setId, linhas: [l] });
+    }
+    if (porSet.length <= 1) return fatiar(ordenadas, { regiao: null, setId: null }, limite);
+    return porSet.flatMap((g) => fatiar(g.linhas, { regiao: null, setId: g.setId }, limite));
+  }
 
   const porRegiao = new Map<Regiao | null, LinhaListaCompra[]>();
   for (const l of ordenadas) {
@@ -270,6 +294,6 @@ export function dividirListaCompra(
   // Ordem da Nacional, e o grupo sem região por último.
   return [...REGIOES, null].flatMap((regiao) => {
     const grupo = porRegiao.get(regiao);
-    return grupo ? fatiar(grupo, regiao, limite) : [];
+    return grupo ? fatiar(grupo, { regiao, setId: null }, limite) : [];
   });
 }

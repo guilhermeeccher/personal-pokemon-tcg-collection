@@ -178,8 +178,10 @@ export function ordenarOpcoes<T extends OpcaoCompra>(opcoes: T[], ordenacao: Ord
 
 /** A vaga vazia como o agrupamento precisa vê-la, nos dois tipos de coleção. */
 export interface VagaParaAgrupar {
-  /** Número da Pokédex ou `local_id` do set. */
+  /** Número da Pokédex ou `set/local_id` (`chave-vaga-set.ts`). */
   chave: string;
+  /** Nome do set da carta, em coleção de set — a tela agrupa por ele quando há mais de um. */
+  setNome?: string | null;
   /** O que a tela chama a vaga: a espécie (Pokédex) ou o nome da carta (set). */
   rotulo: string;
   /** Número da Pokédex, para a tela formatar "001". Nulo em coleção de set. */

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db/client";
-import { obterColecaoPorId } from "@/lib/db/consultas";
+import { nomesDosSets, obterColecaoPorId } from "@/lib/db/consultas";
 import {
   criarVarredura,
   encerrarVarredurasMortas,
@@ -34,7 +34,8 @@ import {
   type VagaParaAgrupar,
 } from "@/lib/dominio/liga-opcoes";
 import { listarEscolhas } from "@/lib/db/escolhas";
-import { compararLocalId } from "@/lib/dominio/ordenacao";
+import { compararChavesVaga, lerChaveVagaSet } from "@/lib/dominio/chave-vaga-set";
+import type { ParametroSet } from "@/lib/dominio/parametro-colecao";
 import { listarSemEstoqueVigente } from "@/lib/db/sem-estoque";
 import { chaveSemEstoque } from "@/lib/dominio/sem-estoque-liga";
 import { totalDaLista } from "@/lib/dominio/exportacao-lista-compra";
@@ -141,7 +142,7 @@ async function vagasParaAgrupar(
     return vagas.map((v) => ({ chave: v.chave, rotulo: v.especie, dex: v.dex }));
   }
   const vagas = await listarVagasVaziasSet(db, colecaoId);
-  return vagas.map((v) => ({ chave: v.chave, rotulo: v.nome, dex: null }));
+  return vagas.map((v) => ({ chave: v.chave, rotulo: v.nome, dex: null, setNome: v.setNome }));
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -270,7 +271,7 @@ function vagasComVariasEscolhas(
   return [...porVaga]
     .filter(([, v]) => v.quantidade > 1)
     .map(([chave, v]) => ({ chave, ...v }))
-    .sort((a, b) => compararLocalId(a.chave, b.chave));
+    .sort((a, b) => compararChavesVaga()(a.chave, b.chave));
 }
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -318,13 +319,24 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const daLista = escolhas.filter((e) => e.vagaVazia);
   const linhas = daLista.map(linhaDaEscolha);
 
+  // Coleção que junta sets: uma aba por set, com o nome dele no rótulo.
+  const ordemSets = colecao.tipo === "set" ? ((colecao.parametro as ParametroSet).sets ?? []) : [];
+  const nomesSets =
+    colecao.tipo === "set"
+      ? await nomesDosSets(
+          db,
+          [...new Set(linhas.flatMap((l) => lerChaveVagaSet(l.chave)?.setId ?? []))],
+          (colecao.parametro as ParametroSet).idiomaCatalogo,
+        )
+      : new Map<string, string>();
+
   const precos = daLista.map((e) => e.precoEm).filter((d): d is Date => d !== null);
   const resumoDaLista = {
     selecionadas: daLista.length,
     guardadas: escolhas.length - daLista.length,
     // Em abas de até 110 cartas, o limite da Compra por Lista deles — por
     // região na Pokédex. Ver `dividirListaCompra`.
-    abasLiga: abasDaLista(linhas, colecao.tipo),
+    abasLiga: abasDaLista(linhas, colecao.tipo, ordemSets, nomesSets),
     // Vagas com mais de uma carta na string. Várias por vaga é permitido
     // (decisão de 2026-09-17), então é aviso, não recusa: na Pokédex é quase
     // sempre sobra de triagem, e cada linha a mais é uma carta a mais comprada.

@@ -6,8 +6,9 @@
  *
  * - `pokedex`: as chaves são os números do escopo (`escopo-pokedex.ts`),
  *   como texto.
- * - `set`: as chaves são os `local_id` das cartas do set, ordenados de
- *   forma natural (`ordenacao.ts` — sets têm `local_id` não-numérico:
+ * - `set`: uma vaga por carta de cada set da receita, com a chave
+ *   qualificada pelo set (`chaveVagaSet`: `30th/001`). Dentro de cada set,
+ *   os `local_id` das cartas, ordenados de forma natural (`ordenacao.ts` — sets têm `local_id` não-numérico:
  *   promos, "TG01", "SV001") e cortados na contagem oficial ou total
  *   (regra 4: a flag "incluir secretas" troca para `cardCount.total`).
  * - `customizada`: nenhuma vaga nasce na criação — a vaga nasce ao
@@ -23,12 +24,20 @@
  * vazia em silêncio.
  */
 
+import { chaveVagaSet } from "./chave-vaga-set";
 import { compararLocalId } from "./ordenacao";
 import {
   resolverEscopoNacional,
   resolverEscopoRegioes,
 } from "./escopo-pokedex";
-import { resolverUniversoVagasSet } from "./numeracao-oficial-set";
+import {
+  detectarCatalogoIncompleto,
+  type AvisoCatalogoIncompleto,
+} from "./catalogo-incompleto";
+import {
+  resolverUniversoVagasSet,
+  type AvisoSemNumeracaoOficial,
+} from "./numeracao-oficial-set";
 import type { ParametroPokedex } from "./parametro-colecao";
 
 export function resolverChavesVagasPokedex(
@@ -68,6 +77,76 @@ export function resolverChavesVagasSet(entrada: EntradaVagasSet): string[] {
   return [...entrada.localIdsDoSet].sort(compararLocalId).slice(0, vagasEsperadas);
 }
 
+export interface EntradaSetDaReceita {
+  setId: string;
+  /** Todos os `local_id` do set (carta a carta, `escolherLinhaPorCarta`). */
+  localIdsDoSet: readonly string[];
+  qtdOficial: number;
+  qtdTotal: number;
+}
+
+/**
+ * As chaves de uma coleção de set: cada set da receita cortado pela regra
+ * 4 (`resolverChavesVagasSet`), na ordem da receita, qualificado pelo set,
+ * e sem as cartas que o usuário tirou (`excluidas`).
+ */
+export function resolverChavesVagasReceita(
+  sets: readonly EntradaSetDaReceita[],
+  incluirSecretas: boolean,
+  excluidas: readonly string[] = [],
+): string[] {
+  const fora = new Set(excluidas);
+  return sets.flatMap((set) =>
+    resolverChavesVagasSet({ ...set, incluirSecretas })
+      .map((localId) => chaveVagaSet(set.setId, localId))
+      .filter((chave) => !fora.has(chave)),
+  );
+}
+
+export interface AvisosDaReceita {
+  avisoCatalogoIncompleto: AvisoCatalogoIncompleto | null;
+  avisoSemNumeracaoOficial: AvisoSemNumeracaoOficial | null;
+}
+
+/**
+ * Os avisos de uma coleção de set, somados por set da receita.
+ *
+ * **Medem o CATÁLOGO, não as vagas (2026-09-30).** Antes o aviso de
+ * incompleto comparava as vagas da coleção com o universo esperado; com a
+ * coleção editável carta a carta, uma exclusão do usuário viraria um falso
+ * "catálogo incompleto", e uma carta avulsa esconderia um buraco de verdade.
+ * O que se compara agora é quantas vagas o catálogo conseguiria materializar
+ * para cada set contra quantas a regra 4 pede — exatamente a pergunta "o
+ * upstream conhece o set inteiro?".
+ */
+export function avisosDaReceita(
+  sets: readonly EntradaSetDaReceita[],
+  incluirSecretas: boolean,
+): AvisosDaReceita {
+  let materializaveis = 0;
+  let esperadas = 0;
+  let totalSemNumeracao = 0;
+  let algumSemNumeracao = false;
+  for (const set of sets) {
+    const universo = resolverUniversoVagasSet({
+      qtdOficial: set.qtdOficial,
+      qtdTotal: set.qtdTotal,
+      incluirSecretas,
+      qtdCartasNoCatalogo: set.localIdsDoSet.length,
+    });
+    esperadas += universo.vagasEsperadas;
+    materializaveis += resolverChavesVagasSet({ ...set, incluirSecretas }).length;
+    if (universo.avisoSemNumeracaoOficial) {
+      algumSemNumeracao = true;
+      totalSemNumeracao += universo.avisoSemNumeracaoOficial.qtdTotal;
+    }
+  }
+  return {
+    avisoCatalogoIncompleto: detectarCatalogoIncompleto(materializaveis, esperadas),
+    avisoSemNumeracaoOficial: algumSemNumeracao ? { qtdTotal: totalSemNumeracao } : null,
+  };
+}
+
 /** `customizada`: nenhuma vaga é gerada na criação (spec §3.3). */
 export function resolverChavesVagasCustomizada(): string[] {
   return [];
@@ -75,7 +154,12 @@ export function resolverChavesVagasCustomizada(): string[] {
 
 export type EntradaResolverChavesVagas =
   | { tipo: "pokedex"; parametro: ParametroPokedex }
-  | ({ tipo: "set" } & EntradaVagasSet)
+  | {
+      tipo: "set";
+      sets: readonly EntradaSetDaReceita[];
+      incluirSecretas: boolean;
+      excluidas?: readonly string[];
+    }
   | { tipo: "customizada" };
 
 /** Dispatcher por tipo — o que a rota de criação de coleção chama. */
@@ -86,7 +170,7 @@ export function resolverChavesVagas(
     case "pokedex":
       return resolverChavesVagasPokedex(entrada.parametro);
     case "set":
-      return resolverChavesVagasSet(entrada);
+      return resolverChavesVagasReceita(entrada.sets, entrada.incluirSecretas, entrada.excluidas);
     case "customizada":
       return resolverChavesVagasCustomizada();
   }

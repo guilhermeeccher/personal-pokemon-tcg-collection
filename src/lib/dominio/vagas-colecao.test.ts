@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  avisosDaReceita,
   resolverChavesVagas,
   resolverChavesVagasCustomizada,
   resolverChavesVagasPokedex,
@@ -112,18 +113,75 @@ describe("resolverChavesVagas (dispatcher)", () => {
     expect(chaves).toHaveLength(1025);
   });
 
-  it("despacha set corretamente", () => {
+  it("despacha set corretamente, com a chave qualificada pelo set", () => {
     const chaves = resolverChavesVagas({
       tipo: "set",
-      localIdsDoSet: ["001", "002", "003"],
-      qtdOficial: 2,
-      qtdTotal: 3,
+      sets: [{ setId: "sv03.5", localIdsDoSet: ["001", "002", "003"], qtdOficial: 2, qtdTotal: 3 }],
       incluirSecretas: false,
     });
-    expect(chaves).toEqual(["001", "002"]);
+    expect(chaves).toEqual(["sv03.5/001", "sv03.5/002"]);
+  });
+
+  it("junta os sets da receita, na ordem dela, cada um com o seu corte", () => {
+    // Caso real (2026-09-30): o 30th e a Coleção Clássica dele, que não tem
+    // numeração oficial separada (oficial 0, 30 cartas).
+    const chaves = resolverChavesVagas({
+      tipo: "set",
+      sets: [
+        { setId: "30th", localIdsDoSet: ["003", "001", "002"], qtdOficial: 2, qtdTotal: 3 },
+        { setId: "30th-c", localIdsDoSet: ["001", "002"], qtdOficial: 0, qtdTotal: 2 },
+      ],
+      incluirSecretas: false,
+    });
+    expect(chaves).toEqual(["30th/001", "30th/002", "30th-c/001", "30th-c/002"]);
+  });
+
+  it("deixa de fora as cartas que o usuário tirou", () => {
+    const chaves = resolverChavesVagas({
+      tipo: "set",
+      sets: [{ setId: "30th", localIdsDoSet: ["001", "002", "003"], qtdOficial: 2, qtdTotal: 3 }],
+      incluirSecretas: true,
+      excluidas: ["30th/002"],
+    });
+    expect(chaves).toEqual(["30th/001", "30th/003"]);
   });
 
   it("despacha customizada corretamente", () => {
     expect(resolverChavesVagas({ tipo: "customizada" })).toEqual([]);
+  });
+});
+
+describe("avisosDaReceita", () => {
+  it("receita com catálogo completo não gera aviso", () => {
+    const r = avisosDaReceita(
+      [{ setId: "30th", localIdsDoSet: ["001", "002", "003"], qtdOficial: 2, qtdTotal: 3 }],
+      false,
+    );
+    expect(r).toEqual({ avisoCatalogoIncompleto: null, avisoSemNumeracaoOficial: null });
+  });
+
+  it("soma a lacuna de cada set da receita", () => {
+    // Caso real de 2026-09-30, antes da importação: o 30th com 2 cartas de 128.
+    const r = avisosDaReceita(
+      [
+        { setId: "30th", localIdsDoSet: ["001", "002"], qtdOficial: 128, qtdTotal: 128 },
+        { setId: "me01", localIdsDoSet: ["001", "002"], qtdOficial: 2, qtdTotal: 2 },
+      ],
+      false,
+    );
+    expect(r.avisoCatalogoIncompleto).toEqual({
+      vagasMaterializadas: 4,
+      vagasEsperadas: 130,
+      vagasFaltantes: 126,
+    });
+  });
+
+  it("set sem numeração oficial avisa com o total que virou universo", () => {
+    const r = avisosDaReceita(
+      [{ setId: "30th-c", localIdsDoSet: ["001", "002"], qtdOficial: 0, qtdTotal: 2 }],
+      false,
+    );
+    expect(r.avisoSemNumeracaoOficial).toEqual({ qtdTotal: 2 });
+    expect(r.avisoCatalogoIncompleto).toBeNull();
   });
 });

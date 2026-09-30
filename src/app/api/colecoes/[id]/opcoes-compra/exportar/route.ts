@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import type { ParametroSet } from "@/lib/dominio/parametro-colecao";
 import { db } from "@/lib/db/client";
 import { obterColecaoPorId } from "@/lib/db/consultas";
 import { listarEscolhas } from "@/lib/db/escolhas";
@@ -65,7 +66,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     let daAba = linhas;
     if (idAba !== null) {
       const tipo = colecao.tipo === "pokedex" ? "pokedex" : "set";
-      const aba = dividirListaCompra(linhas, tipo).find((a) => a.id === idAba);
+      // A mesma ordem de sets da tela, para o `id` da aba bater com o dela.
+      const ordemSets = tipo === "set" ? ((colecao.parametro as ParametroSet).sets ?? []) : [];
+      const aba = dividirListaCompra(linhas, tipo, undefined, ordemSets).find(
+        (a) => a.id === idAba,
+      );
       if (!aba) {
         // A lista mudou entre abrir a tela e clicar (uma carta cadastrada
         // pode sumir com a última aba). Melhor recusar que baixar outra aba.

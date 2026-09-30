@@ -28,7 +28,7 @@ import {
   type Regiao,
 } from "@/lib/dominio/escopo-pokedex";
 import { LIMITE_COMPRA_POR_LISTA } from "@/lib/dominio/exportacao-lista-compra";
-import { compararLocalId } from "@/lib/dominio/ordenacao";
+import { compararChavesVaga, rotuloChaveVaga } from "@/lib/dominio/chave-vaga-set";
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
 import { Icone } from "@/app/_componentes/icone";
@@ -97,6 +97,8 @@ interface VagaDTO {
   chave: string;
   /** A espécie, na Pokédex; o nome da carta, no set. */
   rotulo: string;
+  /** Nome do set da carta, em coleção de set. */
+  setNome?: string | null;
   dex: number | null;
   opcoes: OpcaoDTO[];
   descartadas: number;
@@ -129,6 +131,8 @@ interface RitmoDTO {
 interface AbaLigaDTO {
   id: string;
   regiao: Regiao | null;
+  /** Nome do set da aba, numa coleção que junta sets. */
+  setNome: string | null;
   parte: number;
   partes: number;
   texto: string;
@@ -185,18 +189,31 @@ function menorPreco(vaga: VagaDTO): number | null {
   return Math.min(...vaga.opcoes.map((o) => o.preco));
 }
 
-/** Uma região da Pokédex e as vagas dela, na ordem em que a grade as desenha. */
+/** Uma região da Pokédex (ou um set) e as vagas dela, na ordem em que a grade as desenha. */
 interface GrupoVagas {
   regiao: Regiao | null;
+  /** Título do grupo numa coleção que junta sets; nulo nas outras. */
+  setNome: string | null;
   vagas: VagaDTO[];
 }
 
 /**
  * Agrupa por região, preservando a ordem de entrada. Coleção de set não tem
- * região: é um grupo só, sem título.
+ * região: é um grupo só, sem título — ou, quando junta sets, um grupo por
+ * set, na ordem em que o set aparece primeiro (2026-09-30).
  */
 function agruparPorRegiao(vagas: readonly VagaDTO[], ehSet: boolean): GrupoVagas[] {
-  if (ehSet) return [{ regiao: null, vagas: [...vagas] }];
+  if (ehSet) {
+    const porSet = new Map<string, VagaDTO[]>();
+    for (const vaga of vagas) {
+      const nome = vaga.setNome ?? "";
+      const grupo = porSet.get(nome);
+      if (grupo) grupo.push(vaga);
+      else porSet.set(nome, [vaga]);
+    }
+    if (porSet.size <= 1) return [{ regiao: null, setNome: null, vagas: [...vagas] }];
+    return [...porSet].map(([setNome, doSet]) => ({ regiao: null, setNome, vagas: doSet }));
+  }
   const grupos: GrupoVagas[] = [];
   for (const vaga of vagas) {
     const regiao =
@@ -205,7 +222,7 @@ function agruparPorRegiao(vagas: readonly VagaDTO[], ehSet: boolean): GrupoVagas
         : null;
     const ultimo = grupos.at(-1);
     if (ultimo && ultimo.regiao === regiao) ultimo.vagas.push(vaga);
-    else grupos.push({ regiao, vagas: [vaga] });
+    else grupos.push({ regiao, setNome: null, vagas: [vaga] });
   }
   return grupos;
 }
@@ -518,7 +535,7 @@ export default function OpcoesCompraPage() {
     return [...filtradas].sort((a, b) => {
       const pa = menorPreco(a);
       const pb = menorPreco(b);
-      if (pa === null && pb === null) return compararLocalId(a.chave, b.chave);
+      if (pa === null && pb === null) return compararChavesVaga()(a.chave, b.chave);
       if (pa === null) return 1;
       if (pb === null) return -1;
       return pa - pb;
@@ -536,7 +553,7 @@ export default function OpcoesCompraPage() {
   const abas = dados?.abasLiga ?? [];
   const abaAtiva = abas.find((a) => a.id === abaEscolhida) ?? abas[0] ?? null;
   const rotuloAba = (aba: AbaLigaDTO) => {
-    const nome = aba.regiao ? NOME_REGIAO[aba.regiao] : t("abaLista");
+    const nome = aba.regiao ? NOME_REGIAO[aba.regiao] : (aba.setNome ?? t("abaLista"));
     return aba.partes > 1 ? `${nome} (${aba.parte}/${aba.partes})` : nome;
   };
 
@@ -742,7 +759,9 @@ export default function OpcoesCompraPage() {
         <Alerta tom="aviso">
           {t("multiplasAviso")}{" "}
           {dados?.multiplas
-            .map((m) => t("multiplasItem", { vaga: m.chave, rotulo: m.rotulo, total: m.quantidade }))
+            .map((m) =>
+              t("multiplasItem", { vaga: rotuloChaveVaga(m.chave), rotulo: m.rotulo, total: m.quantidade }),
+            )
             .join(" · ")}
         </Alerta>
       )}
@@ -858,13 +877,14 @@ export default function OpcoesCompraPage() {
       )}
 
       {grupos.map((grupo) => (
-        <div key={grupo.regiao ?? "sem-regiao"} className="flex flex-col gap-3">
+        <div key={grupo.regiao ?? grupo.setNome ?? "sem-regiao"} className="flex flex-col gap-3">
           {/* Título de região só na Pokédex: no set não há região, e um título
-              "Lista" em cima de tudo seria ruído. */}
-          {!ehSet && (
+              "Lista" em cima de tudo seria ruído — salvo quando a coleção
+              junta sets, e o título é o set. */}
+          {(!ehSet || grupo.setNome !== null) && (
             <header className="mt-2 flex flex-wrap items-center gap-2 border-b-2 border-accent pb-1">
               <h2 className="text-base font-semibold text-foreground">
-                {grupo.regiao ? NOME_REGIAO[grupo.regiao] : t("semRegiao")}
+                {grupo.setNome ?? (grupo.regiao ? NOME_REGIAO[grupo.regiao] : t("semRegiao"))}
                 {grupo.regiao && (
                   <span className="ml-2 font-mono text-xs font-normal text-muted">
                     {String(FAIXA_REGIAO[grupo.regiao].inicio).padStart(3, "0")}–
@@ -910,7 +930,7 @@ export default function OpcoesCompraPage() {
                     }`}
                   />
                   <span className="text-sm font-semibold text-foreground">
-                    {vaga.dex !== null ? String(vaga.dex).padStart(3, "0") : vaga.chave} — {vaga.rotulo}
+                    {vaga.dex !== null ? String(vaga.dex).padStart(3, "0") : rotuloChaveVaga(vaga.chave)} — {vaga.rotulo}
                   </span>
                   {marcadas.length > 1 && (
                     <Distintivo tom="aviso" title={t("multiplasTitulo")}>

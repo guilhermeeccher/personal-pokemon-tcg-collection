@@ -213,6 +213,8 @@ export interface ColecaoComVagasDTO {
   avisoSemNumeracaoOficial?: AvisoSemNumeracaoOficial;
   /** Só presente em coleção `pokedex` (item 2): progresso por região. */
   progressoPorRegiao?: ProgressoRegiao[];
+  /** As vagas pedem cartas de mais de um set — a tela mostra o set de cada uma. */
+  multiplosSets: boolean;
 }
 
 // --- Visão geral do inventário (item 1) -----------------------------------

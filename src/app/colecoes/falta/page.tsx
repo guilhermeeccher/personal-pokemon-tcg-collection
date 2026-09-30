@@ -10,6 +10,7 @@ import { ImagemVagaVazia } from "@/app/_componentes/imagem-vaga-vazia";
 import { Painel } from "@/app/_componentes/painel";
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
 import type { ColecaoComVagasDTO, ColecaoListaDTO } from "@/lib/dominio/tipos-cliente";
+import { rotuloChaveVaga } from "@/lib/dominio/chave-vaga-set";
 
 interface ItemFalta {
   chave: string;
@@ -189,10 +190,10 @@ export default function OQueFaltaPage() {
                       imagemUrl={item.imagemUrl}
                       imagemOrigem={item.imagemOrigem}
                       chave={item.chave}
-                      alt={item.nome ?? item.chave}
+                      alt={item.nome ?? rotuloChaveVaga(item.chave)}
                     />
                     <span className="text-xs leading-tight">
-                      <span className="font-mono">#{item.chave}</span>
+                      <span className="font-mono">#{rotuloChaveVaga(item.chave)}</span>
                       {item.nome ? ` — ${item.nome}` : ""}
                       {alocavel && (
                         <span className="mt-0.5 block font-medium text-success-fg">
