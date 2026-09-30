@@ -1,0 +1,1 @@
+ALTER TYPE "public"."origem_carta" ADD VALUE 'repo';

@@ -53,7 +53,15 @@ import {
  *                 idioma. Fica abaixo do catálogo oficial e acima do
  *                 empréstimo, porque idioma certo vale mais que fonte
  *                 oficial em língua errada.
- * 4. `catalogo-pt` / `catalogo-en` — a foto do MESMO card (mesmo `id`) na
+ * 4. `cdn` verificado — arquivo no CDN de assets da TCGdex que a
+ *                 verificação confirmou existir (`imagem_cdn_existe =
+ *                 true`), no MESMO idioma. É arte oficial no idioma certo;
+ *                 pela mesma regra do degrau 3, vence o empréstimo abaixo.
+ *                 Até 2026-09-30 ficava no último degrau, junto do palpite,
+ *                 e as 156 cartas pt do 30th importadas do repositório (sem
+ *                 `imagem_url`, arte pt confirmada no CDN) apareciam com a
+ *                 foto inglesa emprestada.
+ * 5. `catalogo-pt` / `catalogo-en` — a foto do MESMO card (mesmo `id`) na
  *                 outra língua ocidental. Recupera 509 das 1.129 linhas pt
  *                 sem foto, e 85 das en (medido em 2026-08-29). Seguro
  *                 para identificação: em pt/en o id é o mesmo, então é a
@@ -62,9 +70,9 @@ import {
  *                 (`seloOrigemImagem`), a pedido do usuário: o sistema não
  *                 pode deixá-lo achar que tem a versão inglesa quando a
  *                 cópia é a portuguesa.
- * 5. `cdn`      — palpite montado direto no CDN de assets da TCGdex.
+ * 6. `cdn`      — palpite montado direto no CDN de assets da TCGdex.
  *
- * **O degrau 5 vale só para `jp`, e esse corte é o ponto desta mudança.**
+ * **O degrau 6 vale só para `jp`, e esse corte é o ponto desta mudança.**
  * Até 2026-08-29 ele valia para os três idiomas. Em pt/en o palpite erra
  * quase sempre (0 de 1.082 em pt, 59 de 915 em en — medição de
  * 2026-08-26), e errar é caro de um jeito que não estava previsto: **o
@@ -139,23 +147,25 @@ function degrausImagem(t: ColunasImagem) {
   // Verificado como AUSENTE nunca gera URL, em idioma nenhum. E pt/en não
   // verificado também não: é exatamente o palpite que pendurava a página
   // por 60 s, e lá ele erra quase sempre.
-  const urlCdn = sql`(case
-      when ${t.setSerieId} is not null
-       and (
-         ${t.imagemCdnExiste} = true
-         or (${t.idioma} = 'jp' and ${t.imagemCdnExiste} is null)
-       ) then
+  //
+  // As duas portas viram dois degraus: o fato vem antes do empréstimo de
+  // outra língua (idioma certo vale mais), o palpite fica por último.
+  const urlCdn = (condicao: ReturnType<typeof sql>) => sql`(case
+      when ${t.setSerieId} is not null and ${condicao} then
         'https://assets.tcgdex.net/'
         || case when ${t.idioma} = 'jp' then 'ja' else ${t.idioma}::text end
         || '/' || ${t.setSerieId} || '/' || ${t.setId} || '/' || ${t.localId}
     end)::text`;
+  const urlCdnVerificada = urlCdn(sql`${t.imagemCdnExiste} = true`);
+  const urlCdnPalpite = urlCdn(sql`(${t.idioma} = 'jp' and ${t.imagemCdnExiste} is null)`);
 
   return sql`(values
       (1, ${urlLocal(true)}, 'propria'::text),
       (2, ${t.imagemUrl}::text, 'catalogo'::text),
       (3, ${urlLocal(false)}, 'mypcards'::text),
-      (4, ${urlEmprestada}, (case when ${t.idioma} = 'pt' then 'catalogo-en' else 'catalogo-pt' end)::text),
-      (5, ${urlCdn}, 'cdn'::text)
+      (4, ${urlCdnVerificada}, 'cdn'::text),
+      (5, ${urlEmprestada}, (case when ${t.idioma} = 'pt' then 'catalogo-en' else 'catalogo-pt' end)::text),
+      (6, ${urlCdnPalpite}, 'cdn'::text)
     ) as degrau(ordem, url, origem)`;
 }
 

@@ -150,6 +150,7 @@ pnpm db:migrate                 # applies migrations
 pnpm seed:catalogo              # loads the versioned catalog from seed/
 pnpm sync:catalogo              # syncs the TCGdex catalog (pt, en and jp) — incremental
 pnpm sync:catalogo --profundo   # revisits every set card by card (~2h30)
+pnpm importar:catalogo-repo --idioma pt --simular   # what the data repository has that the API lacks
 docker compose up -d --build
 ```
 
@@ -262,13 +263,29 @@ birth, and they obey **the same contract as the sync**: upsert by (`id`, `idioma
 never deactivate, zero network.
 
 Two columns stay out of the upsert's UPDATE, on purpose: `ativa` (a card the sync deactivated stays
-deactivated) and `origem` (a row created by hand by the user, `origem = manual`, is never demoted to
-`sync`, which would expose it to deactivation). Do not "simplify" this into an upsert that updates
-everything.
+deactivated) and `origem` (a row created by hand by the user, `origem = manual`, or filled in from
+the data repository, `origem = repo`, is never demoted to `sync`, which would expose it to
+deactivation). Do not "simplify" this into an upsert that updates everything.
 
 A seed failure **does not take the app down**: the entrypoint uses `if !` precisely so that `set -e`
 does not kill the container. The format of the files, the regeneration and the reason for every
 detail are in [`seed/README.md`](./seed/README.md) and in `lib/dominio/seed-catalogo.ts`.
+
+### Filling the gap from the data repository — `origem = repo`
+
+TCGdex's data repository (`github.com/tcgdex/cards-database`) runs ahead of their API. The 30th
+Celebration set was translated to Portuguese in the repository while the API still answered with two
+cards. `pnpm importar:catalogo-repo --idioma pt` (or `en`) reads a local clone and fills that gap:
+
+- **It only inserts.** A row whose (`id`, `idioma`) already exists — from the API, the seed or an
+  earlier import — is left exactly as it is. The API stays the owner of the Western catalog.
+- **The row is born `origem = repo`**, and that is what keeps it alive: deactivation only touches
+  `origem = sync`, and the API, not knowing the card yet, would deactivate it on the next deep sync.
+  When the API starts publishing the card, its upsert turns `repo` into `sync`, and from then on the
+  API answers for it.
+- `--simular` lists what would come in, per set, without writing. Run it first.
+- Without `--idioma` the importer keeps its original job: the Japanese catalog from `data-asia/`, by
+  upsert.
 
 ---
 

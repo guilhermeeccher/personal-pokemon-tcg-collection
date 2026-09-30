@@ -28,7 +28,7 @@ import {
 /** Idiomas suportados pelo catálogo. `jp` reservado para o futuro (spec §2). */
 export const idiomaEnum = pgEnum("idioma", ["pt", "en", "jp"]);
 /** Ver `carta_catalogo.origem`. */
-export const origemCartaEnum = pgEnum("origem_carta", ["sync", "manual"]);
+export const origemCartaEnum = pgEnum("origem_carta", ["sync", "manual", "repo"]);
 
 /**
  * Forma derivada do nome da carta (spec §3.1, §9). Nome que não casar com
@@ -143,6 +143,16 @@ export const cartaCatalogo = pgTable(
      * precisa saber que ela é manual. O que precisa saber é o **sync**:
      * linha manual nunca é inativada (ver `decidirInativacaoCatalogo`),
      * porque o upstream jamais vai "devolvê-la".
+     *
+     * **`repo` (2026-09-30): linha que o repositório de dados da TCGdex já
+     * tem e a API ainda não publicou.** O repositório sai na frente da API
+     * — o 30th Celebration estava traduzido para pt no repositório com a
+     * API ainda devolvendo 2 cartas. `pnpm importar:catalogo-repo --idioma
+     * pt` preenche essa lacuna, e a linha não pode ser `sync`: a
+     * inativação do sync marca `ativa = false` toda linha `sync` que a API
+     * não devolveu na rodada, e derrubaria exatamente as cartas que a API
+     * ainda não tem. Quando a API passa a publicar a carta, o upsert do
+     * sync a converte em `sync` e ela volta ao fluxo normal.
      */
     origem: origemCartaEnum("origem").notNull().default("sync"),
 

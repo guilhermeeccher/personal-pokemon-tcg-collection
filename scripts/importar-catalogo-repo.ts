@@ -1,6 +1,6 @@
 /**
- * `pnpm importar:catalogo-repo` — popula `carta_catalogo` com o idioma `jp`
- * a partir de um clone local do repositório de dados da TCGdex
+ * `pnpm importar:catalogo-repo` — popula `carta_catalogo` a partir de um
+ * clone local do repositório de dados da TCGdex
  * (https://github.com/tcgdex/cards-database, MIT), sem NENHUMA requisição a
  * api.tcgdex.net. Existe porque o IP deste servidor está bloqueado no
  * firewall da TCGdex desde 2026-08-25 (AGENTS.md) e existem cartas
@@ -18,9 +18,23 @@
  * "puxado" automaticamente por este script. Rode `git -C <clone> pull`
  * manualmente quando quiser dados mais recentes.
  *
+ * Dois modos, escolhidos pelo idioma:
+ *
+ *  - **`jp` (padrão, `data-asia/`)** — o catálogo japonês inteiro vem
+ *    daqui, e o importador faz upsert.
+ *  - **`--idioma pt` ou `--idioma en` (`data/`) — só preenche lacuna
+ *    (2026-09-30).** O catálogo ocidental é da API; o repositório só sai na
+ *    frente dela (o 30th Celebration estava traduzido para pt no
+ *    repositório com a API devolvendo 2 cartas). Neste modo a linha só é
+ *    INSERIDA quando o (id, idioma) ainda não existe — nunca atualiza uma
+ *    linha da API — e nasce com `origem = repo`, que a inativação do sync
+ *    ignora; quando a API publicar a carta, o upsert dela a converte em
+ *    `sync`. `--simular` lista o que entraria, por set, sem gravar.
+ *
  * Contrato (mesmo do sync da API, `lib/sync/catalogo.ts`):
- *  - Idempotente — upsert por (id, idioma) via PK, rodar de novo não
- *    duplica nem altera a contagem de linhas.
+ *  - Idempotente — upsert (jp) ou insert-se-ausente (pt/en) por
+ *    (id, idioma) via PK; rodar de novo não duplica nem altera a contagem
+ *    de linhas.
  *  - Nunca troca o que já sabemos pelo vazio do upstream: número de
  *    Pokédex derivado, imagem e `ativa` sobrevivem à reimportação (ver o
  *    `set` do upsert, abaixo).
@@ -63,16 +77,42 @@ import { client, db } from "../src/lib/db/client";
 import { cartaCatalogo } from "../src/lib/db/schema";
 import { paraLinha, SERIE_EXCLUIDA_ID } from "../src/lib/sync/catalogo";
 
-/** Enum do nosso banco. A chave usada dentro dos arquivos do repositório
- * (`Languages<T>`) é o código ISO `ja` — a mesma tradução que
- * `codigoIdiomaUpstream` faz para a API, aqui feita à mão porque não há
- * cliente HTTP envolvido. */
-const IDIOMA_BANCO = "jp" as const;
-const CODIGO_IDIOMA_REPO = "ja";
-
 const REPO_PATH = process.env.TCGDEX_REPO_PATH ?? "/upstream-dados-tcgdex";
-const PASTA_DADOS_ASIA = path.join(REPO_PATH, "data-asia");
 const TAMANHO_LOTE_UPSERT = 500;
+
+type IdiomaImportavel = "jp" | "pt" | "en";
+
+/**
+ * Onde cada idioma mora no repositório e como é gravado. A chave usada
+ * dentro dos arquivos (`Languages<T>`) é o código ISO — `ja` para o nosso
+ * `jp`, a mesma tradução que `codigoIdiomaUpstream` faz para a API, aqui
+ * feita à mão porque não há cliente HTTP envolvido.
+ */
+const CONFIG_IDIOMA: Record<
+  IdiomaImportavel,
+  { pasta: string; codigoRepo: string; soLacunas: boolean }
+> = {
+  jp: { pasta: "data-asia", codigoRepo: "ja", soLacunas: false },
+  pt: { pasta: "data", codigoRepo: "pt", soLacunas: true },
+  en: { pasta: "data", codigoRepo: "en", soLacunas: true },
+};
+
+function lerArgumentos(argv: readonly string[]): {
+  idioma: IdiomaImportavel;
+  simular: boolean;
+} {
+  const i = argv.indexOf("--idioma");
+  const valor = i === -1 ? "jp" : argv[i + 1];
+  if (valor !== "jp" && valor !== "pt" && valor !== "en") {
+    throw new Error(`--idioma must be jp, pt or en (got: ${String(valor)})`);
+  }
+  return { idioma: valor, simular: argv.includes("--simular") };
+}
+
+const ARGS = lerArgumentos(process.argv.slice(2));
+const IDIOMA_BANCO = ARGS.idioma;
+const { codigoRepo: CODIGO_IDIOMA_REPO, soLacunas: SO_LACUNAS } = CONFIG_IDIOMA[IDIOMA_BANCO];
+const PASTA_DADOS = path.join(REPO_PATH, CONFIG_IDIOMA[IDIOMA_BANCO].pasta);
 
 type LinhaCatalogo = ReturnType<typeof paraLinha> & { setSerieId: string };
 
@@ -88,6 +128,10 @@ interface ResultadoImportacao {
   cartasComErro: { arquivo: string; erro: string }[];
   cartasUpsertadas: number;
   cartasComDexIdUnico: number;
+  /** Modo lacuna: cartas que já existiam no idioma e foram deixadas como estão. */
+  cartasJaExistentes: number;
+  /** Modo lacuna: quantas linhas novas cada set recebe. */
+  lacunasPorSet: Map<string, number>;
   duracaoMs: number;
 }
 
@@ -171,6 +215,24 @@ async function upsertLoteCatalogo(linhas: LinhaCatalogo[]): Promise<void> {
     });
 }
 
+/**
+ * Modo lacuna: só insere. Uma linha que já existe no idioma — da API, do
+ * seed ou de uma importação anterior — fica exatamente como está.
+ */
+async function inserirLacunas(linhas: LinhaCatalogo[]): Promise<void> {
+  if (linhas.length === 0) return;
+  await db
+    .insert(cartaCatalogo)
+    .values(linhas.map((l) => ({ ...l, origem: "repo" as const })))
+    .onConflictDoNothing({ target: [cartaCatalogo.id, cartaCatalogo.idioma] });
+}
+
+async function gravarLote(linhas: LinhaCatalogo[]): Promise<void> {
+  if (ARGS.simular) return;
+  if (SO_LACUNAS) await inserirLacunas(linhas);
+  else await upsertLoteCatalogo(linhas);
+}
+
 async function importar(): Promise<ResultadoImportacao> {
   const inicio = Date.now();
   const resultado: ResultadoImportacao = {
@@ -185,27 +247,40 @@ async function importar(): Promise<ResultadoImportacao> {
     cartasComErro: [],
     cartasUpsertadas: 0,
     cartasComDexIdUnico: 0,
+    cartasJaExistentes: 0,
+    lacunasPorSet: new Map(),
     duracaoMs: 0,
   };
 
-  if (!fs.existsSync(PASTA_DADOS_ASIA)) {
+  if (!fs.existsSync(PASTA_DADOS)) {
     throw new Error(
-      `Data folder not found: ${PASTA_DADOS_ASIA}. Clone ` +
+      `Data folder not found: ${PASTA_DADOS}. Clone ` +
         `https://github.com/tcgdex/cards-database.git and point ` +
         `TCGDEX_REPO_PATH (or mount it at /upstream-dados-tcgdex, see ` +
         `compose.yaml) at the root of the clone.`,
     );
   }
 
+  // Modo lacuna: o que o idioma já tem, para pular sem gravar e contar o
+  // que entra por set. Uma consulta só — o idioma inteiro cabe folgado.
+  const idsExistentes = new Set<string>();
+  if (SO_LACUNAS) {
+    const existentes = await db
+      .select({ id: cartaCatalogo.id })
+      .from(cartaCatalogo)
+      .where(sql`${cartaCatalogo.idioma} = ${IDIOMA_BANCO}`);
+    for (const e of existentes) idsExistentes.add(e.id);
+  }
+
   const seriesDirs = fs
-    .readdirSync(PASTA_DADOS_ASIA, { withFileTypes: true })
+    .readdirSync(PASTA_DADOS, { withFileTypes: true })
     .filter((e) => e.isDirectory())
     .map((e) => e.name);
 
   let linhasPendentes: LinhaCatalogo[] = [];
 
   for (const serieDir of seriesDirs) {
-    const serieDirPath = path.join(PASTA_DADOS_ASIA, serieDir);
+    const serieDirPath = path.join(PASTA_DADOS, serieDir);
     const setFiles = fs
       .readdirSync(serieDirPath, { withFileTypes: true })
       .filter((e) => e.isFile() && e.name.endsWith(".ts"));
@@ -227,7 +302,7 @@ async function importar(): Promise<ResultadoImportacao> {
       }
 
       // Filtro do contrato do sync (AGENTS.md): nunca sincroniza TCG
-      // Pocket. Não visto em data-asia, mantido por segurança.
+      // Pocket. Não visto em data-asia; em `data/` ele existe.
       if (set.serie.id === SERIE_EXCLUIDA_ID) {
         resultado.setsSerieExcluida++;
         continue;
@@ -240,13 +315,17 @@ async function importar(): Promise<ResultadoImportacao> {
 
       resultado.setsQualificados++;
 
-      // Usa o `id` embutido no set (campo `set.id`), não o nome do
-      // arquivo — achado real: alguns arquivos de set do repositório têm
-      // `id` diferente do próprio nome do arquivo (ex.: `CS4.5.ts` declara
-      // `id: 'CS4'`). A pasta de cartas correspondente é sempre nomeada
-      // pelo `id`, replicando o fallback de `getCards` no compilador da
+      // Em `data-asia` a pasta de cartas é nomeada pelo `id` embutido no set
+      // (campo `set.id`), não pelo nome do arquivo — achado real: alguns
+      // arquivos de set têm `id` diferente do próprio nome (ex.: `CS4.5.ts`
+      // declara `id: 'CS4'`). Em `data/` é o contrário: a pasta tem o nome
+      // do arquivo (`30th Celebration/`, id `30th`). Tenta o nome do arquivo
+      // e depois o id, replicando o fallback de `getCards` no compilador da
       // TCGdex.
-      const cardDirPath = path.join(serieDirPath, set.id);
+      const cardDirPath =
+        [setFileId, set.id]
+          .map((nome) => path.join(serieDirPath, nome))
+          .find((caminho) => fs.existsSync(caminho)) ?? path.join(serieDirPath, set.id);
       if (!fs.existsSync(cardDirPath)) {
         resultado.setsSemCartas.push(`${set.id} (${serieDir}/${setFileId})`);
         continue;
@@ -286,7 +365,7 @@ async function importar(): Promise<ResultadoImportacao> {
 
       if (cartasDoSet.length === 0) {
         resultado.setsSemCartas.push(
-          `${set.id} (${serieDir}/${setFileId}, folder had files but none with a name in ja)`,
+          `${set.id} (${serieDir}/${setFileId}, folder had files but none with a name in ${CODIGO_IDIOMA_REPO})`,
         );
         continue;
       }
@@ -308,6 +387,13 @@ async function importar(): Promise<ResultadoImportacao> {
           ...paraLinha(IDIOMA_BANCO, setDetalhado, cartaDetalhada),
           setSerieId: set.serie.id,
         };
+        if (SO_LACUNAS) {
+          if (idsExistentes.has(linha.id)) {
+            resultado.cartasJaExistentes++;
+            continue;
+          }
+          resultado.lacunasPorSet.set(set.id, (resultado.lacunasPorSet.get(set.id) ?? 0) + 1);
+        }
         linhasPendentes.push(linha);
         if (cartaDetalhada.dexId?.length === 1) {
           resultado.cartasComDexIdUnico++;
@@ -316,7 +402,7 @@ async function importar(): Promise<ResultadoImportacao> {
 
       if (linhasPendentes.length >= TAMANHO_LOTE_UPSERT) {
         for (const lote of emLotes(linhasPendentes, TAMANHO_LOTE_UPSERT)) {
-          await upsertLoteCatalogo(lote);
+          await gravarLote(lote);
         }
         resultado.cartasUpsertadas += linhasPendentes.length;
         linhasPendentes = [];
@@ -326,7 +412,7 @@ async function importar(): Promise<ResultadoImportacao> {
 
   if (linhasPendentes.length > 0) {
     for (const lote of emLotes(linhasPendentes, TAMANHO_LOTE_UPSERT)) {
-      await upsertLoteCatalogo(lote);
+      await gravarLote(lote);
     }
     resultado.cartasUpsertadas += linhasPendentes.length;
   }
@@ -336,7 +422,11 @@ async function importar(): Promise<ResultadoImportacao> {
 }
 
 async function main() {
-  console.log(`importar:catalogo-repo — reading from ${PASTA_DADOS_ASIA}`);
+  console.log(
+    `importar:catalogo-repo — idioma=${IDIOMA_BANCO}, reading from ${PASTA_DADOS}` +
+      (SO_LACUNAS ? " (gap-fill: inserts missing rows only, origem=repo)" : "") +
+      (ARGS.simular ? " — DRY RUN, nothing is written" : ""),
+  );
   const r = await importar();
   console.log(`\nsets found (.ts): ${r.setsEncontrados}`);
   console.log(`sets skipped (excluded series '${SERIE_EXCLUIDA_ID}'): ${r.setsSerieExcluida}`);
@@ -356,7 +446,16 @@ async function main() {
     console.log(`cards that errored while importing the module: ${r.cartasComErro.length}`);
     for (const e of r.cartasComErro) console.log(`  -> ${e.arquivo}: ${e.erro}`);
   }
-  console.log(`cards upserted into carta_catalogo (idioma=${IDIOMA_BANCO}): ${r.cartasUpsertadas}`);
+  if (SO_LACUNAS) {
+    console.log(`cards already in carta_catalogo (left untouched): ${r.cartasJaExistentes}`);
+    console.log(
+      `cards ${ARGS.simular ? "that would be inserted" : "inserted"} (idioma=${IDIOMA_BANCO}, origem=repo): ${r.cartasUpsertadas}`,
+    );
+    const porSet = [...r.lacunasPorSet].sort((a, b) => b[1] - a[1]);
+    for (const [setId, qtd] of porSet) console.log(`  -> ${setId}: ${qtd}`);
+  } else {
+    console.log(`cards upserted into carta_catalogo (idioma=${IDIOMA_BANCO}): ${r.cartasUpsertadas}`);
+  }
   console.log(`  of those, with a unique dexId (eligible for a Pokédex slot): ${r.cartasComDexIdUnico}`);
   console.log(`duration: ${(r.duracaoMs / 1000).toFixed(1)}s`);
 

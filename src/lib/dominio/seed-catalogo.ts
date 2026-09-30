@@ -87,7 +87,7 @@ const FORMAS = [
   "mega",
   "gigantamax",
 ] as const;
-const ORIGENS = ["sync", "manual"] as const;
+const ORIGENS = ["sync", "manual", "repo"] as const;
 
 const VIRGULA = 0x2c;
 const ASPA = 0x22;

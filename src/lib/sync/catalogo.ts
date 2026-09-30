@@ -173,6 +173,14 @@ async function upsertLote(
         setQtdTotal: sql`excluded.set_qtd_total`,
         ativa: sql`excluded.ativa`,
         atualizadoEm: sql`excluded.atualizado_em`,
+        // A linha que o importador do repositório trouxe antes da API
+        // (`origem = repo`, ver o schema) vira `sync` quando a API passa a
+        // publicá-la: dali em diante a API responde por ela, inclusive pela
+        // inativação. `manual` nunca muda — a API não sabe nada dela.
+        origem: sql`case
+          when ${cartaCatalogo.origem} = 'repo' then 'sync'::origem_carta
+          else ${cartaCatalogo.origem}
+        end`,
       },
     });
 }

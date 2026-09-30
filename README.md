@@ -235,6 +235,18 @@ above, this path became rare — it existed to bring in the Japanese catalog, wh
 project — but it stays available for anyone who wants data straight from upstream without touching
 the API.
 
+It is also the way to get a translation the API has not published yet. The data repository runs ahead
+of the API: a new set can be fully translated there while the API still has a handful of its cards
+in Portuguese. To fill that gap:
+
+```bash
+docker compose exec app pnpm importar:catalogo-repo --idioma pt --simular   # see what would come in
+docker compose exec app pnpm importar:catalogo-repo --idioma pt
+```
+
+It only inserts cards that are missing, never overwrites what came from the API, and the incremental
+sync takes those cards over once the API publishes them.
+
 `compose.yaml` mounts that clone at `/upstream-dados-tcgdex`, and the host path comes from
 `TCGDEX_REPO_HOST_PATH`. **The recommendation is to clone wherever you want and point the variable
 at it:**
