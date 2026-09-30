@@ -535,7 +535,7 @@
     "trocar": "Swap",
     "descartar": "Dismiss",
     "descartarTitulo": "Hides this suggestion, for this slot only. A better copy that shows up later will flag it again.",
-    "tirarDaColecao": "remove from collection",
+    "tirarDaColecao": "Remove from collection",
     "confirmarTirarVazia": "Remove {alvo} from the collection? The card leaves the missing list.",
     "confirmarTirarPreenchida": "Remove {alvo} from the collection? The copy allocated to this slot becomes free in the inventory again — it is not deleted.",
     "cartaTirada": "{alvo} left the collection.",
@@ -550,7 +550,11 @@
     "cartaIncluida": "{carta} joined the collection.",
     "jaNaColecao": "already in the collection",
     "incluir": "Add",
-    "nenhumaCartaEncontrada": "No card found."
+    "nenhumaCartaEncontrada": "No card found.",
+    "editarCartas": "Edit cards",
+    "concluirEdicaoCartas": "Done",
+    "tirarDaColecaoAlvo": "Remove {alvo} from the collection",
+    "avisoSemNumeracaoOficialDoSet": "{sets} has no separate official numbering upstream; in this collection it comes in with its {total} known cards, with no secrets distinction."
   },
   "opcoesCompra": {
     "voltar": "← Back to the collection",

@@ -535,7 +535,7 @@
     "trocar": "Trocar",
     "descartar": "Descartar",
     "descartarTitulo": "Some com esta sugestão, só para esta vaga. Uma cópia melhor que apareça depois volta a sinalizar.",
-    "tirarDaColecao": "tirar da coleção",
+    "tirarDaColecao": "Tirar da coleção",
     "confirmarTirarVazia": "Tirar {alvo} da coleção? A carta sai da lista do que falta.",
     "confirmarTirarPreenchida": "Tirar {alvo} da coleção? A cópia alocada nesta vaga volta a ficar livre no inventário — ela não é apagada.",
     "cartaTirada": "{alvo} saiu da coleção.",
@@ -550,7 +550,11 @@
     "cartaIncluida": "{carta} entrou na coleção.",
     "jaNaColecao": "já está na coleção",
     "incluir": "Incluir",
-    "nenhumaCartaEncontrada": "Nenhuma carta encontrada."
+    "nenhumaCartaEncontrada": "Nenhuma carta encontrada.",
+    "editarCartas": "Editar cartas",
+    "concluirEdicaoCartas": "Concluir",
+    "tirarDaColecaoAlvo": "Tirar {alvo} da coleção",
+    "avisoSemNumeracaoOficialDoSet": "{sets} não tem numeração oficial separada no upstream; nesta coleção entra com as {total} cartas conhecidas, sem distinção de secretas."
   },
   "opcoesCompra": {
     "voltar": "← Voltar para a coleção",

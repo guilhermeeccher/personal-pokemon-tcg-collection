@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
 import type { ParametroPokedex, TipoColecao } from "@/lib/dominio/parametro-colecao";
-import { chaveVagaSet, rotuloChaveVaga } from "@/lib/dominio/chave-vaga-set";
+import { chaveVagaSet, lerChaveVagaSet, rotuloChaveVaga } from "@/lib/dominio/chave-vaga-set";
 import {
   FAIXA_REGIAO,
   NOME_REGIAO,
@@ -64,6 +64,11 @@ export default function ColecaoPage() {
   const [somenteMelhorias, setSomenteMelhorias] = useState(false);
   const [vagaParaMelhorar, setVagaParaMelhorar] = useState<MelhoriaDaVagaDTO | null>(null);
   const [editando, setEditando] = useState(false);
+  // Modo de edição de cartas (coleção de set): só nele aparecem o "×" de
+  // cada vaga e o painel de incluir carta avulsa. Fora dele a grade é a de
+  // sempre — o "tirar" em toda vaga, sempre visível, esticava os cartões e
+  // poluía a coleção inteira (2026-09-30).
+  const [editandoCartas, setEditandoCartas] = useState(false);
   const [vagaParaAlocar, setVagaParaAlocar] = useState<VagaDaColecaoDTO | null>(null);
   const [regiaoFiltro, setRegiaoFiltro] = useState<Regiao | "todas">("todas");
 
@@ -198,6 +203,36 @@ export default function ColecaoPage() {
     return true;
   });
 
+  // Coleção que junta sets: a grade vira uma seção por set, com o progresso
+  // dele — o nome do set sai do cartão (repetido em cada vaga, vazava da
+  // moldura). A ordem das vagas já vem da receita (`compararChavesVaga`).
+  const setDaVaga = (v: VagaDaColecaoDTO) => lerChaveVagaSet(v.chave)?.setId ?? "";
+  const nomeDoSet = new Map<string, string>();
+  const progressoDoSet = new Map<string, { preenchidas: number; total: number }>();
+  for (const v of colecao.vagas) {
+    const setId = setDaVaga(v);
+    if (v.setNome && !nomeDoSet.has(setId)) nomeDoSet.set(setId, v.setNome);
+    const p = progressoDoSet.get(setId) ?? { preenchidas: 0, total: 0 };
+    p.total++;
+    if (v.copiaId !== null) p.preenchidas++;
+    progressoDoSet.set(setId, p);
+  }
+  const secoes: { setId: string | null; vagas: VagaDaColecaoDTO[] }[] = [];
+  if (colecao.multiplosSets) {
+    for (const v of vagasExibidas) {
+      const setId = setDaVaga(v);
+      const ultima = secoes.at(-1);
+      if (ultima && ultima.setId === setId) ultima.vagas.push(v);
+      else secoes.push({ setId, vagas: [v] });
+    }
+  } else {
+    secoes.push({ setId: null, vagas: vagasExibidas });
+  }
+
+  const setsSemNumeracao = (colecao.avisoSemNumeracaoOficial?.setIds ?? []).map(
+    (setId) => nomeDoSet.get(setId) ?? setId,
+  );
+
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-8">
       <div>
@@ -222,7 +257,7 @@ export default function ColecaoPage() {
           </p>
           {colecao.notas && <p className="mt-1 text-sm text-muted">{colecao.notas}</p>}
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex flex-wrap gap-2">
           {/* Pokédex e set: as duas têm vaga vazia que é carta a comprar
               (regra 6). Customizada não — a vaga dela nasce ao alocar. */}
           {(colecao.tipo === "pokedex" || colecao.tipo === "set") && (
@@ -240,6 +275,16 @@ export default function ColecaoPage() {
           <Botao type="button" variante="secundario" tamanho="sm" onClick={() => setEditando((v) => !v)}>
             {editando ? t("fecharEdicao") : t("editar")}
           </Botao>
+          {colecaoDeSet && (
+            <Botao
+              type="button"
+              variante={editandoCartas ? "primario" : "secundario"}
+              tamanho="sm"
+              onClick={() => setEditandoCartas((v) => !v)}
+            >
+              {editandoCartas ? t("concluirEdicaoCartas") : t("editarCartas")}
+            </Botao>
+          )}
           <Botao type="button" variante="perigo" tamanho="sm" onClick={excluir}>
             {t("excluir")}
           </Botao>
@@ -258,7 +303,14 @@ export default function ColecaoPage() {
 
       {colecao.avisoSemNumeracaoOficial && (
         <Alerta tom="aviso">
-          {t("avisoSemNumeracaoOficial", { total: colecao.avisoSemNumeracaoOficial.qtdTotal })}
+          {/* Numa coleção que junta sets o aviso é de um deles, não da
+              coleção inteira — por isso nomeia o set. */}
+          {colecao.multiplosSets && setsSemNumeracao.length > 0
+            ? t("avisoSemNumeracaoOficialDoSet", {
+                sets: setsSemNumeracao.join(", "),
+                total: colecao.avisoSemNumeracaoOficial.qtdTotal,
+              })
+            : t("avisoSemNumeracaoOficial", { total: colecao.avisoSemNumeracaoOficial.qtdTotal })}
         </Alerta>
       )}
 
@@ -344,7 +396,7 @@ export default function ColecaoPage() {
         />
       )}
 
-      {colecaoDeSet && (
+      {colecaoDeSet && editandoCartas && (
         <IncluirCartaAvulsa
           colecaoId={id}
           idiomaCatalogo={parametroSet?.idiomaCatalogo ?? "pt"}
@@ -384,35 +436,51 @@ export default function ColecaoPage() {
 
       {carregando && <p className="text-sm text-muted">{t("atualizando")}</p>}
 
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2">
-        {vagasExibidas.map((v) => (
-          <VagaCard
-            key={v.id}
-            vaga={v}
-            tipo={colecao.tipo}
-            mostrarSet={colecao.multiplosSets}
-            onExcluir={colecaoDeSet ? () => excluirVaga(v) : undefined}
-            melhoria={melhoriaPorVaga.get(v.id)}
-            onAlocar={() => setVagaParaAlocar(v)}
-            onDesalocar={() => desalocar(v)}
-            onMelhorar={() => {
-              const m = melhoriaPorVaga.get(v.id);
-              if (m) setVagaParaMelhorar(m);
-            }}
-          />
-        ))}
-        {vagasExibidas.length === 0 && (
-          <EstadoVazio className="col-span-full py-6">
-            {customizada
-              ? t("vazioCustomizada")
-              : somenteVazias
-                ? t("vazioSoVazias")
-                : somenteMelhorias
-                  ? t("vazioSoMelhorias")
-                  : t("vazioSemVagas")}
-          </EstadoVazio>
-        )}
-      </div>
+      {secoes.map((secao) => (
+        <section key={secao.setId ?? "todas"} className="flex flex-col gap-2">
+          {secao.setId !== null && (
+            <header className="mt-2 flex flex-wrap items-baseline gap-2 border-b-2 border-accent pb-1">
+              <h2 className="text-base font-semibold text-foreground">
+                {nomeDoSet.get(secao.setId) ?? secao.setId}
+              </h2>
+              <span className="text-xs text-muted">
+                {t("preenchidas", {
+                  preenchidas: progressoDoSet.get(secao.setId)?.preenchidas ?? 0,
+                  total: progressoDoSet.get(secao.setId)?.total ?? 0,
+                })}
+              </span>
+            </header>
+          )}
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2">
+            {secao.vagas.map((v) => (
+              <VagaCard
+                key={v.id}
+                vaga={v}
+                tipo={colecao.tipo}
+                onExcluir={colecaoDeSet && editandoCartas ? () => excluirVaga(v) : undefined}
+                melhoria={melhoriaPorVaga.get(v.id)}
+                onAlocar={() => setVagaParaAlocar(v)}
+                onDesalocar={() => desalocar(v)}
+                onMelhorar={() => {
+                  const m = melhoriaPorVaga.get(v.id);
+                  if (m) setVagaParaMelhorar(m);
+                }}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
+      {vagasExibidas.length === 0 && (
+        <EstadoVazio className="py-6">
+          {customizada
+            ? t("vazioCustomizada")
+            : somenteVazias
+              ? t("vazioSoVazias")
+              : somenteMelhorias
+                ? t("vazioSoMelhorias")
+                : t("vazioSemVagas")}
+        </EstadoVazio>
+      )}
 
       {vagaParaAlocar && (
         <ModalAlocarVaga
@@ -449,7 +517,6 @@ export default function ColecaoPage() {
 function VagaCard({
   vaga,
   tipo,
-  mostrarSet,
   onExcluir,
   melhoria,
   onAlocar,
@@ -458,9 +525,7 @@ function VagaCard({
 }: {
   vaga: VagaDaColecaoDTO;
   tipo: TipoColecao;
-  /** A coleção pede cartas de mais de um set: cada vaga diz o seu. */
-  mostrarSet: boolean;
-  /** Tirar a carta da coleção — só em coleção de set. */
+  /** Tirar a carta da coleção — só em coleção de set, no modo de edição de cartas. */
   onExcluir?: () => void;
   /** Presente só quando existe cópia livre melhor que a alocada aqui. */
   melhoria?: MelhoriaDaVagaDTO;
@@ -473,21 +538,19 @@ function VagaCard({
   const preenchida = vaga.copiaId !== null;
   const nomeExibido = vaga.cartaNome ?? vaga.nomeEspecie;
   const numero = rotuloChaveVaga(vaga.chave);
-  const seloSet =
-    mostrarSet && vaga.setNome ? (
-      <span className="block truncate text-[10px] text-muted" title={vaga.setNome}>
-        {vaga.setNome}
-      </span>
-    ) : null;
+  // O "×" do modo de edição fica no canto do cartão, e não numa linha de
+  // texto embaixo: o "tirar da coleção" em toda vaga esticava a grade.
   const botaoTirar = onExcluir ? (
     <button
       type="button"
       onClick={onExcluir}
-      className="text-[11px] text-muted hover:text-danger hover:underline"
+      title={t("tirarDaColecao")}
+      aria-label={t("tirarDaColecaoAlvo", { alvo: nomeExibido ?? `#${numero}` })}
+      className="flex h-6 w-6 items-center justify-center rounded-full border border-line bg-surface text-sm leading-none text-muted shadow-1 hover:border-danger hover:text-danger"
     >
-      {t("tirarDaColecao")}
+      ×
     </button>
-  ) : null;
+  ) : undefined;
 
   if (preenchida) {
     return (
@@ -504,12 +567,8 @@ function VagaCard({
             className="rounded-tcg"
           />
         }
-        titulo={
-          <>
-            {nomeExibido ?? `#${numero}`}
-            {seloSet}
-          </>
-        }
+        titulo={nomeExibido ?? `#${numero}`}
+        acaoCanto={botaoTirar}
         meta={
           /* Cada pedaço é indivisível: a vaga tem 96px, e deixar o texto
              quebrar sozinho órfanava o "·" no começo da linha de baixo. */
@@ -545,7 +604,6 @@ function VagaCard({
             >
               {t("desalocar")}
             </button>
-            {botaoTirar}
           </div>
         }
       />
@@ -569,9 +627,9 @@ function VagaCard({
         <>
           #{numero}
           {nomeExibido ? ` — ${nomeExibido}` : ""}
-          {seloSet}
         </>
       }
+      acaoCanto={botaoTirar}
       /* Botão desabilitado continua VISÍVEL, cinza: vaga vazia é saída de
          primeira classe (regra 6), e sumir o botão faria a grade parecer
          quebrada.
@@ -581,22 +639,19 @@ function VagaCard({
          recebe hover e a tooltip nunca apareceria — justamente no caso em
          que ela é necessária. Cinza sem explicação vira suspeita de bug. */
       acao={
-        <div className="flex flex-col items-center gap-1">
-          <span title={tc("rotuloAlocacao", { total: vaga.candidatosDisponiveis })}>
-            <Botao
-              type="button"
-              variante="primario"
-              tamanho="xs"
-              onClick={onAlocar}
-              disabled={vaga.candidatosDisponiveis === 0}
-            >
-              {vaga.candidatosDisponiveis === 0
-                ? t("alocar")
-                : t("alocarComTotal", { total: vaga.candidatosDisponiveis })}
-            </Botao>
-          </span>
-          {botaoTirar}
-        </div>
+        <span title={tc("rotuloAlocacao", { total: vaga.candidatosDisponiveis })}>
+          <Botao
+            type="button"
+            variante="primario"
+            tamanho="xs"
+            onClick={onAlocar}
+            disabled={vaga.candidatosDisponiveis === 0}
+          >
+            {vaga.candidatosDisponiveis === 0
+              ? t("alocar")
+              : t("alocarComTotal", { total: vaga.candidatosDisponiveis })}
+          </Botao>
+        </span>
       }
     />
   );
@@ -828,7 +883,6 @@ function IncluirCartaAvulsa({
 }) {
   const t = useTranslations("colecaoDetalhe");
   const tr = useTranslations("recusas");
-  const [aberto, setAberto] = useState(false);
   const [nome, setNome] = useState("");
   const [setId, setSetId] = useState("");
   const [numero, setNumero] = useState("");
@@ -888,18 +942,9 @@ function IncluirCartaAvulsa({
     }
   }
 
-  if (!aberto) {
-    return (
-      <div>
-        <Botao type="button" variante="secundario" tamanho="xs" onClick={() => setAberto(true)}>
-          {t("incluirCartaAvulsa")}
-        </Botao>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-2 rounded border border-line p-3">
+      <div className="text-sm font-medium text-strong">{t("incluirCartaAvulsa")}</div>
       <form onSubmit={buscar} className="flex flex-wrap items-end gap-2 text-sm">
         <Campo rotulo={t("campoNomeCarta")}>
           <input value={nome} onChange={(e) => setNome(e.target.value)} className={`w-48 ${classesEntrada}`} />
@@ -918,9 +963,6 @@ function IncluirCartaAvulsa({
         <Botao type="submit" variante="secundario" disabled={buscando}>
           {buscando ? t("buscando") : t("buscar")}
         </Botao>
-        <button type="button" onClick={() => setAberto(false)} className="text-xs text-muted">
-          {t("cancelar")}
-        </button>
       </form>
 
       {resultados && (

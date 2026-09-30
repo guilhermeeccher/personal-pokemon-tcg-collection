@@ -126,7 +126,7 @@ export function avisosDaReceita(
   let materializaveis = 0;
   let esperadas = 0;
   let totalSemNumeracao = 0;
-  let algumSemNumeracao = false;
+  const setsSemNumeracao: string[] = [];
   for (const set of sets) {
     const universo = resolverUniversoVagasSet({
       qtdOficial: set.qtdOficial,
@@ -137,13 +137,16 @@ export function avisosDaReceita(
     esperadas += universo.vagasEsperadas;
     materializaveis += resolverChavesVagasSet({ ...set, incluirSecretas }).length;
     if (universo.avisoSemNumeracaoOficial) {
-      algumSemNumeracao = true;
+      setsSemNumeracao.push(set.setId);
       totalSemNumeracao += universo.avisoSemNumeracaoOficial.qtdTotal;
     }
   }
   return {
     avisoCatalogoIncompleto: detectarCatalogoIncompleto(materializaveis, esperadas),
-    avisoSemNumeracaoOficial: algumSemNumeracao ? { qtdTotal: totalSemNumeracao } : null,
+    avisoSemNumeracaoOficial:
+      setsSemNumeracao.length > 0
+        ? { qtdTotal: totalSemNumeracao, setIds: setsSemNumeracao }
+        : null,
   };
 }
 

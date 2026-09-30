@@ -26,6 +26,12 @@
 export interface AvisoSemNumeracaoOficial {
   /** Universo de vagas usado no lugar da numeração oficial ausente. */
   qtdTotal: number;
+  /**
+   * Quais sets da receita estão nesse caso, numa coleção de set — a tela
+   * nomeia o set, porque numa coleção que junta sets o aviso vale para um
+   * deles e não para a coleção inteira. Ausente fora de `avisosDaReceita`.
+   */
+  setIds?: string[];
 }
 
 export interface EntradaUniversoVagasSet {

@@ -181,7 +181,7 @@ describe("avisosDaReceita", () => {
       [{ setId: "30th-c", localIdsDoSet: ["001", "002"], qtdOficial: 0, qtdTotal: 2 }],
       false,
     );
-    expect(r.avisoSemNumeracaoOficial).toEqual({ qtdTotal: 2 });
+    expect(r.avisoSemNumeracaoOficial).toEqual({ qtdTotal: 2, setIds: ["30th-c"] });
     expect(r.avisoCatalogoIncompleto).toBeNull();
   });
 });
