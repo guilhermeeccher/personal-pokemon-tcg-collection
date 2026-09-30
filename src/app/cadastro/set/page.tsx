@@ -96,7 +96,11 @@ export default function CadastroPorSetPage() {
 
   async function enviar() {
     if (!gradeAtual) return;
-    const itens = construirItensSubmissao(estado);
+    const idiomaPorCarta = new Map(gradeAtual.cartas.map((c) => [c.cartaId, c.idiomaCatalogo]));
+    const itens = construirItensSubmissao(
+      estado,
+      (cartaId) => idiomaPorCarta.get(cartaId) ?? gradeAtual.idiomaCatalogo,
+    );
     if (itens.length === 0) return;
 
     setEnviando(true);
@@ -106,7 +110,7 @@ export default function CadastroPorSetPage() {
       const resp = await fetch(`/api/sets/${encodeURIComponent(gradeAtual.setId)}/copias`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idiomaCatalogo: gradeAtual.idiomaCatalogo, itens }),
+        body: JSON.stringify({ itens }),
       });
       const dados = await resp.json();
       if (!resp.ok) {
@@ -159,6 +163,11 @@ export default function CadastroPorSetPage() {
             <Alerta tom="neutro">
               {t.rich("catalogoPt", { forte: (partes) => <strong>{partes}</strong> })} —{" "}
               {gradeAtual.setNome}
+            </Alerta>
+          )}
+          {gradeAtual.temPt && gradeAtual.cartasEmOutroIdioma > 0 && (
+            <Alerta tom="aviso">
+              {t("catalogoMisto", { total: gradeAtual.cartasEmOutroIdioma })}
             </Alerta>
           )}
 

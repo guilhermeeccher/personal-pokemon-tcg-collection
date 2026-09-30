@@ -25,6 +25,7 @@ import {
 /** Um item da grade, como chega do cliente (formato ainda não validado). */
 export interface ItemLoteBruto {
   cartaId?: unknown;
+  idiomaCatalogo?: unknown;
   quantidade?: unknown;
   variante?: unknown;
   idioma?: unknown;
@@ -55,15 +56,18 @@ export interface ErroItemLote {
 }
 
 export type ResultadoValidacaoLote =
-  | { ok: true; idiomaCatalogo: Idioma; copias: CopiaParaInserir[] }
+  | { ok: true; copias: CopiaParaInserir[] }
   | { ok: false; erros: ErroItemLote[] };
 
 /**
  * Valida e normaliza o lote inteiro da grade de um set.
  *
  * Regras:
- * - `idiomaCatalogo` é único para o lote inteiro (a grade inteira usa a
- *   mesma linha de catálogo — pt ou en, spec §2 / regra 7 do AGENTS.md).
+ * - `idiomaCatalogo` é POR ITEM (2026-09-30): a grade decide a ficha carta
+ *   a carta (`escolherLinhaPorCarta`), e num set traduzido pela metade uma
+ *   grade em pt tem cartas identificadas pela ficha en. O `idiomaCatalogo`
+ *   do lote continua aceito como padrão do item que não trouxer o seu —
+ *   era o formato antes disso, quando a grade inteira usava uma ficha só.
  * - Precisa de pelo menos 1 item.
  * - Cada item precisa de `cartaId`, `quantidade` inteira >= 1, `variante`,
  *   `idioma` (físico) e `condicao` válidos. `localizacao` é opcional.
@@ -76,11 +80,11 @@ export function validarLoteCopias(
 ): ResultadoValidacaoLote {
   const erros: ErroItemLote[] = [];
 
-  if (!ehIdioma(bruto.idiomaCatalogo)) {
+  if (bruto.idiomaCatalogo !== undefined && !ehIdioma(bruto.idiomaCatalogo)) {
     erros.push({
       indice: -1,
       cartaId: null,
-      motivo: `idiomaCatalogo inválido ou ausente: ${String(bruto.idiomaCatalogo)}`,
+      motivo: `idiomaCatalogo inválido: ${String(bruto.idiomaCatalogo)}`,
     });
   }
 
@@ -109,6 +113,15 @@ export function validarLoteCopias(
 
     if (!cartaId) {
       erros.push({ indice, cartaId: null, motivo: "cartaId ausente ou vazio" });
+      return;
+    }
+    const idiomaCatalogo = item.idiomaCatalogo ?? bruto.idiomaCatalogo;
+    if (!ehIdioma(idiomaCatalogo)) {
+      erros.push({
+        indice,
+        cartaId,
+        motivo: `idiomaCatalogo inválido ou ausente: ${String(idiomaCatalogo)}`,
+      });
       return;
     }
     if (
@@ -154,7 +167,7 @@ export function validarLoteCopias(
 
     copias.push({
       cartaId,
-      idiomaCatalogo: bruto.idiomaCatalogo as Idioma,
+      idiomaCatalogo,
       idioma: item.idioma,
       variante: item.variante,
       quantidade: item.quantidade,
@@ -167,9 +180,5 @@ export function validarLoteCopias(
     return { ok: false, erros };
   }
 
-  return {
-    ok: true,
-    idiomaCatalogo: bruto.idiomaCatalogo as Idioma,
-    copias,
-  };
+  return { ok: true, copias };
 }

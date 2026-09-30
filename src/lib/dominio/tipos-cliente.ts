@@ -48,6 +48,8 @@ export interface CartaParaGradeDTO extends FlagsVarianteDTO {
   /** Nome ocidental da espécie, só em carta com nome japonês. `null` no resto. */
   nomeEspecie: string | null;
   cartaId: string;
+  /** Idioma da ficha que identifica esta carta — decidido carta a carta. */
+  idiomaCatalogo: Idioma;
   localId: string;
   nome: string;
   categoria: string;
@@ -62,8 +64,11 @@ export interface CartaParaGradeDTO extends FlagsVarianteDTO {
 export interface GradeDoSetDTO {
   setId: string;
   setNome: string;
+  /** Idioma preferido da grade; cada carta traz o seu. */
   idiomaCatalogo: Idioma;
   temPt: boolean;
+  /** Cartas cuja ficha veio do outro idioma ocidental, por faltar no preferido. */
+  cartasEmOutroIdioma: number;
   cartas: CartaParaGradeDTO[];
 }
 

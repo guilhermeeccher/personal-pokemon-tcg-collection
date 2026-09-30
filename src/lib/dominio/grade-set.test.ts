@@ -8,6 +8,8 @@ import {
 } from "./grade-set";
 import type { FlagsVariantesCatalogo } from "./variantes-catalogo";
 
+const SEMPRE_PT = () => "pt" as const;
+
 const TODAS_DISPONIVEIS: FlagsVariantesCatalogo = {
   varianteNormalDisponivel: true,
   varianteReverseDisponivel: true,
@@ -55,7 +57,7 @@ describe("reduzirGrade — bug reportado: herança de variante contaminando linh
     estado = marcar(estado, "B");
     estado = reduzirGrade(estado, { tipo: "campoLinha", cartaId: "B", campo: "variante", valor: "holo" });
 
-    const itens = construirItensSubmissao(estado);
+    const itens = construirItensSubmissao(estado, SEMPRE_PT);
     const itemA = itens.find((i) => i.cartaId === "A");
     const itemB = itens.find((i) => i.cartaId === "B");
 
@@ -79,7 +81,7 @@ describe("reduzirGrade — bug reportado: herança de variante contaminando linh
       valor: "holo",
     });
 
-    const itens = construirItensSubmissao(estado);
+    const itens = construirItensSubmissao(estado, SEMPRE_PT);
     expect(itens).toHaveLength(41);
     for (const id of cartaIds) {
       const item = itens.find((i) => i.cartaId === id);
@@ -134,8 +136,21 @@ describe("construirItensSubmissao", () => {
     let estado = estadoGradeInicial();
     estado = marcar(estado, "A");
     estado = marcar(estado, "B", 0);
-    const itens = construirItensSubmissao(estado);
+    const itens = construirItensSubmissao(estado, SEMPRE_PT);
     expect(itens.map((i) => i.cartaId)).toEqual(["A"]);
+  });
+
+  it("cada item leva o idioma de catálogo da própria carta", () => {
+    // Set traduzido pela metade: A tem ficha pt, B só tem a en.
+    let estado = estadoGradeInicial();
+    estado = marcar(estado, "A");
+    estado = marcar(estado, "B");
+    const fichas: Record<string, "pt" | "en"> = { A: "pt", B: "en" };
+    const itens = construirItensSubmissao(estado, (id) => fichas[id]);
+    expect(itens.map((i) => [i.cartaId, i.idiomaCatalogo])).toEqual([
+      ["A", "pt"],
+      ["B", "en"],
+    ]);
   });
 });
 
@@ -169,7 +184,7 @@ describe("mexer numa linha não contamina as cartas ainda não marcadas", () => 
       tipo: "quantidade", cartaId: "c4", valor: 1, flags: TODAS_DISPONIVEIS,
     });
 
-    const item = construirItensSubmissao(estado).find((i) => i.cartaId === "c4");
+    const item = construirItensSubmissao(estado, SEMPRE_PT).find((i) => i.cartaId === "c4");
     expect(item?.variante).toBe("normal");
   });
 
@@ -182,7 +197,7 @@ describe("mexer numa linha não contamina as cartas ainda não marcadas", () => 
       tipo: "quantidade", cartaId: "c1", valor: 1, flags: TODAS_DISPONIVEIS,
     });
 
-    const item = construirItensSubmissao(estado).find((i) => i.cartaId === "c1");
+    const item = construirItensSubmissao(estado, SEMPRE_PT).find((i) => i.cartaId === "c1");
     expect(item?.variante).toBe("holo");
   });
 });

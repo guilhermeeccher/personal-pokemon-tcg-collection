@@ -287,6 +287,29 @@ cards. `pnpm importar:catalogo-repo --idioma pt` (or `en`) reads a local clone a
 - Without `--idioma` the importer keeps its original job: the Japanese catalog from `data-asia/`, by
   upsert.
 
+### Catalog language is decided card by card
+
+A Set collection's `idiomaCatalogo` is a **preference**, not a filter. Each number in the set uses its
+row in the preferred language when it exists and the other Western row when it does not
+(`ordemIdiomasPorCarta`, `escolherLinhaPorCarta` in `lib/dominio/idioma-catalogo.ts`): pt → en,
+en → pt. The universe of slots is the union of both, and the counts are the larger of the two
+(`contagensDoSet`). This is rule 7 carried one step further: the catalog row only says which card it
+is, so swapping pt for en on a card does not change the card.
+
+- **Why card by card:** upstream translates a set a little at a time. Deciding for the whole set gave
+  two bad answers for the 30th Celebration — stay in pt and materialize 2 slots out of 128, or fall
+  back to en and lose the two that did exist in pt.
+- **Japanese is never a fallback for pt/en, nor the other way round.** pt and en share the card id
+  and number (`30th-001` in both, checked across the 13,907 cards that exist in both). Japanese sets
+  have their own `set_id`, and the four that share one with English (`neo1` to `neo4`) number the
+  cards differently and hold different cards — `neo1` has 111 cards `1..111` in en and 96
+  `001..096` in jp, with no number in common. Mixing them would create slots for cards that are not
+  in the set.
+- The same rule serves the collection screen, slot creation, the secrets toggle, the missing-catalog
+  warning, the set registration grid and the Buy by List. **Do not reintroduce a single-language
+  query in any of them**: the grid sends `idiomaCatalogo` per item for this reason, and the batch
+  route checks each card's variants against its own row.
+
 ---
 
 ## LigaPokemon price collector — hard rules

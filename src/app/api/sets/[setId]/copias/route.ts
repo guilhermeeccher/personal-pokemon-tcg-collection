@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { inserirLoteCopias, obterVariantesDisponiveisPorCarta } from "@/lib/db/consultas";
 import { validarLoteCopias } from "@/lib/dominio/lote-copias";
 import { corpoRecusa } from "@/lib/dominio/recusa";
+import type { VarianteCopia } from "@/lib/dominio/enums";
 import { validarVariantesContraCatalogo } from "@/lib/dominio/variantes-catalogo";
 
 /**
@@ -43,13 +44,27 @@ export async function POST(
     );
   }
 
-  const cartaIds = [...new Set(resultado.copias.map((c) => c.cartaId))];
-  const variantesPorCarta = await obterVariantesDisponiveisPorCarta(
-    db,
-    resultado.idiomaCatalogo,
-    cartaIds,
-  );
-  const errosVariante = validarVariantesContraCatalogo(resultado.copias, variantesPorCarta);
+  // A ficha de cada carta é a do SEU idioma de catálogo — a grade decide
+  // carta a carta, então um lote pode misturar pt e en. As variantes são
+  // buscadas por idioma e casadas pelo par (carta, idioma): as flags de uma
+  // carta podem diferir entre a ficha pt e a en.
+  const chave = (cartaId: string, idioma: string) => `${cartaId}\u0000${idioma}`;
+  const variantesPorChave: Record<string, VarianteCopia[]> = {};
+  for (const idioma of new Set(resultado.copias.map((c) => c.idiomaCatalogo))) {
+    const cartaIds = [
+      ...new Set(
+        resultado.copias.filter((c) => c.idiomaCatalogo === idioma).map((c) => c.cartaId),
+      ),
+    ];
+    const mapa = await obterVariantesDisponiveisPorCarta(db, idioma, cartaIds);
+    for (const [cartaId, variantes] of Object.entries(mapa)) {
+      variantesPorChave[chave(cartaId, idioma)] = variantes;
+    }
+  }
+  const errosVariante = validarVariantesContraCatalogo(
+    resultado.copias.map((c) => ({ ...c, cartaId: chave(c.cartaId, c.idiomaCatalogo) })),
+    variantesPorChave,
+  ).map((e) => ({ ...e, cartaId: resultado.copias[e.indice].cartaId }));
   if (errosVariante.length > 0) {
     return NextResponse.json(
       { ...corpoRecusa("varianteForaDoCatalogoNoLote"), detalhes: errosVariante },

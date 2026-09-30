@@ -60,6 +60,41 @@ describe("validarLoteCopias", () => {
     expect(resultado.copias[0].idioma).toBe("pt");
   });
 
+  it("aceita idiomaCatalogo por item, num lote que mistura fichas pt e en", () => {
+    // Caso real (2026-09-30): o 30th tinha 2 cartas com ficha pt e o resto
+    // só com a en; a mesma grade grava as duas.
+    const resultado = validarLoteCopias({
+      itens: [
+        { cartaId: "30th-001", idiomaCatalogo: "pt", quantidade: 1, variante: "normal", idioma: "pt", condicao: "NM" },
+        { cartaId: "30th-050", idiomaCatalogo: "en", quantidade: 1, variante: "holo", idioma: "pt", condicao: "NM" },
+      ],
+    });
+    expect(resultado.ok).toBe(true);
+    if (!resultado.ok) throw new Error("esperava ok");
+    expect(resultado.copias.map((c) => c.idiomaCatalogo)).toEqual(["pt", "en"]);
+  });
+
+  it("o idiomaCatalogo do item vence o do lote", () => {
+    const resultado = validarLoteCopias({
+      idiomaCatalogo: "pt",
+      itens: [
+        { cartaId: "30th-050", idiomaCatalogo: "en", quantidade: 1, variante: "holo", idioma: "pt", condicao: "NM" },
+      ],
+    });
+    expect(resultado.ok).toBe(true);
+    if (!resultado.ok) throw new Error("esperava ok");
+    expect(resultado.copias[0].idiomaCatalogo).toBe("en");
+  });
+
+  it("rejeita idiomaCatalogo inválido no item", () => {
+    const resultado = validarLoteCopias({
+      itens: [
+        { cartaId: "x-1", idiomaCatalogo: "fr", quantidade: 1, variante: "normal", idioma: "pt", condicao: "NM" },
+      ],
+    });
+    expect(resultado.ok).toBe(false);
+  });
+
   it("rejeita lote vazio (nenhuma carta marcada)", () => {
     const resultado = validarLoteCopias({ idiomaCatalogo: "pt", itens: [] });
     expect(resultado.ok).toBe(false);

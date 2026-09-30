@@ -30,6 +30,7 @@ import {
 } from "@/lib/dominio/liga-set";
 import { JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS } from "@/lib/dominio/estimativa-varredura";
 import { compararLocalId } from "@/lib/dominio/ordenacao";
+import { ordemIdiomasPorCarta } from "@/lib/dominio/idioma-catalogo";
 import type { ParametroSet } from "@/lib/dominio/parametro-colecao";
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
 
@@ -148,7 +149,9 @@ export async function listarVagasVaziasSet(
       and(
         eq(cartaCatalogo.setId, parametro.setId),
         eq(cartaCatalogo.ativa, true),
-        inArray(cartaCatalogo.idioma, [parametro.idiomaCatalogo, "en"]),
+        inArray(cartaCatalogo.idioma, [
+          ...new Set([...ordemIdiomasPorCarta(parametro.idiomaCatalogo), "en" as const]),
+        ]),
       ),
     );
 
@@ -163,7 +166,13 @@ export async function listarVagasVaziasSet(
     const numero = normalizarNumeroCarta(chave);
     const daColecao = porIdiomaENumero.get(`${parametro.idiomaCatalogo}:${numero}`);
     const emIngles = porIdiomaENumero.get(`en:${numero}`);
-    const principal = daColecao ?? emIngles;
+    // A mesma ordem carta a carta da tela da coleção (`ordemIdiomasPorCarta`):
+    // numa coleção en, a carta que só tem ficha pt ainda resolve.
+    const principal =
+      daColecao ??
+      ordemIdiomasPorCarta(parametro.idiomaCatalogo)
+        .map((idioma) => porIdiomaENumero.get(`${idioma}:${numero}`))
+        .find((c) => c !== undefined);
     // Vaga cujo número não resolve carta no catálogo fica de fora: sem nome não
     // há o que buscar, e mandar o número puro traria qualquer carta com aquele
     // número impresso. Acontece em set que o upstream não tem carta a carta.

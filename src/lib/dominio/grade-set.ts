@@ -132,6 +132,8 @@ export function reduzirGrade(estado: EstadoGrade, acao: AcaoGrade): EstadoGrade 
 
 export interface ItemSubmissaoGrade {
   cartaId: string;
+  /** Idioma da ficha desta carta — a grade decide carta a carta, não o lote. */
+  idiomaCatalogo: Idioma;
   quantidade: number;
   variante: VarianteCopia;
   idioma: Idioma;
@@ -144,12 +146,21 @@ export interface ItemSubmissaoGrade {
  * quantidade e a materialização ocorrer (mesmo tick) — na prática, depois
  * da correção acima, toda linha marcada já chega aqui com campos
  * próprios.
+ *
+ * `idiomaCatalogoDe` diz a ficha de cada carta: num set traduzido pela
+ * metade, uma grade em pt tem cartas identificadas pela ficha en
+ * (`escolherLinhaPorCarta`), e a cópia precisa apontar para a linha que
+ * existe.
  */
-export function construirItensSubmissao(estado: EstadoGrade): ItemSubmissaoGrade[] {
+export function construirItensSubmissao(
+  estado: EstadoGrade,
+  idiomaCatalogoDe: (cartaId: string) => Idioma,
+): ItemSubmissaoGrade[] {
   return Object.entries(estado.linhas)
     .filter(([, l]) => l.quantidade > 0)
     .map(([cartaId, l]) => ({
       cartaId,
+      idiomaCatalogo: idiomaCatalogoDe(cartaId),
       quantidade: l.quantidade,
       variante: l.variante ?? estado.defaults.variante,
       idioma: l.idioma ?? estado.defaults.idioma,

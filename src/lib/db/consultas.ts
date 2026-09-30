@@ -15,7 +15,12 @@ import { compararLocalId } from "@/lib/dominio/ordenacao";
 import { type Recusa, recusa } from "@/lib/dominio/recusa";
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
 import { casaNumeroCarta } from "@/lib/dominio/busca-carta";
-import { resolverIdiomaCatalogoDoSet } from "@/lib/dominio/idioma-catalogo";
+import {
+  contagensDoSet,
+  escolherLinhaPorCarta,
+  ordemIdiomasPorCarta,
+  resolverIdiomaCatalogoDoSet,
+} from "@/lib/dominio/idioma-catalogo";
 import { resolverDexIdsPorNome } from "@/lib/dominio/nome-especie";
 import { derivarForma } from "@/lib/dominio/forma";
 import { energiaDaCarta, type TipoEnergia } from "@/lib/dominio/tipo-energia";
@@ -248,8 +253,8 @@ export interface SetParaCadastro {
   qtdOficial: number;
   qtdTotal: number;
   /**
-   * Quantas cartas desse set (no `idiomaCatalogo` resolvido) já estão
-   * materializadas no catálogo local — mesmo dado que `formatarRotuloSet`
+   * Quantas cartas desse set já estão materializadas no catálogo local,
+   * somando pt e en carta a carta (só jp num set japonês) — mesmo dado que `formatarRotuloSet`
    * usa via `resolverUniversoVagasSet` pra não anunciar "0 cartas" em
    * set sem numeração oficial (achado do coordenador, caso `mep`).
    */
@@ -305,6 +310,22 @@ export async function listarSetsParaCadastro(
       cartaCatalogo.setQtdTotal,
     );
 
+  // Quantas cartas distintas o set tem somando pt e en — o universo carta a
+  // carta (`escolherLinhaPorCarta`) de um set ocidental. A contagem por
+  // idioma acima não serve para isso: o 30th tinha 2 cartas em pt e 158 em
+  // en, e o rótulo anunciava as 2.
+  const cartasOcidentais = await db
+    .select({
+      setId: cartaCatalogo.setId,
+      qtd: sql<number>`count(distinct ${cartaCatalogo.localId})::int`,
+    })
+    .from(cartaCatalogo)
+    .where(
+      and(eq(cartaCatalogo.ativa, true), inArray(cartaCatalogo.idioma, ["pt", "en"])),
+    )
+    .groupBy(cartaCatalogo.setId);
+  const cartasOcidentaisPorSet = new Map(cartasOcidentais.map((l) => [l.setId, l.qtd]));
+
   const porSetId = new Map<string, typeof linhas>();
   for (const linha of linhas) {
     const grupo = porSetId.get(linha.setId);
@@ -319,10 +340,14 @@ export async function listarSetsParaCadastro(
       );
       const idiomaCatalogo = resolverIdiomaCatalogoDoSet(idiomasDisponiveis);
       const temPt = idiomasDisponiveis.includes("pt");
-      // Linha "representante" pra nome/sigla/data/contagem: mesma
-      // preferência pt > en > jp usada pra escolher idiomaCatalogo.
+      // Linha "representante" pra nome/sigla/data: mesma preferência
+      // pt > en > jp usada pra escolher idiomaCatalogo.
       const escolhido =
         linhasDoSet.find((l) => l.idioma === idiomaCatalogo) ?? linhasDoSet[0];
+      // Contagens pelos idiomas que se completam carta a carta — as mesmas
+      // que a criação da coleção vai usar (`obterInfoSetParaVagas`).
+      const ordem = ordemIdiomasPorCarta(idiomaCatalogo);
+      const contagens = contagensDoSet(linhasDoSet.filter((l) => ordem.includes(l.idioma)));
       return {
         setId: escolhido.setId,
         setNome: escolhido.nome,
@@ -333,9 +358,12 @@ export async function listarSetsParaCadastro(
         idiomaCatalogo,
         temPt,
         idiomasDisponiveis,
-        qtdOficial: escolhido.qtdOficial,
-        qtdTotal: escolhido.qtdTotal,
-        qtdCartasNoCatalogo: escolhido.qtdCartasNoCatalogo,
+        qtdOficial: contagens.qtdOficial,
+        qtdTotal: contagens.qtdTotal,
+        qtdCartasNoCatalogo:
+          idiomaCatalogo === "jp"
+            ? escolhido.qtdCartasNoCatalogo
+            : (cartasOcidentaisPorSet.get(escolhido.setId) ?? escolhido.qtdCartasNoCatalogo),
       };
     })
     .sort((a, b) => {
@@ -356,6 +384,8 @@ export async function listarSetsParaCadastro(
 
 export interface CartaParaGrade {
   cartaId: string;
+  /** Idioma da ficha que identifica ESTA carta — decidido carta a carta. */
+  idiomaCatalogo: Idioma;
   localId: string;
   nome: string;
   categoria: string;
@@ -373,8 +403,11 @@ export interface CartaParaGrade {
 export interface GradeDoSet {
   setId: string;
   setNome: string;
+  /** Idioma preferido da grade; cada carta traz o seu em `CartaParaGrade`. */
   idiomaCatalogo: Idioma;
   temPt: boolean;
+  /** Cartas cuja ficha veio do outro idioma ocidental, por faltar no preferido. */
+  cartasEmOutroIdioma: number;
   cartas: CartaParaGrade[];
 }
 
@@ -402,9 +435,10 @@ export async function obterGradeDoSet(
   );
   const temPt = idiomasDoSet.some((l) => l.idioma === "pt");
 
-  const linhas = await db
+  const linhasDosIdiomas = await db
     .select({
       cartaId: cartaCatalogo.id,
+      idioma: cartaCatalogo.idioma,
       localId: cartaCatalogo.localId,
       nome: cartaCatalogo.nome,
       dexIds: cartaCatalogo.dexIds,
@@ -424,11 +458,15 @@ export async function obterGradeDoSet(
     .where(
       and(
         eq(cartaCatalogo.setId, setId),
-        eq(cartaCatalogo.idioma, idiomaCatalogo),
+        inArray(cartaCatalogo.idioma, [...ordemIdiomasPorCarta(idiomaCatalogo)]),
         eq(cartaCatalogo.ativa, true),
       ),
     );
 
+  // Carta a carta: cada número usa a ficha no idioma preferido do set
+  // quando ela existe, e a outra ficha ocidental quando não. Por isso cada
+  // carta leva o PRÓPRIO idioma de catálogo até a gravação da cópia.
+  const linhas = escolherLinhaPorCarta(linhasDosIdiomas, idiomaCatalogo);
   if (linhas.length === 0) return null;
 
   const cartas = await comNomeEspecie(
@@ -436,18 +474,18 @@ export async function obterGradeDoSet(
     linhas
       .slice()
       .sort((a, b) => compararLocalId(a.localId, b.localId))
-      // A grade inteira é de um set só, logo de um idioma de catálogo só —
-      // `comNomeEspecie` decide carta a carta, então precisa do campo.
-      .map((c) => ({ ...c, idiomaCatalogo })),
+      .map((c) => ({ ...c, idiomaCatalogo: c.idioma })),
   );
 
   return {
     setId,
-    setNome: linhas[0].setNome,
+    setNome: (linhas.find((l) => l.idioma === idiomaCatalogo) ?? linhas[0]).setNome,
     idiomaCatalogo,
     temPt,
+    cartasEmOutroIdioma: linhas.filter((l) => l.idioma !== idiomaCatalogo).length,
     cartas: cartas.map((c) => ({
       cartaId: c.cartaId,
+      idiomaCatalogo: c.idiomaCatalogo,
       localId: c.localId,
       nome: c.nome,
       nomeEspecie: c.nomeEspecie,
@@ -1463,7 +1501,10 @@ export async function listarRaridadesDoInventario(
 // --- Catálogo para materialização de vagas (Fase 2) -----------------------
 
 export interface InfoSetParaVagas {
-  /** Todos os `local_id` do set, no idioma de catálogo pedido. */
+  /**
+   * Todos os `local_id` do set, um por carta, juntando os idiomas de
+   * `ordemIdiomasPorCarta` (pt e en se completam; jp fica sozinho).
+   */
   localIds: string[];
   qtdOficial: number;
   qtdTotal: number;
@@ -1480,25 +1521,31 @@ export interface InfoSetParaVagas {
  * contar para a numeração oficial).
  */
 export async function obterInfoSetParaVagas(
-  db: Database,
+  db: Database | Transacao,
   setId: string,
-  idiomaCatalogo: Idioma,
+  idiomaPreferido: Idioma,
 ): Promise<InfoSetParaVagas | null> {
+  // Carta a carta (`escolherLinhaPorCarta`): o universo é a união dos
+  // números que o set tem nos idiomas da ordem, não só os do preferido —
+  // senão um set traduzido pela metade materializa só a metade traduzida.
   const linhas = await db
     .select({
       localId: cartaCatalogo.localId,
+      idioma: cartaCatalogo.idioma,
       qtdOficial: cartaCatalogo.setQtdOficial,
       qtdTotal: cartaCatalogo.setQtdTotal,
     })
     .from(cartaCatalogo)
     .where(
-      and(eq(cartaCatalogo.setId, setId), eq(cartaCatalogo.idioma, idiomaCatalogo)),
+      and(
+        eq(cartaCatalogo.setId, setId),
+        inArray(cartaCatalogo.idioma, [...ordemIdiomasPorCarta(idiomaPreferido)]),
+      ),
     );
   if (linhas.length === 0) return null;
   return {
-    localIds: linhas.map((l) => l.localId),
-    qtdOficial: linhas[0].qtdOficial,
-    qtdTotal: linhas[0].qtdTotal,
+    localIds: escolherLinhaPorCarta(linhas, idiomaPreferido).map((l) => l.localId),
+    ...contagensDoSet(linhas),
   };
 }
 
@@ -1733,7 +1780,8 @@ export interface VagaDaColecao {
    *   cartaId/idiomaCatalogo da própria cópia — nunca pelo idiomaCatalogo
    *   da coleção, regra 7).
    * - Vazia, coleção `set`: da carta ESPERADA naquele `local_id`, no
-   *   `idiomaCatalogo` da coleção (join direto por setId+idioma+localId).
+   *   `idiomaCatalogo` da coleção quando a carta existe nele, senão na
+   *   outra ficha ocidental (`escolherLinhaPorCarta`).
    *   "Falta a carta 042" é inútil; "falta Golbat (042)" é a lista de
    *   compras.
    * - Vazia, coleção `pokedex`: null — usa `nomeEspecie` acima, porque
@@ -1854,6 +1902,7 @@ export async function obterColecaoComVagas(
     const linhasSet = await db
       .select({
         localId: cartaCatalogo.localId,
+        idioma: cartaCatalogo.idioma,
         nome: cartaCatalogo.nome,
         setNome: cartaCatalogo.setNome,
         tipos: cartaCatalogo.tipos,
@@ -1864,10 +1913,14 @@ export async function obterColecaoComVagas(
       .where(
         and(
           eq(cartaCatalogo.setId, parametro.setId),
-          eq(cartaCatalogo.idioma, parametro.idiomaCatalogo),
+          inArray(cartaCatalogo.idioma, [...ordemIdiomasPorCarta(parametro.idiomaCatalogo)]),
         ),
       );
-    cartasEsperadasPorLocalId = new Map(linhasSet.map((l) => [l.localId, l]));
+    // Carta a carta: a vaga vazia mostra a carta no idioma preferido da
+    // coleção quando existe, e na outra ficha ocidental quando não.
+    cartasEsperadasPorLocalId = new Map(
+      escolherLinhaPorCarta(linhasSet, parametro.idiomaCatalogo).map((l) => [l.localId, l]),
+    );
   }
 
   let nomesPorNumero: Map<number, string | null> = new Map();
@@ -1993,34 +2046,14 @@ export async function alternarSecretasDaColecao(
       return { ok: true }; // já está nesse estado — no-op idempotente
     }
 
-    const linhasSet = await tx
-      .select({ localId: cartaCatalogo.localId })
-      .from(cartaCatalogo)
-      .where(
-        and(
-          eq(cartaCatalogo.setId, parametro.setId),
-          eq(cartaCatalogo.idioma, parametro.idiomaCatalogo),
-        ),
-      );
-    if (linhasSet.length === 0) {
+    // Mesmo universo da criação, carta a carta (`obterInfoSetParaVagas`):
+    // lendo só o idioma preferido, o toggle de um set traduzido pela metade
+    // cortaria a numeração no lugar errado.
+    const info = await obterInfoSetParaVagas(tx, parametro.setId, parametro.idiomaCatalogo);
+    if (!info) {
       return { ok: false, motivo: recusa("setNaoEncontradoNoCatalogo") };
     }
-
-    // Precisa das contagens oficiais/total — vêm denormalizadas em toda
-    // linha do set, então a primeira serve.
-    const [{ qtdOficial, qtdTotal }] = await tx
-      .select({
-        qtdOficial: cartaCatalogo.setQtdOficial,
-        qtdTotal: cartaCatalogo.setQtdTotal,
-      })
-      .from(cartaCatalogo)
-      .where(
-        and(
-          eq(cartaCatalogo.setId, parametro.setId),
-          eq(cartaCatalogo.idioma, parametro.idiomaCatalogo),
-        ),
-      )
-      .limit(1);
+    const { qtdOficial, qtdTotal } = info;
 
     // Set sem numeração oficial (`numeracao-oficial-set.ts`, caso `mep`):
     // `qtdOficial = 0` faria `chavesSecretas` abaixo cobrir o set INTEIRO
@@ -2031,7 +2064,7 @@ export async function alternarSecretasDaColecao(
       return { ok: false, motivo: recusa("setSemNumeracaoOficialSeparada") };
     }
 
-    const ordenados = linhasSet.map((l) => l.localId).sort(compararLocalId);
+    const ordenados = info.localIds.slice().sort(compararLocalId);
     const chavesSecretas = ordenados.slice(qtdOficial, qtdTotal);
 
     if (!incluirSecretas) {

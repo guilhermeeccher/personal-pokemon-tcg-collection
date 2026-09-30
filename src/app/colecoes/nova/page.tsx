@@ -60,10 +60,12 @@ export default function NovaColecaoPage() {
 
   function selecionarSet(set: SetParaCadastroDTO | null) {
     setSetEscolhido(set);
-    // `SetParaCadastroDTO.idiomaCatalogo` é tipado como `Idioma` (inclui
-    // "jp") mas `resolverIdiomaCatalogoDoSet` só devolve "pt" ou "en" —
-    // nunca "jp" (spec §2: catálogo sincronizado só em pt/en por ora).
-    setIdiomaCatalogo(set?.idiomaCatalogo === "pt" ? "pt" : "en");
+    // O idioma é a PREFERÊNCIA da coleção: a ficha é escolhida carta a
+    // carta (`escolherLinhaPorCarta`), e pt completa com en onde falta.
+    // Por isso pt é o padrão de todo set ocidental, mesmo sem nenhuma
+    // carta em pt hoje — quando o upstream traduzir, a coleção passa a
+    // mostrar os nomes em português sem ser recriada.
+    setIdiomaCatalogo("pt");
   }
 
   function alternarRegiao(r: Regiao) {
@@ -201,7 +203,7 @@ export default function NovaColecaoPage() {
                     onChange={(e) => setIdiomaCatalogo(e.target.value as IdiomaCatalogo)}
                     className={`w-40 ${classesEntrada}`}
                   >
-                    {setEscolhido.temPt && <option value="pt">pt</option>}
+                    <option value="pt">pt</option>
                     <option value="en">en</option>
                   </select>
                   {!setEscolhido.temPt && (
