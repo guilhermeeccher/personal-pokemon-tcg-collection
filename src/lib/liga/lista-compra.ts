@@ -9,7 +9,13 @@
  */
 
 import type { EscolhaSalva } from "@/lib/db/escolhas";
-import type { LinhaListaCompra } from "@/lib/dominio/exportacao-lista-compra";
+import type { Regiao } from "@/lib/dominio/escopo-pokedex";
+import {
+  dividirListaCompra,
+  gerarListaLiga,
+  totalDaLista,
+  type LinhaListaCompra,
+} from "@/lib/dominio/exportacao-lista-compra";
 
 /**
  * Uma escolha do usuário, no formato da lista de compras.
@@ -38,4 +44,36 @@ export function linhaDaEscolha(e: EscolhaSalva): LinhaListaCompra {
     noCatalogo: e.cartaId !== null,
     caminho: e.caminho,
   };
+}
+
+/** Uma aba do bloco para colar, como a tela a recebe. */
+export interface AbaLigaDTO {
+  id: string;
+  regiao: Regiao | null;
+  parte: number;
+  partes: number;
+  /** O texto que o botão Copiar leva — só desta aba. */
+  texto: string;
+  quantidade: number;
+  total: number;
+}
+
+/**
+ * A lista de compras em abas que cabem na Compra por Lista deles. A divisão
+ * vive em `dividirListaCompra`, e a exportação usa a mesma função: o `id` da
+ * aba que a tela mostra é o que a URL de download pede.
+ */
+export function abasDaLista(
+  linhas: readonly LinhaListaCompra[],
+  tipo: "pokedex" | "set",
+): AbaLigaDTO[] {
+  return dividirListaCompra(linhas, tipo).map((aba) => ({
+    id: aba.id,
+    regiao: aba.regiao,
+    parte: aba.parte,
+    partes: aba.partes,
+    texto: gerarListaLiga(aba.linhas),
+    quantidade: aba.linhas.length,
+    total: totalDaLista(aba.linhas),
+  }));
 }

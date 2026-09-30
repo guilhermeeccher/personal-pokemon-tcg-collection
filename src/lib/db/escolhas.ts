@@ -7,7 +7,7 @@
 
 import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
-import type { Database } from "./client";
+import type { Database, Transacao } from "./client";
 import { cartaCatalogo, escolhaCompra, vaga } from "./schema";
 import { identidadeDaCarta } from "@/lib/dominio/identidade-carta";
 
@@ -176,7 +176,7 @@ export async function marcarEscolhas(
  * Desmarca cartas. Apagar aqui é o gesto do usuário, não efeito colateral.
  */
 export async function desmarcarEscolhas(
-  db: Database,
+  db: Database | Transacao,
   colecaoId: string,
   alvos: ReadonlyArray<{ chave: string; identidade: string }>,
 ): Promise<number> {

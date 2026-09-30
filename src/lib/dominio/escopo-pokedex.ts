@@ -37,6 +37,20 @@ export const FAIXA_REGIAO: Record<Regiao, { inicio: number; fim: number }> = {
   paldea: { inicio: 906, fim: 1025 },
 };
 
+/* Nome de região é nome próprio do universo Pokémon — não traduz, e por
+   isso fica aqui e não no catálogo de mensagens. */
+export const NOME_REGIAO: Record<Regiao, string> = {
+  kanto: "Kanto",
+  johto: "Johto",
+  hoenn: "Hoenn",
+  sinnoh: "Sinnoh",
+  unova: "Unova",
+  kalos: "Kalos",
+  alola: "Alola",
+  galar: "Galar",
+  paldea: "Paldea",
+};
+
 export const POKEDEX_NACIONAL_INICIO = 1;
 export const POKEDEX_NACIONAL_FIM = 1025;
 

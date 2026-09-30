@@ -34,9 +34,12 @@ import {
   type VagaParaAgrupar,
 } from "@/lib/dominio/liga-opcoes";
 import { listarEscolhas } from "@/lib/db/escolhas";
-import { gerarListaLiga, totalDaLista } from "@/lib/dominio/exportacao-lista-compra";
+import { compararLocalId } from "@/lib/dominio/ordenacao";
+import { listarSemEstoqueVigente } from "@/lib/db/sem-estoque";
+import { chaveSemEstoque } from "@/lib/dominio/sem-estoque-liga";
+import { totalDaLista } from "@/lib/dominio/exportacao-lista-compra";
 import { identidadeDaCarta } from "@/lib/dominio/identidade-carta";
-import { linhaDaEscolha } from "@/lib/liga/lista-compra";
+import { abasDaLista, linhaDaEscolha } from "@/lib/liga/lista-compra";
 import { ehUuid } from "@/lib/dominio/uuid";
 import { executarVarredura, vagasParaVarrer } from "@/lib/liga/varredura";
 
@@ -255,6 +258,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   );
 }
 
+function vagasComVariasEscolhas(
+  escolhas: ReadonlyArray<{ chave: string; especie: string | null; nome: string }>,
+): Array<{ chave: string; rotulo: string; quantidade: number }> {
+  const porVaga = new Map<string, { rotulo: string; quantidade: number }>();
+  for (const e of escolhas) {
+    const atual = porVaga.get(e.chave);
+    if (atual) atual.quantidade++;
+    else porVaga.set(e.chave, { rotulo: e.especie ?? e.nome, quantidade: 1 });
+  }
+  return [...porVaga]
+    .filter(([, v]) => v.quantidade > 1)
+    .map(([chave, v]) => ({ chave, ...v }))
+    .sort((a, b) => compararLocalId(a.chave, b.chave));
+}
+
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!ehUuid(id)) {
@@ -279,7 +297,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     vagas: [],
     selecionadas: 0,
     guardadas: 0,
-    listaLiga: "",
+    abasLiga: [],
+    multiplas: [],
     total: 0,
     semPreco: 0,
     precoMaisAntigo: null,
@@ -303,7 +322,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const resumoDaLista = {
     selecionadas: daLista.length,
     guardadas: escolhas.length - daLista.length,
-    listaLiga: gerarListaLiga(linhas),
+    // Em abas de até 110 cartas, o limite da Compra por Lista deles — por
+    // região na Pokédex. Ver `dividirListaCompra`.
+    abasLiga: abasDaLista(linhas, colecao.tipo),
+    // Vagas com mais de uma carta na string. Várias por vaga é permitido
+    // (decisão de 2026-09-17), então é aviso, não recusa: na Pokédex é quase
+    // sempre sobra de triagem, e cada linha a mais é uma carta a mais comprada.
+    multiplas: vagasComVariasEscolhas(daLista),
     total: totalDaLista(linhas),
     // Preço sem data é armadilha: a carta que sumiu da varredura seguinte
     // continua aqui com o preço de antes, e a tela precisa poder dizer isso.
@@ -359,8 +384,28 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   // Efeito colateral desejado: vaga que o usuário preencheu depois da
   // varredura sai da lista sozinha, em vez de oferecer compra do que já é
   // dele.
+  // A carta que a Liga devolveu como "sem estoque" deixa de ser oferecida
+  // (decisão de 2026-09-24, `lib/dominio/sem-estoque-liga.ts`). A varredura a
+  // acharia de novo, com preço de outra condição — o filtro é aqui, na
+  // leitura, e não na gravação, para que o registro vencido a traga de volta
+  // sem varredura nova.
+  //
+  // **A já selecionada fica**, com a marca: esconder uma carta que está na
+  // string tiraria do usuário o único jeito de desmarcá-la pela grade.
+  const semEstoque = new Set((await listarSemEstoqueVigente(db)).map((r) => r.chave));
+  const escondidasPorVaga = new Map<string, number>();
+  const oferecidas = opcoesComMarcacao
+    .map((o) => ({ ...o, semEstoque: semEstoque.has(chaveSemEstoque(o)) }))
+    .filter((o) => {
+      if (!o.semEstoque || o.selecionada) return true;
+      escondidasPorVaga.set(o.chave, (escondidasPorVaga.get(o.chave) ?? 0) + 1);
+      return false;
+    });
+
   const vagasDaRodada = await vagasParaAgrupar(id, colecao.tipo);
-  const agrupadas = montarOpcoesPorVaga(opcoesComMarcacao, vagasDaRodada, varredura.filtros);
+  const agrupadas = montarOpcoesPorVaga(oferecidas, vagasDaRodada, varredura.filtros).map(
+    (v) => ({ ...v, semEstoque: escondidasPorVaga.get(v.chave) ?? 0 }),
+  );
 
   const emAndamento = varredura.concluidaEm === null;
 

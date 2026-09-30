@@ -21,9 +21,18 @@ import {
 } from "@/lib/dominio/liga-opcoes";
 import { formatarDuracao } from "@/lib/dominio/estimativa-varredura";
 import { VALIDADE_CONSULTA_HORAS } from "@/lib/dominio/frescor-consulta";
+import {
+  FAIXA_REGIAO,
+  NOME_REGIAO,
+  regiaoDoNumero,
+  type Regiao,
+} from "@/lib/dominio/escopo-pokedex";
+import { LIMITE_COMPRA_POR_LISTA } from "@/lib/dominio/exportacao-lista-compra";
 import { compararLocalId } from "@/lib/dominio/ordenacao";
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { Icone } from "@/app/_componentes/icone";
+import { PainelSemEstoque } from "./painel-sem-estoque";
 
 /**
  * Tela de opções de compra das vagas vazias — a Fase 6 em uso, nas coleções
@@ -74,6 +83,11 @@ interface OpcaoDTO {
   cartaId: string | null;
   caminho: string;
   selecionada: boolean;
+  /**
+   * A Liga devolveu esta carta como "sem estoque". Só chega à tela quando está
+   * selecionada — a não selecionada é escondida no servidor.
+   */
+  semEstoque: boolean;
   /** `null` na carta fora do nosso catálogo — não fazemos hotlink da foto deles. */
   imagemUrl: string | null;
   imagemOrigem: OrigemImagem | null;
@@ -86,6 +100,8 @@ interface VagaDTO {
   dex: number | null;
   opcoes: OpcaoDTO[];
   descartadas: number;
+  /** Opções escondidas por estarem registradas como sem estoque na Liga. */
+  semEstoque: number;
 }
 
 interface VarreduraDTO {
@@ -109,6 +125,17 @@ interface RitmoDTO {
   origem: "env" | "robots" | "conservador";
 }
 
+/** Uma aba do bloco para colar — ver `abasDaLista` em `lib/liga/lista-compra.ts`. */
+interface AbaLigaDTO {
+  id: string;
+  regiao: Regiao | null;
+  parte: number;
+  partes: number;
+  texto: string;
+  quantidade: number;
+  total: number;
+}
+
 interface RespostaDTO {
   tipo: TipoColecaoComVaga;
   ritmo: RitmoDTO;
@@ -118,8 +145,13 @@ interface RespostaDTO {
   selecionadas: number;
   /** Escolhas de vaga já preenchida: guardadas, fora da string. */
   guardadas: number;
-  /** O bloco pronto para colar na Compra por Lista deles. */
-  listaLiga: string;
+  /**
+   * O bloco pronto para colar na Compra por Lista deles, em abas de até 110
+   * cartas (o limite deles) — por região na Pokédex.
+   */
+  abasLiga: AbaLigaDTO[];
+  /** Vagas com mais de uma carta na string — aviso, não recusa. */
+  multiplas: Array<{ chave: string; rotulo: string; quantidade: number }>;
   total: number;
   /** Escolhas sem preço conhecido — entram na string, não no total. */
   semPreco: number;
@@ -152,6 +184,58 @@ function menorPreco(vaga: VagaDTO): number | null {
   if (vaga.opcoes.length === 0) return null;
   return Math.min(...vaga.opcoes.map((o) => o.preco));
 }
+
+/** Uma região da Pokédex e as vagas dela, na ordem em que a grade as desenha. */
+interface GrupoVagas {
+  regiao: Regiao | null;
+  vagas: VagaDTO[];
+}
+
+/**
+ * Agrupa por região, preservando a ordem de entrada. Coleção de set não tem
+ * região: é um grupo só, sem título.
+ */
+function agruparPorRegiao(vagas: readonly VagaDTO[], ehSet: boolean): GrupoVagas[] {
+  if (ehSet) return [{ regiao: null, vagas: [...vagas] }];
+  const grupos: GrupoVagas[] = [];
+  for (const vaga of vagas) {
+    const regiao =
+      vaga.dex !== null && vaga.dex >= 1 && vaga.dex <= FAIXA_REGIAO.paldea.fim
+        ? regiaoDoNumero(vaga.dex)
+        : null;
+    const ultimo = grupos.at(-1);
+    if (ultimo && ultimo.regiao === regiao) ultimo.vagas.push(vaga);
+    else grupos.push({ regiao, vagas: [vaga] });
+  }
+  return grupos;
+}
+
+/**
+ * O que o usuário abriu e fechou na grade, por coleção, neste navegador.
+ *
+ * Só as escolhas explícitas são guardadas: a vaga que ele nunca tocou segue o
+ * padrão (`recolhidaPorPadrao`), e por isso muda sozinha quando ele marca a
+ * primeira carta dela. É conveniência de quem olha — `localStorage` pode vir
+ * vazio ou recusar a escrita (janela anônima), e a tela funciona igual.
+ */
+const chaveRecolhidas = (colecaoId: string) => `opcoes-compra:recolhidas:${colecaoId}`;
+
+function lerRecolhidas(colecaoId: string): Record<string, boolean> {
+  if (typeof window === "undefined") return {};
+  try {
+    const bruto = window.localStorage.getItem(chaveRecolhidas(colecaoId));
+    const lido: unknown = bruto ? JSON.parse(bruto) : {};
+    return lido !== null && typeof lido === "object" ? (lido as Record<string, boolean>) : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Padrão de 2026-09-24: vaga com carta selecionada começa recolhida, vaga sem
+ * seleção começa aberta — a tela abre mostrando o que falta triar.
+ */
+const recolhidaPorPadrao = (vaga: VagaDTO) => vaga.opcoes.some((o) => o.selecionada);
 
 export default function OpcoesCompraPage() {
   const t = useTranslations("opcoesCompra");
@@ -197,6 +281,7 @@ export default function OpcoesCompraPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [disparando, setDisparando] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [abaEscolhida, setAbaEscolhida] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
 
   const [teto, setTeto] = useState(String(FILTROS_PADRAO.tetoPreco ?? ""));
@@ -207,6 +292,24 @@ export default function OpcoesCompraPage() {
   const [reconsultarTudo, setReconsultarTudo] = useState(false);
   const [soComOpcao, setSoComOpcao] = useState(false);
   const [ordemVagas, setOrdemVagas] = useState<OrdemVagasSet>("numero");
+  const [recolhidas, setRecolhidas] = useState<Record<string, boolean>>(() =>
+    lerRecolhidas(id),
+  );
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(chaveRecolhidas(id), JSON.stringify(recolhidas));
+    } catch {
+      // Sem armazenamento a arrumação vale só até recarregar — nada quebra.
+    }
+  }, [id, recolhidas]);
+
+  const estaRecolhida = (vaga: VagaDTO) => recolhidas[vaga.chave] ?? recolhidaPorPadrao(vaga);
+  const definirRecolhidas = (vagas: readonly VagaDTO[], recolher: boolean) =>
+    setRecolhidas((atual) => ({
+      ...atual,
+      ...Object.fromEntries(vagas.map((v) => [v.chave, recolher])),
+    }));
 
   // O padrão da coleção de set é outro (sem teto, ordenado por preço), e o
   // tipo só se sabe depois da primeira resposta — então os padrões são
@@ -428,7 +531,17 @@ export default function OpcoesCompraPage() {
   // o bloco para colar.
   const totalSelecionado = dados?.total ?? 0;
 
+  // A aba escolhida pode sumir quando a lista encolhe (a última carta de
+  // Johto cadastrada): aí cai na primeira, em vez de mostrar bloco vazio.
+  const abas = dados?.abasLiga ?? [];
+  const abaAtiva = abas.find((a) => a.id === abaEscolhida) ?? abas[0] ?? null;
+  const rotuloAba = (aba: AbaLigaDTO) => {
+    const nome = aba.regiao ? NOME_REGIAO[aba.regiao] : t("abaLista");
+    return aba.partes > 1 ? `${nome} (${aba.parte}/${aba.partes})` : nome;
+  };
+
   const semOpcao = (dados?.vagas ?? []).filter((v) => v.opcoes.length === 0).length;
+  const grupos = agruparPorRegiao(vagasVisiveis, ehSet);
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-4 p-4">
@@ -609,12 +722,6 @@ export default function OpcoesCompraPage() {
             </span>
           )}
           <a
-            href={`/api/colecoes/${id}/opcoes-compra/exportar?formato=liga`}
-            className={classesBotao("secundario", "sm")}
-          >
-            {t("baixarListaLiga")}
-          </a>
-          <a
             href={`/api/colecoes/${id}/opcoes-compra/exportar?formato=csv`}
             className={classesBotao("secundario", "sm")}
           >
@@ -629,34 +736,81 @@ export default function OpcoesCompraPage() {
         </section>
       )}
 
-      {dados && dados.listaLiga !== "" && (
+      {/* Várias cartas por vaga é permitido (decisão de 2026-09-17) — por isso
+          aviso, e não recusa. Na Pokédex quase sempre é sobra de triagem. */}
+      {(dados?.multiplas.length ?? 0) > 0 && (
+        <Alerta tom="aviso">
+          {t("multiplasAviso")}{" "}
+          {dados?.multiplas
+            .map((m) => t("multiplasItem", { vaga: m.chave, rotulo: m.rotulo, total: m.quantidade }))
+            .join(" · ")}
+        </Alerta>
+      )}
+
+      {dados && abaAtiva && (
         <section className="flex flex-col gap-2 rounded-card border border-hairline bg-surface p-3 shadow-1">
           <header className="flex flex-wrap items-center gap-2">
             <h2 className="text-sm font-semibold text-foreground">
               {t("compraPorLista")}
             </h2>
+            <a
+              href={`/api/colecoes/${id}/opcoes-compra/exportar?formato=liga&aba=${encodeURIComponent(abaAtiva.id)}`}
+              className={`${classesBotao("secundario", "sm")} ml-auto`}
+            >
+              {t("baixarListaLiga")}
+            </a>
             <Botao
               variante="secundario"
               tamanho="sm"
-              onClick={() => void copiar(dados.listaLiga)}
-              className="ml-auto"
+              onClick={() => void copiar(abaAtiva.texto)}
             >
               {copiado ? t("copiado") : t("copiar")}
             </Botao>
           </header>
 
-          {/* Uma lista só, de propósito. A divisão por variante existiu por
-              algumas horas em 16/09 e foi desfeita: duas listas viram duas
-              otimizações de loja independentes na Liga, contra o frete. A
-              organização de lojas é deles — eles enxergam o marketplace
-              inteiro e o preço real; nós, uma fatia. */}
+          {/* Abas, e não uma lista só, desde 2026-09-24: a Compra por Lista
+              deles aceita até 110 cartas por busca. Na Pokédex a divisão é por
+              região — ver `dividirListaCompra`, que também registra o custo
+              (cada colagem é uma otimização de lojas separada na Liga). */}
+          <div role="tablist" aria-label={t("abasLiga")} className="flex flex-wrap gap-1">
+            {abas.map((aba) => {
+              const ativa = aba.id === abaAtiva.id;
+              return (
+                <button
+                  key={aba.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={ativa}
+                  onClick={() => {
+                    setAbaEscolhida(aba.id);
+                    setCopiado(false);
+                  }}
+                  className={`rounded border px-2 py-1 text-xs ${
+                    ativa ? "border-accent bg-accent text-accent-fg" : "border-line text-muted"
+                  }`}
+                >
+                  {rotuloAba(aba)} · {aba.quantidade}
+                </button>
+              );
+            })}
+          </div>
+
           <p className="text-xs text-muted">
-            {t.rich("comoColar", { forte: (partes) => <strong className="text-foreground">{partes}</strong> })}
+            {t.rich("comoColar", { forte: (partes) => <strong className="text-foreground">{partes}</strong> })}{" "}
+            {t("limitePorAba", { limite: LIMITE_COMPRA_POR_LISTA })}
           </p>
 
-          <pre className="max-h-80 overflow-auto rounded-card bg-inset p-2 text-xs leading-relaxed text-foreground">
-            {dados.listaLiga}
+          <pre
+            role="tabpanel"
+            aria-label={rotuloAba(abaAtiva)}
+            className="max-h-80 overflow-auto rounded-card bg-inset p-2 text-xs leading-relaxed text-foreground"
+          >
+            {abaAtiva.texto}
           </pre>
+
+          <p className="text-xs text-muted">
+            {t("abaResumo", { total: abaAtiva.quantidade, valor: dinheiro(abaAtiva.total) })}
+          </p>
 
           <p className="text-xs text-muted">
             {t("listaGuardada")}
@@ -668,6 +822,8 @@ export default function OpcoesCompraPage() {
           </p>
         </section>
       )}
+
+      <PainelSemEstoque colecaoId={id} aoAlterar={carregar} />
 
       {dados && dados.vagas.length > 0 && (
         <label className="flex items-center gap-2 text-sm text-muted">
@@ -690,31 +846,111 @@ export default function OpcoesCompraPage() {
         </EstadoVazio>
       )}
 
-      <div className="flex flex-col gap-4">
-        {vagasVisiveis.map((vaga) => (
-          <section
-            key={vaga.chave}
-            className="overflow-hidden rounded-card border border-hairline bg-surface shadow-1"
-          >
-            <header className="flex items-center justify-between border-b border-line px-3 py-2">
-              <h2 className="text-sm font-semibold text-foreground">
-                {vaga.dex !== null ? String(vaga.dex).padStart(3, "0") : vaga.chave} — {vaga.rotulo}
+      {vagasVisiveis.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Botao variante="secundario" tamanho="sm" onClick={() => definirRecolhidas(vagasVisiveis, false)}>
+            {t("expandirTodas")}
+          </Botao>
+          <Botao variante="secundario" tamanho="sm" onClick={() => definirRecolhidas(vagasVisiveis, true)}>
+            {t("recolherTodas")}
+          </Botao>
+        </div>
+      )}
+
+      {grupos.map((grupo) => (
+        <div key={grupo.regiao ?? "sem-regiao"} className="flex flex-col gap-3">
+          {/* Título de região só na Pokédex: no set não há região, e um título
+              "Lista" em cima de tudo seria ruído. */}
+          {!ehSet && (
+            <header className="mt-2 flex flex-wrap items-center gap-2 border-b-2 border-accent pb-1">
+              <h2 className="text-base font-semibold text-foreground">
+                {grupo.regiao ? NOME_REGIAO[grupo.regiao] : t("semRegiao")}
+                {grupo.regiao && (
+                  <span className="ml-2 font-mono text-xs font-normal text-muted">
+                    {String(FAIXA_REGIAO[grupo.regiao].inicio).padStart(3, "0")}–
+                    {String(FAIXA_REGIAO[grupo.regiao].fim).padStart(3, "0")}
+                  </span>
+                )}
               </h2>
               <span className="text-xs text-muted">
-                {/* No set a contagem é sempre 0 ou 1: repetir "1 opção(ões)" em
-                    cada linha seria ruído. O que informa lá é o descarte. */}
-                {!ehSet && t("contagemOpcoes", { total: vaga.opcoes.length })}
-                {vaga.descartadas > 0 &&
-                  `${ehSet ? "" : " · "}${t("foraDosFiltros", { total: vaga.descartadas })}`}
+                {t("vagasNaRegiao", { total: grupo.vagas.length })}
+              </span>
+              <span className="ml-auto flex gap-2">
+                <Botao variante="secundario" tamanho="sm" onClick={() => definirRecolhidas(grupo.vagas, false)}>
+                  {t("expandirRegiao")}
+                </Botao>
+                <Botao variante="secundario" tamanho="sm" onClick={() => definirRecolhidas(grupo.vagas, true)}>
+                  {t("recolherRegiao")}
+                </Botao>
               </span>
             </header>
+          )}
 
-            {vaga.opcoes.length === 0 ? (
-              <p className="px-3 py-3 text-sm text-muted">
-                {ehSet ? t("semOfertaSet") : t("semOpcaoPokedex")}
-              </p>
-            ) : (
-              <ul className="divide-y divide-line">
+          {grupo.vagas.map((vaga) => {
+            const recolhida = estaRecolhida(vaga);
+            const marcadas = vaga.opcoes.filter((o) => o.selecionada);
+            return (
+              <section
+                key={vaga.chave}
+                className="overflow-hidden rounded-card border border-hairline bg-surface shadow-1"
+              >
+                <button
+                  type="button"
+                  aria-expanded={!recolhida}
+                  onClick={() => definirRecolhidas([vaga], !recolhida)}
+                  className={`flex w-full flex-wrap items-center gap-2 px-3 py-2 text-left ${
+                    recolhida ? "" : "border-b border-line"
+                  }`}
+                >
+                  <Icone
+                    nome="chevron-right"
+                    tamanho={15}
+                    className={`shrink-0 text-muted [transition:var(--transition-control)] ${
+                      recolhida ? "" : "rotate-90"
+                    }`}
+                  />
+                  <span className="text-sm font-semibold text-foreground">
+                    {vaga.dex !== null ? String(vaga.dex).padStart(3, "0") : vaga.chave} — {vaga.rotulo}
+                  </span>
+                  {marcadas.length > 1 && (
+                    <Distintivo tom="aviso" title={t("multiplasTitulo")}>
+                      {t("selecionadasNaVaga", { total: marcadas.length })}
+                    </Distintivo>
+                  )}
+                  <span className="ml-auto text-xs text-muted">
+                    {/* No set a contagem é sempre 0 ou 1: repetir "1 opção(ões)" em
+                        cada linha seria ruído. O que informa lá é o descarte. */}
+                    {!ehSet && t("contagemOpcoes", { total: vaga.opcoes.length })}
+                    {vaga.descartadas > 0 &&
+                      `${ehSet ? "" : " · "}${t("foraDosFiltros", { total: vaga.descartadas })}`}
+                    {vaga.semEstoque > 0 &&
+                      ` · ${t("escondidasSemEstoque", { total: vaga.semEstoque })}`}
+                  </span>
+                </button>
+
+                {/* Recolhida, a vaga ainda diz o que está escolhido nela: é o que
+                    permite conferir a triagem sem abrir uma por uma. */}
+                {recolhida ? (
+                  <p className="px-3 pb-2 pl-9 text-xs text-muted">
+                    {marcadas.length > 0
+                      ? marcadas
+                          .map(
+                            (o) =>
+                              `✓ ${o.nome} (${o.numero}${o.total ? `/${o.total}` : ""}) · ${dinheiro(o.preco)}`,
+                          )
+                          .join("  ·  ")
+                      : vaga.opcoes.length === 0
+                        ? ehSet
+                          ? t("semOfertaSet")
+                          : t("semOpcaoPokedex")
+                        : t("semSelecao")}
+                  </p>
+                ) : vaga.opcoes.length === 0 ? (
+                  <p className="px-3 py-3 text-sm text-muted">
+                    {ehSet ? t("semOfertaSet") : t("semOpcaoPokedex")}
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-line">
                 {vaga.opcoes.map((opcao) => (
                   <li
                     key={opcao.id}
@@ -752,6 +988,11 @@ export default function OpcoesCompraPage() {
                       {opcao.total ? `/${opcao.total}` : ""})
                     </span>
                     {opcao.raridade && <Distintivo tom="neutro">{opcao.raridade}</Distintivo>}
+                    {opcao.semEstoque && (
+                      <Distintivo tom="perigo" title={t("semEstoqueOpcaoTitulo")}>
+                        {t("semEstoqueOpcao")}
+                      </Distintivo>
+                    )}
                     {opcao.cartaId === null && (
                       <Distintivo tom="aviso" title={t("foraDoCatalogoTitulo")}>
                         {t("foraDoCatalogo")}
@@ -768,11 +1009,13 @@ export default function OpcoesCompraPage() {
                     </a>
                   </li>
                 ))}
-              </ul>
-            )}
-          </section>
-        ))}
-      </div>
+                  </ul>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      ))}
     </main>
   );
 }

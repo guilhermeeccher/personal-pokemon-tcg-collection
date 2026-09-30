@@ -342,11 +342,34 @@ update. What follows from that, and cannot be reverted:
 - The list to paste exists **with no scan at all**, and is assembled by `lib/liga/lista-compra.ts` —
   the same function for the screen and for the export.
 
+### Out of stock — fed back from their Buy by List
+
+The scan price is the lowest in **any** condition, so a card with no NM offer keeps coming back with
+a price. When their Buy by List answers "Cards sem estoque", the user pastes that notice on the
+screen (`lib/dominio/sem-estoque-liga.ts`, table `sem_estoque_liga`):
+
+- **The key is the card as Liga sees it: name + number/total**, no edition — our paste line carries
+  no edition, so neither does their answer. Two editions sharing name and numbering go out together.
+- **Global, not per collection** — stock belongs to the store. **Valid for 30 days**, then the card
+  is offered again on its own; pasting again renews it. The quality is stored and not used yet.
+- **Hidden at read time, not at write time**, in the options GET: an expired record brings the card
+  back with no new scan. **A card that is already selected is never hidden** — it stays, flagged, so
+  the user can still unselect it from the grid.
+- Pasting is two steps: a preview, then a confirm that records and unselects **in one transaction**,
+  and only the choices of **this collection's empty slots** — the list the paste came from.
+
 ### Export to LigaPokemon
 
 Two distinct flows, which **share no format**: uploading the collection (learned from real exports
 from the site, `lib/dominio/exportacao-liga.ts`) and the Buy by List (`[Quantidade] [Card]`, e.g.
 `2 Charizard (1/111)`).
+
+**The Buy by List takes at most 110 cards per search**, so the list to paste comes in tabs
+(`dividirListaCompra`, `LIMITE_COMPRA_POR_LISTA`): one tab per region in a Pokédex, one plain tab in
+a set, and a group above the limit becomes `Kanto (1/2)`, `Kanto (2/2)`. This knowingly softens the
+single-list decision below — each paste is a separate store optimization on their side — and the
+region split was chosen over packing tabs to 110 regardless of region. The screen and the per-tab
+download use the same function, so a tab's `id` is the same in both.
 
 Two things about the buy list format **have not been verified** against a real paste, and are
 declared uncertain in `exportacao-lista-compra.ts`: the leading zero (we send `003`, the way their

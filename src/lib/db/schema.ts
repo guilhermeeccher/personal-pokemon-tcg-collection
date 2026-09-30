@@ -697,3 +697,32 @@ export const escolhaCompra = pgTable(
     index("escolha_compra_colecao_idx").on(t.colecaoId),
   ],
 );
+
+/**
+ * Cartas que a Compra por Lista deles devolveu como "sem estoque" — decisão de
+ * 2026-09-24. Ver `lib/dominio/sem-estoque-liga.ts`.
+ *
+ * **Global, sem `colecao_id`:** estoque é da loja, não da coleção. A carta sem
+ * NM na Liga está sem NM para qualquer coleção que a ofereça.
+ *
+ * Não é dado da coleção no sentido da regra 1 do AGENTS — é cache de mercado,
+ * como `liga_opcao` —, mas também nunca entra no repositório.
+ *
+ * Vence em 30 dias (`VALIDADE_SEM_ESTOQUE_DIAS`): o registro fica, e a leitura
+ * é que ignora o vencido. Colar de novo renova `registrado_em`.
+ */
+export const semEstoqueLiga = pgTable(
+  "sem_estoque_liga",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** `chaveSemEstoque`: nome + número/total, como a Liga vê a carta. */
+    chave: text("chave").notNull(),
+    nome: text("nome").notNull(),
+    numero: text("numero").notNull(),
+    total: text("total"),
+    /** `NM`, como a Liga escreve. Vazio quando a linha não trouxe. Guardada, não usada. */
+    qualidade: text("qualidade").notNull().default(""),
+    registradoEm: timestamp("registrado_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique("sem_estoque_liga_unica").on(t.chave, t.qualidade)],
+);

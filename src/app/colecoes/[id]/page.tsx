@@ -7,7 +7,13 @@ import { useCallback, useEffect, useState } from "react";
 
 import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
 import type { ParametroPokedex, TipoColecao } from "@/lib/dominio/parametro-colecao";
-import { FAIXA_REGIAO, REGIOES, type Regiao, regiaoDoNumero } from "@/lib/dominio/escopo-pokedex";
+import {
+  FAIXA_REGIAO,
+  NOME_REGIAO,
+  REGIOES,
+  type Regiao,
+  regiaoDoNumero,
+} from "@/lib/dominio/escopo-pokedex";
 import { Alerta } from "@/app/_componentes/alerta";
 import { Botao, classesBotao } from "@/app/_componentes/botao";
 import { Campo, classesEntrada } from "@/app/_componentes/campo";
@@ -29,20 +35,6 @@ import type {
   VagaDaColecaoDTO,
 } from "@/lib/dominio/tipos-cliente";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
-
-/* Nome de região é nome próprio do universo Pokémon — não traduz, e por
-   isso fica aqui e não no catálogo de mensagens. */
-const NOME_REGIAO: Record<Regiao, string> = {
-  kanto: "Kanto",
-  johto: "Johto",
-  hoenn: "Hoenn",
-  sinnoh: "Sinnoh",
-  unova: "Unova",
-  kalos: "Kalos",
-  alola: "Alola",
-  galar: "Galar",
-  paldea: "Paldea",
-};
 
 /* As regiões no formato que a GradeEscopo desenha — nome e faixa em
    campos separados, para a faixa sair na face mono. */

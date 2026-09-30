@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import { gerarCsv } from "./exportacao-csv";
 import {
   adapterListaCompra,
+  dividirListaCompra,
   gerarListaLiga,
+  LIMITE_COMPRA_POR_LISTA,
   gerarListaTexto,
   linhaFormatoLiga,
   totalDaLista,
@@ -113,5 +115,81 @@ describe("gerarListaLiga", () => {
 
   it("é vazia quando não há seleção, sem quebra de linha solta", () => {
     expect(gerarListaLiga([])).toBe("");
+  });
+});
+
+describe("dividirListaCompra", () => {
+  const vagas = (de: number, ate: number) =>
+    Array.from({ length: ate - de + 1 }, (_, i) => linha({ chave: String(de + i) }));
+
+  it("na Pokédex, separa por região, na ordem da Nacional", () => {
+    const abas = dividirListaCompra([...vagas(200, 201), ...vagas(1, 2)], "pokedex");
+    expect(abas.map((a) => a.id)).toEqual(["kanto-1", "johto-1"]);
+    expect(abas.map((a) => [a.regiao, a.parte, a.partes])).toEqual([
+      ["kanto", 1, 1],
+      ["johto", 1, 1],
+    ]);
+  });
+
+  it("não cria aba para região sem carta", () => {
+    const abas = dividirListaCompra(vagas(252, 253), "pokedex");
+    expect(abas.map((a) => a.regiao)).toEqual(["hoenn"]);
+  });
+
+  it("região acima do limite enche a primeira aba e manda o resto para a próxima", () => {
+    const abas = dividirListaCompra(vagas(1, 130), "pokedex");
+    expect(abas.map((a) => a.linhas.length)).toEqual([LIMITE_COMPRA_POR_LISTA, 20]);
+    expect(abas.map((a) => [a.id, a.parte, a.partes])).toEqual([
+      ["kanto-1", 1, 2],
+      ["kanto-2", 2, 2],
+    ]);
+  });
+
+  it("exatamente no limite ainda é uma aba só", () => {
+    expect(dividirListaCompra(vagas(1, 110), "pokedex")).toHaveLength(1);
+  });
+
+  it("ordena pelo número da vaga, e não pela ordem de texto da chave", () => {
+    const [aba] = dividirListaCompra(
+      [linha({ chave: "100" }), linha({ chave: "2" }), linha({ chave: "10" })],
+      "pokedex",
+    );
+    expect(aba.linhas.map((l) => l.chave)).toEqual(["2", "10", "100"]);
+  });
+
+  it("várias escolhas da mesma vaga mantêm a ordem em que chegaram", () => {
+    const [aba] = dividirListaCompra(
+      [linha({ chave: "4", nome: "B" }), linha({ chave: "4", nome: "A" })],
+      "pokedex",
+    );
+    expect(aba.linhas.map((l) => l.nome)).toEqual(["B", "A"]);
+  });
+
+  it("vaga de Pokédex com chave fora da Nacional vai para uma aba à parte, no fim", () => {
+    const abas = dividirListaCompra([linha({ chave: "x" }), linha({ chave: "1" })], "pokedex");
+    expect(abas.map((a) => [a.id, a.regiao])).toEqual([
+      ["kanto-1", "kanto"],
+      ["lista-1", null],
+    ]);
+  });
+
+  it("no set, não separa por região — só pelo limite", () => {
+    const abas = dividirListaCompra(vagas(1, 111), "set");
+    expect(abas.map((a) => [a.id, a.regiao, a.linhas.length])).toEqual([
+      ["lista-1", null, 110],
+      ["lista-2", null, 1],
+    ]);
+  });
+
+  it("lista vazia não tem aba", () => {
+    expect(dividirListaCompra([], "pokedex")).toEqual([]);
+    expect(dividirListaCompra([], "set")).toEqual([]);
+  });
+
+  it("nenhuma carta entra nem sai na divisão", () => {
+    const entrada = [...vagas(1, 300), ...vagas(1, 5)];
+    const abas = dividirListaCompra(entrada, "pokedex");
+    expect(abas.reduce((soma, a) => soma + a.linhas.length, 0)).toBe(entrada.length);
+    expect(abas.every((a) => a.linhas.length <= LIMITE_COMPRA_POR_LISTA)).toBe(true);
   });
 });

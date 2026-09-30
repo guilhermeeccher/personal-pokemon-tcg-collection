@@ -6,6 +6,7 @@ import { listarEscolhas } from "@/lib/db/escolhas";
 import { gerarCsv, nomeArquivoColecao, slugificar } from "@/lib/dominio/exportacao-csv";
 import {
   adapterListaCompra,
+  dividirListaCompra,
   gerarListaLiga,
   gerarListaTexto,
   totalDaLista,
@@ -15,7 +16,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
 import { linhaDaEscolha } from "@/lib/liga/lista-compra";
 
 /**
- * GET /api/colecoes/:id/opcoes-compra/exportar?formato=csv|texto|liga
+ * GET /api/colecoes/:id/opcoes-compra/exportar?formato=csv|texto|liga[&aba=kanto-1]
  *
  * Exporta **só o que o usuário marcou** na última varredura. Exportar a
  * varredura inteira seria devolver centenas de linhas que ele não escolheu —
@@ -25,9 +26,10 @@ import { linhaDaEscolha } from "@/lib/liga/lista-compra";
  *   quantas lojas têm cada carta.
  * - `texto` — lista nossa, com a sigla da edição no fim.
  * - `liga` — o formato da Compra por Lista deles, aprendido em 2026-09-16.
- *   Uma lista só: a divisão por variante foi desfeita no mesmo dia, porque
- *   duas listas viram duas otimizações de loja independentes na Liga — contra
- *   o frete, que era o objetivo. Ver `exportacao-lista-compra.ts`.
+ *   Com `aba`, só aquela aba (até 110 cartas, o limite deles; por região na
+ *   Pokédex) — é o que a tela pede, e o `id` é o mesmo que ela mostra. Sem
+ *   `aba`, a lista inteira, que acima de 110 cartas não cabe numa colagem.
+ *   Ver `dividirListaCompra` em `exportacao-lista-compra.ts`.
  */
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -59,11 +61,27 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const dataIso = new Date().toISOString().slice(0, 10);
 
   if (formato === "liga") {
-    return new NextResponse(gerarListaLiga(linhas), {
+    const idAba = new URL(req.url).searchParams.get("aba");
+    let daAba = linhas;
+    if (idAba !== null) {
+      const tipo = colecao.tipo === "pokedex" ? "pokedex" : "set";
+      const aba = dividirListaCompra(linhas, tipo).find((a) => a.id === idAba);
+      if (!aba) {
+        // A lista mudou entre abrir a tela e clicar (uma carta cadastrada
+        // pode sumir com a última aba). Melhor recusar que baixar outra aba.
+        return NextResponse.json(
+          { erro: "Essa aba não existe mais na lista de compras. Recarregue a tela." },
+          { status: 404 },
+        );
+      }
+      daAba = aba.linhas;
+    }
+    const sufixo = idAba === null ? "" : `-${idAba}`;
+    return new NextResponse(gerarListaLiga(daAba), {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
-        "Content-Disposition": `attachment; filename="compra-por-lista-${slugificar(colecao.nome)}-${dataIso}.txt"`,
-        "X-Total-Brl": String(totalDaLista(linhas)),
+        "Content-Disposition": `attachment; filename="compra-por-lista-${slugificar(colecao.nome)}${sufixo}-${dataIso}.txt"`,
+        "X-Total-Brl": String(totalDaLista(daAba)),
       },
     });
   }
