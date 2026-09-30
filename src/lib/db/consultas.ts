@@ -77,8 +77,10 @@ import {
  *                 `imagem_url`, arte pt confirmada no CDN) apareciam com a
  *                 foto inglesa emprestada.
  * 5. `catalogo-pt` / `catalogo-en` — a foto do MESMO card (mesmo `id`) na
- *                 outra língua ocidental. Recupera 509 das 1.129 linhas pt
- *                 sem foto, e 85 das en (medido em 2026-08-29). Seguro
+ *                 outra língua ocidental: a oficial dela, ou, sem oficial, o
+ *                 scan do mypcards dela (2026-09-30, caso `30th-c`).
+ *                 Recupera 509 das 1.129 linhas pt sem foto, e 85 das en
+ *                 (medido em 2026-08-29). Seguro
  *                 para identificação: em pt/en o id é o mesmo, então é a
  *                 mesma arte, o mesmo número e o mesmo set — só muda a
  *                 língua impressa. Vai marcada com selo na tela
@@ -139,8 +141,22 @@ function degrausImagem(t: ColunasImagem) {
   // o alias aqui, o SQL sai completo. O nome precisa ser diferente do
   // usado pela consulta de fora (às vezes já é `carta_copia`), senão a
   // subconsulta se referiria a si mesma.
+  // Empresta a foto oficial da outra língua e, na falta dela, o scan do
+  // mypcards que aquela língua tiver (2026-09-30): a Coleção Clássica do
+  // 30th não tem arte no CDN em idioma nenhum, e o mypcards só tem o scan
+  // em inglês — sem isto, a ficha pt da carta ficava sem foto com a foto
+  // inglesa já no volume. O selo continua dizendo "foto em inglês".
   const urlEmprestada = sql`(
-      select emprestimo.imagem_url
+      select coalesce(
+        emprestimo.imagem_url,
+        (
+          select '/api/imagens-locais/' || local_emprestado.carta_id || '/' || local_emprestado.idioma::text
+          from ${imagemLocal} as local_emprestado
+          where local_emprestado.carta_id = emprestimo.id
+            and local_emprestado.idioma = emprestimo.idioma
+            and local_emprestado.origem::text = 'mypcards'
+        )
+      )
       from ${cartaCatalogo} as emprestimo
       where emprestimo.id = ${t.id}
         and emprestimo.idioma = (case when ${t.idioma} = 'pt' then 'en' else 'pt' end)::idioma
