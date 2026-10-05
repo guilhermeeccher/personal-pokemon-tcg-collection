@@ -724,7 +724,22 @@
     "colunaConsultado": "Consultado",
     "naoEncontrada": "não encontrada",
     "naoEncontradaTitulo": "A carta não apareceu nas primeiras páginas da busca por nome na Liga.",
-    "vazio": "Nenhum preço guardado. Aperte o botão para consultar as cartas especiais."
+    "vazio": "Nenhum preço guardado. Aperte o botão para consultar as cartas especiais.",
+    "grafico": {
+      "titulo": "Valor total ao longo das consultas",
+      "aviso": "O total também sobe quando entram cartas na conta (uma consulta nova pode precificar mais cartas), então comprar ou precificar mais cartas não é valorização. Compare o preço médio por carta e olhe quantas cartas cada ponto tem.",
+      "umPonto": "Primeiro ponto: {total} em {cartas} cartas, em {data}. A linha aparece a partir da segunda consulta.",
+      "rotuloGrafico": "Gráfico do valor total das cartas com preço, com {pontos} ponto(s). Os dados completos estão na tabela abaixo.",
+      "ponto": "{data}: total {total}, {media} por carta, {cartas} cartas com preço",
+      "cartasNoPonto": "{cartas} cartas",
+      "tooltipMedia": "{media} por carta (média)",
+      "tooltipCartas": "{cartas} cartas com preço",
+      "verTabela": "Ver como tabela",
+      "colunaData": "Data",
+      "colunaTotal": "Total",
+      "colunaMedia": "Média por carta",
+      "colunaCartas": "Cartas"
+    }
   },
   "recusas": {
     "arquivoAcimaDoLimite": "Arquivo maior que o limite de {mb} MB.",

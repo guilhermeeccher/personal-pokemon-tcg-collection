@@ -32,6 +32,7 @@ import {
   consultasDePrecoDesde,
   gravarPrecoDeCarta,
   listarCartasEspeciaisPossuidas,
+  registrarFotoDaRodada,
   tocarProgressoDePreco,
 } from "@/lib/db/precos-liga";
 import {
@@ -124,7 +125,7 @@ export async function executarRodadaDePrecos(
         maxPaginas,
       );
       requisicoes += gastas;
-      await gravarPrecoDeCarta(db, carta.cartaId, linha, maxPaginas);
+      await gravarPrecoDeCarta(db, carta.cartaId, linha, maxPaginas, rodadaId);
       if (linha) achadas++;
       else naoAchadas++;
       cartasConsultadas++;
@@ -156,6 +157,11 @@ export async function executarRodadaDePrecos(
     requisicoes,
     erro: erro ?? resumoFalhas,
   });
+  // A foto do fim da rodada (também quando abortou por bloqueio). Uma falha
+  // aqui não pode derrubar o resumo de uma rodada que já gravou tudo.
+  await registrarFotoDaRodada(db, rodadaId).catch((err) =>
+    console.error(`[preços ${rodadaId}] falha ao registrar a foto: ${String(err)}`),
+  );
   return { cartasConsultadas, cartasComFalha: falhas.length, achadas, naoAchadas, requisicoes, erro, falhas };
 }
 

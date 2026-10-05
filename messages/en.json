@@ -724,7 +724,22 @@
     "colunaConsultado": "Looked up",
     "naoEncontrada": "not found",
     "naoEncontradaTitulo": "The card did not show up in the first pages of the name search on Liga.",
-    "vazio": "No prices stored. Press the button to look up the special cards."
+    "vazio": "No prices stored. Press the button to look up the special cards.",
+    "grafico": {
+      "titulo": "Total value over the rounds",
+      "aviso": "The total also goes up when cards enter the sum (a new round may price more cards), so buying or pricing more cards is not appreciation. Compare the average price per card and look at how many cards each point has.",
+      "umPonto": "First point: {total} across {cartas} cards, on {data}. The line appears from the second round.",
+      "rotuloGrafico": "Chart of the total value of priced cards, with {pontos} point(s). The full data is in the table below.",
+      "ponto": "{data}: total {total}, {media} per card, {cartas} priced cards",
+      "cartasNoPonto": "{cartas} cards",
+      "tooltipMedia": "{media} per card (average)",
+      "tooltipCartas": "{cartas} priced cards",
+      "verTabela": "View as table",
+      "colunaData": "Date",
+      "colunaTotal": "Total",
+      "colunaMedia": "Average per card",
+      "colunaCartas": "Cards"
+    }
   },
   "recusas": {
     "arquivoAcimaDoLimite": "File larger than the {mb} MB limit.",

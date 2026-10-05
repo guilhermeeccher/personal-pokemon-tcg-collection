@@ -8,8 +8,16 @@
 import { and, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 
 import type { Database } from "./client";
-import { cartaCatalogo, copia, ligaRodadaPreco, precoCartaLiga } from "./schema";
+import {
+  cartaCatalogo,
+  copia,
+  ligaRodadaPreco,
+  ligaSnapshotPreco,
+  precoCartaLiga,
+  precoCartaLigaHistorico,
+} from "./schema";
 import type { LinhaBuscaLiga } from "@/lib/dominio/liga-busca";
+import { fotografarPrecos, type PontoDaSerie } from "@/lib/dominio/historico-precos";
 import {
   selecionarCartasParaPreco,
   type CartaParaPreco,
@@ -84,6 +92,7 @@ export async function gravarPrecoDeCarta(
   cartaId: string,
   linha: LinhaBuscaLiga | null,
   paginasMax: number,
+  rodadaId: string | null = null,
 ): Promise<void> {
   const valores = {
     cartaId,
@@ -116,6 +125,63 @@ export async function gravarPrecoDeCarta(
       // Só sobrescreve se a nova achou, ou se a antiga também não tinha achado.
       setWhere: sql`excluded.encontrada or not ${precoCartaLiga.encontrada}`,
     });
+  // O histórico registra a consulta como ela foi (inclusive "não achada"),
+  // mesmo quando o upsert acima preservou o preço antigo: é o diário de
+  // consultas, não o último estado. Só acrescenta.
+  await db.insert(precoCartaLigaHistorico).values({
+    cartaId,
+    rodadaId,
+    preco: valores.preco,
+    precoMedio: valores.precoMedio,
+    precoMaximo: valores.precoMaximo,
+    encontrada: valores.encontrada,
+  });
+}
+
+/**
+ * Fotografa a tabela de preços inteira agora e grava como o ponto da rodada
+ * (a agregação é `fotografarPrecos`). Idempotente por rodada: chamar de novo
+ * não duplica. Vale também para rodada abortada por bloqueio — o que já foi
+ * precificado continua valendo.
+ */
+export async function registrarFotoDaRodada(db: Database, rodadaId: string): Promise<void> {
+  const linhas = await db
+    .select({
+      encontrada: precoCartaLiga.encontrada,
+      preco: precoCartaLiga.preco,
+      precoMedio: precoCartaLiga.precoMedio,
+      precoMaximo: precoCartaLiga.precoMaximo,
+    })
+    .from(precoCartaLiga);
+  const foto = fotografarPrecos(
+    linhas.map((l) => ({
+      encontrada: l.encontrada,
+      preco: numero(l.preco),
+      precoMedio: numero(l.precoMedio),
+      precoMaximo: numero(l.precoMaximo),
+    })),
+  );
+  await db
+    .insert(ligaSnapshotPreco)
+    .values({
+      rodadaId,
+      somaMedios: String(foto.somaMedios),
+      cartasComPreco: foto.cartasComPreco,
+      precoMedioPorCarta: String(foto.precoMedioPorCarta),
+      somaMinimos: String(foto.somaMinimos),
+    })
+    .onConflictDoNothing({ target: ligaSnapshotPreco.rodadaId });
+}
+
+/** A série do gráfico: uma foto por rodada concluída, da mais antiga à mais nova. */
+export async function listarSerieDePrecos(db: Database): Promise<PontoDaSerie[]> {
+  const linhas = await db.select().from(ligaSnapshotPreco).orderBy(ligaSnapshotPreco.tiradoEm);
+  return linhas.map((l) => ({
+    tiradoEm: new Date(l.tiradoEm).toISOString(),
+    somaMedios: Number(l.somaMedios),
+    cartasComPreco: l.cartasComPreco,
+    precoMedioPorCarta: Number(l.precoMedioPorCarta),
+  }));
 }
 
 export interface PrecoListado {

@@ -575,6 +575,50 @@ export const ligaRodadaPreco = pgTable("liga_rodada_preco", {
 });
 
 /**
+ * Histórico de consultas de preço: UMA linha por carta a cada vez que ela é
+ * consultada numa rodada (achada ou não). Só se acrescenta — nunca se atualiza
+ * nem se apaga. `preco_carta_liga` guarda só o último estado; aqui fica o
+ * caminho. `rodada_id` é nulo nas linhas do backfill inicial (a consulta
+ * original aconteceu antes de o histórico existir), e não é chave estrangeira
+ * de propósito: a linha de histórico sobrevive a qualquer limpeza da rodada.
+ */
+export const precoCartaLigaHistorico = pgTable(
+  "preco_carta_liga_historico",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    cartaId: text("carta_id").notNull(),
+    rodadaId: uuid("rodada_id"),
+    preco: numeric("preco", { precision: 10, scale: 2 }),
+    precoMedio: numeric("preco_medio", { precision: 10, scale: 2 }),
+    precoMaximo: numeric("preco_maximo", { precision: 10, scale: 2 }),
+    encontrada: boolean("encontrada").notNull(),
+    consultadoEm: timestamp("consultado_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("preco_carta_liga_historico_carta_idx").on(t.cartaId, t.consultadoEm)],
+);
+
+/**
+ * Foto da tabela de preços inteira no fim de uma rodada: a série do gráfico de
+ * valor total. Tabela própria, e não colunas em `liga_rodada_preco`, porque o
+ * ponto inicial (backfill) não tem rodada — a foto é do estado da tabela, e a
+ * rodada é só a origem quando existe (`rodada_id` único: uma foto por rodada,
+ * o que torna a gravação idempotente). A agregação é a função pura
+ * `fotografarPrecos`; o SQL só lê as linhas.
+ */
+export const ligaSnapshotPreco = pgTable("liga_snapshot_preco", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  rodadaId: uuid("rodada_id").unique(),
+  /** O instante da foto (no backfill, o `consultado_em` mais recente da tabela). */
+  tiradoEm: timestamp("tirado_em", { withTimezone: true }).notNull().defaultNow(),
+  /** Soma dos preços médios (mínimo se não houver média) das cartas com preço. */
+  somaMedios: numeric("soma_medios", { precision: 12, scale: 2 }).notNull(),
+  cartasComPreco: integer("cartas_com_preco").notNull(),
+  /** somaMedios / cartasComPreco. */
+  precoMedioPorCarta: numeric("preco_medio_por_carta", { precision: 12, scale: 2 }).notNull(),
+  somaMinimos: numeric("soma_minimos", { precision: 12, scale: 2 }).notNull(),
+});
+
+/**
  * Uma opção de compra encontrada para uma vaga vazia, com o preço no instante
  * da varredura. Serve os dois tipos de coleção que têm vaga vazia: Pokédex
  * (a vaga é uma espécie, e as opções são as cartas dela) e set (a vaga é uma

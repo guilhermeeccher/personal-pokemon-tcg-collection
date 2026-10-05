@@ -447,6 +447,11 @@ specifics:
 - **The dead-round window is derived from the interval and from this round's worst case**
   (`janelaSemBatimentoSegundos(intervalo, REQUISICOES_NO_PIOR_CASO_POR_CARTA)`), so raising the cap
   raises the window with it.
+- **History is append-only, and each finished round leaves a snapshot.** Every consult appends a row
+  to `preco_carta_liga_historico` (found or not, even when the upsert kept the older price); when a
+  round ends, including an abort on a block, `liga_snapshot_preco` records the state of the whole
+  price table (`fotografarPrecos`, pure, `lib/dominio/historico-precos.ts`). The chart on the screen
+  plots it, and it must keep saying that the total also rises when cards enter the sum.
 - The overview's "gems" are ordered by the stored average price (cards with a price first), then
   by the showcase rule. Prices are BRL as the site gives them; no conversion.
 

@@ -25,6 +25,9 @@ import { classesCelulaCabecalho, classesLinha, classesLinhaCabecalho, Tabela } f
 import { Painel } from "@/app/_componentes/painel";
 import { formatarDuracao } from "@/lib/dominio/estimativa-varredura";
 import { VALIDADE_CONSULTA_HORAS } from "@/lib/dominio/frescor-consulta";
+import type { PontoDaSerie } from "@/lib/dominio/historico-precos";
+
+import { GraficoValorTotal } from "./grafico-valor-total";
 
 interface RitmoDTO {
   intervaloSegundos: number;
@@ -64,6 +67,7 @@ interface RespostaDTO {
   ultimaAtualizacao: string | null;
   varredura: RodadaDTO | null;
   resumo: { cartasComPreco: number; naoEncontradas: number; somaMedios: number };
+  serie: PontoDaSerie[];
   itens: ItemPrecoDTO[];
 }
 
@@ -295,6 +299,8 @@ export default function PrecosPage() {
           )}
         </tbody>
       </Tabela>
+
+      {dados && <GraficoValorTotal serie={dados.serie} />}
     </main>
   );
 }

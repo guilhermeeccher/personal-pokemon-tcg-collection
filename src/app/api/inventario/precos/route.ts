@@ -7,6 +7,7 @@ import {
   encerrarRodadasDePrecoMortas,
   listarCartasEspeciaisPossuidas,
   listarPrecos,
+  listarSerieDePrecos,
   obterUltimaRodadaDePreco,
   rodadaDePrecoViva,
 } from "@/lib/db/precos-liga";
@@ -124,10 +125,11 @@ export async function GET() {
   const ritmo = ritmoLigaPadrao().atual();
   await encerrarRodadasDePrecoMortas(db, janelaDaRodada(ritmo.intervaloSegundos));
 
-  const [precos, rodada, selecionadas] = await Promise.all([
+  const [precos, rodada, selecionadas, serie] = await Promise.all([
     listarPrecos(db),
     obterUltimaRodadaDePreco(db),
     listarCartasEspeciaisPossuidas(db),
+    listarSerieDePrecos(db),
   ]);
 
   const itens = precos
@@ -193,6 +195,7 @@ export async function GET() {
     ultimaAtualizacao: ultimaAtualizacao?.toISOString() ?? null,
     varredura,
     resumo: resumirPrecos(precos),
+    serie,
     itens,
   });
 }
