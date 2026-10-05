@@ -159,12 +159,15 @@ export default function VisaoGeralPage() {
 }
 
 /**
- * As cartas mais vistosas que ele tem (`destaque-carta.ts`), em leque leve.
+ * As cartas que mais valem no inventário, em leque leve: ordem pelo preço
+ * guardado na Liga quando existe (`ordenarJoias`), senão pela vitrine
+ * (`destaque-carta.ts`).
  * A inclinação alterna para a faixa não parecer uma tabela de miniaturas;
  * no hover a carta endireita e sobe, como tirada do fichário.
  */
 function Joias({ joias }: { joias: CartaVitrineDTO[] }) {
   const t = useTranslations("visaoGeral");
+  const locale = useLocale();
   const inclinacoes = ["-rotate-3", "rotate-2", "-rotate-1", "rotate-3", "-rotate-2", "rotate-1"];
   return (
     <section
@@ -200,6 +203,13 @@ function Joias({ joias }: { joias: CartaVitrineDTO[] }) {
                 <span className="truncate text-[11px] text-muted" title={j.setNome}>
                   {j.setNome} · {j.localId}
                 </span>
+                {/* Só quando a carta já foi consultada: sem preço, nada a
+                    mostrar — "R$ 0" seria mentira, e "—" em 8 cartas, ruído. */}
+                {j.preco !== null && (
+                  <span className="font-mono text-xs font-semibold tabular-nums text-strong">
+                    {t("joiaPreco", { valor: j.preco.toLocaleString(locale, { style: "currency", currency: "BRL" }) })}
+                  </span>
+                )}
               </figcaption>
             </figure>
           </li>

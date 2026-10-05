@@ -273,6 +273,8 @@ export interface CartaVitrineDTO {
   localId: string;
   raridade: string | null;
   imagemUrl: string;
+  /** Preço médio (senão o mínimo) na Liga, em BRL. `null` até a carta ser consultada. */
+  preco: number | null;
 }
 
 export interface QuaseLaDTO {

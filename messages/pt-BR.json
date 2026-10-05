@@ -20,7 +20,8 @@
       "visaoGeral": "Visão geral",
       "inventario": "Inventário",
       "repetidas": "Repetidas",
-      "colecoes": "Coleções"
+      "colecoes": "Coleções",
+      "precos": "Preços"
     }
   },
   "seletorLocale": {
@@ -264,14 +265,15 @@
     "porVariante": "Por variante",
     "nenhumaCopia": "Nenhuma cópia cadastrada ainda.",
     "joias": "Joias da coleção",
-    "joiasDescricao": "As cartas mais raras que você tem.",
+    "joiasDescricao": "As cartas que mais valem na coleção; as sem preço consultado seguem pela raridade.",
     "suasColecoes": "Suas coleções",
     "completa": "Completa",
     "quaseLa": "Quase lá",
     "quaseLaDescricao": "As divisões mais perto de fechar, com as primeiras cartas que faltam.",
     "faltam": "{total, plural, =1 {falta 1} other {faltam #}}",
     "estatisticas": "Estatísticas",
-    "estatisticasDescricao": "Como o inventário está distribuído. Clique em qualquer recorte para abrir o inventário já filtrado."
+    "estatisticasDescricao": "Como o inventário está distribuído. Clique em qualquer recorte para abrir o inventário já filtrado.",
+    "joiaPreco": "~{valor}"
   },
   "divisoes": {
     "principal": "principal",
@@ -684,6 +686,46 @@
     "foraDoCatalogo": "fora do catálogo",
     "verOfertas": "ver ofertas"
   },
+  "precos": {
+    "titulo": "Preços das cartas especiais",
+    "descricao": "Quanto valem na LigaPokemon as cartas holo, as secretas e as clássicas de 30 Anos que você tem. É uma foto do momento da consulta, sempre em reais.",
+    "atualizar": "Atualizar preços das cartas especiais",
+    "iniciando": "Iniciando…",
+    "emAndamentoBotao": "Consulta em andamento…",
+    "erroCarregar": "Falha ao carregar os preços.",
+    "erroIniciar": "Falha ao iniciar a consulta de preços.",
+    "carregando": "Carregando…",
+    "iniciada": "Consulta iniciada: {cartas} cartas, cerca de {estimativa}, previsão de término {previsao}.",
+    "puladas": " {total} já consultadas nas últimas {horas} h foram puladas.",
+    "podeSair": " Pode sair desta tela; a consulta segue no servidor.",
+    "ritmoEnv": "Uma requisição a cada {intervalo}, definido em LIGA_INTERVALO_SEGUNDOS nesta instalação.",
+    "ritmoRobots": "Uma requisição a cada {intervalo}, que é o Crawl-delay do robots.txt deles.",
+    "ritmoConservador": "Uma requisição a cada {intervalo}: o robots.txt deles não pôde ser lido, e sem leitura vale o valor conservador.",
+    "explicacaoRitmo": "O ritmo padrão público segue o Crawl-delay do robots.txt da LigaPokemon (hoje cerca de 6 minutos por requisição); esta instalação o sobrepõe, por escolha de quem a instalou. Cartas consultadas nas últimas {horas} h são puladas, e uma busca por nome pode gastar mais de uma requisição por carta.",
+    "emAndamento": "Em andamento",
+    "concluida": "Concluída",
+    "andamento": "{feitas} de {total} cartas · {requisicoes} requisições",
+    "falhas": "{total} com falha",
+    "faltam": "Faltam ~{duracao}{termino}",
+    "terminoPrevisto": " · previsão {quando}",
+    "telaSeAtualiza": "A tela se atualiza sozinha enquanto a consulta roda.",
+    "interrompida": "Parou antes do fim: {erro}",
+    "ultimaAtualizacao": "Última atualização: {data}",
+    "nuncaAtualizado": "Nenhuma consulta feita ainda.",
+    "resumo": "{comPreco} de {selecionadas} cartas com preço · soma dos preços médios {soma}",
+    "naoEncontradasResumo": " · {total} não encontradas",
+    "colunaCarta": "Carta",
+    "colunaSet": "Set",
+    "colunaNumero": "Nº",
+    "colunaRaridade": "Raridade",
+    "colunaMinimo": "Mínimo",
+    "colunaMedio": "Médio",
+    "colunaMaximo": "Máximo",
+    "colunaConsultado": "Consultado",
+    "naoEncontrada": "não encontrada",
+    "naoEncontradaTitulo": "A carta não apareceu nas primeiras páginas da busca por nome na Liga.",
+    "vazio": "Nenhum preço guardado. Aperte o botão para consultar as cartas especiais."
+  },
   "recusas": {
     "arquivoAcimaDoLimite": "Arquivo maior que o limite de {mb} MB.",
     "arquivoNaoEhImagem": "Arquivo não reconhecido como imagem JPEG, PNG ou WEBP (checado pelo conteúdo, não pela extensão).",
@@ -757,6 +799,9 @@
     "varianteForaDoCatalogoDaCarta": "Variante fora do catálogo para esta carta.",
     "varianteForaDoCatalogoNaSelecao": "A variante ''{variante}'' não existe no catálogo para {total} carta(s) da seleção — nenhuma cópia foi alterada.",
     "varianteForaDoCatalogoNoLote": "Variante fora do catálogo em uma ou mais cartas.",
-    "varreduraEmAndamento": "Já existe uma varredura em andamento nesta coleção. Espere ela terminar."
+    "varreduraEmAndamento": "Já existe uma varredura em andamento nesta coleção. Espere ela terminar.",
+    "precosEmAndamento": "Já existe uma consulta de preços em andamento. Espere ela terminar.",
+    "precosJaConsultados": "As {total} cartas especiais já foram consultadas nas últimas {horas} h; não há o que atualizar agora.",
+    "semCartasEspeciais": "Nenhuma carta especial (holo, secreta ou clássica de 30 Anos) no inventário para consultar."
   }
 }

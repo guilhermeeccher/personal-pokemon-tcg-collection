@@ -9,6 +9,8 @@ import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or, sql } from "
 import { alias, type AnyPgColumn } from "drizzle-orm/pg-core";
 
 import type { Database, Transacao } from "./client";
+import { valoresPorCarta } from "./precos-liga";
+import { ordenarJoias } from "@/lib/dominio/precos-cartas-especiais";
 import { cartaCatalogo, colecao, copia, imagemLocal, melhoriaDescartada, vaga } from "./schema";
 import type { Condicao, Idioma, VarianteCopia } from "@/lib/dominio/enums";
 import { compararLocalId } from "@/lib/dominio/ordenacao";
@@ -2182,6 +2184,8 @@ export interface CartaNaVitrine {
   localId: string;
   raridade: string | null;
   imagemUrl: string;
+  /** Preço médio (senão o mínimo) na Liga, em BRL; `null` quando ainda não consultado. */
+  preco: number | null;
 }
 
 /**
@@ -2292,13 +2296,21 @@ export async function listarColecoesNaVitrine(db: Database): Promise<ColecaoNaVi
 }
 
 /**
- * Joias da coleção: as cartas distintas mais vistosas do inventário
- * (`destaque-carta.ts`), alocadas ou não — é o que ele tem, não o que está
- * no fichário. Distintas por carta de catálogo: três cópias da mesma
- * ilustração não ocupam três lugares na vitrine.
+ * Joias da coleção: as cartas distintas que mais valem no inventário,
+ * alocadas ou não — é o que ele tem, não o que está no fichário. Distintas
+ * por carta física (`carta_id`): três cópias da mesma ilustração, ou a mesma
+ * carta em pt e en, não ocupam lugares na vitrine.
+ *
+ * **A ordem é o preço guardado, quando existe.** Até 2026-10-05 era só a
+ * aparência (`destaque-carta.ts`), mas "mais vistosa" erra o que importa: uma
+ * carta clássica vale mais que muita ilustração rara. A consulta de preço
+ * (`precos-liga.ts`) só cobre as cartas especiais, então a regra é em dois
+ * blocos (`ordenarJoias`): primeiro as com preço, do maior valor (médio,
+ * senão mínimo) para o menor; depois as sem preço pela vitrine, em vez de
+ * sumirem ou valerem zero. Sem nenhuma consulta feita, a vitrine é a de antes.
  */
 export async function listarJoias(db: Database, limite: number): Promise<CartaNaVitrine[]> {
-  const distintas = await db
+  const linhas = await db
     .selectDistinct({
       cartaId: cartaCatalogo.id,
       idioma: cartaCatalogo.idioma,
@@ -2312,12 +2324,25 @@ export async function listarJoias(db: Database, limite: number): Promise<CartaNa
       cartaCatalogo,
       and(eq(copia.cartaId, cartaCatalogo.id), eq(copia.idiomaCatalogo, cartaCatalogo.idioma)),
     );
-  const candidatas = ordenarPorDestaque(distintas).slice(0, limite * FOLGA_SEM_FOTO);
+  // Uma linha por carta física: com cópias em pt e en do mesmo `carta_id`, a
+  // ficha em pt é a que se mostra.
+  const porCarta = new Map<string, (typeof linhas)[number]>();
+  for (const l of linhas) {
+    const atual = porCarta.get(l.cartaId);
+    if (!atual || (l.idioma === "pt" && atual.idioma !== "pt")) porCarta.set(l.cartaId, l);
+  }
+  const distintas = [...porCarta.values()];
+
+  const valores = await valoresPorCarta(
+    db,
+    distintas.map((d) => d.cartaId),
+  );
+  const candidatas = ordenarJoias(distintas, valores).slice(0, limite * FOLGA_SEM_FOTO);
   const fotos = await fotosDasCartas(db, candidatas);
   return candidatas
     .flatMap((c) => {
       const imagemUrl = fotos.get(`${c.cartaId}|${c.idioma}`);
-      return imagemUrl ? [{ ...c, imagemUrl }] : [];
+      return imagemUrl ? [{ ...c, imagemUrl, preco: valores.get(c.cartaId) ?? null }] : [];
     })
     .slice(0, limite);
 }

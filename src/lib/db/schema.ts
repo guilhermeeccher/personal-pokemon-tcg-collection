@@ -520,6 +520,61 @@ export const ligaVarredura = pgTable("liga_varredura", {
 });
 
 /**
+ * O preço de uma carta possuída na LigaPokemon, um por carta física
+ * (`carta_id`) — a consulta de preço das cartas especiais
+ * (`lib/dominio/precos-cartas-especiais.ts`).
+ *
+ * **Não é `liga_opcao`.** A opção é preço de vaga vazia, preso a uma coleção e
+ * a uma rodada, e morre com ela. Aqui é preço de carta que o usuário **tem**:
+ * uma linha por carta, atualizada no lugar (upsert), e nenhuma rodada nova a
+ * apaga — carta que não reapareceu continua com o preço e a data de antes.
+ *
+ * Sem FK para o catálogo, de propósito: a chave do catálogo é composta
+ * (`id` + idioma) e a mesma carta física tem fichas pt e en. O `carta_id` é o
+ * que as duas dividem, e a consulta é feita uma vez só.
+ *
+ * `encontrada = false` guarda "perguntei e a linha não estava lá" com a data,
+ * para a rodada seguinte não repetir a pergunta por 24 h. `paginas_max` é o
+ * teto de páginas com que a busca rodou: "não achei" só vale para ele.
+ */
+export const precoCartaLiga = pgTable("preco_carta_liga", {
+  cartaId: text("carta_id").primaryKey(),
+  /** Como a Liga escreve a edição e o número da carta que casou. Nulos se não achada. */
+  edicaoSigla: text("edicao_sigla"),
+  edid: integer("edid"),
+  numero: text("numero"),
+  /** Menor preço com estoque, em BRL, sem conversão. */
+  preco: numeric("preco", { precision: 10, scale: 2 }),
+  precoMedio: numeric("preco_medio", { precision: 10, scale: 2 }),
+  precoMaximo: numeric("preco_maximo", { precision: 10, scale: 2 }),
+  encontrada: boolean("encontrada").notNull(),
+  paginasMax: integer("paginas_max").notNull(),
+  consultadoEm: timestamp("consultado_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Uma rodada de consulta de preços. Separada de `liga_varredura` porque
+ * aquela é presa a uma coleção (`colecao_id` não nulo, e continua assim): o
+ * preço das cartas especiais é do inventário, não de uma coleção.
+ *
+ * Mesmo contrato da varredura: `atualizado_em` é o batimento que distingue
+ * rodada viva de rodada morta por reinício, e a rodada nunca recomeça sozinha.
+ */
+export const ligaRodadaPreco = pgTable("liga_rodada_preco", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  /** Cartas que esta rodada se propôs a consultar (as não frescas, ao disparar). */
+  totalCartas: integer("total_cartas").notNull().default(0),
+  cartasConsultadas: integer("cartas_consultadas").notNull().default(0),
+  /** Cartas que falharam sozinhas (5xx, timeout) e ficaram para a próxima. */
+  cartasComFalha: integer("cartas_com_falha").notNull().default(0),
+  requisicoes: integer("requisicoes").notNull().default(0),
+  concluidaEm: timestamp("concluida_em", { withTimezone: true }),
+  atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+  erro: text("erro"),
+  criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
  * Uma opção de compra encontrada para uma vaga vazia, com o preço no instante
  * da varredura. Serve os dois tipos de coleção que têm vaga vazia: Pokédex
  * (a vaga é uma espécie, e as opções são as cartas dela) e set (a vaga é uma

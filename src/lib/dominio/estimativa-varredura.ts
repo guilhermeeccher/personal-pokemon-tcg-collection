@@ -99,7 +99,14 @@ export const JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS = 120;
  * A folga é o pior caso de uma vaga (seis requisições) mais margem, com o
  * piso antigo preservado para quem roda em intervalo curto.
  */
-export function janelaSemBatimentoSegundos(intervaloSegundos: number): number {
-  const piorCaso = intervaloSegundos * REQUISICOES_NO_PIOR_CASO_POR_VAGA * 1.5;
+export function janelaSemBatimentoSegundos(
+  intervaloSegundos: number,
+  requisicoesNoPiorCaso: number = REQUISICOES_NO_PIOR_CASO_POR_VAGA,
+): number {
+  // `requisicoesNoPiorCaso` existe para a rodada de preços, cuja carta pode
+  // gastar duas buscas de até `MAX_PAGINAS_PRECO` páginas — mais que as seis
+  // de uma vaga. A janela segue o pior caso de quem a usa, senão uma rodada
+  // viva seria declarada morta e liberaria uma segunda em paralelo.
+  const piorCaso = intervaloSegundos * requisicoesNoPiorCaso * 1.5;
   return Math.max(JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS, Math.round(piorCaso));
 }

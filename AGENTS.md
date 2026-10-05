@@ -424,6 +424,30 @@ screen (`lib/dominio/sem-estoque-liga.ts`, table `sem_estoque_liga`):
 - Pasting is two steps: a preview, then a confirm that records and unselects **in one transaction**,
   and only the choices of **this collection's empty slots** — the list the paste came from.
 
+### Special card prices — a second, separate round
+
+`/inventario/precos` prices the owned cards that matter: rarity class `holo` or `secreta`, **plus**
+every card of set `30th-c` (upstream writes their rarity as the literal "None"). The rule is pure
+and tested (`lib/dominio/precos-cartas-especiais.ts`). It follows every rule above, with these
+specifics:
+
+- **Own tables, never `liga_varredura`.** `preco_carta_liga` (one row per `carta_id`, upserted) and
+  `liga_rodada_preco` (the round). A scan round is tied to a collection (`colecao_id` NOT NULL);
+  this one belongs to the inventory. Do not make that column nullable to share the code.
+- **One lookup per physical card.** The pt and en rows of a `carta_id` are the same card; the
+  English name is searched first, the other name only if it differs and the first found nothing.
+- **A row is never deleted, and a "not found" never overwrites a price already found** — the last
+  known price with its date beats an empty row (same reasoning as the buy triage).
+- **A "not found" is an answer only for the page cap it was asked with** (`paginas_max`). The search
+  is by name, cheapest first, so an expensive card with a common name can sit past the last page
+  read; raising `MAX_PAGINAS_PRECO` makes old "not found" rows stale and they are asked again.
+  The cap costs requests, never pace: the limiter is per request.
+- **The dead-round window is derived from the interval and from this round's worst case**
+  (`janelaSemBatimentoSegundos(intervalo, REQUISICOES_NO_PIOR_CASO_POR_CARTA)`), so raising the cap
+  raises the window with it.
+- The overview's "gems" are ordered by the stored average price (cards with a price first), then
+  by the showcase rule. Prices are BRL as the site gives them; no conversion.
+
 ### Export to LigaPokemon
 
 Two distinct flows, which **share no format**: uploading the collection (learned from real exports

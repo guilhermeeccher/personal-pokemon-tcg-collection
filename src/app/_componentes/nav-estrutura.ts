@@ -40,6 +40,7 @@ export const GRUPOS: readonly GrupoNav[] = [
       { href: "/inventario/visao-geral", chaveLabel: "itens.visaoGeral", icone: "chart-pie" },
       { href: "/inventario", chaveLabel: "itens.inventario", icone: "library" },
       { href: "/inventario/repetidas", chaveLabel: "itens.repetidas", icone: "copy" },
+      { href: "/inventario/precos", chaveLabel: "itens.precos", icone: "tag" },
     ],
   },
   {

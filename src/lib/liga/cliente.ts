@@ -56,7 +56,7 @@ const TIMEOUT_MS = 30_000;
  * então passar disso significa que o teto de preço é alto o bastante para a
  * lista inteira — e aí a varredura vira um custo que ninguém pediu.
  */
-const MAX_PAGINAS = 3;
+export const MAX_PAGINAS = 3;
 
 export class ErroBloqueioLiga extends Error {
   constructor(readonly motivo: string) {
@@ -95,6 +95,13 @@ export interface ClienteLiga {
   buscarCarta(
     nome: string,
     achou: (linhas: readonly LinhaBuscaLiga[]) => boolean,
+    /**
+     * Teto de páginas desta busca. O padrão é `MAX_PAGINAS`; a consulta de
+     * preço das cartas especiais passa um maior (ver `lib/liga/precos.ts`):
+     * mais requisições, no mesmo ritmo — o limitador é por requisição, então
+     * página a mais nunca acelera nada.
+     */
+    maxPaginas?: number,
   ): Promise<ResultadoBusca>;
 }
 
@@ -161,11 +168,11 @@ export function criarClienteLiga({
       return { linhas, requisicoes };
     },
 
-    async buscarCarta(nome, achou) {
+    async buscarCarta(nome, achou, maxPaginas = MAX_PAGINAS) {
       const linhas: LinhaBuscaLiga[] = [];
       let requisicoes = 0;
 
-      for (let pagina = 1; pagina <= MAX_PAGINAS; pagina++) {
+      for (let pagina = 1; pagina <= maxPaginas; pagina++) {
         const html = await pegar(urlBuscaLiga(nome, pagina));
         requisicoes++;
         const daPagina = parsearBuscaLiga(html);

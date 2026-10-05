@@ -20,7 +20,8 @@
       "visaoGeral": "Overview",
       "inventario": "Inventory",
       "repetidas": "Duplicates",
-      "colecoes": "Collections"
+      "colecoes": "Collections",
+      "precos": "Prices"
     }
   },
   "seletorLocale": {
@@ -264,14 +265,15 @@
     "porVariante": "By variant",
     "nenhumaCopia": "No copies added yet.",
     "joias": "Collection gems",
-    "joiasDescricao": "The rarest cards you own.",
+    "joiasDescricao": "The cards worth the most in your collection; those without a looked-up price follow rarity.",
     "suasColecoes": "Your collections",
     "completa": "Complete",
     "quaseLa": "Almost there",
     "quaseLaDescricao": "The divisions closest to done, with the first cards still missing.",
     "faltam": "{total, plural, =1 {1 to go} other {# to go}}",
     "estatisticas": "Statistics",
-    "estatisticasDescricao": "How the inventory is spread out. Click any breakdown to open the inventory already filtered."
+    "estatisticasDescricao": "How the inventory is spread out. Click any breakdown to open the inventory already filtered.",
+    "joiaPreco": "~{valor}"
   },
   "divisoes": {
     "principal": "main",
@@ -684,6 +686,46 @@
     "foraDoCatalogo": "outside the catalog",
     "verOfertas": "see offers"
   },
+  "precos": {
+    "titulo": "Special card prices",
+    "descricao": "What the holo, secret and 30th Anniversary classic cards you own are worth on LigaPokemon. A snapshot from the moment of the lookup, always in Brazilian reais.",
+    "atualizar": "Update special card prices",
+    "iniciando": "Starting…",
+    "emAndamentoBotao": "Lookup running…",
+    "erroCarregar": "Failed to load the prices.",
+    "erroIniciar": "Failed to start the price lookup.",
+    "carregando": "Loading…",
+    "iniciada": "Lookup started: {cartas} cards, about {estimativa}, expected to finish {previsao}.",
+    "puladas": " {total} already looked up in the last {horas} h were skipped.",
+    "podeSair": " You can leave this screen; the lookup keeps running on the server.",
+    "ritmoEnv": "One request every {intervalo}, set in LIGA_INTERVALO_SEGUNDOS on this installation.",
+    "ritmoRobots": "One request every {intervalo}, which is the Crawl-delay in their robots.txt.",
+    "ritmoConservador": "One request every {intervalo}: their robots.txt could not be read, and without a reading the conservative value applies.",
+    "explicacaoRitmo": "The public default pace follows the Crawl-delay in LigaPokemon's robots.txt (currently about 6 minutes per request); this installation overrides it, by its installer's choice. Cards looked up in the last {horas} h are skipped, and a search by name may take more than one request per card.",
+    "emAndamento": "Running",
+    "concluida": "Finished",
+    "andamento": "{feitas} of {total} cards · {requisicoes} requests",
+    "falhas": "{total} failed",
+    "faltam": "~{duracao} left{termino}",
+    "terminoPrevisto": " · expected {quando}",
+    "telaSeAtualiza": "The screen refreshes by itself while the lookup runs.",
+    "interrompida": "Stopped before the end: {erro}",
+    "ultimaAtualizacao": "Last update: {data}",
+    "nuncaAtualizado": "No lookup made yet.",
+    "resumo": "{comPreco} of {selecionadas} cards priced · sum of average prices {soma}",
+    "naoEncontradasResumo": " · {total} not found",
+    "colunaCarta": "Card",
+    "colunaSet": "Set",
+    "colunaNumero": "No.",
+    "colunaRaridade": "Rarity",
+    "colunaMinimo": "Min",
+    "colunaMedio": "Average",
+    "colunaMaximo": "Max",
+    "colunaConsultado": "Looked up",
+    "naoEncontrada": "not found",
+    "naoEncontradaTitulo": "The card did not show up in the first pages of the name search on Liga.",
+    "vazio": "No prices stored. Press the button to look up the special cards."
+  },
   "recusas": {
     "arquivoAcimaDoLimite": "File larger than the {mb} MB limit.",
     "arquivoNaoEhImagem": "File not recognized as a JPEG, PNG or WEBP image (checked by its content, not by its extension).",
@@ -757,6 +799,9 @@
     "varianteForaDoCatalogoDaCarta": "Variant outside the catalog for this card.",
     "varianteForaDoCatalogoNaSelecao": "Variant ''{variante}'' does not exist in the catalog for {total} card(s) in the selection — no copy was changed.",
     "varianteForaDoCatalogoNoLote": "Variant outside the catalog on one or more cards.",
-    "varreduraEmAndamento": "There is already a scan running on this collection. Wait for it to finish."
+    "varreduraEmAndamento": "There is already a scan running on this collection. Wait for it to finish.",
+    "precosEmAndamento": "A price lookup is already running. Wait for it to finish.",
+    "precosJaConsultados": "All {total} special cards were already looked up in the last {horas} h; nothing to update right now.",
+    "semCartasEspeciais": "No special card (holo, secret or 30th Anniversary classic) in the inventory to look up."
   }
 }

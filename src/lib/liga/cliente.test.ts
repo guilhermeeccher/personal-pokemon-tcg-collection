@@ -171,6 +171,17 @@ describe("criarClienteLiga", () => {
     expect(chamadas).toHaveLength(3);
   });
 
+  it("a busca por carta aceita um teto de páginas maior, e cada página continua sendo uma requisição", async () => {
+    // A consulta de preço das cartas especiais procura a carta cara de nome
+    // comum: mais páginas, mas o ritmo é por requisição e não muda.
+    const { cliente, chamadas } = clienteFake(
+      [1, 2, 3, 4, 5, 6].map((n) => ok(paginaCheia(`${n},00`))),
+    );
+    const { requisicoes } = await cliente.buscarCarta("Charizard", () => false, 5);
+    expect(chamadas).toHaveLength(5);
+    expect(requisicoes).toBe(5);
+  });
+
   it("identifica o cliente no User-Agent", async () => {
     const fetchImpl = vi.fn(async () => ok(paginaReal)) as unknown as typeof fetch;
     const cliente = criarClienteLiga({

@@ -32,6 +32,7 @@ import {
   Search,
   Sparkles,
   Star,
+  Tag,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -50,6 +51,7 @@ const ICONES = {
   search: Search,
   sparkles: Sparkles,
   star: Star,
+  tag: Tag,
   x: X,
 } satisfies Record<string, LucideIcon>;
 

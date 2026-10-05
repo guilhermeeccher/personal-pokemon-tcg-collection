@@ -70,6 +70,12 @@ describe("janelaSemBatimentoSegundos", () => {
     expect(janela).toBeGreaterThan(360 * 3);
   });
 
+  it("acompanha o pior caso de quem a usa: carta com mais buscas pede janela maior", () => {
+    // Rodada de preços: duas buscas de várias páginas por carta.
+    expect(janelaSemBatimentoSegundos(7, 24)).toBeGreaterThan(janelaSemBatimentoSegundos(7));
+    expect(janelaSemBatimentoSegundos(7, 24)).toBe(Math.round(7 * 24 * 1.5));
+  });
+
   it("nunca desce abaixo do piso antigo, para quem roda em intervalo curto", () => {
     expect(janelaSemBatimentoSegundos(3)).toBe(JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS);
     expect(janelaSemBatimentoSegundos(0.5)).toBe(JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS);
