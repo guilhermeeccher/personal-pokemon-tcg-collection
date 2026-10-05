@@ -34,7 +34,7 @@
     "atalhos": {
       "visaoGeral": {
         "titulo": "Visão geral",
-        "descricao": "Quanto você tem e como está distribuído: totais, expansão, raridade, idioma, condição, variante e progresso das coleções."
+        "descricao": "Sua coleção num relance: as joias, cada coleção com o progresso por divisão, o que está quase fechando e as estatísticas."
       },
       "cadastroSet": {
         "titulo": "Cadastro rápido por set",
@@ -240,14 +240,13 @@
   },
   "visaoGeral": {
     "titulo": "Visão geral",
-    "descricao": "Quanto você tem e como está distribuído. Clique em qualquer recorte para abrir o inventário já filtrado.",
+    "descricao": "Sua coleção num relance. Clique numa coleção para abri-la, ou em qualquer estatística para abrir o inventário já filtrado.",
     "carregando": "Carregando…",
     "erroCarregar": "Falha ao carregar a visão geral.",
     "cartasDistintas": "Cartas distintas",
     "unidadesTotais": "Unidades totais",
     "alocadas": "Alocadas",
     "livres": "Livres",
-    "progressoColecoes": "Progresso das coleções",
     "verTodas": "Ver todas →",
     "tipo": {
       "pokedex": "Pokédex",
@@ -263,7 +262,21 @@
     "porIdioma": "Por idioma (físico)",
     "porCondicao": "Por condição",
     "porVariante": "Por variante",
-    "nenhumaCopia": "Nenhuma cópia cadastrada ainda."
+    "nenhumaCopia": "Nenhuma cópia cadastrada ainda.",
+    "joias": "Joias da coleção",
+    "joiasDescricao": "As cartas mais raras que você tem.",
+    "suasColecoes": "Suas coleções",
+    "completa": "Completa",
+    "quaseLa": "Quase lá",
+    "quaseLaDescricao": "As divisões mais perto de fechar, com as primeiras cartas que faltam.",
+    "faltam": "{total, plural, =1 {falta 1} other {faltam #}}",
+    "estatisticas": "Estatísticas",
+    "estatisticasDescricao": "Como o inventário está distribuído. Clique em qualquer recorte para abrir o inventário já filtrado."
+  },
+  "divisoes": {
+    "principal": "principal",
+    "secretas": "secretas",
+    "maisDivisoes": "{total, plural, =1 {+1 divisão} other {+# divisões}}"
   },
   "repetidas": {
     "titulo": "Repetidas",
@@ -454,7 +467,8 @@
     "erroDesalocar": "Falha ao desalocar.",
     "avisoCatalogoIncompleto": "O catálogo local só conhece {materializadas} de {esperadas} cartas deste set no upstream — faltam {faltantes}. A coleção não finge estar completa: o progresso acima reflete só o que o catálogo local tem hoje.",
     "avisoSemNumeracaoOficial": "Este set não tem numeração oficial separada no upstream (é uma coleção promocional). O universo desta coleção usa as {total} cartas conhecidas do set inteiro, no lugar da contagem oficial.",
-    "progressoPorRegiao": "Progresso por região:",
+    "progressoPorRegiao": "Progresso por região",
+    "progressoPorDivisao": "Progresso por divisão",
     "filtrar": "Filtrar",
     "todasAsRegioes": "Todas as regiões",
     "filtroSoVazias": "Mostrar só vagas vazias ({total}) — o que falta desta coleção",

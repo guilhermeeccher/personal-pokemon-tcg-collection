@@ -34,7 +34,7 @@
     "atalhos": {
       "visaoGeral": {
         "titulo": "Overview",
-        "descricao": "How much you have and how it is spread out: totals, set, rarity, language, condition, variant and collection progress."
+        "descricao": "Your collection at a glance: the gems, each collection with progress by division, what is close to done and the statistics."
       },
       "cadastroSet": {
         "titulo": "Quick add by set",
@@ -240,14 +240,13 @@
   },
   "visaoGeral": {
     "titulo": "Overview",
-    "descricao": "How much you have and how it is spread out. Click any breakdown to open the inventory already filtered.",
+    "descricao": "Your collection at a glance. Click a collection to open it, or any statistic to open the inventory already filtered.",
     "carregando": "Loading…",
     "erroCarregar": "Failed to load the overview.",
     "cartasDistintas": "Distinct cards",
     "unidadesTotais": "Total units",
     "alocadas": "Allocated",
     "livres": "Free",
-    "progressoColecoes": "Collection progress",
     "verTodas": "See all →",
     "tipo": {
       "pokedex": "Pokédex",
@@ -263,7 +262,21 @@
     "porIdioma": "By language (physical)",
     "porCondicao": "By condition",
     "porVariante": "By variant",
-    "nenhumaCopia": "No copies added yet."
+    "nenhumaCopia": "No copies added yet.",
+    "joias": "Collection gems",
+    "joiasDescricao": "The rarest cards you own.",
+    "suasColecoes": "Your collections",
+    "completa": "Complete",
+    "quaseLa": "Almost there",
+    "quaseLaDescricao": "The divisions closest to done, with the first cards still missing.",
+    "faltam": "{total, plural, =1 {1 to go} other {# to go}}",
+    "estatisticas": "Statistics",
+    "estatisticasDescricao": "How the inventory is spread out. Click any breakdown to open the inventory already filtered."
+  },
+  "divisoes": {
+    "principal": "main",
+    "secretas": "secret",
+    "maisDivisoes": "{total, plural, =1 {+1 division} other {+# divisions}}"
   },
   "repetidas": {
     "titulo": "Duplicates",
@@ -454,7 +467,8 @@
     "erroDesalocar": "Failed to deallocate.",
     "avisoCatalogoIncompleto": "The local catalog only knows {materializadas} of the {esperadas} cards of this set upstream — {faltantes} are missing. The collection does not pretend to be complete: the progress above reflects only what the local catalog has today.",
     "avisoSemNumeracaoOficial": "This set has no separate official numbering upstream (it is a promo collection). This collection's universe uses the {total} known cards of the whole set instead of the official count.",
-    "progressoPorRegiao": "Progress by region:",
+    "progressoPorRegiao": "Progress by region",
+    "progressoPorDivisao": "Progress by division",
     "filtrar": "Filter",
     "todasAsRegioes": "All regions",
     "filtroSoVazias": "Show empty slots only ({total}) — what this collection is missing",

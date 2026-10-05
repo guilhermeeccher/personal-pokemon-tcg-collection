@@ -245,6 +245,16 @@ import {
   calcularProgressoPorRegiao,
   type ProgressoRegiao,
 } from "@/lib/dominio/progresso-regiao";
+import {
+  calcularDivisoes,
+  type Divisao,
+  type DivisaoQuaseLa,
+  type EntradaDivisoes,
+  selecionarQuaseLa,
+  type VagaParaDivisao,
+} from "@/lib/dominio/divisoes-colecao";
+import { ordenarPorDestaque } from "@/lib/dominio/destaque-carta";
+import { urlsLogoSetCdn } from "@/lib/dominio/imagem-carta";
 
 // --- Sets (cadastro rápido por set) ----------------------------------------
 
@@ -1876,6 +1886,8 @@ export interface VagaDaColecao {
    * tipo de um palpite seria inventar dado.
    */
   energia: TipoEnergia | null;
+  /** Id da divisão em que a vaga conta (`divisoes-colecao.ts`); `null` em customizada. */
+  divisao: string | null;
 }
 
 export interface ColecaoComVagas extends ColecaoBasica {
@@ -1886,6 +1898,8 @@ export interface ColecaoComVagas extends ColecaoBasica {
   avisoSemNumeracaoOficial?: AvisoSemNumeracaoOficial;
   /** Só presente em coleção `pokedex` (item 2): progresso por região. */
   progressoPorRegiao?: ProgressoRegiao[];
+  /** Regiões (Pokédex) ou sets e suas partes (set); vazia em customizada. */
+  divisoes: Divisao[];
   /**
    * As vagas pedem cartas de mais de um set (coleção que junta sets, ou com
    * carta avulsa) — a tela passa a mostrar o set de cada vaga.
@@ -2016,6 +2030,16 @@ export async function obterColecaoComVagas(
         )
       : undefined;
 
+  const sets =
+    colecaoLinha.tipo === "set" ? await lerSetsParaDivisoes(db, setsDasVagas) : new Map();
+  const { divisoes, divisaoPorChave } = calcularDivisoes(
+    entradaDivisoes(
+      colecaoLinha,
+      ordenadas.map((v) => ({ chave: v.chave, preenchida: v.copiaId !== null })),
+      sets,
+    ),
+  );
+
   return {
     ...colecaoLinha,
     vagas: ordenadas.map((v) => {
@@ -2048,6 +2072,7 @@ export async function obterColecaoComVagas(
         idiomaFisico: preenchida ? v.idiomaFisico : null,
         condicao: preenchida ? v.condicao : null,
         energia: energiaDaCarta(preenchida ? v.tipos : esperada?.tipos),
+        divisao: divisaoPorChave.get(v.chave) ?? null,
       };
     }),
     ...(avisos.avisoCatalogoIncompleto
@@ -2057,8 +2082,290 @@ export async function obterColecaoComVagas(
       ? { avisoSemNumeracaoOficial: avisos.avisoSemNumeracaoOficial }
       : {}),
     ...(progressoPorRegiao ? { progressoPorRegiao } : {}),
+    divisoes,
     multiplosSets: setsDasVagas.length > 1,
   };
+}
+
+// --- Divisões e vitrine (2026-10-05) ----------------------------------------
+
+interface SetParaDivisoes {
+  qtdOficial: number;
+  serieId: string | null;
+  nomePorIdioma: Map<Idioma, string>;
+}
+
+/**
+ * O que as divisões e a vitrine precisam saber de cada set, numa consulta
+ * só para todos: numeração oficial (a maior entre os idiomas, como em
+ * `contagensDoSet`), id da série (o logo no CDN) e o nome em cada idioma.
+ */
+async function lerSetsParaDivisoes(
+  db: Database,
+  setIds: readonly string[],
+): Promise<Map<string, SetParaDivisoes>> {
+  const resultado = new Map<string, SetParaDivisoes>();
+  if (setIds.length === 0) return resultado;
+  const linhas = await db
+    .select({
+      setId: cartaCatalogo.setId,
+      idioma: cartaCatalogo.idioma,
+      qtdOficial: sql<number>`max(${cartaCatalogo.setQtdOficial})::int`,
+      serieId: sql<string | null>`max(${cartaCatalogo.setSerieId})`,
+      nome: sql<string>`min(${cartaCatalogo.setNome})`,
+    })
+    .from(cartaCatalogo)
+    .where(inArray(cartaCatalogo.setId, [...setIds]))
+    .groupBy(cartaCatalogo.setId, cartaCatalogo.idioma);
+  for (const l of linhas) {
+    const atual = resultado.get(l.setId) ?? {
+      qtdOficial: 0,
+      serieId: null,
+      nomePorIdioma: new Map<Idioma, string>(),
+    };
+    atual.qtdOficial = Math.max(atual.qtdOficial, l.qtdOficial);
+    atual.serieId = atual.serieId ?? l.serieId;
+    atual.nomePorIdioma.set(l.idioma, l.nome);
+    resultado.set(l.setId, atual);
+  }
+  return resultado;
+}
+
+/** Nome do set no idioma preferido, senão no outro ocidental, senão no que houver. */
+function nomeDoSetPreferido(info: SetParaDivisoes | undefined, preferido: Idioma): string | null {
+  if (!info) return null;
+  for (const idioma of ordemIdiomasPorCarta(preferido)) {
+    const nome = info.nomePorIdioma.get(idioma);
+    if (nome) return nome;
+  }
+  return info.nomePorIdioma.values().next().value ?? null;
+}
+
+function setIdsDasChaves(chaves: readonly string[]): string[] {
+  return [...new Set(chaves.flatMap((c) => lerChaveVagaSet(c)?.setId ?? []))];
+}
+
+function entradaDivisoes(
+  c: { tipo: TipoColecao; parametro: unknown },
+  vagas: readonly VagaParaDivisao[],
+  sets: ReadonlyMap<string, SetParaDivisoes>,
+): EntradaDivisoes {
+  const preferido = (c.parametro as Partial<ParametroSet> | null)?.idiomaCatalogo ?? "pt";
+  const qtdOficialPorSet = new Map<string, number>();
+  const nomePorSet = new Map<string, string>();
+  for (const [setId, info] of sets) {
+    qtdOficialPorSet.set(setId, info.qtdOficial);
+    const nome = nomeDoSetPreferido(info, preferido);
+    if (nome) nomePorSet.set(setId, nome);
+  }
+  return { tipo: c.tipo, parametro: c.parametro, vagas, qtdOficialPorSet, nomePorSet };
+}
+
+export interface CapaDaColecao {
+  nome: string;
+  imagemUrl: string;
+}
+
+export interface ColecaoNaVitrine extends ColecaoComProgresso {
+  divisoes: Divisao[];
+  /** A carta mais vistosa já alocada (`destaque-carta.ts`); `null` sem nenhuma com foto. */
+  capa: CapaDaColecao | null;
+  /** Logo do primeiro set da receita, em ordem de idioma; vazio fora de coleção de set. */
+  logos: string[];
+}
+
+export interface CartaNaVitrine {
+  cartaId: string;
+  idioma: Idioma;
+  nome: string;
+  setNome: string;
+  localId: string;
+  raridade: string | null;
+  imagemUrl: string;
+}
+
+/**
+ * Candidatas por destaque que a segunda consulta (a da foto) recebe. A
+ * cadeia de imagem é cara por linha (`imagemDaCarta` faz subconsultas), então
+ * ela não roda sobre o inventário inteiro: primeiro ordena-se só pela
+ * raridade, depois busca-se foto para uma folga acima do que vai à tela —
+ * carta sem foto nenhuma não entra na vitrine e cede o lugar.
+ */
+const FOLGA_SEM_FOTO = 3;
+
+async function fotosDasCartas(
+  db: Database,
+  pares: readonly { cartaId: string; idioma: Idioma }[],
+): Promise<Map<string, string>> {
+  const fotos = new Map<string, string>();
+  if (pares.length === 0) return fotos;
+  const linhas = await db
+    .select({
+      id: cartaCatalogo.id,
+      idioma: cartaCatalogo.idioma,
+      imagemUrl: imagemDaCarta(cartaCatalogo),
+    })
+    .from(cartaCatalogo)
+    .where(
+      or(...pares.map((p) => and(eq(cartaCatalogo.id, p.cartaId), eq(cartaCatalogo.idioma, p.idioma)))),
+    );
+  for (const l of linhas) if (l.imagemUrl) fotos.set(`${l.id}|${l.idioma}`, l.imagemUrl);
+  return fotos;
+}
+
+/**
+ * As coleções da visão geral: o progresso de `listarColecoes` mais as
+ * divisões, a capa e o logo de cada uma. Número fixo de consultas, não
+ * proporcional ao de coleções: vagas de todas de uma vez, sets de todas de
+ * uma vez, vagas preenchidas de todas de uma vez, e uma de fotos.
+ */
+export async function listarColecoesNaVitrine(db: Database): Promise<ColecaoNaVitrine[]> {
+  const colecoes = await listarColecoes(db);
+  const ids = colecoes.map((c) => c.id);
+  if (ids.length === 0) return [];
+
+  const vagasLinhas = await db
+    .select({ colecaoId: vaga.colecaoId, chave: vaga.chave, copiaId: vaga.copiaId })
+    .from(vaga)
+    .where(inArray(vaga.colecaoId, ids));
+  const vagasPorColecao = new Map<string, VagaParaDivisao[]>();
+  for (const v of vagasLinhas) {
+    const lista = vagasPorColecao.get(v.colecaoId) ?? [];
+    lista.push({ chave: v.chave, preenchida: v.copiaId !== null });
+    vagasPorColecao.set(v.colecaoId, lista);
+  }
+
+  const sets = await lerSetsParaDivisoes(db, [
+    ...new Set([
+      ...setIdsDasChaves(vagasLinhas.map((v) => v.chave)),
+      ...colecoes.flatMap((c) =>
+        c.tipo === "set" ? ((c.parametro as ParametroSet).sets ?? []) : [],
+      ),
+    ]),
+  ]);
+
+  // Capa: as cartas alocadas de cada coleção, ordenadas pelo destaque.
+  const alocadas = await db
+    .select({
+      colecaoId: vaga.colecaoId,
+      cartaId: cartaCatalogo.id,
+      idioma: cartaCatalogo.idioma,
+      nome: cartaCatalogo.nome,
+      localId: cartaCatalogo.localId,
+      raridade: cartaCatalogo.raridade,
+    })
+    .from(vaga)
+    .innerJoin(copia, eq(vaga.copiaId, copia.id))
+    .innerJoin(
+      cartaCatalogo,
+      and(eq(copia.cartaId, cartaCatalogo.id), eq(copia.idiomaCatalogo, cartaCatalogo.idioma)),
+    )
+    .where(inArray(vaga.colecaoId, ids));
+  const candidatasCapa = new Map<string, typeof alocadas>();
+  for (const id of ids) {
+    candidatasCapa.set(
+      id,
+      ordenarPorDestaque(alocadas.filter((a) => a.colecaoId === id)).slice(0, FOLGA_SEM_FOTO),
+    );
+  }
+  const fotos = await fotosDasCartas(db, [...candidatasCapa.values()].flat());
+
+  return colecoes.map((c) => {
+    const { divisoes } = calcularDivisoes(
+      entradaDivisoes(c, vagasPorColecao.get(c.id) ?? [], sets),
+    );
+    const capa = (candidatasCapa.get(c.id) ?? [])
+      .map((a) => ({ nome: a.nome, imagemUrl: fotos.get(`${a.cartaId}|${a.idioma}`) }))
+      .find((a): a is CapaDaColecao => a.imagemUrl !== undefined);
+    let logos: string[] = [];
+    if (c.tipo === "set") {
+      const p = c.parametro as ParametroSet;
+      const primeiro = p.sets?.[0];
+      logos = urlsLogoSetCdn(
+        ordemIdiomasPorCarta(p.idiomaCatalogo),
+        primeiro ? sets.get(primeiro)?.serieId : null,
+        primeiro,
+      );
+    }
+    return { ...c, divisoes, capa: capa ?? null, logos };
+  });
+}
+
+/**
+ * Joias da coleção: as cartas distintas mais vistosas do inventário
+ * (`destaque-carta.ts`), alocadas ou não — é o que ele tem, não o que está
+ * no fichário. Distintas por carta de catálogo: três cópias da mesma
+ * ilustração não ocupam três lugares na vitrine.
+ */
+export async function listarJoias(db: Database, limite: number): Promise<CartaNaVitrine[]> {
+  const distintas = await db
+    .selectDistinct({
+      cartaId: cartaCatalogo.id,
+      idioma: cartaCatalogo.idioma,
+      nome: cartaCatalogo.nome,
+      setNome: cartaCatalogo.setNome,
+      localId: cartaCatalogo.localId,
+      raridade: cartaCatalogo.raridade,
+    })
+    .from(copia)
+    .innerJoin(
+      cartaCatalogo,
+      and(eq(copia.cartaId, cartaCatalogo.id), eq(copia.idiomaCatalogo, cartaCatalogo.idioma)),
+    );
+  const candidatas = ordenarPorDestaque(distintas).slice(0, limite * FOLGA_SEM_FOTO);
+  const fotos = await fotosDasCartas(db, candidatas);
+  return candidatas
+    .flatMap((c) => {
+      const imagemUrl = fotos.get(`${c.cartaId}|${c.idioma}`);
+      return imagemUrl ? [{ ...c, imagemUrl }] : [];
+    })
+    .slice(0, limite);
+}
+
+export interface FaltanteQuaseLa {
+  chave: string;
+  /** Carta esperada (set) ou nome da espécie (Pokédex). */
+  nome: string | null;
+  imagemUrl: string | null;
+}
+
+export interface QuaseLa extends DivisaoQuaseLa {
+  colecaoNome: string;
+  tipo: TipoColecao;
+  /** As primeiras vagas vazias da divisão, na ordem da grade. */
+  faltantes: FaltanteQuaseLa[];
+}
+
+/**
+ * "Quase lá": as divisões mais perto de fechar (`selecionarQuaseLa`) com as
+ * primeiras cartas que faltam em cada uma. Lê a coleção inteira pela mesma
+ * função da tela da coleção — é ela que sabe qual é a carta esperada de
+ * uma vaga vazia — e só para as coleções escolhidas (no máximo `limite`).
+ */
+export async function listarQuaseLa(
+  db: Database,
+  colecoes: readonly ColecaoNaVitrine[],
+  limite: number,
+  faltantesPorDivisao: number,
+): Promise<QuaseLa[]> {
+  const escolhidas = selecionarQuaseLa(colecoes, limite);
+  const lidas = new Map<string, ColecaoComVagas | null>();
+  for (const id of new Set(escolhidas.map((e) => e.colecaoId))) {
+    lidas.set(id, await obterColecaoComVagas(db, id));
+  }
+  return escolhidas.flatMap((e) => {
+    const colecaoLida = lidas.get(e.colecaoId);
+    if (!colecaoLida) return [];
+    const faltantes = colecaoLida.vagas
+      .filter((v) => v.copiaId === null && v.divisao === e.divisao.id)
+      .slice(0, faltantesPorDivisao)
+      .map((v) => ({
+        chave: v.chave,
+        nome: v.cartaNome ?? v.nomeEspecie,
+        imagemUrl: v.imagemUrl,
+      }));
+    return [{ ...e, colecaoNome: colecaoLida.nome, tipo: colecaoLida.tipo, faltantes }];
+  });
 }
 
 /** Edita nome, notas e/ou idiomaExigido. Nunca toca no parâmetro estrutural. */

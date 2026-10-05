@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
@@ -25,6 +25,12 @@ import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { ImagemCartaComZoom } from "@/app/_componentes/imagem-carta-zoom";
 import { ImagemVagaVazia } from "@/app/_componentes/imagem-vaga-vazia";
+import { formatarPercentual } from "@/app/_componentes/ds/linha-distribuicao";
+import {
+  percentualDe,
+  ProgressoDivisoes,
+  useRotuloDivisao,
+} from "@/app/_componentes/ds/progresso-divisoes";
 import { Modal } from "@/app/_componentes/modal";
 import type {
   CandidataMelhoriaDTO,
@@ -52,6 +58,8 @@ export default function ColecaoPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
   const router = useRouter();
+  const locale = useLocale();
+  const rotuloDivisao = useRotuloDivisao();
 
   const [colecao, setColecao] = useState<ColecaoComVagasDTO | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -203,30 +211,27 @@ export default function ColecaoPage() {
     return true;
   });
 
-  // Coleção que junta sets: a grade vira uma seção por set, com o progresso
-  // dele — o nome do set sai do cartão (repetido em cada vaga, vazava da
-  // moldura). A ordem das vagas já vem da receita (`compararChavesVaga`).
-  const setDaVaga = (v: VagaDaColecaoDTO) => lerChaveVagaSet(v.chave)?.setId ?? "";
+  // Coleção de set com mais de uma divisão (sets juntos, ou um set com as
+  // secretas partidas da numeração principal): a grade vira uma seção por
+  // divisão, com o progresso dela — o nome do set sai do cartão (repetido
+  // em cada vaga, vazava da moldura). A ordem das vagas já vem da receita
+  // (`compararChavesVaga`), e as secretas ficam no fim de cada set. A
+  // Pokédex não se secciona: lá a região tem filtro próprio.
   const nomeDoSet = new Map<string, string>();
-  const progressoDoSet = new Map<string, { preenchidas: number; total: number }>();
   for (const v of colecao.vagas) {
-    const setId = setDaVaga(v);
+    const setId = lerChaveVagaSet(v.chave)?.setId ?? "";
     if (v.setNome && !nomeDoSet.has(setId)) nomeDoSet.set(setId, v.setNome);
-    const p = progressoDoSet.get(setId) ?? { preenchidas: 0, total: 0 };
-    p.total++;
-    if (v.copiaId !== null) p.preenchidas++;
-    progressoDoSet.set(setId, p);
   }
-  const secoes: { setId: string | null; vagas: VagaDaColecaoDTO[] }[] = [];
-  if (colecao.multiplosSets) {
+  const divisaoPorId = new Map(colecao.divisoes.map((d) => [d.id, d]));
+  const secoes: { divisaoId: string | null; vagas: VagaDaColecaoDTO[] }[] = [];
+  if (colecaoDeSet && colecao.divisoes.length > 1) {
     for (const v of vagasExibidas) {
-      const setId = setDaVaga(v);
       const ultima = secoes.at(-1);
-      if (ultima && ultima.setId === setId) ultima.vagas.push(v);
-      else secoes.push({ setId, vagas: [v] });
+      if (ultima && ultima.divisaoId === v.divisao) ultima.vagas.push(v);
+      else secoes.push({ divisaoId: v.divisao, vagas: [v] });
     }
   } else {
-    secoes.push({ setId: null, vagas: vagasExibidas });
+    secoes.push({ divisaoId: null, vagas: vagasExibidas });
   }
 
   const setsSemNumeracao = (colecao.avisoSemNumeracaoOficial?.setIds ?? []).map(
@@ -354,18 +359,19 @@ export default function ColecaoPage() {
         />
       )}
 
-      {pokedex && colecao.progressoPorRegiao && colecao.progressoPorRegiao.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded border border-line p-3 text-sm">
-          <span className="text-muted">{t("progressoPorRegiao")}</span>
-          <div className="flex flex-wrap gap-x-3 gap-y-1">
-            {colecao.progressoPorRegiao.map((p) => (
-              <span key={p.regiao}>
-                {NOME_REGIAO[p.regiao]} {p.preenchidas}/{p.total}
-              </span>
-            ))}
-          </div>
-          {colecao.progressoPorRegiao.length > 1 && (
-            <label className="ml-auto flex items-center gap-2">
+      {/* Uma divisão só é a coleção inteira, que o cabeçalho já mostra. */}
+      {colecao.divisoes.length > 1 && (
+        <section className="flex flex-col gap-3 rounded-card border border-hairline bg-surface p-4 shadow-1">
+          <h2 className="text-sm font-semibold text-strong">
+            {pokedex ? t("progressoPorRegiao") : t("progressoPorDivisao")}
+          </h2>
+          <ProgressoDivisoes divisoes={colecao.divisoes} colunas />
+        </section>
+      )}
+
+      {pokedex && colecao.progressoPorRegiao && colecao.progressoPorRegiao.length > 1 && (
+        <div className="flex flex-wrap items-center gap-3 text-sm">
+          <label className="flex items-center gap-2">
               <span className="text-muted">{t("filtrar")}</span>
               <select
                 value={regiaoFiltro}
@@ -380,7 +386,6 @@ export default function ColecaoPage() {
                 ))}
               </select>
             </label>
-          )}
         </div>
       )}
 
@@ -436,18 +441,16 @@ export default function ColecaoPage() {
 
       {carregando && <p className="text-sm text-muted">{t("atualizando")}</p>}
 
-      {secoes.map((secao) => (
-        <section key={secao.setId ?? "todas"} className="flex flex-col gap-2">
-          {secao.setId !== null && (
+      {secoes.map((secao, i) => {
+        const divisao = secao.divisaoId ? divisaoPorId.get(secao.divisaoId) : undefined;
+        return (
+        <section key={secao.divisaoId ?? `secao-${i}`} className="flex flex-col gap-2">
+          {divisao && (
             <header className="mt-2 flex flex-wrap items-baseline gap-2 border-b-2 border-accent pb-1">
-              <h2 className="text-base font-semibold text-foreground">
-                {nomeDoSet.get(secao.setId) ?? secao.setId}
-              </h2>
+              <h2 className="text-base font-semibold text-foreground">{rotuloDivisao(divisao)}</h2>
               <span className="text-xs text-muted">
-                {t("preenchidas", {
-                  preenchidas: progressoDoSet.get(secao.setId)?.preenchidas ?? 0,
-                  total: progressoDoSet.get(secao.setId)?.total ?? 0,
-                })}
+                {t("preenchidas", { preenchidas: divisao.preenchidas, total: divisao.total })} ·{" "}
+                {formatarPercentual(percentualDe(divisao.preenchidas, divisao.total), locale)}
               </span>
             </header>
           )}
@@ -469,7 +472,8 @@ export default function ColecaoPage() {
             ))}
           </div>
         </section>
-      ))}
+        );
+      })}
       {vagasExibidas.length === 0 && (
         <EstadoVazio className="py-6">
           {customizada

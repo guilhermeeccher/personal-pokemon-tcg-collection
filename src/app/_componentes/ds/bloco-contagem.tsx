@@ -17,11 +17,14 @@ export function BlocoContagem({
   rotulo,
   tom = "var(--text-strong)",
   href,
+  compacto = false,
 }: {
   valor: number | string;
   rotulo: ReactNode;
   tom?: string;
   href?: string;
+  /** Número menor e cartão mais baixo — quando a contagem não é o assunto da tela. */
+  compacto?: boolean;
 }) {
   const locale = useLocale();
   const formatado = typeof valor === "number" ? valor.toLocaleString(locale) : valor;
@@ -29,7 +32,7 @@ export function BlocoContagem({
   const conteudo = (
     <>
       <span
-        className="font-display text-[length:var(--fs-display-2)] leading-[1.05] font-bold tabular-nums"
+        className={`font-display ${compacto ? "text-[length:var(--fs-title-1)]" : "text-[length:var(--fs-display-2)]"} leading-[1.05] font-bold tabular-nums`}
         style={{ color: tom }}
       >
         {formatado}
@@ -38,7 +41,7 @@ export function BlocoContagem({
     </>
   );
 
-  const classes = "flex flex-col gap-1 rounded-card border border-hairline bg-surface px-6 py-5 shadow-1";
+  const classes = `flex flex-col gap-1 rounded-card border border-hairline bg-surface shadow-1 ${compacto ? "px-4 py-3" : "px-6 py-5"}`;
 
   if (!href) return <div className={classes}>{conteudo}</div>;
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { urlBaseImagemCartaCdn } from "./imagem-carta";
+import { urlBaseImagemCartaCdn, urlsLogoSetCdn } from "./imagem-carta";
 
 describe("urlBaseImagemCartaCdn", () => {
   it("monta a URL base a partir de idioma, série, set e localId", () => {
@@ -140,5 +140,24 @@ describe("urlBaseImagemCartaCdn", () => {
         localId: "001",
       }),
     ).toBeNull();
+  });
+});
+
+describe("urlsLogoSetCdn", () => {
+  it("monta a URL do logo por idioma, na ordem dada e sem repetir", () => {
+    expect(urlsLogoSetCdn(["pt", "en", "pt"], "me", "30th")).toEqual([
+      "https://assets.tcgdex.net/pt/me/30th/logo.png",
+      "https://assets.tcgdex.net/en/me/30th/logo.png",
+    ]);
+  });
+
+  it("traduz jp para o código ISO do CDN", () => {
+    expect(urlsLogoSetCdn(["jp"], "SV", "SV2a")).toEqual([
+      "https://assets.tcgdex.net/ja/SV/SV2a/logo.png",
+    ]);
+  });
+
+  it("sem série ou sem set não há URL", () => {
+    expect(urlsLogoSetCdn(["pt"], null, "selo30")).toEqual([]);
   });
 });

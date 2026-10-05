@@ -89,3 +89,22 @@ export function urlBaseImagemCartaCdn({
   if (!idioma || !setSerieId || !setId || !localId) return null;
   return `https://assets.tcgdex.net/${codigoIdiomaCdn(idioma)}/${setSerieId}/${setId}/${localId}`;
 }
+
+/**
+ * Logo do set no CDN da TCGdex — a identidade de uma coleção de set na
+ * visão geral (2026-10-05). Mesmo esquema da imagem de carta, com `logo`
+ * no lugar do número; ao contrário dela, o arquivo vem com extensão.
+ *
+ * Não há verificação prévia: nem todo set tem logo em todo idioma, e quem
+ * exibe tenta a próxima URL (ou cai no nome) quando uma falha. Por isso
+ * a função devolve a lista na ordem de preferência, sem repetição.
+ */
+export function urlsLogoSetCdn(
+  idiomas: readonly Idioma[],
+  setSerieId: string | null | undefined,
+  setId: string | null | undefined,
+): string[] {
+  if (!setSerieId || !setId) return [];
+  const codigos = [...new Set(idiomas.map(codigoIdiomaCdn))];
+  return codigos.map((c) => `https://assets.tcgdex.net/${c}/${setSerieId}/${setId}/logo.png`);
+}

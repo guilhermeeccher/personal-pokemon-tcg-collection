@@ -11,6 +11,7 @@ import type { AvisoCatalogoIncompleto } from "./catalogo-incompleto";
 import type { AvisoSemNumeracaoOficial } from "./numeracao-oficial-set";
 import type { EixoMelhoria } from "./melhoria-vaga";
 import type { ParametroPokedex, ParametroSet, TipoColecao } from "./parametro-colecao";
+import type { Divisao } from "./divisoes-colecao";
 import type { ProgressoRegiao } from "./progresso-regiao";
 import type { TipoEnergia } from "./tipo-energia";
 
@@ -187,6 +188,8 @@ export interface VagaDaColecaoDTO {
    * carta esperada) e em Treinador/Energia, que não têm tipo.
    */
   energia: TipoEnergia | null;
+  /** Id da divisão em que a vaga conta; `null` em customizada. */
+  divisao: string | null;
 }
 
 /**
@@ -213,6 +216,8 @@ export interface ColecaoComVagasDTO {
   avisoSemNumeracaoOficial?: AvisoSemNumeracaoOficial;
   /** Só presente em coleção `pokedex` (item 2): progresso por região. */
   progressoPorRegiao?: ProgressoRegiao[];
+  /** Regiões (Pokédex) ou sets e suas partes (set); vazia em customizada. */
+  divisoes: Divisao[];
   /** As vagas pedem cartas de mais de um set — a tela mostra o set de cada uma. */
   multiplosSets: boolean;
 }
@@ -252,10 +257,36 @@ export interface DistribuicaoVarianteDTO {
   unidades: number;
 }
 
+/** Coleção na visão geral: o progresso da lista, mais divisões, capa e logo. */
+export interface ColecaoVitrineDTO extends ColecaoListaDTO {
+  divisoes: Divisao[];
+  capa: { nome: string; imagemUrl: string } | null;
+  /** Logo do primeiro set da receita, em ordem de idioma (tenta o seguinte se falhar). */
+  logos: string[];
+}
+
+export interface CartaVitrineDTO {
+  cartaId: string;
+  idioma: Idioma;
+  nome: string;
+  setNome: string;
+  localId: string;
+  raridade: string | null;
+  imagemUrl: string;
+}
+
+export interface QuaseLaDTO {
+  colecaoId: string;
+  colecaoNome: string;
+  tipo: TipoColecao;
+  divisao: Divisao;
+  faltam: number;
+  faltantes: { chave: string; nome: string | null; imagemUrl: string | null }[];
+}
+
 /**
- * `GET /api/inventario/resumo`. `colecoes` é exatamente o que
- * `listarColecoes` calcula (mesmo formato de `ColecaoListaDTO`) — não
- * recalculado aqui, só reaproveitado.
+ * `GET /api/inventario/resumo`. `colecoes` é `listarColecoes` sem
+ * recálculo, mais o que a vitrine acrescenta (`listarColecoesNaVitrine`).
  */
 export interface ResumoInventarioDTO {
   totais: TotaisInventarioDTO;
@@ -266,7 +297,9 @@ export interface ResumoInventarioDTO {
     porCondicao: DistribuicaoCondicaoDTO[];
     porVariante: DistribuicaoVarianteDTO[];
   };
-  colecoes: ColecaoListaDTO[];
+  colecoes: ColecaoVitrineDTO[];
+  joias: CartaVitrineDTO[];
+  quaseLa: QuaseLaDTO[];
 }
 
 // --- Repetidas / o que sobra para troca (item 2) --------------------------
