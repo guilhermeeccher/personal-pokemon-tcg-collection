@@ -76,6 +76,7 @@
  */
 
 import type { Condicao, Idioma, VarianteCopia } from "./enums";
+import { identidadeNaLiga } from "./numeracao-liga";
 
 /** As 14 colunas, na ordem exata do arquivo deles. */
 export const COLUNAS_LIGA = [
@@ -245,6 +246,8 @@ function tresDigitos(n: number): string {
 export interface CopiaParaExportar {
   setNomePt: string | null;
   setNomeEn: string | null;
+  /** `carta_catalogo.set_id` — a identidade na Liga depende dele (`numeracao-liga.ts`). */
+  setId: string;
   setSigla: string | null;
   cartaNomePt: string | null;
   cartaNomeEn: string | null;
@@ -263,11 +266,14 @@ export interface CopiaParaExportar {
 
 /** Uma linha do CSV, já na ordem das colunas. */
 export function linhaLiga(c: CopiaParaExportar): string[] {
+  // Sigla, número e total vêm da identidade na Liga, não do catálogo: para a
+  // Coleção Clássica de 30 Anos eles diferem (ver `numeracao-liga.ts`).
+  const liga = identidadeNaLiga(c);
   return [
     // Nome da EDIÇÃO mantém acento; nome da CARTA, não. Ver `semAcento`.
     c.setNomePt ?? "",
     c.setNomeEn ?? "",
-    c.setSigla ?? "",
+    liga.sigla ?? "",
     semAcento(c.cartaNomePt ?? ""),
     semAcento(c.cartaNomeEn ?? ""),
     String(c.quantidade),
@@ -276,12 +282,12 @@ export function linhaLiga(c: CopiaParaExportar): string[] {
     (c.raridade && RARIDADE_LIGA[c.raridade]) ?? "",
     corDaCarta(c.categoria, c.tipos),
     EXTRAS_POR_VARIANTE[c.variante] ?? "",
-    c.localId,
+    liga.numero,
     // Comentário do arquivo deles é campo livre; a nota da cópia é o que
     // mais se parece com isso. Quebra de linha viraria linha nova no CSV,
     // então vira espaço.
     (c.notas ?? "").replace(/\s*\n\s*/g, " ").trim(),
-    tresDigitos(c.setQtdOficial),
+    tresDigitos(liga.total ?? 0),
   ];
 }
 

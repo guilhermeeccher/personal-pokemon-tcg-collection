@@ -28,6 +28,7 @@ import {
   normalizarNumeroCarta,
   type AlvoVagaSet,
 } from "@/lib/dominio/liga-set";
+import { identidadeNaLiga, setIdsDaSiglaLiga } from "@/lib/dominio/numeracao-liga";
 import { JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS } from "@/lib/dominio/estimativa-varredura";
 import { compararChavesVaga, lerChaveVagaSet } from "@/lib/dominio/chave-vaga-set";
 import { ordemIdiomasPorCarta } from "@/lib/dominio/idioma-catalogo";
@@ -326,6 +327,9 @@ export async function casarComCatalogo(
   if (linhas.length === 0) return [];
 
   const siglas = [...new Set(linhas.map((l) => l.edicaoSigla.toUpperCase()))];
+  // Edição que a Liga publica sob sigla própria (`30C-C`): não é sigla de set
+  // nenhum nosso, então o set vem da tabela de exceções.
+  const setsDeExcecao = siglas.flatMap(setIdsDaSiglaLiga);
   const edids = [
     ...new Set(
       linhas.map((l) => l.edicaoId).filter((e): e is number => e !== null),
@@ -354,6 +358,7 @@ export async function casarComCatalogo(
       setId: cartaCatalogo.setId,
       setSigla: cartaCatalogo.setSigla,
       setNome: cartaCatalogo.setNome,
+      setQtdOficial: cartaCatalogo.setQtdOficial,
       localId: cartaCatalogo.localId,
       raridade: cartaCatalogo.raridade,
       dexIds: cartaCatalogo.dexIds,
@@ -370,22 +375,37 @@ export async function casarComCatalogo(
           inArray(sql`upper(${cartaCatalogo.setSigla})`, siglas),
           inArray(sql`upper(${cartaCatalogo.setId})`, siglas),
           ...(setIds.length > 0 ? [inArray(cartaCatalogo.setId, setIds)] : []),
+          ...(setsDeExcecao.length > 0 ? [inArray(cartaCatalogo.setId, setsDeExcecao)] : []),
         ),
       ),
     );
 
   // pt antes de en antes de jp: a linha em português é a que o usuário lê.
   const peso: Record<string, number> = { pt: 0, en: 1, jp: 2 };
-  const porChave = new Map<string, (typeof candidatas)[number]>();
-  const registrar = (chave: string, carta: (typeof candidatas)[number]) => {
-    const atual = porChave.get(chave);
-    if (!atual || peso[carta.idioma] < peso[atual.idioma])
-      porChave.set(chave, carta);
+  // Uma chave pode ter várias cartas: as clássicas de 30 Anos repetem o número
+  // original (011 ×2, 106 ×3), e a Liga as distingue só pelo nome. Guardamos
+  // todas e, na hora de casar, a vaga de Pokédex escolhe a que tem o dexId dela.
+  type Candidata = (typeof candidatas)[number];
+  const porChave = new Map<string, Candidata[]>();
+  const registrar = (chave: string, carta: Candidata) => {
+    const lista = porChave.get(chave);
+    if (lista) lista.push(carta);
+    else porChave.set(chave, [carta]);
+  };
+  const melhor = (lista: Candidata[] | undefined, dex: number): Candidata | undefined => {
+    if (!lista) return undefined;
+    const ordenada = [...lista].sort((a, b) => peso[a.idioma] - peso[b.idioma]);
+    return (
+      ordenada.find((c) => c.dexIds.length === 1 && c.dexIds[0] === dex) ?? ordenada[0]
+    );
   };
   for (const carta of candidatas) {
-    const numero = normalizarNumeroCarta(carta.localId);
-    if (carta.setSigla)
-      registrar(`sigla:${carta.setSigla.toUpperCase()}:${numero}`, carta);
+    // Sigla e número como a Liga os escreve, não como o catálogo: nas
+    // clássicas de 30 Anos o catálogo repete a sigla `30C` e numera 001–030,
+    // o que colidia com o set principal (`numeracao-liga.ts`).
+    const liga = identidadeNaLiga(carta);
+    const numero = normalizarNumeroCarta(liga.numero);
+    if (liga.sigla) registrar(`sigla:${liga.sigla.toUpperCase()}:${numero}`, carta);
     registrar(`set:${carta.setId.toUpperCase()}:${numero}`, carta);
   }
 
@@ -397,10 +417,10 @@ export async function casarComCatalogo(
 
     const carta =
       (setVinculado
-        ? porChave.get(`set:${setVinculado.toUpperCase()}:${numero}`)
+        ? melhor(porChave.get(`set:${setVinculado.toUpperCase()}:${numero}`), linha.dex)
         : undefined) ??
-      porChave.get(`sigla:${sigla}:${numero}`) ??
-      porChave.get(`set:${sigla}:${numero}`);
+      melhor(porChave.get(`sigla:${sigla}:${numero}`), linha.dex) ??
+      melhor(porChave.get(`set:${sigla}:${numero}`), linha.dex);
 
     // Regra 2: só carta com exatamente um dexId ocupa vaga de Pokédex. Uma
     // linha que case com tag team não pode entrar como se preenchesse a vaga.

@@ -83,6 +83,37 @@ describe("linhaCasaComVagaSet", () => {
   });
 });
 
+describe("Coleção Clássica de 30 Anos", () => {
+  const delcattyClassica: AlvoVagaSet = { numero: "002", setId: "30th-c", setSigla: "30C" };
+  const cartaPrincipal: AlvoVagaSet = { numero: "005", setId: "30th", setSigla: "30C" };
+  const misty = { numero: "005", setId: "30th-c", setSigla: "30C" };
+  const classica = (numero: string) =>
+    linha({ edicaoSigla: "30C-C", edicaoId: 805, numero, total: "30" });
+
+  it("a linha 30C-C 005 casa com a Delcatty clássica (30th-c-002)", () => {
+    expect(linhaCasaComVagaSet(classica("005"), delcattyClassica)).toBe(true);
+  });
+
+  it("a linha 30C 005 casa com o set principal e NÃO com a Misty clássica", () => {
+    const principal = linha({ edicaoSigla: "30C", edicaoId: null, numero: "005" });
+    expect(linhaCasaComVagaSet(principal, cartaPrincipal)).toBe(true);
+    expect(linhaCasaComVagaSet(principal, misty)).toBe(false);
+  });
+
+  it("a linha 30C-C 005 não casa com a Misty clássica, que é a 018", () => {
+    expect(linhaCasaComVagaSet(classica("005"), misty)).toBe(false);
+    expect(linhaCasaComVagaSet(classica("018"), misty)).toBe(true);
+  });
+
+  it("o número do catálogo (002) não casa mais com a linha da clássica", () => {
+    expect(linhaCasaComVagaSet(classica("002"), delcattyClassica)).toBe(false);
+  });
+
+  it("a linha 30C-C não casa com o set principal", () => {
+    expect(linhaCasaComVagaSet(classica("005"), cartaPrincipal)).toBe(false);
+  });
+});
+
 describe("deveBuscarProximaPaginaSet", () => {
   it("para assim que a carta aparece", () => {
     expect(deveBuscarProximaPaginaSet({ blocos: 40, achou: true })).toBe(false);

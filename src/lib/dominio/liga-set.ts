@@ -34,6 +34,7 @@
 
 import type { LinhaBuscaLiga } from "./liga-busca";
 import { LINHAS_POR_PAGINA } from "./liga-busca";
+import { identidadeNaLiga } from "./numeracao-liga";
 
 /** A vaga de um set, do jeito que o casamento precisa vê-la. */
 export interface AlvoVagaSet {
@@ -79,7 +80,16 @@ export function edicaoCasaComSet(
 
   const sigla = linha.edicaoSigla.trim().toUpperCase();
   if (sigla === "") return false;
-  if (alvo.setSigla && sigla === alvo.setSigla.trim().toUpperCase()) return true;
+  // A sigla que a Liga usa para o set, que na Coleção Clássica de 30 Anos não
+  // é a do catálogo (`numeracao-liga.ts`): sem isto a linha `30C` casaria com
+  // as clássicas, que a Liga publica como `30C-C`.
+  const siglaLiga = identidadeNaLiga({
+    setId: alvo.setId,
+    localId: alvo.numero,
+    setSigla: alvo.setSigla,
+    setQtdOficial: null,
+  }).sigla;
+  if (siglaLiga && sigla === siglaLiga.trim().toUpperCase()) return true;
   return sigla === alvo.setId.trim().toUpperCase();
 }
 
@@ -89,7 +99,15 @@ export function linhaCasaComVagaSet(
   alvo: AlvoVagaSet,
   setPorEdid: ReadonlyMap<number, string> = new Map(),
 ): boolean {
-  if (normalizarNumeroCarta(linha.numero) !== normalizarNumeroCarta(alvo.numero)) {
+  // O número que a Liga imprime, que nas clássicas de 30 Anos é o da carta
+  // original e não o `local_id` do catálogo (`numeracao-liga.ts`).
+  const numeroLiga = identidadeNaLiga({
+    setId: alvo.setId,
+    localId: alvo.numero,
+    setSigla: alvo.setSigla,
+    setQtdOficial: null,
+  }).numero;
+  if (normalizarNumeroCarta(linha.numero) !== normalizarNumeroCarta(numeroLiga)) {
     return false;
   }
   return edicaoCasaComSet(linha, alvo, setPorEdid);

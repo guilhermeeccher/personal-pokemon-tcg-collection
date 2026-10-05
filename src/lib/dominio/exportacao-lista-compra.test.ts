@@ -99,6 +99,16 @@ describe("linhaFormatoLiga", () => {
     );
   });
 
+  it("clássica de 30 Anos sai com o número e o total que a Liga devolveu", () => {
+    // A linha nasce do resultado da busca deles (`005/30`), não do catálogo;
+    // o que importa é o casamento acertar a vaga (`liga-set.ts`).
+    expect(
+      linhaFormatoLiga(
+        linha({ nome: "Charizard", edicaoSigla: "30C-C", numero: "004", total: "30" }),
+      ),
+    ).toBe("1 Charizard (004/30)");
+  });
+
   it("não leva a sigla da edição — o formato deles não a prevê", () => {
     expect(linhaFormatoLiga(linha())).not.toContain("MEW");
   });

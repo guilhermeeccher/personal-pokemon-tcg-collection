@@ -19,6 +19,7 @@ const CABECALHO_REAL =
 const GENGAR: CopiaParaExportar = {
   setNomePt: "Heróis Excelsos",
   setNomeEn: "Ascended Heroes",
+  setId: "asc",
   setSigla: "ASC",
   cartaNomePt: "Mega Gengar ex",
   cartaNomeEn: "Mega Gengar ex",
@@ -117,6 +118,39 @@ describe("linhaLiga", () => {
     const l = linhaLiga({ ...GENGAR, setSigla: null, cartaNomeEn: null });
     expect(l[2]).toBe("");
     expect(l[4]).toBe("");
+  });
+});
+
+describe("Coleção Clássica de 30 Anos", () => {
+  const CHARIZARD_CLASSICO: CopiaParaExportar = {
+    ...GENGAR,
+    setNomePt: "Coleção Clássica de 30 Anos",
+    setNomeEn: "30th Classic Collection",
+    setId: "30th-c",
+    setSigla: "30C",
+    cartaNomePt: "Charizard",
+    cartaNomeEn: "Charizard",
+    localId: "001",
+    setQtdOficial: 0,
+  };
+
+  it("sai com a sigla 30C-C, o número original e o total 030", () => {
+    const l = linhaLiga(CHARIZARD_CLASSICO);
+    expect(l[2]).toBe("30C-C");
+    expect(l[11]).toBe("004");
+    expect(l[13]).toBe("030");
+  });
+
+  it("a Dark Tyranitar e a Uxie saem com 019 e 043", () => {
+    expect(linhaLiga({ ...CHARIZARD_CLASSICO, localId: "006" })[11]).toBe("019");
+    expect(linhaLiga({ ...CHARIZARD_CLASSICO, localId: "010" })[11]).toBe("043");
+  });
+
+  it("o set principal da 30 Anos continua com 30C e o próprio número", () => {
+    const l = linhaLiga({ ...CHARIZARD_CLASSICO, setId: "30th", localId: "005", setQtdOficial: 128 });
+    expect(l[2]).toBe("30C");
+    expect(l[11]).toBe("005");
+    expect(l[13]).toBe("128");
   });
 });
 

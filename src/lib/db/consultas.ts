@@ -3946,6 +3946,7 @@ export async function listarCartasRepetidas(
 export interface CopiaParaLiga {
   setNomePt: string | null;
   setNomeEn: string | null;
+  setId: string;
   setSigla: string | null;
   cartaNomePt: string | null;
   cartaNomeEn: string | null;
@@ -4000,6 +4001,7 @@ export async function listarInventarioParaLiga(
       raridade: cartaCatalogo.raridade,
       categoria: cartaCatalogo.categoria,
       tipos: cartaCatalogo.tipos,
+      setId: cartaCatalogo.setId,
       setSigla: cartaCatalogo.setSigla,
       setQtdOficial: cartaCatalogo.setQtdOficial,
       setNomePt: catalogoPt.setNome,
@@ -4037,6 +4039,7 @@ export async function listarInventarioParaLiga(
     itens.push({
       setNomePt: l.setNomePt,
       setNomeEn: l.setNomeEn,
+      setId: l.setId,
       setSigla: l.setSigla,
       cartaNomePt: l.cartaNomePt,
       cartaNomeEn: l.cartaNomeEn,
