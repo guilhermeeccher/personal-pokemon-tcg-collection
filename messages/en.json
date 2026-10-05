@@ -688,7 +688,7 @@
   },
   "precos": {
     "titulo": "Special card prices",
-    "descricao": "What the holo, secret and 30th Anniversary classic cards you own are worth on LigaPokemon. A snapshot from the moment of the lookup, always in Brazilian reais.",
+    "descricao": "What the cards you own, except plain commons and uncommons are worth on LigaPokemon. A snapshot from the moment of the lookup, always in Brazilian reais.",
     "atualizar": "Update special card prices",
     "iniciando": "Starting…",
     "emAndamentoBotao": "Lookup running…",
@@ -802,6 +802,6 @@
     "varreduraEmAndamento": "There is already a scan running on this collection. Wait for it to finish.",
     "precosEmAndamento": "A price lookup is already running. Wait for it to finish.",
     "precosJaConsultados": "All {total} special cards were already looked up in the last {horas} h; nothing to update right now.",
-    "semCartasEspeciais": "No special card (holo, secret or 30th Anniversary classic) in the inventory to look up."
+    "semCartasEspeciais": "No special card (all but common and uncommon) in the inventory to look up."
   }
 }

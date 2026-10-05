@@ -688,7 +688,7 @@
   },
   "precos": {
     "titulo": "Preços das cartas especiais",
-    "descricao": "Quanto valem na LigaPokemon as cartas holo, as secretas e as clássicas de 30 Anos que você tem. É uma foto do momento da consulta, sempre em reais.",
+    "descricao": "Quanto valem na LigaPokemon as cartas que você tem, exceto as comuns e incomuns. É uma foto do momento da consulta, sempre em reais.",
     "atualizar": "Atualizar preços das cartas especiais",
     "iniciando": "Iniciando…",
     "emAndamentoBotao": "Consulta em andamento…",
@@ -802,6 +802,6 @@
     "varreduraEmAndamento": "Já existe uma varredura em andamento nesta coleção. Espere ela terminar.",
     "precosEmAndamento": "Já existe uma consulta de preços em andamento. Espere ela terminar.",
     "precosJaConsultados": "As {total} cartas especiais já foram consultadas nas últimas {horas} h; não há o que atualizar agora.",
-    "semCartasEspeciais": "Nenhuma carta especial (holo, secreta ou clássica de 30 Anos) no inventário para consultar."
+    "semCartasEspeciais": "Nenhuma carta especial (todas menos comum e incomum) no inventário para consultar."
   }
 }

@@ -426,9 +426,11 @@ screen (`lib/dominio/sem-estoque-liga.ts`, table `sem_estoque_liga`):
 
 ### Special card prices — a second, separate round
 
-`/inventario/precos` prices the owned cards that matter: rarity class `holo` or `secreta`, **plus**
-every card of set `30th-c` (upstream writes their rarity as the literal "None"). The rule is pure
-and tested (`lib/dominio/precos-cartas-especiais.ts`). It follows every rule above, with these
+`/inventario/precos` prices **every owned card except plain commons and uncommons**: the exclusion
+is by the explicit strings (`Comum`, `Common`, `Incomum`, `Uncommon`), not by rarity class, because
+`classificarRaridade` sends null, "None" and "Promo" to `comum` and those must be priced (so must
+plain rares, and every card of set `30th-c`, whose upstream rarity is the literal "None"). The rule
+is pure and tested (`lib/dominio/precos-cartas-especiais.ts`). It follows every rule above, with these
 specifics:
 
 - **Own tables, never `liga_varredura`.** `preco_carta_liga` (one row per `carta_id`, upserted) and

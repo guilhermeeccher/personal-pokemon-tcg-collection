@@ -2,13 +2,13 @@
  * Classificação visual da raridade.
  *
  * A raridade no catálogo é **texto livre vindo do upstream**, em dois
- * idiomas, com 56 valores distintos hoje ("Common", "Comum", "Rara Holo
+ * idiomas, com 59 valores distintos hoje ("Common", "Comum", "Rara Holo
  * VMAX", "Ilustração Rara Especial", "ACE SPEC Raro"…). O design system,
  * por outro lado, desenhou só cinco glifos.
  *
  * Este módulo faz a ponte, e só ela: reduz o texto livre a um dos cinco
  * baldes **para escolher glifo e cor**. O rótulo exibido continua sendo a
- * string original, sem tradução — mapear 56 em 5 na exibição perderia
+ * string original, sem tradução — mapear 59 em 5 na exibição perderia
  * informação que o usuário usa.
  *
  * Ordem de teste importa, e é a parte fácil de errar:
@@ -52,6 +52,10 @@ const REGRAS: readonly (readonly [ClasseRaridade, readonly string[]])[] = [
       "legend",
       "full art",
       "arte completa",
+      // Raras secretas de coleções comemorativas, sem "secret" no nome:
+      // "Futuristic Rare" (Celebração de 30 Anos) e "RGB Rare" (as Mew).
+      "futurist",
+      "rgb",
     ],
   ],
   [

@@ -3,21 +3,29 @@
  * como a linha certa é reconhecida e como o resultado se ordena. Módulo puro:
  * não faz requisição, não toca banco.
  *
- * ## Por que só as especiais
+ * ## Por que quase todas
  *
  * No ritmo que o `robots.txt` deles pede (~6 min por requisição), consultar o
- * inventário inteiro levaria semanas; o valor da coleção está nas cartas
- * holo/secretas, e é por elas que se pergunta. Hoje são ~63 cartas.
+ * inventário inteiro levaria semanas. Ficam de fora só as comuns e incomuns,
+ * que valem centavos e são a maior parte do inventário: isso mantém a rodada
+ * curta. As raras simples são baratas, mas o gráfico de valor total precisa
+ * delas; e a regra antiga (só holo/secreta) já deixou de fora uma Mewtwo ex
+ * "Futuristic" justamente por ter a raridade mal classificada.
  *
  * ## A regra de seleção
  *
- * Carta de catálogo **possuída** (qualquer cópia, alocada ou livre) cuja
- * classe de raridade (`classificarRaridade`) é `holo` ou `secreta` — **mais**
- * toda carta do set `30th-c`, as clássicas da Celebração de 30 Anos: o
- * upstream grava a raridade delas como o texto literal "None", que cai em
- * `comum`, e ficariam de fora justamente sendo as mais valiosas do conjunto.
+ * Carta de catálogo **possuída** (qualquer cópia, alocada ou livre) entra
+ * **a menos que** a raridade seja explicitamente comum ou incomum ("Comum",
+ * "Common", "Incomum", "Uncommon"). Entram, portanto: raras simples, "Pikachu
+ * Rare", "Promo", raridade vazia e o texto literal "None" do upstream, além de
+ * toda holo/secreta.
  *
- * ## Uma consulta por carta física
+ * A exclusão **não** usa `classificarRaridade`: ela manda para `comum` também
+ * o vazio, o "None" e o "Promo", que aqui devem entrar. Por isso o teste é
+ * pelo texto (`ehComumOuIncomum`). O set `30th-c` (clássicas da Celebração de
+ * 30 Anos, raridade "None") entra sempre, por garantia.
+ *
+  * ## Uma consulta por carta física
  *
  * As linhas pt e en do mesmo `carta_id` são a mesma carta física (regra 7):
  * a Liga é consultada uma vez só, e o preço é gravado por `carta_id`. O termo
@@ -29,7 +37,6 @@ import type { LinhaBuscaLiga } from "./liga-busca";
 import { separarPorFrescor } from "./frescor-consulta";
 import { linhaCasaComVagaSet } from "./liga-set";
 import { ordenarPorDestaque } from "./destaque-carta";
-import { classificarRaridade } from "./raridade-visual";
 
 /** Set cujas cartas entram sempre, qualquer que seja a raridade gravada. */
 export const SET_CLASSICAS_30_ANOS = "30th-c";
@@ -63,10 +70,26 @@ export interface CartaParaPreco {
   raridade: string | null;
 }
 
+/** Minúsculas e sem acento, para comparar "Incomum" de qualquer jeito. */
+function normalizar(valor: string): string {
+  return valor
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+const COMUNS_E_INCOMUNS = new Set(["comum", "common", "incomum", "uncommon"]);
+
+/** Raridade explicitamente comum ou incomum. Vazio, "None" e "Promo" não são. */
+export function ehComumOuIncomum(raridade: string | null): boolean {
+  return raridade !== null && COMUNS_E_INCOMUNS.has(normalizar(raridade));
+}
+
+/** A ficha, sozinha, pede consulta de preço (ver "A regra de seleção"). */
 export function ehCartaEspecial(carta: { setId: string; raridade: string | null }): boolean {
   if (carta.setId.toLowerCase() === SET_CLASSICAS_30_ANOS) return true;
-  const classe = classificarRaridade(carta.raridade);
-  return classe === "holo" || classe === "secreta";
+  return !ehComumOuIncomum(carta.raridade);
 }
 
 const ORDEM_EXIBICAO = ["pt", "en", "jp"] as const;
@@ -77,8 +100,9 @@ const ORDEM_EXIBICAO = ["pt", "en", "jp"] as const;
  * por `carta_id`, só das especiais, na ordem do catálogo (set, número).
  *
  * A elegibilidade olha **todas** as linhas do `carta_id`: a raridade de uma
- * carta física não muda com o idioma da ficha, e uma ficha sem texto de
- * raridade não pode tirar a carta da lista.
+ * carta física não muda com o idioma da ficha, então uma ficha que diga
+ * comum/incomum tira a carta da lista, e uma sem texto de raridade não a
+ * coloca por si só nem a tira.
  */
 export function selecionarCartasParaPreco(
   linhas: readonly LinhaCatalogoParaPreco[],
@@ -92,7 +116,9 @@ export function selecionarCartasParaPreco(
 
   const cartas: CartaParaPreco[] = [];
   for (const [cartaId, grupo] of porCarta) {
-    if (!grupo.some(ehCartaEspecial)) continue;
+    // Uma ficha explicitamente comum/incomum tira a carta, mesmo que a outra
+    // ficha do idioma não traga raridade: a carta física é uma só.
+    if (!grupo.every(ehCartaEspecial)) continue;
 
     const ordenado = [...grupo].sort(
       (a, b) => ORDEM_EXIBICAO.indexOf(a.idioma) - ORDEM_EXIBICAO.indexOf(b.idioma),

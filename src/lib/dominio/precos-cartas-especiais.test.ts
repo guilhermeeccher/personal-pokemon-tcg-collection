@@ -43,18 +43,33 @@ function linhaLiga(p: Partial<LinhaBuscaLiga>): LinhaBuscaLiga {
 }
 
 describe("ehCartaEspecial", () => {
-  it("aceita holo e secreta, recusa o resto", () => {
-    expect(ehCartaEspecial({ setId: "a", raridade: "Rara Holo" })).toBe(true);
-    expect(ehCartaEspecial({ setId: "a", raridade: "Ilustração Rara Especial" })).toBe(true);
-    expect(ehCartaEspecial({ setId: "a", raridade: "Comum" })).toBe(false);
-    expect(ehCartaEspecial({ setId: "a", raridade: "Rara" })).toBe(false);
-    expect(ehCartaEspecial({ setId: "a", raridade: null })).toBe(false);
+  it("recusa só comum e incomum, em qualquer idioma, caixa ou acento", () => {
+    for (const r of ["Comum", "Common", "Incomum", "Uncommon", "INCOMUM", " common "]) {
+      expect(ehCartaEspecial({ setId: "a", raridade: r })).toBe(false);
+    }
+  });
+
+  it("aceita raras simples, Pikachu Rare, Promo, vazio, None e holo/secreta", () => {
+    for (const r of [
+      "Rara",
+      "Rare",
+      "Pikachu Rare",
+      "Promo",
+      "None",
+      "",
+      null,
+      "Rara Holo",
+      "Ilustração Rara Especial",
+      "Futuristic Rare",
+    ]) {
+      expect(ehCartaEspecial({ setId: "a", raridade: r })).toBe(true);
+    }
   });
 
   it("toda carta das clássicas de 30 anos entra, mesmo com raridade 'None'", () => {
     expect(ehCartaEspecial({ setId: "30th-c", raridade: "None" })).toBe(true);
     expect(ehCartaEspecial({ setId: "30th-c", raridade: null })).toBe(true);
-    expect(ehCartaEspecial({ setId: "30th", raridade: "None" })).toBe(false);
+    expect(ehCartaEspecial({ setId: "30th", raridade: "Comum" })).toBe(false);
   });
 });
 
@@ -83,12 +98,25 @@ describe("selecionarCartasParaPreco", () => {
     expect(r[0].nomeAlternativo).toBeNull();
   });
 
-  it("a raridade de qualquer ficha do carta_id basta para a elegibilidade", () => {
+  it("uma ficha sem raridade não tira a carta; uma comum/incomum tira", () => {
     const r = selecionarCartasParaPreco([
       linhaCat({ cartaId: "a-1", idioma: "pt", raridade: null }),
       linhaCat({ cartaId: "a-1", idioma: "en", raridade: "Holo Rare" }),
+      linhaCat({ cartaId: "b-1", idioma: "pt", raridade: null }),
+      linhaCat({ cartaId: "b-1", idioma: "en", raridade: "Common" }),
     ]);
-    expect(r).toHaveLength(1);
+    expect(r.map((c) => c.cartaId)).toEqual(["a-1"]);
+  });
+
+  it("inclui rara simples, promo e sem raridade; deixa de fora comum e incomum", () => {
+    const r = selecionarCartasParaPreco([
+      linhaCat({ cartaId: "a-1", localId: "1", raridade: "Rara" }),
+      linhaCat({ cartaId: "a-2", localId: "2", raridade: "Promo" }),
+      linhaCat({ cartaId: "a-3", localId: "3", raridade: null }),
+      linhaCat({ cartaId: "a-4", localId: "4", raridade: "Uncommon" }),
+      linhaCat({ cartaId: "a-5", localId: "5", raridade: "Comum" }),
+    ]);
+    expect(r.map((c) => c.cartaId)).toEqual(["a-1", "a-2", "a-3"]);
   });
 
   it("deixa de fora as comuns e mantém as clássicas", () => {

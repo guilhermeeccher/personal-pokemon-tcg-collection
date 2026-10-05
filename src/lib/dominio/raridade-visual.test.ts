@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { classificarRaridade } from "./raridade-visual";
 
 /**
- * Os 56 valores distintos de raridade que existem no catálogo real
- * (consultados no banco em 2026-09-03). Servem de fixture porque a
+ * Os 59 valores distintos de raridade que existem no catálogo real
+ * (consultados no banco em 2026-09-03; os três últimos em 2026-10-05). Servem de fixture porque a
  * classificação só vale se sobreviver ao dado de verdade, bilíngue e
  * cheio de armadilha de substring — não a exemplos inventados.
  */
@@ -65,10 +65,13 @@ const RARIDADES_REAIS: readonly string[] = [
   "Arte Completa de Treinador",
   "Full Art Trainer",
   "Rara Preto e Branco",
+  "Futuristic Rare",
+  "RGB Rare",
+  "Pikachu Rare",
 ];
 
 describe("classificarRaridade", () => {
-  it("classifica todos os 56 valores reais do catálogo", () => {
+  it("classifica todos os 59 valores reais do catálogo", () => {
     for (const valor of RARIDADES_REAIS) {
       expect(CLASSES_ESPERADAS[valor], `sem expectativa declarada para "${valor}"`).toBeDefined();
       expect(classificarRaridade(valor), `raridade "${valor}"`).toBe(CLASSES_ESPERADAS[valor]);
@@ -182,4 +185,7 @@ const CLASSES_ESPERADAS: Record<string, string> = {
   "Arte Completa de Treinador": "secreta",
   "Full Art Trainer": "secreta",
   "Rara Preto e Branco": "holo",
+  "Futuristic Rare": "secreta",
+  "RGB Rare": "secreta",
+  "Pikachu Rare": "rara",
 };
