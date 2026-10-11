@@ -78,12 +78,12 @@ describe("janelaSemBatimentoSegundos", () => {
     expect(janelaSemBatimentoSegundos(7, 24)).toBe(Math.round(7 * 24 * 1.5));
   });
 
-  it("a vaga de set cobre duas buscas no teto de páginas dela", () => {
+  it("a vaga de set cobre as três buscas no teto de páginas dela", () => {
     // Teto de 20 com janela de seis requisições: a 7 s, uma vaga viva
     // paginando fundo passaria de 63 s sem batimento e seria dada como morta.
-    expect(requisicoesNoPiorCasoPorVaga("set")).toBe(2 * MAX_PAGINAS_VAGA_SET);
+    expect(requisicoesNoPiorCasoPorVaga("set")).toBe(3 * MAX_PAGINAS_VAGA_SET);
     expect(janelaSemBatimentoSegundos(7, requisicoesNoPiorCasoPorVaga("set"))).toBeGreaterThan(
-      7 * 2 * MAX_PAGINAS_VAGA_SET,
+      7 * 3 * MAX_PAGINAS_VAGA_SET,
     );
     expect(requisicoesNoPiorCasoPorVaga("pokedex")).toBe(6);
   });

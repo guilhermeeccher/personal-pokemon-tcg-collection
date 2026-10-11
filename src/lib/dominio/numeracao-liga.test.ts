@@ -48,12 +48,14 @@ describe("identidadeNaLiga", () => {
     expect(`${misty.sigla}:${misty.numero}`).not.toBe(`${principal.sigla}:${principal.numero}`);
   });
 
-  it("mantém os números repetidos que a Liga distingue pelo nome", () => {
+  it("distingue os números repetidos pela letra, como a Liga escreve", () => {
+    // Medido em 2026-10-11: Genesect-EX é 011b, M Gardevoir-EX 106b e
+    // Shining Celebi 106c; a primeira de cada número fica sem letra.
     expect(identidadeNaLiga(classica("003")).numero).toBe("011");
-    expect(identidadeNaLiga(classica("004")).numero).toBe("011");
+    expect(identidadeNaLiga(classica("004")).numero).toBe("011b");
     expect(
       ["022", "023", "024"].map((l) => identidadeNaLiga(classica(l)).numero),
-    ).toEqual(["106", "106", "106"]);
+    ).toEqual(["106", "106b", "106c"]);
     expect(identidadeNaLiga(classica("019")).numero).toBe("099");
     expect(identidadeNaLiga(classica("020")).numero).toBe("100");
   });
@@ -62,7 +64,7 @@ describe("identidadeNaLiga", () => {
     for (let i = 1; i <= 30; i += 1) {
       const id = identidadeNaLiga(classica(String(i).padStart(3, "0")));
       expect(id.sigla).toBe("30C-C");
-      expect(id.numero).toMatch(/^\d{3}$/);
+      expect(id.numero).toMatch(/^\d{3}[a-z]?$/);
     }
   });
 

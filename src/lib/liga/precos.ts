@@ -39,7 +39,7 @@ import {
   corteDeFrescor,
   VALIDADE_CONSULTA_HORAS,
 } from "@/lib/dominio/frescor-consulta";
-import type { LinhaBuscaLiga } from "@/lib/dominio/liga-busca";
+import { nomesDeBuscaDaCarta, type LinhaBuscaLiga } from "@/lib/dominio/liga-busca";
 import {
   escolherLinhaDePreco,
   separarCartasPorFrescor,
@@ -62,8 +62,11 @@ import { criarClienteLiga, ErroBloqueioLiga, type ClienteLiga } from "./cliente"
  */
 export const MAX_PAGINAS_PRECO = 20;
 
-/** Buscas por carta no pior caso: o nome em inglês e o alternativo. */
-export const BUSCAS_POR_CARTA_NO_PIOR_CASO = 2;
+/**
+ * Buscas por carta no pior caso: o nome em inglês, o alternativo e o com
+ * hífen na mecânica (`nomesDeBuscaDaCarta`).
+ */
+export const BUSCAS_POR_CARTA_NO_PIOR_CASO = 3;
 
 /** Requisições de uma carta no pior caso — base da janela de "rodada morta". */
 export const REQUISICOES_NO_PIOR_CASO_POR_CARTA =
@@ -89,8 +92,7 @@ async function consultarCarta(
     escolherLinhaDePreco(linhas, carta, setPorEdid) !== null;
 
   let requisicoes = 0;
-  for (const nome of [carta.nomeBusca, carta.nomeAlternativo]) {
-    if (nome === null) continue;
+  for (const nome of nomesDeBuscaDaCarta(carta.nomeBusca, carta.nomeAlternativo)) {
     const resultado = await cliente.buscarCarta(nome, achou, maxPaginas);
     requisicoes += resultado.requisicoes;
     const linha = escolherLinhaDePreco(resultado.linhas, carta, setPorEdid);

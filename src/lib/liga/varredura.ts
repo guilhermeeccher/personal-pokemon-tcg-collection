@@ -60,7 +60,11 @@ import {
   VALIDADE_CONSULTA_HORAS,
 } from "@/lib/dominio/frescor-consulta";
 import type { LinhaBuscaLiga } from "@/lib/dominio/liga-busca";
-import { nomeCompativelComEspecie, termoDeBusca } from "@/lib/dominio/liga-busca";
+import {
+  nomeCompativelComEspecie,
+  nomesDeBuscaDaCarta,
+  termoDeBusca,
+} from "@/lib/dominio/liga-busca";
 import type { Filtros, OpcaoCompra } from "@/lib/dominio/liga-opcoes";
 import { linhaCasaComVagaSet, MAX_PAGINAS_VAGA_SET } from "@/lib/dominio/liga-set";
 import { criarClienteLiga, ErroBloqueioLiga, type ClienteLiga } from "./cliente";
@@ -146,8 +150,7 @@ async function consultarVagaSet(
   let requisicoes = 0;
   let encontradas: OpcaoCompra[] = [];
 
-  for (const nome of [vaga.nomeBusca, vaga.nomeAlternativo]) {
-    if (nome === null) continue;
+  for (const nome of nomesDeBuscaDaCarta(vaga.nomeBusca, vaga.nomeAlternativo)) {
 
     // Teto próprio, maior que o da Pokédex: a carta da vaga pode ser a mais
     // cara de um nome comum (`MAX_PAGINAS_VAGA_SET`).

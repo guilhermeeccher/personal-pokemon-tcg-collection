@@ -87,14 +87,18 @@ export function formatarDuracao(segundos: number): string {
  *
  * - **Pokédex:** três páginas (o `MAX_PAGINAS` do cliente) de uma busca só;
  *   fica nas seis de antes, que já cobriam com folga.
- * - **Set:** `MAX_PAGINAS_VAGA_SET` páginas, vezes as duas tentativas de nome.
- *   Quando o teto da vaga de set subiu de 3 para 20 (2026-10-11), esta conta
- *   tinha de subir junto: com a janela antiga de seis, uma vaga viva paginando
- *   fundo seria dada como morta e liberaria uma segunda rodada em paralelo.
+ * - **Set:** `MAX_PAGINAS_VAGA_SET` páginas, vezes as três tentativas de nome
+ *   (`nomesDeBuscaDaCarta`). Quando o teto da vaga de set subiu de 3 para 20
+ *   e a terceira tentativa entrou (2026-10-11), esta conta tinha de subir
+ *   junto: com a janela antiga de seis, uma vaga viva paginando fundo seria
+ *   dada como morta e liberaria uma segunda rodada em paralelo.
  */
 export function requisicoesNoPiorCasoPorVaga(tipo: TipoVarredura): number {
-  return tipo === "set" ? 2 * MAX_PAGINAS_VAGA_SET : 6;
+  return tipo === "set" ? TENTATIVAS_DE_NOME_NA_VAGA_SET * MAX_PAGINAS_VAGA_SET : 6;
 }
+
+/** Nome em inglês, alternativo e com hífen — ver `nomesDeBuscaDaCarta`. */
+export const TENTATIVAS_DE_NOME_NA_VAGA_SET = 3;
 
 /** Piso da janela sem batimento — o valor que valia quando o ritmo era 3 s. */
 export const JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS = 120;

@@ -6,6 +6,7 @@ import {
   LINHAS_POR_PAGINA,
   contarBlocosBusca,
   nomeCompativelComEspecie,
+  nomesDeBuscaDaCarta,
   parsearBuscaLiga,
   termoDeBusca,
   urlBuscaLiga,
@@ -266,5 +267,37 @@ describe("nomeCompativelComEspecie", () => {
     expect(nomeCompativelComEspecie("Mr. Mime", "Mr. Mime")).toBe(true);
     expect(nomeCompativelComEspecie("Farfetch'd", "Farfetch'd")).toBe(true);
     expect(nomeCompativelComEspecie("Galarian Farfetch'd", "Farfetch'd")).toBe(true);
+  });
+});
+
+describe("nomesDeBuscaDaCarta", () => {
+  it("acrescenta o nome com hífen na mecânica, por último", () => {
+    // `Arceus VSTAR` volta vazio lá; a carta está como `Arceus-VSTAR`.
+    expect(nomesDeBuscaDaCarta("Arceus VSTAR", "Arceus V-ASTRO")).toEqual([
+      "Arceus VSTAR",
+      "Arceus V-ASTRO",
+      "Arceus-VSTAR",
+    ]);
+    expect(nomesDeBuscaDaCarta("M Gardevoir EX", null)).toEqual([
+      "M Gardevoir EX",
+      "M Gardevoir-EX",
+    ]);
+    expect(nomesDeBuscaDaCarta("Zacian V", null)).toEqual(["Zacian V", "Zacian-V"]);
+  });
+
+  it("não mexe no ex minúsculo nem em nome sem mecânica", () => {
+    expect(nomesDeBuscaDaCarta("Scizor ex", null)).toEqual(["Scizor ex"]);
+    expect(nomesDeBuscaDaCarta("Meowth", null)).toEqual(["Meowth"]);
+    expect(nomesDeBuscaDaCarta("Wondrous Patch", "Fragmento Encantado")).toEqual([
+      "Wondrous Patch",
+      "Fragmento Encantado",
+    ]);
+  });
+
+  it("não repete o mesmo nome", () => {
+    expect(nomesDeBuscaDaCarta("Rayquaza EX", "Rayquaza EX")).toEqual([
+      "Rayquaza EX",
+      "Rayquaza-EX",
+    ]);
   });
 });

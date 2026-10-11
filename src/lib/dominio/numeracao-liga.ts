@@ -50,14 +50,20 @@ interface ExcecaoSet {
 
 /**
  * Número original das 30 clássicas, lido das URLs de imagem
- * (`pokemon_30cc_<num>_<total>`). Os repetidos (011 ×2, 106 ×3) a Liga
- * distingue pelo nome; as duas Darkrai & Cresselia LEGEND são 099 e 100.
+ * (`pokemon_30cc_<num>_<total>`); as duas Darkrai & Cresselia LEGEND são 099
+ * e 100.
+ *
+ * **Os repetidos a Liga distingue por letra, não pelo nome.** Medido em
+ * 2026-10-11 com busca real: Metagross `011` e Genesect-EX `011b`; Palkia
+ * `106`, M Gardevoir-EX `106b` e Shining Celebi `106c`. Com `011` e `106`
+ * puros, as três de sufixo nunca casavam na varredura (três rodadas sem
+ * oferta) e saíam no arquivo de envio com o número de outra carta.
  */
 const CLASSICAS_30_ANOS: Readonly<Record<string, string>> = {
   "001": "004", // Charizard
   "002": "005", // Delcatty
   "003": "011", // Metagross
-  "004": "011", // Genesect EX
+  "004": "011b", // Genesect EX
   "005": "018", // Misty
   "006": "019", // Dark Tyranitar
   "007": "025", // Sneasel
@@ -76,8 +82,8 @@ const CLASSICAS_30_ANOS: Readonly<Record<string, string>> = {
   "020": "100", // Darkrai & Cresselia LEGEND
   "021": "101", // N
   "022": "106", // Palkia
-  "023": "106", // M Gardevoir EX
-  "024": "106", // Shining Celebi
+  "023": "106b", // M Gardevoir EX
+  "024": "106c", // Shining Celebi
   "025": "108", // Scizor ex
   "026": "114", // Mew VMAX
   "027": "123", // Arceus VSTAR

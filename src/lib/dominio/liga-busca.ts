@@ -88,6 +88,30 @@ export function termoDeBusca(especie: string): {
   return { termo: especie, exigeCasamento: false };
 }
 
+/** Mecânicas que a Liga escreve coladas ao nome por hífen (`Arceus-VSTAR`). */
+const MECANICA_FINAL = /\s+(EX|GX|V|VMAX|VSTAR|V-UNION)$/;
+
+/**
+ * Os nomes a tentar, em ordem, na busca de uma carta específica (vaga de set
+ * e consulta de preço) — a próxima só é tentada quando a anterior não achou.
+ *
+ * 1. O nome em inglês, que é como a lista deles escreve.
+ * 2. O nome no idioma da coleção (carta de Treinador: `Wondrous Patch` ×
+ *    `Fragmento Encantado`).
+ * 3. O nome com a mecânica presa por hífen. **Medido em 2026-10-11:** a busca
+ *    por `Arceus VSTAR` volta com zero linhas, e a carta está lá como
+ *    `Arceus-VSTAR`; a busca deles é por substring e o espaço não casa com o
+ *    hífen. Só a mecânica em caixa alta: o `ex` minúsculo da era Escarlate e
+ *    Violeta eles escrevem com espaço (`Scizor ex`).
+ */
+export function nomesDeBuscaDaCarta(nomeBusca: string, nomeAlternativo: string | null): string[] {
+  const nomes = [nomeBusca];
+  if (nomeAlternativo !== null) nomes.push(nomeAlternativo);
+  const comHifen = nomeBusca.replace(MECANICA_FINAL, "-$1");
+  if (comHifen !== nomeBusca) nomes.push(comHifen);
+  return [...new Set(nomes)];
+}
+
 /**
  * URL da busca. `termo` é o nome procurado — a espécie, na Pokédex; o nome da
  * carta, no set. `pagina` começa em 1.
