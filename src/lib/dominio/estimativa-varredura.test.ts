@@ -5,8 +5,10 @@ import {
   janelaSemBatimentoSegundos,
   JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS,
   previsaoDeTermino,
+  requisicoesNoPiorCasoPorVaga,
   segundosDeVarredura,
 } from "./estimativa-varredura";
+import { MAX_PAGINAS_VAGA_SET } from "./liga-set";
 
 describe("segundosDeVarredura", () => {
   it("as 161 vagas da Pokédex no ritmo do robots.txt dão ~16 horas", () => {
@@ -72,12 +74,29 @@ describe("janelaSemBatimentoSegundos", () => {
 
   it("acompanha o pior caso de quem a usa: carta com mais buscas pede janela maior", () => {
     // Rodada de preços: duas buscas de várias páginas por carta.
-    expect(janelaSemBatimentoSegundos(7, 24)).toBeGreaterThan(janelaSemBatimentoSegundos(7));
+    expect(janelaSemBatimentoSegundos(7, 24)).toBeGreaterThan(janelaSemBatimentoSegundos(7, 6));
     expect(janelaSemBatimentoSegundos(7, 24)).toBe(Math.round(7 * 24 * 1.5));
   });
 
+  it("a vaga de set cobre duas buscas no teto de páginas dela", () => {
+    // Teto de 20 com janela de seis requisições: a 7 s, uma vaga viva
+    // paginando fundo passaria de 63 s sem batimento e seria dada como morta.
+    expect(requisicoesNoPiorCasoPorVaga("set")).toBe(2 * MAX_PAGINAS_VAGA_SET);
+    expect(janelaSemBatimentoSegundos(7, requisicoesNoPiorCasoPorVaga("set"))).toBeGreaterThan(
+      7 * 2 * MAX_PAGINAS_VAGA_SET,
+    );
+    expect(requisicoesNoPiorCasoPorVaga("pokedex")).toBe(6);
+  });
+
+  it("sem pior caso informado, usa o maior de vaga — erra para o lado seguro", () => {
+    expect(janelaSemBatimentoSegundos(360)).toBe(
+      janelaSemBatimentoSegundos(360, requisicoesNoPiorCasoPorVaga("set")),
+    );
+  });
+
   it("nunca desce abaixo do piso antigo, para quem roda em intervalo curto", () => {
-    expect(janelaSemBatimentoSegundos(3)).toBe(JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS);
+    const pokedex = requisicoesNoPiorCasoPorVaga("pokedex");
+    expect(janelaSemBatimentoSegundos(3, pokedex)).toBe(JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS);
     expect(janelaSemBatimentoSegundos(0.5)).toBe(JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS);
   });
 

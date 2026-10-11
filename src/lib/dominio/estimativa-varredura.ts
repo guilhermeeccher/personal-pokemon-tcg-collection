@@ -13,11 +13,16 @@
  * ## O fator por vaga
  *
  * Na Pokédex é uma requisição por vaga: a busca por nome da espécie já devolve
- * as opções ordenadas por preço. No set a busca pode precisar de até três
- * páginas até a carta aparecer, e as cartas de Treinador ainda gastam uma
- * segunda tentativa com o nome no idioma da coleção — 1,6 é estimativa
- * declarada como estimativa, calibrável quando houver medição de rodada real.
+ * as opções ordenadas por preço. No set a busca pode precisar de várias
+ * páginas até a carta aparecer (até `MAX_PAGINAS_VAGA_SET`), e as cartas de
+ * Treinador ainda gastam uma segunda tentativa com o nome no idioma da
+ * coleção — 1,6 é estimativa declarada como estimativa. A rodada real da 30C
+ * em 2026-10-11 deu 1,4 (130 requisições, 92 vagas, ainda com teto de 3); a
+ * maioria das vagas acha a carta na primeira página, e só a de nome comum
+ * pagina fundo.
  */
+
+import { MAX_PAGINAS_VAGA_SET } from "./liga-set";
 
 export type TipoVarredura = "pokedex" | "set";
 
@@ -78,10 +83,18 @@ export function formatarDuracao(segundos: number): string {
 }
 
 /**
- * Requisições que uma vaga pode gastar no pior caso: três páginas (o teto do
- * cliente), vezes as duas tentativas de nome da vaga de set.
+ * Requisições que uma vaga pode gastar no pior caso.
+ *
+ * - **Pokédex:** três páginas (o `MAX_PAGINAS` do cliente) de uma busca só;
+ *   fica nas seis de antes, que já cobriam com folga.
+ * - **Set:** `MAX_PAGINAS_VAGA_SET` páginas, vezes as duas tentativas de nome.
+ *   Quando o teto da vaga de set subiu de 3 para 20 (2026-10-11), esta conta
+ *   tinha de subir junto: com a janela antiga de seis, uma vaga viva paginando
+ *   fundo seria dada como morta e liberaria uma segunda rodada em paralelo.
  */
-const REQUISICOES_NO_PIOR_CASO_POR_VAGA = 6;
+export function requisicoesNoPiorCasoPorVaga(tipo: TipoVarredura): number {
+  return tipo === "set" ? 2 * MAX_PAGINAS_VAGA_SET : 6;
+}
 
 /** Piso da janela sem batimento — o valor que valia quando o ritmo era 3 s. */
 export const JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS = 120;
@@ -96,17 +109,18 @@ export const JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS = 120;
  * é liberar uma segunda rodada em paralelo, que **dobra o ritmo contra o site
  * deles**. Foi o acidente de 2026-09-02, por outro caminho.
  *
- * A folga é o pior caso de uma vaga (seis requisições) mais margem, com o
- * piso antigo preservado para quem roda em intervalo curto.
+ * A folga é o pior caso de uma vaga (`requisicoesNoPiorCasoPorVaga`) mais
+ * margem, com o piso antigo preservado para quem roda em intervalo curto.
  */
 export function janelaSemBatimentoSegundos(
   intervaloSegundos: number,
-  requisicoesNoPiorCaso: number = REQUISICOES_NO_PIOR_CASO_POR_VAGA,
+  requisicoesNoPiorCaso: number = requisicoesNoPiorCasoPorVaga("set"),
 ): number {
-  // `requisicoesNoPiorCaso` existe para a rodada de preços, cuja carta pode
-  // gastar duas buscas de até `MAX_PAGINAS_PRECO` páginas — mais que as seis
-  // de uma vaga. A janela segue o pior caso de quem a usa, senão uma rodada
-  // viva seria declarada morta e liberaria uma segunda em paralelo.
+  // A janela segue o pior caso de quem a usa — a vaga de cada tipo de coleção,
+  // ou a carta da rodada de preços —, senão uma rodada viva seria declarada
+  // morta e liberaria uma segunda em paralelo. O padrão é o maior pior caso
+  // de vaga: quem esquecer de passar erra para o lado seguro (demora mais a
+  // dar como morta), nunca para o que dobra o ritmo.
   const piorCaso = intervaloSegundos * requisicoesNoPiorCaso * 1.5;
   return Math.max(JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS, Math.round(piorCaso));
 }

@@ -129,3 +129,20 @@ export function deveBuscarProximaPaginaSet(pagina: {
   if (pagina.achou) return false;
   return pagina.blocos >= LINHAS_POR_PAGINA;
 }
+
+/**
+ * Teto de páginas da busca de uma vaga de set (40 linhas cada, mais barata
+ * primeiro).
+ *
+ * Era o `MAX_PAGINAS` do cliente (3), herdado da Pokédex — onde passar da
+ * terceira página só serve a quem pôs teto de preço alto. Aqui a vaga é uma
+ * carta só e pode ser a mais cara do nome, o mesmo problema que levou a
+ * consulta de preço a 20 páginas em 2026-10-05. **Medido em 2026-10-11** na
+ * 30C: 12 vagas de nome comum (Meowth, Pikachu, N, Mewtwo, Mew, Ditto, as
+ * MEP 102–106) nunca apareceram em três varreduras, com o Mewtwo MEP 104 já
+ * visto na Liga em setembro. Mesmo teto da consulta de preço. O custo é só
+ * tempo: a busca para na página em que a carta aparece, e o limitador é por
+ * requisição — página a mais nunca acelera o ritmo contra o site deles. A
+ * janela de rodada morta acompanha este número (`estimativa-varredura.ts`).
+ */
+export const MAX_PAGINAS_VAGA_SET = 20;

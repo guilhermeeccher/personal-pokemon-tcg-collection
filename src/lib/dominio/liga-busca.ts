@@ -173,6 +173,34 @@ function decodificarUrl(texto: string): string {
   }
 }
 
+/**
+ * Entidades nomeadas que o site deles usa além das de acento.
+ *
+ * `&infin;` é o total das promos sem numeração fechada (`Bulbasaur
+ * (037/&infin;)`, MEP): sem decodificar, a linha ia para a Compra por Lista
+ * com o código cru e as 35 MEP da 30C saíam sem nenhuma oferta lá
+ * (2026-10-11). `&rsquo;` e `&times;` aparecem em nome de edição (`Champion’s
+ * Path`, `EX×M×BREAK`). Entidade fora desta tabela fica como veio — melhor o
+ * código visível do que um caractere inventado.
+ */
+const ENTIDADES_NOMEADAS: Readonly<Record<string, string>> = {
+  infin: "∞",
+  rsquo: "’",
+  lsquo: "‘",
+  rdquo: "”",
+  ldquo: "“",
+  times: "×",
+  ndash: "–",
+  mdash: "—",
+  hellip: "…",
+};
+
+/** Código numérico de entidade → caractere; código inválido fica como veio. */
+function caracterDoCodigo(codigo: number, original: string): string {
+  if (!Number.isInteger(codigo) || codigo <= 0 || codigo > 0x10ffff) return original;
+  return String.fromCodePoint(codigo);
+}
+
 /** Desfaz as entidades HTML que aparecem em nome de carta e de edição. */
 function decodificar(texto: string): string {
   return texto
@@ -182,6 +210,11 @@ function decodificar(texto: string): string {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (original, dec: string) => caracterDoCodigo(Number(dec), original))
+    .replace(/&#x([0-9a-f]+);/gi, (original, hex: string) =>
+      caracterDoCodigo(parseInt(hex, 16), original),
+    )
+    .replace(/&([a-z]+);/g, (original, nome: string) => ENTIDADES_NOMEADAS[nome] ?? original)
     .replace(/&([a-z])(acute|grave|circ|tilde|uml|cedil);/g, (_, letra: string, acento: string) => {
       const mapa: Record<string, Record<string, string>> = {
         acute: { a: "á", e: "é", i: "í", o: "ó", u: "ú", c: "ć" },

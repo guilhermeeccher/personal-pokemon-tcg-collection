@@ -187,6 +187,35 @@ describe("entidade HTML dentro do parâmetro card", () => {
     expect(linha.edicaoSigla).toBe("MEP");
     expect(linha.preco).toBe(0.5);
   });
+
+  it("decodifica o ∞ do total — é ele que vai para a Compra por Lista", () => {
+    // Com `&infin;` cru, a linha `1 Bulbasaur (037/&infin;)` não casava com
+    // nada lá e as MEP saíam sem oferta (2026-10-11).
+    const bloco = `<div class="mtg-single">
+      <a href="/?view=cards/card&card=Bulbasaur (037/&infin;)&ed=MEP&num=037"></a>
+      <div class="price-min">R$ 78,90</div></div>`;
+    const [linha] = parsearBuscaLiga(bloco);
+    expect(linha.total).toBe("∞");
+    expect(linha.numero).toBe("037");
+  });
+
+  it("decodifica entidade nomeada e numérica no nome da edição", () => {
+    const bloco = `<div class="mtg-single">
+      <a href="/?view=cards/card&card=Machop (24/73)&ed=CPA&num=24"></a>
+      <a class="edition-name">Champion&rsquo;s Path &#8212; EX&times;M&#x00D7;BREAK</a>
+      <div class="price-min">R$ 1,00</div></div>`;
+    const [linha] = parsearBuscaLiga(bloco);
+    expect(linha.edicaoNome).toBe("Champion’s Path — EX×M×BREAK");
+  });
+
+  it("deixa como veio a entidade que não conhece, em vez de inventar caractere", () => {
+    const bloco = `<div class="mtg-single">
+      <a href="/?view=cards/card&card=Pikachu (1/10)&ed=XYZ&num=1"></a>
+      <a class="edition-name">Set &bogus; &#0;</a>
+      <div class="price-min">R$ 1,00</div></div>`;
+    const [linha] = parsearBuscaLiga(bloco);
+    expect(linha.edicaoNome).toBe("Set &bogus; &#0;");
+  });
 });
 
 describe("contarBlocosBusca", () => {

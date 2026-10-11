@@ -21,6 +21,7 @@ import {
   formatarDuracao,
   janelaSemBatimentoSegundos,
   previsaoDeTermino,
+  requisicoesNoPiorCasoPorVaga,
   segundosDeVarredura,
 } from "@/lib/dominio/estimativa-varredura";
 import { corpoDaRecusa, corpoRecusa, recusa } from "@/lib/dominio/recusa";
@@ -187,7 +188,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   // vaga sozinha passa dos 2 minutos que bastavam a 3 s, e a janela antiga
   // daria como morta uma rodada viva — liberando uma segunda em paralelo, que
   // é justamente o que dobra o ritmo contra o site deles.
-  const janela = janelaSemBatimentoSegundos(ritmo.intervaloSegundos);
+  const janela = janelaSemBatimentoSegundos(
+    ritmo.intervaloSegundos,
+    requisicoesNoPiorCasoPorVaga(tipo),
+  );
 
   // Rodada morta por reinício do processo fica "em andamento" para sempre —
   // fecha antes de decidir se há uma viva.
@@ -357,7 +361,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   await encerrarVarredurasMortas(
     db,
     id,
-    janelaSemBatimentoSegundos(ritmo.intervaloSegundos),
+    janelaSemBatimentoSegundos(
+      ritmo.intervaloSegundos,
+      requisicoesNoPiorCasoPorVaga(colecao.tipo),
+    ),
   );
 
   const varredura = await obterUltimaVarredura(db, id);

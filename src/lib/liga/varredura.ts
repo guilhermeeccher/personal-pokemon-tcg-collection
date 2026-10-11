@@ -62,7 +62,7 @@ import {
 import type { LinhaBuscaLiga } from "@/lib/dominio/liga-busca";
 import { nomeCompativelComEspecie, termoDeBusca } from "@/lib/dominio/liga-busca";
 import type { Filtros, OpcaoCompra } from "@/lib/dominio/liga-opcoes";
-import { linhaCasaComVagaSet } from "@/lib/dominio/liga-set";
+import { linhaCasaComVagaSet, MAX_PAGINAS_VAGA_SET } from "@/lib/dominio/liga-set";
 import { criarClienteLiga, ErroBloqueioLiga, type ClienteLiga } from "./cliente";
 
 /** Uma vaga vazia a consultar, já sabendo de que tipo de coleção ela veio. */
@@ -149,7 +149,9 @@ async function consultarVagaSet(
   for (const nome of [vaga.nomeBusca, vaga.nomeAlternativo]) {
     if (nome === null) continue;
 
-    const resultado = await cliente.buscarCarta(nome, achou);
+    // Teto próprio, maior que o da Pokédex: a carta da vaga pode ser a mais
+    // cara de um nome comum (`MAX_PAGINAS_VAGA_SET`).
+    const resultado = await cliente.buscarCarta(nome, achou, MAX_PAGINAS_VAGA_SET);
     requisicoes += resultado.requisicoes;
     await registrarEdicoesVistas(db, resultado.linhas);
 
