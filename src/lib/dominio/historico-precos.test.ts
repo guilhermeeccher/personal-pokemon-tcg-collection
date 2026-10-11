@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { fotografarPrecos, variacaoEntrePontos } from "./historico-precos";
+import {
+  fotoEntraNoGrafico,
+  fotografarPrecos,
+  rodadaPodeSerExcluida,
+  variacaoEntrePontos,
+} from "./historico-precos";
 
 const achada = (preco: number | null, precoMedio: number | null) => ({
   encontrada: true,
@@ -55,5 +60,26 @@ describe("variacaoEntrePontos", () => {
         { somaMedios: 150, cartasComPreco: 20, precoMedioPorCarta: 7.5 },
       ),
     ).toEqual({ total: 50, cartas: 10, precoMedioPorCarta: -2.5 });
+  });
+});
+
+describe("fotoEntraNoGrafico", () => {
+  it("deixa de fora a foto de rodada interrompida", () => {
+    expect(fotoEntraNoGrafico({ rodadaId: "r1", erroDaRodada: "Acesso barrado" })).toBe(false);
+  });
+
+  it("mantém a foto de rodada concluída sem erro", () => {
+    expect(fotoEntraNoGrafico({ rodadaId: "r1", erroDaRodada: null })).toBe(true);
+  });
+
+  it("mantém a foto do backfill, que não tem rodada", () => {
+    expect(fotoEntraNoGrafico({ rodadaId: null, erroDaRodada: null })).toBe(true);
+  });
+});
+
+describe("rodadaPodeSerExcluida", () => {
+  it("só a rodada encerrada", () => {
+    expect(rodadaPodeSerExcluida({ concluidaEm: "2026-10-11T14:46:24Z" })).toBe(true);
+    expect(rodadaPodeSerExcluida({ concluidaEm: null })).toBe(false);
   });
 });

@@ -17,7 +17,12 @@ import {
   precoCartaLigaHistorico,
 } from "./schema";
 import type { LinhaBuscaLiga } from "@/lib/dominio/liga-busca";
-import { fotografarPrecos, type PontoDaSerie } from "@/lib/dominio/historico-precos";
+import {
+  fotoEntraNoGrafico,
+  fotografarPrecos,
+  rodadaPodeSerExcluida,
+  type PontoDaSerie,
+} from "@/lib/dominio/historico-precos";
 import {
   selecionarCartasParaPreco,
   type CartaParaPreco,
@@ -173,10 +178,24 @@ export async function registrarFotoDaRodada(db: Database, rodadaId: string): Pro
     .onConflictDoNothing({ target: ligaSnapshotPreco.rodadaId });
 }
 
-/** A série do gráfico: uma foto por rodada concluída, da mais antiga à mais nova. */
+/**
+ * A série do gráfico: uma foto por rodada concluída, da mais antiga à mais
+ * nova. A de rodada interrompida fica de fora (`fotoEntraNoGrafico`).
+ */
 export async function listarSerieDePrecos(db: Database): Promise<PontoDaSerie[]> {
-  const linhas = await db.select().from(ligaSnapshotPreco).orderBy(ligaSnapshotPreco.tiradoEm);
-  return linhas.map((l) => ({
+  const linhas = await db
+    .select({
+      tiradoEm: ligaSnapshotPreco.tiradoEm,
+      somaMedios: ligaSnapshotPreco.somaMedios,
+      cartasComPreco: ligaSnapshotPreco.cartasComPreco,
+      precoMedioPorCarta: ligaSnapshotPreco.precoMedioPorCarta,
+      rodadaId: ligaSnapshotPreco.rodadaId,
+      erroDaRodada: ligaRodadaPreco.erro,
+    })
+    .from(ligaSnapshotPreco)
+    .leftJoin(ligaRodadaPreco, eq(ligaRodadaPreco.id, ligaSnapshotPreco.rodadaId))
+    .orderBy(ligaSnapshotPreco.tiradoEm);
+  return linhas.filter(fotoEntraNoGrafico).map((l) => ({
     tiradoEm: new Date(l.tiradoEm).toISOString(),
     somaMedios: Number(l.somaMedios),
     cartasComPreco: l.cartasComPreco,
@@ -264,6 +283,83 @@ export async function valoresPorCarta(
 }
 
 // --- A rodada ---------------------------------------------------------------
+
+/** Uma rodada na lista "Pesquisas anteriores" da tela. */
+export interface RodadaListada {
+  id: string;
+  criadoEm: Date;
+  concluidaEm: Date | null;
+  totalCartas: number;
+  cartasConsultadas: number;
+  cartasComFalha: number;
+  requisicoes: number;
+  erro: string | null;
+  /** O total do ponto que a rodada deixou; nulo quando não deixou foto. */
+  somaMedios: number | null;
+  /** O ponto aparece no gráfico (`fotoEntraNoGrafico`). */
+  noGrafico: boolean;
+}
+
+/** As rodadas, da mais nova à mais antiga, com o ponto que cada uma deixou. */
+export async function listarRodadasDePreco(db: Database, limite = 50): Promise<RodadaListada[]> {
+  const linhas = await db
+    .select({
+      rodada: ligaRodadaPreco,
+      somaMedios: ligaSnapshotPreco.somaMedios,
+      fotoId: ligaSnapshotPreco.id,
+    })
+    .from(ligaRodadaPreco)
+    .leftJoin(ligaSnapshotPreco, eq(ligaSnapshotPreco.rodadaId, ligaRodadaPreco.id))
+    .orderBy(desc(ligaRodadaPreco.criadoEm))
+    .limit(limite);
+  return linhas.map(({ rodada, somaMedios, fotoId }) => ({
+    id: rodada.id,
+    criadoEm: new Date(rodada.criadoEm),
+    concluidaEm: rodada.concluidaEm === null ? null : new Date(rodada.concluidaEm),
+    totalCartas: rodada.totalCartas,
+    cartasConsultadas: rodada.cartasConsultadas,
+    cartasComFalha: rodada.cartasComFalha,
+    requisicoes: rodada.requisicoes,
+    erro: rodada.erro,
+    somaMedios: somaMedios === null ? null : Number(somaMedios),
+    noGrafico: fotoId !== null && fotoEntraNoGrafico({ rodadaId: rodada.id, erroDaRodada: rodada.erro }),
+  }));
+}
+
+/**
+ * Exclui uma rodada encerrada: o registro dela e o ponto que ela deixou no
+ * gráfico.
+ *
+ * **Os preços ficam** — decisão dele, 2026-10-11. O que a rodada leu da Liga
+ * é preço real, inclusive numa rodada que caiu no meio; apagar devolveria as
+ * cartas ao preço anterior e a próxima rodada teria de consultá-las de novo
+ * (o frescor de 24 h é contado sobre `preco_carta_liga`). O histórico por
+ * carta também fica, só perde o vínculo com a rodada (`rodada_id` nulo, como
+ * as linhas do backfill).
+ */
+export async function excluirRodadaDePreco(
+  db: Database,
+  rodadaId: string,
+): Promise<"excluida" | "naoEncontrada" | "emAndamento"> {
+  return db.transaction(async (tx) => {
+    const [rodada] = await tx
+      .select({ concluidaEm: ligaRodadaPreco.concluidaEm })
+      .from(ligaRodadaPreco)
+      .where(eq(ligaRodadaPreco.id, rodadaId))
+      .for("update");
+    if (!rodada) return "naoEncontrada";
+    if (!rodadaPodeSerExcluida(rodada)) return "emAndamento";
+
+    await tx.delete(ligaSnapshotPreco).where(eq(ligaSnapshotPreco.rodadaId, rodadaId));
+    await tx
+      .update(precoCartaLigaHistorico)
+      .set({ rodadaId: null })
+      .where(eq(precoCartaLigaHistorico.rodadaId, rodadaId));
+    await tx.delete(ligaRodadaPreco).where(eq(ligaRodadaPreco.id, rodadaId));
+    return "excluida";
+  });
+}
+
 
 export async function criarRodadaDePreco(db: Database, totalCartas: number): Promise<string> {
   const [linha] = await db

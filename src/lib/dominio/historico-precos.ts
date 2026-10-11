@@ -62,3 +62,35 @@ export function variacaoEntrePontos(
     precoMedioPorCarta: centavos(para.precoMedioPorCarta - de.precoMedioPorCarta),
   };
 }
+
+/**
+ * A foto entra no gráfico?
+ *
+ * **Foto de rodada interrompida fica de fora** (pedido dele, 2026-10-11).
+ * Ela não é falsa — fotografa a tabela inteira, e o que a rodada já tinha
+ * precificado continua valendo —, mas cai no meio de uma atualização: parte
+ * das cartas com o preço novo, parte com o de antes. Duas quedas de rede no
+ * mesmo dia viravam dois pontos a mais, colados, e o gráfico passava a contar
+ * a história das falhas em vez da do valor.
+ *
+ * Foto sem rodada (a do backfill da migração `0022`) entra: ela é o primeiro
+ * ponto da série e não tem rodada que a desqualifique.
+ */
+export function fotoEntraNoGrafico(foto: {
+  rodadaId: string | null;
+  erroDaRodada: string | null;
+}): boolean {
+  return foto.rodadaId === null || foto.erroDaRodada === null;
+}
+
+/**
+ * A rodada pode ser excluída da lista?
+ *
+ * Só a encerrada. Rodada viva está gravando preço e batimento; apagar o
+ * registro dela no meio faria a tela perder a rodada que ainda roda — e a
+ * trava contra duas rodadas simultâneas (que dobrariam o ritmo contra o site
+ * deles) é justamente esse registro.
+ */
+export function rodadaPodeSerExcluida(rodada: { concluidaEm: Date | string | null }): boolean {
+  return rodada.concluidaEm !== null;
+}

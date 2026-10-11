@@ -7,6 +7,7 @@ import {
   encerrarRodadasDePrecoMortas,
   listarCartasEspeciaisPossuidas,
   listarPrecos,
+  listarRodadasDePreco,
   listarSerieDePrecos,
   obterUltimaRodadaDePreco,
   rodadaDePrecoViva,
@@ -125,11 +126,12 @@ export async function GET() {
   const ritmo = ritmoLigaPadrao().atual();
   await encerrarRodadasDePrecoMortas(db, janelaDaRodada(ritmo.intervaloSegundos));
 
-  const [precos, rodada, selecionadas, serie] = await Promise.all([
+  const [precos, rodada, selecionadas, serie, rodadas] = await Promise.all([
     listarPrecos(db),
     obterUltimaRodadaDePreco(db),
     listarCartasEspeciaisPossuidas(db),
     listarSerieDePrecos(db),
+    listarRodadasDePreco(db),
   ]);
 
   const itens = precos
@@ -196,6 +198,11 @@ export async function GET() {
     varredura,
     resumo: resumirPrecos(precos),
     serie,
+    rodadas: rodadas.map((r) => ({
+      ...r,
+      criadoEm: r.criadoEm.toISOString(),
+      concluidaEm: r.concluidaEm?.toISOString() ?? null,
+    })),
     itens,
   });
 }

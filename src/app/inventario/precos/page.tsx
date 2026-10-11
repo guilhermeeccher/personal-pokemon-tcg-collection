@@ -61,6 +61,19 @@ interface ItemPrecoDTO {
   consultadoEm: string;
 }
 
+interface RodadaListadaDTO {
+  id: string;
+  criadoEm: string;
+  concluidaEm: string | null;
+  totalCartas: number;
+  cartasConsultadas: number;
+  cartasComFalha: number;
+  requisicoes: number;
+  erro: string | null;
+  somaMedios: number | null;
+  noGrafico: boolean;
+}
+
 interface RespostaDTO {
   ritmo: RitmoDTO;
   cartasEspeciais: number;
@@ -68,6 +81,7 @@ interface RespostaDTO {
   varredura: RodadaDTO | null;
   resumo: { cartasComPreco: number; naoEncontradas: number; somaMedios: number };
   serie: PontoDaSerie[];
+  rodadas: RodadaListadaDTO[];
   itens: ItemPrecoDTO[];
 }
 
@@ -86,6 +100,7 @@ export default function PrecosPage() {
   const [disparando, setDisparando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [excluindo, setExcluindo] = useState<string | null>(null);
   const montado = useRef(true);
 
   const carregar = useCallback(() => {
@@ -155,6 +170,28 @@ export default function PrecosPage() {
         t("podeSair"),
     );
     carregar();
+  }
+
+  async function excluirRodada(r: RodadaListadaDTO) {
+    const confirmado = window.confirm(
+      t("rodadas.confirmarExcluir", { data: new Date(r.criadoEm).toLocaleString(locale) }),
+    );
+    if (!confirmado) return;
+    setExcluindo(r.id);
+    setErro(null);
+    try {
+      const resposta = await fetch(`/api/inventario/precos/rodadas/${r.id}`, { method: "DELETE" });
+      if (!resposta.ok) {
+        const corpo: unknown = await resposta.json().catch(() => ({}));
+        setErro(textoDaRecusa(tr, corpo, t("rodadas.erroExcluir")));
+        return;
+      }
+      carregar();
+    } catch {
+      setErro(t("rodadas.erroExcluir"));
+    } finally {
+      setExcluindo(null);
+    }
   }
 
   const ritmo = dados?.ritmo;
@@ -301,6 +338,92 @@ export default function PrecosPage() {
       </Tabela>
 
       {dados && <GraficoValorTotal serie={dados.serie} />}
+
+      {dados && (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-base font-semibold text-strong">{t("rodadas.titulo")}</h2>
+          <p className="text-xs text-muted">{t("rodadas.explicacao")}</p>
+          <Tabela>
+            <thead>
+              <tr className={classesLinhaCabecalho}>
+                <th className={classesCelulaCabecalho}>{t("rodadas.colunaData")}</th>
+                <th className={classesCelulaCabecalho}>{t("rodadas.colunaSituacao")}</th>
+                <th className={`${classesCelulaCabecalho} hidden text-right sm:table-cell`}>
+                  {t("rodadas.colunaCartas")}
+                </th>
+                <th className={`${classesCelulaCabecalho} hidden text-right sm:table-cell`}>
+                  {t("rodadas.colunaRequisicoes")}
+                </th>
+                <th className={`${classesCelulaCabecalho} text-right`}>{t("rodadas.colunaTotal")}</th>
+                <th className={classesCelulaCabecalho}>
+                  <span className="sr-only">{t("rodadas.excluir")}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {dados.rodadas.map((r) => {
+                const viva = r.concluidaEm === null;
+                return (
+                  <tr key={r.id} className={classesLinha}>
+                    <td className="p-2 sm:whitespace-nowrap">
+                      {new Date(r.criadoEm).toLocaleString(locale, {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </td>
+                    {/* O motivo da interrupção é uma frase longa: vai no title, não na célula. */}
+                    <td className="p-2" title={r.erro ?? undefined}>
+                      <Distintivo tom={viva ? "aviso" : r.erro ? "perigo" : "neutro"}>
+                        {viva
+                          ? t("rodadas.emAndamento")
+                          : r.erro
+                            ? t("rodadas.interrompida")
+                            : t("rodadas.concluida")}
+                      </Distintivo>
+                    </td>
+                    <td className="hidden p-2 text-right font-mono whitespace-nowrap tabular-nums sm:table-cell">
+                      {t("rodadas.cartas", { feitas: r.cartasConsultadas, total: r.totalCartas })}
+                    </td>
+                    <td className="hidden p-2 text-right font-mono tabular-nums sm:table-cell">
+                      {r.requisicoes}
+                    </td>
+                    <td className="p-2 text-right font-mono whitespace-nowrap tabular-nums">
+                      {r.somaMedios === null ? (
+                        t("rodadas.semPonto")
+                      ) : r.noGrafico ? (
+                        brl(r.somaMedios, locale)
+                      ) : (
+                        <span className="flex flex-col items-end text-muted">
+                          {brl(r.somaMedios, locale)}
+                          <span className="font-sans text-xs">{t("rodadas.foraDoGrafico")}</span>
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-2 text-right">
+                      <Botao
+                        type="button"
+                        variante="perigo"
+                        tamanho="xs"
+                        onClick={() => excluirRodada(r)}
+                        disabled={viva || excluindo !== null}
+                      >
+                        {excluindo === r.id ? t("rodadas.excluindo") : t("rodadas.excluir")}
+                      </Botao>
+                    </td>
+                  </tr>
+                );
+              })}
+              {dados.rodadas.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-4">
+                    <EstadoVazio>{t("rodadas.vazio")}</EstadoVazio>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </Tabela>
+        </section>
+      )}
     </main>
   );
 }

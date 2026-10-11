@@ -739,6 +739,26 @@
       "colunaTotal": "Total",
       "colunaMedia": "Average per card",
       "colunaCartas": "Cards"
+    },
+    "rodadas": {
+      "titulo": "Previous lookups",
+      "explicacao": "Deleting a lookup removes its record and its point on the chart. The prices it brought in remain. Interrupted lookups are left out of the chart.",
+      "colunaData": "Date",
+      "colunaSituacao": "Status",
+      "colunaCartas": "Cards",
+      "colunaRequisicoes": "Requests",
+      "colunaTotal": "On chart",
+      "concluida": "Finished",
+      "interrompida": "Interrupted",
+      "emAndamento": "Running",
+      "cartas": "{feitas} of {total}",
+      "foraDoGrafico": "not on chart",
+      "semPonto": "—",
+      "excluir": "Delete",
+      "excluindo": "Deleting…",
+      "confirmarExcluir": "Delete the lookup from {data}? The record and the chart point go away; the prices it brought in stay.",
+      "erroExcluir": "Failed to delete the lookup.",
+      "vazio": "No lookups yet."
     }
   },
   "recusas": {
@@ -817,6 +837,8 @@
     "varreduraEmAndamento": "There is already a scan running on this collection. Wait for it to finish.",
     "precosEmAndamento": "A price lookup is already running. Wait for it to finish.",
     "precosJaConsultados": "All {total} special cards were already looked up in the last {horas} h; nothing to update right now.",
-    "semCartasEspeciais": "No special card (all but common and uncommon) in the inventory to look up."
+    "semCartasEspeciais": "No special card (all but common and uncommon) in the inventory to look up.",
+    "rodadaDePrecoNaoEncontrada": "Price lookup not found.",
+    "rodadaDePrecoEmAndamento": "This lookup is still running. Wait for it to finish before deleting it."
   }
 }
