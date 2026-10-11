@@ -85,7 +85,7 @@ interface RespostaDTO {
   itens: ItemPrecoDTO[];
 }
 
-/** Cartas por página na tabela de preços — pedido dele, 2026-10-11. */
+/** Cartas por página na tabela de preços — pedido do usuário, 2026-10-11. */
 const CARTAS_POR_PAGINA = 50;
 
 /* Só a pontuação do número muda com o idioma da interface; a moeda é sempre

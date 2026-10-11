@@ -66,7 +66,7 @@ export function variacaoEntrePontos(
 /**
  * A foto entra no gráfico?
  *
- * **Foto de rodada interrompida fica de fora** (pedido dele, 2026-10-11).
+ * **Foto de rodada interrompida fica de fora** (pedido do usuário, 2026-10-11).
  * Ela não é falsa — fotografa a tabela inteira, e o que a rodada já tinha
  * precificado continua valendo —, mas cai no meio de uma atualização: parte
  * das cartas com o preço novo, parte com o de antes. Duas quedas de rede no

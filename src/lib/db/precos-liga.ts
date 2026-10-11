@@ -330,7 +330,7 @@ export async function listarRodadasDePreco(db: Database, limite = 50): Promise<R
  * Exclui uma rodada encerrada: o registro dela e o ponto que ela deixou no
  * gráfico.
  *
- * **Os preços ficam** — decisão dele, 2026-10-11. O que a rodada leu da Liga
+ * **Os preços ficam** — decisão do usuário, 2026-10-11. O que a rodada leu da Liga
  * é preço real, inclusive numa rodada que caiu no meio; apagar devolveria as
  * cartas ao preço anterior e a próxima rodada teria de consultá-las de novo
  * (o frescor de 24 h é contado sobre `preco_carta_liga`). O histórico por

@@ -2297,7 +2297,7 @@ export async function listarColecoesNaVitrine(db: Database): Promise<ColecaoNaVi
 
 /**
  * Joias da coleção: as cartas distintas que mais valem no inventário,
- * alocadas ou não — é o que ele tem, não o que está no fichário. Distintas
+ * alocadas ou não — é o que o usuário tem, não o que está no fichário. Distintas
  * por carta física (`carta_id`): três cópias da mesma ilustração, ou a mesma
  * carta em pt e en, não ocupam lugares na vitrine.
  *
