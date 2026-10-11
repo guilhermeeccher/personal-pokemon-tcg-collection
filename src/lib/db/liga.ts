@@ -661,14 +661,37 @@ export interface OpcaoSalva extends Omit<
   imagemOrigem: OrigemImagem | null;
 }
 
-export async function listarOpcoesDaVarredura(
+/**
+ * As opções que a tela mostra: **para cada vaga, as da varredura mais recente
+ * que achou alguma coisa para ela** — e não só as da última varredura.
+ *
+ * A última varredura sozinha não descreve a coleção desde que a rodada pula o
+ * que já tem resposta fresca (`frescor-consulta.ts`): uma rodada que consultou
+ * só as 14 vagas ainda sem opção escondia as 78 que a anterior tinha achado, e
+ * a tela de opções da 30C ficou com 4 linhas (2026-10-11). Cada vaga fala pela
+ * sua consulta mais nova.
+ *
+ * Mesmo ponto cego de `frescor-consulta.ts`, do outro lado: vaga consultada
+ * que não achou oferta não grava linha, então ela continua mostrando a oferta
+ * da rodada anterior, com o preço de então — o mesmo trato que a lista de
+ * compras dá à carta que sumiu (decisão de 2026-09-17).
+ */
+export async function listarOpcoesMaisRecentesPorVaga(
   db: Database,
-  varreduraId: string,
+  colecaoId: string,
 ): Promise<OpcaoSalva[]> {
   const linhas = await db
     .select()
     .from(ligaOpcao)
-    .where(eq(ligaOpcao.varreduraId, varreduraId))
+    .where(
+      sql`(${ligaOpcao.varreduraId}, ${ligaOpcao.chave}) in (
+        select distinct on (o.chave) o.varredura_id, o.chave
+        from ${ligaOpcao} o
+        join ${ligaVarredura} v on v.id = o.varredura_id
+        where v.colecao_id = ${colecaoId}
+        order by o.chave, v.criado_em desc
+      )`,
+    )
     // Por chave, e não por `dex`: em coleção de set o `dex` é nulo em toda
     // linha, e ordenar por ele deixaria a lista na ordem de inserção.
     .orderBy(asc(ligaOpcao.chave));
@@ -728,14 +751,18 @@ export async function listarOpcoesDaVarredura(
 }
 
 /**
- * Opções pontuais de uma varredura, pelos ids que a tela mandou.
+ * Opções pontuais de uma coleção, pelos ids que a tela mandou.
  *
  * Existe para a rota de marcar: carregar as 4.830 opções de uma Pokédex a cada
- * clique de checkbox seria absurdo, e é o que `listarOpcoesDaVarredura` faria.
+ * clique de checkbox seria absurdo, e é o que `listarOpcoesMaisRecentesPorVaga`
+ * faria. O escopo é a **coleção**, e não a última varredura: a tela mostra
+ * opções de varreduras diferentes, vaga a vaga, e marcar uma da rodada
+ * anterior precisa funcionar. Id de opção de outra coleção continua não
+ * resolvendo.
  */
 export async function opcoesPorId(
   db: Database,
-  varreduraId: string,
+  colecaoId: string,
   ids: readonly string[],
 ): Promise<
   Array<{
@@ -770,7 +797,8 @@ export async function opcoesPorId(
       preco: ligaOpcao.preco,
     })
     .from(ligaOpcao)
-    .where(and(eq(ligaOpcao.varreduraId, varreduraId), inArray(ligaOpcao.id, [...ids])));
+    .innerJoin(ligaVarredura, eq(ligaVarredura.id, ligaOpcao.varreduraId))
+    .where(and(eq(ligaVarredura.colecaoId, colecaoId), inArray(ligaOpcao.id, [...ids])));
 
   return linhas.map((l) => ({ ...l, preco: Number(l.preco) }));
 }

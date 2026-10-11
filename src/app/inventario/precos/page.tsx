@@ -85,6 +85,9 @@ interface RespostaDTO {
   itens: ItemPrecoDTO[];
 }
 
+/** Cartas por página na tabela de preços — pedido dele, 2026-10-11. */
+const CARTAS_POR_PAGINA = 50;
+
 /* Só a pontuação do número muda com o idioma da interface; a moeda é sempre
    o real (AGENTS.md: nenhuma conversão de moeda). */
 const brl = (valor: number, locale: string) =>
@@ -101,6 +104,7 @@ export default function PrecosPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [excluindo, setExcluindo] = useState<string | null>(null);
+  const [pagina, setPagina] = useState(1);
   const montado = useRef(true);
 
   const carregar = useCallback(() => {
@@ -149,6 +153,7 @@ export default function PrecosPage() {
 
   async function disparar() {
     setDisparando(true);
+    setPagina(1);
     setErro(null);
     setAviso(null);
     const resposta = await fetch("/api/inventario/precos", { method: "POST" });
@@ -209,6 +214,15 @@ export default function PrecosPage() {
         : t("ritmoConservador", { intervalo });
 
   const rodada = dados?.varredura ?? null;
+
+  const itens = dados?.itens ?? [];
+  const totalPaginas = Math.max(1, Math.ceil(itens.length / CARTAS_POR_PAGINA));
+  // Presa ao total: a lista pode encolher entre uma leitura e outra.
+  const paginaVisivel = Math.min(pagina, totalPaginas);
+  const itensDaPagina = itens.slice(
+    (paginaVisivel - 1) * CARTAS_POR_PAGINA,
+    paginaVisivel * CARTAS_POR_PAGINA,
+  );
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 sm:p-8">
@@ -271,6 +285,8 @@ export default function PrecosPage() {
         </section>
       )}
 
+      {dados && <GraficoValorTotal serie={dados.serie} />}
+
       {dados && dados.itens.length > 0 && (
         <p className="text-sm text-muted">
           {t("resumo", {
@@ -297,7 +313,7 @@ export default function PrecosPage() {
           </tr>
         </thead>
         <tbody>
-          {(dados?.itens ?? []).map((i) => (
+          {itensDaPagina.map((i) => (
             <tr key={i.cartaId} className={classesLinha}>
               <td className="p-2 font-semibold text-strong">{i.nome}</td>
               <td className="p-2 text-muted">{i.setNome}</td>
@@ -337,7 +353,25 @@ export default function PrecosPage() {
         </tbody>
       </Tabela>
 
-      {dados && <GraficoValorTotal serie={dados.serie} />}
+      {totalPaginas > 1 && (
+        <div className="flex items-center justify-between text-sm">
+          <Botao
+            variante="secundario"
+            disabled={paginaVisivel <= 1}
+            onClick={() => setPagina(paginaVisivel - 1)}
+          >
+            {t("anterior")}
+          </Botao>
+          <span>{t("paginacao", { pagina: paginaVisivel, totalPaginas })}</span>
+          <Botao
+            variante="secundario"
+            disabled={paginaVisivel >= totalPaginas}
+            onClick={() => setPagina(paginaVisivel + 1)}
+          >
+            {t("proxima")}
+          </Botao>
+        </div>
+      )}
 
       {dados && (
         <section className="flex flex-col gap-2">

@@ -5,7 +5,7 @@ import { nomesDosSets, obterColecaoPorId } from "@/lib/db/consultas";
 import {
   criarVarredura,
   encerrarVarredurasMortas,
-  listarOpcoesDaVarredura,
+  listarOpcoesMaisRecentesPorVaga,
   listarVagasVaziasPokedex,
   listarVagasVaziasSet,
   obterUltimaVarredura,
@@ -373,7 +373,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ ...vazio, ...resumoDaLista });
   }
 
-  const opcoes = await listarOpcoesDaVarredura(db, varredura.id);
+  // Vaga a vaga, a consulta mais nova — não só a última rodada, que depois do
+  // filtro de frescor pode ter consultado poucas vagas.
+  const opcoes = await listarOpcoesMaisRecentesPorVaga(db, id);
 
   // A marcação de cada opção é DERIVADA da escolha, não uma coluna dela: a
   // verdade mora em `escolha_compra`, e a linha da varredura é descartável.

@@ -759,7 +759,10 @@
       "confirmarExcluir": "Excluir a pesquisa de {data}? O registro e o ponto no gráfico somem; os preços que ela trouxe ficam.",
       "erroExcluir": "Falha ao excluir a pesquisa.",
       "vazio": "Nenhuma pesquisa feita ainda."
-    }
+    },
+    "anterior": "Anterior",
+    "proxima": "Próxima",
+    "paginacao": "Página {pagina} de {totalPaginas}"
   },
   "recusas": {
     "arquivoAcimaDoLimite": "Arquivo maior que o limite de {mb} MB.",

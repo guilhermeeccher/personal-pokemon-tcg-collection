@@ -64,15 +64,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   if (!bruto.selecionada) {
     // Resolve primeiro como id de escolha (o caminho que funciona sem
-    // varredura); o que sobrar, resolve pela varredura corrente.
+    // varredura); o que sobrar, resolve pelas opções da coleção.
     const alvos = [...(await escolhasPorId(db, id, ids))];
 
     if (alvos.length < ids.length) {
-      const varredura = await obterUltimaVarredura(db, id);
-      if (varredura) {
-        for (const o of await opcoesPorId(db, varredura.id, ids)) {
-          alvos.push({ chave: o.chave, identidade: identidadeDaCarta(o) });
-        }
+      for (const o of await opcoesPorId(db, id, ids)) {
+        alvos.push({ chave: o.chave, identidade: identidadeDaCarta(o) });
       }
     }
 
@@ -87,7 +84,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     );
   }
 
-  const opcoes = await opcoesPorId(db, varredura.id, ids);
+  // Escopo da coleção, não da última varredura: a tela mostra, vaga a vaga, a
+  // opção da rodada mais recente que achou algo (`listarOpcoesMaisRecentesPorVaga`).
+  const opcoes = await opcoesPorId(db, id, ids);
   if (opcoes.length === 0) return NextResponse.json({ alteradas: 0 });
 
   const novas: EscolhaNova[] = opcoes.map((o) => ({

@@ -759,7 +759,10 @@
       "confirmarExcluir": "Delete the lookup from {data}? The record and the chart point go away; the prices it brought in stay.",
       "erroExcluir": "Failed to delete the lookup.",
       "vazio": "No lookups yet."
-    }
+    },
+    "anterior": "Previous",
+    "proxima": "Next",
+    "paginacao": "Page {pagina} of {totalPaginas}"
   },
   "recusas": {
     "arquivoAcimaDoLimite": "File larger than the {mb} MB limit.",
