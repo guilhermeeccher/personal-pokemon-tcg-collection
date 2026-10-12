@@ -161,6 +161,16 @@ const REGRAS: readonly Regra[] = [
   { padrao: /^(koraidon|miraidon)-|^eternatus-eternamax$/, destino: "fora" },
   { padrao: /^(mothim|scatterbug|spewpa)-/, destino: "fora" },
   { padrao: /^minior-.+-meteor$|^minior-red$/, destino: "fora" },
+  /*
+   * Formas de habilidade (decisão de 2026-10-12, na D7): o Greninja com
+   * Battle Bond, o Rockruff com Own Tempo e os Zygarde com Power Construct
+   * são formas internas, mas o SuperEffective deixa todas fora de todos os
+   * arranjos de caixa do HOME, e nenhuma fonte achada diz que o HOME as
+   * separa. Como as posições das caixas (`dex-caixas.ts`) são o que o
+   * usuário segue para arrumar o HOME, ficam fora e as caixas batem com a
+   * referência nas nove regiões. Até então eram `especial`.
+   */
+  { padrao: /^greninja-battle-bond$|^rockruff-own-tempo$|^zygarde-(10|50)-power-construct$/, destino: "fora" },
 
   /* Gênero que a PokeAPI já modela como forma (as demais fêmeas são geradas). */
   {
@@ -193,14 +203,11 @@ const REGRAS: readonly Regra[] = [
   /*
    * Especial: armazenável e com diferença de jogo (tipo, habilidade, golpe,
    *    status). Forma que só muda a aparência é cosmética, mesmo vinda de evento.
-   *  - Greninja Battle Bond: igual na tela, mas é forma própria no HOME (o
-   *    SuperEffective lista; o homestretch não).
    *  - Floette Eterna: entrou com o Legends Z-A (o homestretch lista).
    */
   { padrao: /^(deoxys|wormadam|rotom|basculin|pumpkaboo|gourgeist|zygarde|oricorio|lycanroc|squawkabilly)-/, destino: "especial" },
   { padrao: /^shaymin-sky$|^hoopa-unbound$|^keldeo-resolute$|^floette-eternal$/, destino: "especial" },
   { padrao: /^(tornadus|thundurus|landorus|enamorus)-therian$/, destino: "especial" },
-  { padrao: /^greninja-battle-bond$|^rockruff-own-tempo$/, destino: "especial" },
   { padrao: /^toxtricity-low-key$|^urshifu-rapid-strike$|^ursaluna-bloodmoon$/, destino: "especial" },
   { padrao: /^gimmighoul-roaming$/, destino: "especial" },
 
@@ -222,13 +229,10 @@ const NOME_FEMEA = "Female";
 
 /**
  * Nome que a PokeAPI não dá, ou dá errado para o papel da vaga. O meteoro
- * vermelho é a vaga do núcleo vermelho (ver regra do Minior); o Greninja
- * Battle Bond e o Rockruff Own Tempo vêm sem nome de forma.
+ * vermelho é a vaga do núcleo vermelho (ver regra do Minior).
  */
 const NOME_SOBRESCRITO: Readonly<Record<string, string>> = {
   "minior-red-meteor": "Red Core",
-  "greninja-battle-bond": "Battle Bond",
-  "rockruff-own-tempo": "Own Tempo",
 };
 
 /** Sprite do núcleo vermelho na vaga base do Minior, como as outras seis cores. */
@@ -284,7 +288,6 @@ const FORMAS_SEM_SHINY: ReadonlySet<string> = new Set([
   "pikachu-kalos-cap",
   "pikachu-alola-cap",
   "pikachu-world-cap",
-  "greninja-battle-bond",
   "vivillon-poke-ball",
   "floette-eternal",
   "magearna-original",

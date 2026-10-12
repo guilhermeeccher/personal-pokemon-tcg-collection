@@ -105,7 +105,6 @@ const GO_FORMAS_NAO_LANCADAS = new Set([
   "vivillon-fancy",
   "vivillon-poke-ball",
   "floette-eternal",
-  "greninja-battle-bond",
   "zarude-dada",
   // O GO só tem a forma Roaming; a vaga base é a forma Chest.
   "gimmighoul",
@@ -197,8 +196,6 @@ export const DISPONIBILIDADE: Readonly<Record<string, DadosJogo>> = {
       "spinda",
       "zygarde",
       "zygarde-10",
-      "zygarde-10-power-construct",
-      "zygarde-50-power-construct",
       "eternatus",
       "keldeo-resolute",
     ],

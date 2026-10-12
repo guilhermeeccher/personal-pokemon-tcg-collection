@@ -29,8 +29,8 @@ describe("caixas do HOME", () => {
       hoenn: "6×, última 8",
       sinnoh: "5×, última 30",
       unova: "6×, última 30",
-      kalos: "5×, última 9",
-      alola: "4×, última 12",
+      kalos: "5×, última 6",
+      alola: "4×, última 11",
       galar: "6×, última 17",
       paldea: "5×, última 11",
     });
@@ -39,8 +39,9 @@ describe("caixas do HOME", () => {
 
   /*
    * Posições conferidas em 2026-10-12 no "Fully Sorted by Regions" do
-   * SuperEffective (sem as caixas de reserva vazias dele): batem vaga a vaga
-   * em Kanto, Johto, Hoenn, Sinnoh, Unova, Galar e Paldea.
+   * SuperEffective (sem as caixas de reserva vazias dele): 1.376 das 1.387
+   * vagas na mesma caixa e posição; as 11 restantes são a ordem interna do
+   * Vivillon e das cores de Flabébé/Floette/Florges (ver `dex-caixas.ts`).
    */
   it("bate com o arranjo de referência nas viradas de região", () => {
     const esperado: Record<string, [number, number]> = {
@@ -54,7 +55,11 @@ describe("caixas do HOME", () => {
       arceus: [25, 30],
       victini: [26, 1],
       chespin: [32, 1],
+      greninja: [32, 9],
+      bunnelby: [32, 10],
       rowlet: [37, 1],
+      rockruff: [37, 27],
+      lycanroc: [37, 28],
       grookey: [41, 1],
       sprigatito: [47, 1],
       pecharunt: [51, 11],

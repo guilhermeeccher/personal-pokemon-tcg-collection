@@ -20,14 +20,14 @@
  *   As cosméticas contam sempre e ficam intercaladas na espécie, sem caixas
  *   próprias.
  *
- * Conferido em 2026-10-12 contra o dataset: as 1.387 vagas em comum estão
- * na mesma ordem e nas mesmas quebras de região, com três diferenças
- * conhecidas — o SuperEffective põe o Vivillon Icy Snow antes do Meadow, as
- * cores de Flabébé/Floette/Florges em ordem alfabética (num outro arranjo
- * dele, na ordem do jogo, que é a daqui), e reserva uma caixa vazia no fim
- * de Sinnoh e de Unova. As 4 vagas que ele não tem (Greninja Battle Bond,
- * Rockruff Own Tempo, Zygarde 10% e 50% Power Construct) vêm da
- * classificação (`dex-classificacao.ts`).
+ * Conferido em 2026-10-12 contra o dataset: as mesmas 1.387 vagas (as
+ * formas de habilidade que ele deixa fora saíram da classificação na mesma
+ * data), 1.376 na mesma caixa e posição. As 11 que diferem trocam de lugar
+ * dentro da própria espécie, sem mudar de caixa: o SuperEffective
+ * põe o Vivillon Icy Snow antes do Meadow e as cores de Flabébé/Floette/
+ * Florges em ordem alfabética (num outro arranjo dele, na ordem do jogo, que
+ * é a daqui); e reserva uma caixa vazia no fim de Sinnoh e de Unova, que
+ * aqui não existe.
  *
  * Caixa e posição são calculadas, não gravadas: dependem da trilha e das
  * seções ligadas.
