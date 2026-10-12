@@ -73,7 +73,7 @@ Route paths are in Portuguese too:
 | `/colecoes/[id]/opcoes-compra` | the buy options and the buy list for one collection |
 | `/inventario` | the inventory; `/inventario/repetidas` is duplicates, `/inventario/visao-geral` is the overview |
 | `/cadastro` | card entry; `/cadastro/set` is the grid for a whole set, `/cadastro/busca` is one card by search |
-| `/dex` | the optional Living Dex module (`MODULO_LIVING_DEX=1`): `/dex/pokedex` is the slot grid, `/dex/cadastrar` adds a Pokémon, `/dex/jogos` lists the owned games. 404 when the module is off |
+| `/dex` | the optional Living Dex module (`MODULO_LIVING_DEX=1`): `/dex/pokedex` is the slot grid, `/dex/cadastrar` adds Pokémon by game, `/dex/inventario` lists them, `/dex/jogos` lists the owned games. 404 when the module is off |
 
 ## Environment
 

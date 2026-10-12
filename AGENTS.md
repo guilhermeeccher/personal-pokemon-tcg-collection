@@ -535,10 +535,22 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
   Pokémon; the location is HOME or an owned, active game. **Leaving a `so_envio` game needs the
   user's confirmation**: the move route answers 409 with `dexConfirmarSemVolta` until the screen
   resends with `confirmarSemVolta: true`. Never make that confirmation automatic.
-- **Moving and correcting are separate operations.** `POST /api/dex/registros/:id/mover` changes the
-  location under the rules above; `PATCH /api/dex/registros/:id` fixes the other fields and leaves the
-  location alone. A game marked as stopped keeps its records and takes no new ones; it can only be
-  removed when no record sits in it.
+- **Records come in by game, in batches** (`POST /api/dex/registros`, `{ jogoId, itens }`), like the
+  card set grid: every Pokémon becomes one record, born in that game and still in it. One refusal
+  refuses the whole batch, and nothing is written.
+- **One row per Pokémon in the database, grouped only on screen.** The inventory groups records that
+  are identical except for the id (`agruparInventario`); its actions move or delete **one** Pokémon of
+  the group, and a correction applies to the whole group. Do not add a quantity column to
+  `dex_registro`: each Pokémon has to be movable on its own.
+- **Moving and correcting are separate operations.** `POST /api/dex/registros/mover` (`{ ids, local }`)
+  changes the location of one or many records under the rules above, in one transaction, asking for
+  the one-way confirmation once per batch; `PATCH /api/dex/registros` (`{ ids, ... }`) fixes the other
+  fields and leaves the location alone. A game marked as stopped keeps its records and takes no new
+  ones; it can only be removed when no record sits in it.
+- **"Take to HOME" is the cards' "what can be allocated now"** (`oportunidadesHome`): a slot not in
+  HOME, in one track, that a Pokémon the user already has in a game would fill. A slot counts once,
+  however many copies exist; with copies in two games, the suggestion comes from the two-way game,
+  since that one can come back.
 
 ---
 
