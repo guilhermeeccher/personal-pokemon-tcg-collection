@@ -115,27 +115,50 @@ const formaGo = (f: FormaParaDisponibilidade) =>
 
 const goNaoLancadas = new Set(lerFaixas(GO_ESPECIES_NAO_LANCADAS));
 
+/*
+ * Míticos que o GO dá a qualquer jogador, a qualquer momento, conferido em
+ * 2026-10-12 na Bulbapedia ("Special Research", as globais, gratuitas e sem
+ * data de fim): Mew, Celebi, Jirachi, Victini, Keldeo, Meloetta, Shaymin,
+ * Diancie e Marshadow; Meltan e Melmetal saem da Mystery Box, que se ganha
+ * mandando um Pokémon ao HOME. Os outros míticos do GO vieram de evento.
+ * Cada um destes é um troféu-checkpoint do GO (`seed/dex-trofeus.json`).
+ */
+const GO_MITICOS_PERMANENTES = new Set([151, 251, 385, 492, 494, 647, 648, 719, 802, 808, 809]);
+
 export const DISPONIBILIDADE: Readonly<Record<string, DadosJogo>> = {
   /*
    * FireRed e LeafGreen, conferidos em 2026-10-11. Encontros por versão da
    * PokeAPI (caminhada, surf, pesca, Rock Smash, presentes, estáticos, trocas
    * com NPC), fechados por evolução e por ovo, restritos à Geração 1–3.
    * Fora: evoluções por horário (Espeon, Umbreon — o jogo não tem relógio) e
-   * o Celebi do disco bônus japonês do Colosseum. Por evento: Lugia, Ho-Oh
-   * (Navel Rock) e Deoxys (Birth Island), que pedem ticket. Os exclusivos de
-   * versão batem com a lista da Serebii; Wynaut (ovo de Wobbuffet com Lax
-   * Incense) e Azurill (só no LeafGreen) conferidos na Bulbapedia.
+   * o Celebi do disco bônus japonês do Colosseum. Os exclusivos de versão
+   * batem com a lista da Serebii; Wynaut (ovo de Wobbuffet com Lax Incense)
+   * e Azurill (só no LeafGreen) conferidos na Bulbapedia.
+   *
+   * Corrigido em 2026-10-12, os dois pela Bulbapedia:
+   *  - Lugia, Ho-Oh (Navel Rock) e Deoxys (Birth Island) são livres: na
+   *    versão de Switch, o AuroraTicket e o MysticTicket chegam sozinhos
+   *    depois do Hall da Fama ("Differences in the Nintendo Switch
+   *    release"). No cartucho eram de evento.
+   *  - Mareep, Aipom, Pineco, Shuckle, Teddiursa, Houndour, Stantler e
+   *    Smeargle (e as evoluções) saíram: a PokeAPI os lista na Altering
+   *    Cave, mas só por um Mystery Gift que nunca foi distribuído. Lá só há
+   *    Zubat ("Altering Cave").
+   *
+   * Quando cada espécie fica acessível no save (Ilhas Sevii, Pokédex
+   * Nacional…) não é dado daqui: são os troféus-checkpoint de
+   * `seed/dex-trofeus.json`.
    */
   firered: {
-    livre: "1-26,29-36,39-64,66-67,72-75,77-78,81-93,95-119,122-125,128-150,161-162,165-169,172-182,187-190,193-195,198,201-202,204-206,211,213-214,216-221,225,227-229,231-232,234-239,242-248,360",
+    livre: "1-26,29-36,39-64,66-67,72-75,77-78,81-93,95-119,122-125,128-150,161-162,165-169,172-178,182,187-189,193-195,198,201-202,206,211,214,218-221,225,227,231-232,236-239,242-250,360,386",
     troca: "27-28,37-38,65,68-71,76,79-80,94,120-121,126-127,183-184,186,199-200,208,212,215,223-224,226,230,233,240,298",
-    evento: "249-250,386",
+    evento: "",
     forma: formaGeracao3,
   },
   leafgreen: {
-    livre: "1-22,25-42,46-53,56-57,60-64,66-67,69-75,77-89,92-93,95-122,124,126-150,161-162,165-169,172-181,183-184,187-190,193,199-202,204-206,213-221,223-224,226,228-229,231-232,234-238,240,242-248,298,360",
+    livre: "1-22,25-42,46-53,56-57,60-64,66-67,69-75,77-89,92-93,95-122,124,126-150,161-162,165-169,172-178,183-184,187-189,193,199-202,206,214-215,218-221,223-224,226,231-232,236-238,240,242-250,298,360,386",
     troca: "23-24,43-45,54-55,58-59,65,68,76,90-91,94,123,125,182,186,194-195,198,208,211-212,225,227,230,233,239",
-    evento: "249-250,386",
+    evento: "",
     forma: formaGeracao3,
   },
   /*
@@ -200,9 +223,11 @@ export function catalogoDoJogo(
 
   const como = new Map<number, ComoObter>();
   if (jogoId === "go") {
-    // O GO lista o que NÃO saiu; o resto é livre, e míticos são por evento.
+    // O GO lista o que NÃO saiu; o resto é livre, e míticos são por evento,
+    // menos os de pesquisa gratuita permanente.
     for (const f of formas) {
-      if (!goNaoLancadas.has(f.numero)) como.set(f.numero, f.mitico ? "evento" : "livre");
+      if (goNaoLancadas.has(f.numero)) continue;
+      como.set(f.numero, f.mitico && !GO_MITICOS_PERMANENTES.has(f.numero) ? "evento" : "livre");
     }
   } else {
     for (const tipo of ["livre", "troca", "evento"] as const) {

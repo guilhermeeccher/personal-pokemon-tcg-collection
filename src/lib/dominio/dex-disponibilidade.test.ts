@@ -54,12 +54,24 @@ describe("FireRed", () => {
     expect(fr.get("azurill")?.como).toBe("troca");
   });
 
-  it("exclusivos do LeafGreen e evoluções por troca são troca; Lugia e Deoxys, evento", () => {
+  it("exclusivos do LeafGreen e evoluções por troca são troca", () => {
     expect(fr.get("vulpix")?.como).toBe("troca");
     expect(fr.get("alakazam")?.como).toBe("troca");
-    expect(fr.get("lugia")?.como).toBe("evento");
-    expect(fr.get("deoxys")?.como).toBe("evento");
     expect(fr.has("celebi")).toBe(false);
+  });
+
+  it("no Switch, Lugia, Ho-Oh e Deoxys são livres: os tickets vêm com o Hall da Fama", () => {
+    for (const id of ["lugia", "ho-oh", "deoxys"]) expect(fr.get(id)?.como).toBe("livre");
+    expect(ids("leafgreen").get("deoxys")?.como).toBe("livre");
+  });
+
+  it("a Altering Cave só tem Zubat: o Mystery Gift que a mudava nunca saiu", () => {
+    for (const jogo of ["firered", "leafgreen"]) {
+      const c = ids(jogo);
+      for (const id of ["mareep", "ampharos", "aipom", "pineco", "forretress", "shuckle", "teddiursa", "houndour", "stantler", "smeargle"]) {
+        expect(c.has(id)).toBe(false);
+      }
+    }
   });
 
   it("nenhuma forma regional", () => {
@@ -102,8 +114,15 @@ describe("GO", () => {
     expect(go.has("gimmighoul-roaming")).toBe(true);
   });
 
-  it("míticos por evento; Zygarde e Spinda não passam pelo GO Transporter", () => {
-    expect(go.get("mew")?.como).toBe("evento");
+  it("míticos de pesquisa gratuita são livres, os outros por evento", () => {
+    expect(go.get("mew")?.como).toBe("livre");
+    expect(go.get("meltan")?.como).toBe("livre");
+    expect(go.get("keldeo")?.como).toBe("livre");
+    expect(go.get("darkrai")?.como).toBe("evento");
+    expect(go.get("genesect")?.como).toBe("evento");
+  });
+
+  it("Zygarde e Spinda não passam pelo GO Transporter", () => {
     expect(go.get("zygarde")?.transferivel).toBe(false);
     expect(go.get("spinda")?.transferivel).toBe(false);
     expect(naoTransferiveis().has("go:spinda")).toBe(true);
