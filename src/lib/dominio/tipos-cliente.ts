@@ -14,6 +14,7 @@ import type { ParametroPokedex, ParametroSet, TipoColecao } from "./parametro-co
 import type { Divisao } from "./divisoes-colecao";
 import type { ProgressoRegiao } from "./progresso-regiao";
 import type { TipoEnergia } from "./tipo-energia";
+import type { RegraTrofeuHome } from "./dex-trofeus";
 
 export interface FlagsVarianteDTO {
   varianteNormalDisponivel: boolean;
@@ -449,14 +450,20 @@ export interface RegistroDexDTO {
 export interface TrofeuDexDTO {
   id: string;
   jogoId: string;
-  tipo: "checkpoint" | "marco";
+  tipo: "checkpoint" | "marco" | "calculado";
   nivel: "bronze" | "prata" | "ouro";
   ordem: number;
   textos: Record<"pt-BR" | "en", { titulo: string; descricao: string }>;
   requer: string[];
   /** Números nacionais que o checkpoint destrava. */
   libera: number[];
-  obtido: { em: string; origem: "sessao" | "manual"; notas: string | null } | null;
+  /** O que o troféu calculado (do HOME) pede; nulo nos outros. */
+  regra: RegraTrofeuHome | null;
+  /**
+   * A conquista. No troféu calculado é derivada dos registros
+   * (`comTrofeusDoHome`): sem data, com `origem: "calculado"`.
+   */
+  obtido: { em: string | null; origem: "sessao" | "manual" | "calculado"; notas: string | null } | null;
 }
 
 export interface TarefaDexDTO {

@@ -1,6 +1,159 @@
 {
-  "sobre": "Living Dex trophies, one list per game. Loaded on every boot by `pnpm seed:dex` (see src/lib/dominio/dex-trofeus.ts). A checkpoint lists the national numbers it unlocks in that game (libera) and where that came from (fonte); a marco unlocks nothing. Order in the file is the display order. Platinum is derived, never listed.",
+  "sobre": "Living Dex trophies, one list per game. Loaded on every boot by `pnpm seed:dex` (see src/lib/dominio/dex-trofeus.ts). A checkpoint lists the national numbers it unlocks in that game (libera) and where that came from (fonte); a marco unlocks nothing; a calculado (only for jogo \"home\") is never marked: it holds while the records meet its regra (see src/lib/dominio/dex-trofeus-home.ts). Order in the file is the display order. Platinum is derived, never listed.",
   "trofeus": [
+    {
+      "id": "home-primeiro",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Mudança feita", "descricao": "Leve o primeiro Pokémon para o HOME." },
+      "en": { "titulo": "Moving Day", "descricao": "Bring your first Pokémon to HOME." },
+      "regra": { "tipo": "quantidade", "quantidade": 1, "trilha": "normal" }
+    },
+    {
+      "id": "home-primeiro-shiny",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Primeiro brilho", "descricao": "Leve o primeiro Pokémon shiny para o HOME." },
+      "en": { "titulo": "First Sparkle", "descricao": "Bring your first shiny Pokémon to HOME." },
+      "regra": { "tipo": "quantidade", "quantidade": 1, "trilha": "shiny" }
+    },
+    {
+      "id": "home-100",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Centena", "descricao": "Tenha 100 vagas preenchidas no HOME." },
+      "en": { "titulo": "Century", "descricao": "Fill 100 slots in HOME." },
+      "regra": { "tipo": "quantidade", "quantidade": 100, "trilha": "normal" }
+    },
+    {
+      "id": "home-kanto",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Do Pallet ao Platô", "descricao": "Complete Kanto no HOME: toda vaga da vista principal de #0001–#0151." },
+      "en": { "titulo": "From Pallet to the Plateau", "descricao": "Complete Kanto in HOME: every main-view slot from #0001–#0151." },
+      "regra": { "tipo": "regiao", "regiao": "kanto", "trilha": "normal" }
+    },
+    {
+      "id": "home-johto",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Sinos e torres", "descricao": "Complete Johto no HOME: toda vaga da vista principal de #0152–#0251." },
+      "en": { "titulo": "Bells and Towers", "descricao": "Complete Johto in HOME: every main-view slot from #0152–#0251." },
+      "regra": { "tipo": "regiao", "regiao": "johto", "trilha": "normal" }
+    },
+    {
+      "id": "home-hoenn",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Terra, mar e céu", "descricao": "Complete Hoenn no HOME: toda vaga da vista principal de #0252–#0386." },
+      "en": { "titulo": "Land, Sea and Sky", "descricao": "Complete Hoenn in HOME: every main-view slot from #0252–#0386." },
+      "regra": { "tipo": "regiao", "regiao": "hoenn", "trilha": "normal" }
+    },
+    {
+      "id": "home-sinnoh",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Pilar Lança", "descricao": "Complete Sinnoh no HOME: toda vaga da vista principal de #0387–#0493." },
+      "en": { "titulo": "Spear Pillar", "descricao": "Complete Sinnoh in HOME: every main-view slot from #0387–#0493." },
+      "regra": { "tipo": "regiao", "regiao": "sinnoh", "trilha": "normal" }
+    },
+    {
+      "id": "home-unova",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Verdade e ideais", "descricao": "Complete Unova no HOME: toda vaga da vista principal de #0494–#0649." },
+      "en": { "titulo": "Truth and Ideals", "descricao": "Complete Unova in HOME: every main-view slot from #0494–#0649." },
+      "regra": { "tipo": "regiao", "regiao": "unova", "trilha": "normal" }
+    },
+    {
+      "id": "home-kalos",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Beleza eterna", "descricao": "Complete Kalos no HOME: toda vaga da vista principal de #0650–#0721." },
+      "en": { "titulo": "Eternal Beauty", "descricao": "Complete Kalos in HOME: every main-view slot from #0650–#0721." },
+      "regra": { "tipo": "regiao", "regiao": "kalos", "trilha": "normal" }
+    },
+    {
+      "id": "home-alola",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Alola, Alola", "descricao": "Complete Alola no HOME: toda vaga da vista principal de #0722–#0809." },
+      "en": { "titulo": "Alola, Alola", "descricao": "Complete Alola in HOME: every main-view slot from #0722–#0809." },
+      "regra": { "tipo": "regiao", "regiao": "alola", "trilha": "normal" }
+    },
+    {
+      "id": "home-galar",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Dynamax e chá", "descricao": "Complete Galar no HOME: toda vaga da vista principal de #0810–#0905." },
+      "en": { "titulo": "Dynamax and Tea", "descricao": "Complete Galar in HOME: every main-view slot from #0810–#0905." },
+      "regra": { "tipo": "regiao", "regiao": "galar", "trilha": "normal" }
+    },
+    {
+      "id": "home-paldea",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Tesouro de Paldea", "descricao": "Complete Paldea no HOME: toda vaga da vista principal de #0906–#1025." },
+      "en": { "titulo": "Paldea's Treasure", "descricao": "Complete Paldea in HOME: every main-view slot from #0906–#1025." },
+      "regra": { "tipo": "regiao", "regiao": "paldea", "trilha": "normal" }
+    },
+    {
+      "id": "home-500",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Quinhentos", "descricao": "Tenha 500 vagas preenchidas no HOME." },
+      "en": { "titulo": "Five Hundred", "descricao": "Fill 500 slots in HOME." },
+      "regra": { "tipo": "quantidade", "quantidade": 500, "trilha": "normal" }
+    },
+    {
+      "id": "home-1000",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Mil", "descricao": "Tenha 1.000 vagas preenchidas no HOME." },
+      "en": { "titulo": "A Thousand", "descricao": "Fill 1,000 slots in HOME." },
+      "regra": { "tipo": "quantidade", "quantidade": 1000, "trilha": "normal" }
+    },
+    {
+      "id": "home-living-dex",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Living Dex", "descricao": "Complete a vista principal no HOME, de Kanto a Paldea." },
+      "en": { "titulo": "Living Dex", "descricao": "Complete the main view in HOME, from Kanto to Paldea." },
+      "regra": { "tipo": "vista", "vista": "principal", "trilha": "normal" }
+    },
+    {
+      "id": "home-guarda-roupa",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Guarda-roupa completo", "descricao": "Leve todas as formas cosméticas para o HOME." },
+      "en": { "titulo": "Full Wardrobe", "descricao": "Bring every cosmetic form to HOME." },
+      "regra": { "tipo": "vista", "vista": "cosmeticas", "trilha": "normal" }
+    },
+    {
+      "id": "home-100-shiny",
+      "jogo": "home",
+      "tipo": "calculado",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Cem brilhos", "descricao": "Tenha 100 vagas shiny preenchidas no HOME." },
+      "en": { "titulo": "A Hundred Sparkles", "descricao": "Fill 100 shiny slots in HOME." },
+      "regra": { "tipo": "quantidade", "quantidade": 100, "trilha": "shiny" }
+    },
     {
       "id": "firered-primeiro-parceiro",
       "jogo": "firered",

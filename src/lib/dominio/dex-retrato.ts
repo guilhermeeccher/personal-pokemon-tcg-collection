@@ -15,7 +15,8 @@ import { contaNaTrilha, vistaDaCategoria, type FormaParaGrade, type TrilhaDex } 
 import { oportunidadesHome, type RegistroParaInventario } from "./dex-inventario";
 import { jogoDex } from "./dex-jogos";
 import type { SecoesContadas } from "./dex-secoes";
-import { especiesTrancadas, progressoTrofeus, type IdiomaTrofeu, type ProgressoTrofeus } from "./dex-trofeus";
+import { especiesTrancadas, JOGO_HOME, progressoTrofeus, type IdiomaTrofeu, type ProgressoTrofeus } from "./dex-trofeus";
+import { comTrofeusDoHome } from "./dex-trofeus-home";
 import { NOME_REGIAO, REGIOES, regiaoDoNumero, type Regiao } from "./escopo-pokedex";
 import type { JogoPossuidoDTO, PlanoDexDTO, TrofeuDexDTO } from "./tipos-cliente";
 
@@ -44,8 +45,9 @@ export interface VagaRetrato {
 export interface TrofeuRetrato {
   id: string;
   titulo: string;
-  tipo: "checkpoint" | "marco";
+  tipo: "checkpoint" | "marco" | "calculado";
   nivel: "bronze" | "prata" | "ouro";
+  /** Data da conquista; nos troféus do HOME (calculados), "now" enquanto valem. */
   obtidoEm: string | null;
   /** Checkpoint pendente: vagas vazias que ele tranca (sozinho ou junto com outro). */
   vagasQueSegura?: number;
@@ -77,6 +79,8 @@ export interface Retrato {
     porRegiao: { regiao: Regiao; normal: ProgressoTrilha; shiny: ProgressoTrilha }[];
   };
   jogos: JogoRetrato[];
+  /** Troféus do HOME, calculados dos registros. */
+  home: ProgressoTrofeus & { lista: TrofeuRetrato[] };
   foraDoHome: { jogoId: string; nome: string; conexaoHome: string; vagas: (VagaRetrato & { trilha: TrilhaDex })[] }[];
   planosAtivos: PlanoDexDTO[];
   /** Tarefas fechadas depois da última sessão (ou todas, sem sessão). */
@@ -93,11 +97,12 @@ export function montarRetrato(e: EntradaRetrato): Retrato {
   const mapa = mapearEstadosDex(e.registros);
   const principal = e.formas.filter((f) => vistaDaCategoria(f.categoria) === "principal");
   const porId = new Map(e.formas.map((f) => [f.id, f]));
-  const obtidos = new Set(e.trofeus.filter((t) => t.obtido).map((t) => t.id));
+  const trofeus = comTrofeusDoHome(e.trofeus, e.formas, mapa, e.secoes);
+  const obtidos = new Set(trofeus.filter((t) => t.obtido).map((t) => t.id));
   const vaga = (f: FormaParaRetrato): VagaRetrato => ({ formaId: f.id, numero: f.numero, nome: nomeDaForma(f) });
 
   const jogos: JogoRetrato[] = e.jogos.map((j) => {
-    const doJogo = e.trofeus.filter((t) => t.jogoId === j.jogoId);
+    const doJogo = trofeus.filter((t) => t.jogoId === j.jogoId);
     const trancadas = especiesTrancadas(doJogo, j.jogoId, obtidos);
     const catalogo = catalogoDoJogo(j.jogoId, e.formas);
 
@@ -126,7 +131,7 @@ export function montarRetrato(e: EntradaRetrato): Retrato {
       titulo: t.textos[e.idioma].titulo,
       tipo: t.tipo,
       nivel: t.nivel,
-      obtidoEm: t.obtido?.em ?? null,
+      obtidoEm: t.obtido ? (t.obtido.em ?? "now") : null,
       ...(t.tipo === "checkpoint" && !t.obtido
         ? { vagasQueSegura: segura.get(t.id) ?? 0, vagasQueAbre: abre.get(t.id) ?? 0 }
         : {}),
@@ -183,6 +188,19 @@ export function montarRetrato(e: EntradaRetrato): Retrato {
       }),
     },
     jogos,
+    home: (() => {
+      const doHome = trofeus.filter((t) => t.jogoId === JOGO_HOME);
+      return {
+        ...progressoTrofeus(doHome, JOGO_HOME, obtidos),
+        lista: doHome.map<TrofeuRetrato>((t) => ({
+          id: t.id,
+          titulo: t.textos[e.idioma].titulo,
+          tipo: t.tipo,
+          nivel: t.nivel,
+          obtidoEm: t.obtido ? "now" : null,
+        })),
+      };
+    })(),
     foraDoHome,
     planosAtivos: e.planos.filter((p) => p.status === "ativo"),
     tarefasFechadas,
@@ -206,6 +224,17 @@ export function retratoEmMarkdown(r: Retrato, nomeTrofeu: (id: string) => string
   l.push("| Region | Normal | Shiny |", "|---|---|---|");
   for (const p of r.progresso.porRegiao) l.push(`| ${NOME_REGIAO[p.regiao]} | ${pct(p.normal)} | ${pct(p.shiny)} |`);
   l.push("");
+
+  l.push("## HOME trophies (calculated from the records, never marked)", "");
+  const h = r.home;
+  if (h.total > 0) {
+    l.push(
+      `${h.obtidos}/${h.total}${h.platina ? " · PLATINUM" : ""} (bronze ${h.porNivel.bronze.obtidos}/${h.porNivel.bronze.total}, silver ${h.porNivel.prata.obtidos}/${h.porNivel.prata.total}, gold ${h.porNivel.ouro.obtidos}/${h.porNivel.ouro.total})`,
+    );
+    const faltam = h.lista.filter((x) => !x.obtidoEm);
+    if (faltam.length) l.push(`Left: ${faltam.map((x) => `${x.titulo} \`${x.id}\``).join("; ")}`);
+    l.push("");
+  }
 
   l.push("## Games", "");
   for (const j of r.jogos) {

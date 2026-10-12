@@ -26,6 +26,7 @@
  */
 import { ehJogoDex } from "./dex-jogos";
 import { expandirLoteCadastro, lerLoteCadastro, type ContextoRegistroDex, type DadosRegistroDex } from "./dex-registro";
+import { JOGO_HOME } from "./dex-trofeus";
 
 export const TIPOS_TAREFA = ["captura", "evolucao", "troca", "progresso", "transferencia", "outro"] as const;
 export type TipoTarefaDex = (typeof TIPOS_TAREFA)[number];
@@ -175,6 +176,10 @@ export function planejarLote(json: unknown, ctx: ContextoSessao, hoje: string): 
     const onde = `trofeus[${i}]`;
     if (!texto(t.trofeuId) || !trofeuValido(t.trofeuId, onde)) {
       if (!texto(t.trofeuId)) erros.push(`${onde}: missing trofeuId`);
+      return;
+    }
+    if (ctx.trofeus.get(t.trofeuId) === JOGO_HOME) {
+      erros.push(`${onde}: "${t.trofeuId}" is a HOME trophy; it counts from the records and is never marked`);
       return;
     }
     if (t.obtidoEm !== undefined && !dataValida(t.obtidoEm)) erros.push(`${onde}: obtidoEm must be YYYY-MM-DD`);

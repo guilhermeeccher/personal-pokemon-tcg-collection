@@ -41,6 +41,7 @@ export async function listarTrofeus(db: Db): Promise<TrofeuDexDTO[]> {
       textos: dexTrofeu.textos,
       requer: dexTrofeu.requer,
       libera: dexTrofeu.libera,
+      regra: dexTrofeu.regra,
       obtidoEm: dexTrofeuObtido.obtidoEm,
       origem: dexTrofeuObtido.origem,
       notas: dexTrofeuObtido.notas,
@@ -68,10 +69,12 @@ export async function marcarTrofeu(
 ): Promise<{ ok: true } | { ok: false; motivo: Recusa; status: number }> {
   if (!DATA_ISO.test(dados.obtidoEm)) return { ok: false, motivo: recusa("dexDataInvalida", { data: dados.obtidoEm }), status: 400 };
   const [trofeu] = await db
-    .select({ id: dexTrofeu.id })
+    .select({ id: dexTrofeu.id, tipo: dexTrofeu.tipo })
     .from(dexTrofeu)
     .where(sql`${dexTrofeu.id} = ${dados.trofeuId} and ${dexTrofeu.ativo}`);
   if (!trofeu) return { ok: false, motivo: recusa("dexTrofeuNaoEncontrado"), status: 404 };
+  // Troféu do HOME vale pelos registros; marcar à mão criaria uma conquista falsa.
+  if (trofeu.tipo === "calculado") return { ok: false, motivo: recusa("dexTrofeuCalculado"), status: 409 };
   await db
     .insert(dexTrofeuObtido)
     .values({ ...dados, origem: "manual" })

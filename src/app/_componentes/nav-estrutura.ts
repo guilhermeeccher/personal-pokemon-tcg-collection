@@ -54,6 +54,7 @@ export const GRUPOS: readonly GrupoNav[] = [
 export const GRUPO_LIVING_DEX: GrupoNav = {
   chaveTitulo: "grupos.livingDex",
   itens: [
+    { href: "/dex", chaveLabel: "itens.visaoGeralDex", icone: "chart-pie" },
     { href: "/dex/pokedex", chaveLabel: "itens.pokedex", icone: "book-open" },
     { href: "/dex/caixas", chaveLabel: "itens.caixas", icone: "layout-grid" },
     { href: "/dex/cadastrar", chaveLabel: "itens.cadastrarDex", icone: "circle-plus" },

@@ -53,6 +53,16 @@ describe("planejarLote", () => {
     expect(registros.tipo === "registros" && registros.registros.length).toBe(2);
   });
 
+  it("troféu do HOME não se marca por lote: vale pelos registros", () => {
+    const r = planejarLote(
+      { ref: "s1", trofeus: [{ ref: "s1/t", trofeuId: "home-100" }] },
+      ctx({ trofeus: new Map([["home-100", "home"]]) }),
+      HOJE,
+    );
+    expect(r.ok).toBe(false);
+    expect(JSON.stringify(r)).toMatch(/HOME trophy/);
+  });
+
   it("lote já aplicado não faz nada; item com ref já aplicada é pulado", () => {
     expect(planejarLote({ ref: "s1" }, ctx({ refs: new Map([["s1", "lote"]]) }), HOJE)).toEqual({
       ok: true,

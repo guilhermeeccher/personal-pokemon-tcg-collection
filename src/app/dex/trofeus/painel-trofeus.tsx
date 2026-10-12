@@ -3,7 +3,8 @@
 /**
  * Troféus — a lista de cada jogo, na ordem da história, com a platina no
  * topo. O usuário marca o que conquistou; o checkpoint diz quantas espécies
- * destrava, e "Caçar" abre um plano com o troféu como alvo (spec §6).
+ * destrava, e "Caçar" abre um plano com o troféu como alvo (spec §6). Os do
+ * HOME (`calculado`) não se marcam: valem pelos registros, sem data.
  */
 
 import { useRouter } from "next/navigation";
@@ -21,7 +22,7 @@ import { Icone } from "@/app/_componentes/icone";
 import { Painel } from "@/app/_componentes/painel";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
 import { progressoTrofeus, type IdiomaTrofeu, type NivelTrofeu } from "@/lib/dominio/dex-trofeus";
-import type { JogoPossuidoDTO, TrofeuDexDTO } from "@/lib/dominio/tipos-cliente";
+import type { TrofeuDexDTO } from "@/lib/dominio/tipos-cliente";
 
 import { hojeLocal } from "../_componentes/hoje";
 
@@ -42,7 +43,8 @@ export function PainelTrofeus({
   trofeus,
   jogoInicial,
 }: {
-  jogos: JogoPossuidoDTO[];
+  /** As abas: o HOME e os jogos do usuário que têm troféus. */
+  jogos: { jogoId: string; nome: string }[];
   trofeus: TrofeuDexDTO[];
   jogoInicial: string;
 }) {
@@ -189,7 +191,9 @@ export function PainelTrofeus({
                     </Distintivo>
                   )}
                   {x.obtido && (
-                    <Distintivo tom="sucesso">{t("trofeus.conquistadoEm", { data: x.obtido.em })}</Distintivo>
+                    <Distintivo tom="sucesso">
+                      {x.obtido.em ? t("trofeus.conquistadoEm", { data: x.obtido.em }) : t("trofeus.conquistado")}
+                    </Distintivo>
                   )}
                 </div>
                 <p className="text-sm text-muted">{texto.descricao}</p>
@@ -199,7 +203,16 @@ export function PainelTrofeus({
                   </p>
                 )}
 
-                {marcando?.id === x.id ? (
+                {x.tipo === "calculado" ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-muted">{t("trofeus.contaSozinho")}</span>
+                    {!x.obtido && (
+                      <Botao tamanho="xs" disabled={ocupado} onClick={() => cacar(x)}>
+                        {t("trofeus.cacar")}
+                      </Botao>
+                    )}
+                  </div>
+                ) : marcando?.id === x.id ? (
                   <div className="flex flex-wrap items-center gap-2">
                     <input
                       type="date"

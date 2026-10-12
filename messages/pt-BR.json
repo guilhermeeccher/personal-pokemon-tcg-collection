@@ -23,6 +23,7 @@
       "repetidas": "Repetidas",
       "colecoes": "Coleções",
       "precos": "Preços",
+      "visaoGeralDex": "Visão geral",
       "pokedex": "Pokédex",
       "caixas": "Caixas",
       "cadastrarDex": "Cadastrar",
@@ -864,6 +865,7 @@
     "dexRegistroNaoEncontrado": "Registro não encontrado.",
     "dexNaoTransferivel": "O HOME não recebe este Pokémon de {jogo}.",
     "dexTrofeuNaoEncontrado": "Troféu não encontrado.",
+    "dexTrofeuCalculado": "Este troféu do HOME conta sozinho, pelos Pokémon que estão no HOME.",
     "dexPlanoNaoEncontrado": "Plano não encontrado.",
     "dexTarefaNaoEncontrada": "Tarefa não encontrada."
   },
@@ -1041,6 +1043,8 @@
       "soFalta": "Só o que falta",
       "libera": "Libera {quantidade} espécie(s)",
       "conquistadoEm": "Conquistado em {data}",
+      "conquistado": "Conquistado",
+      "contaSozinho": "Conta sozinho, pelos Pokémon que estão no HOME.",
       "depoisDe": "Depois de: {trofeus}",
       "data": "Data da conquista",
       "confirmar": "Confirmar",
@@ -1094,6 +1098,26 @@
       "criar": "Criar plano",
       "novoPlano": "Novo plano",
       "historico": "Histórico ({quantidade})"
+    },
+    "visaoGeral": {
+      "titulo": "Visão geral",
+      "cosmeticas": "Vista cosmética no HOME: {normal} na normal, {shiny} na shiny.",
+      "colecoes": "Coleções",
+      "livingDex": "Living Dex",
+      "shinyNoHome": "Shiny: {feitas} de {total} no HOME",
+      "parado": "Parado",
+      "completa": "Completa",
+      "planoAtivo": "Plano ativo",
+      "semPlano": "Nenhum plano ativo.",
+      "ate": "Até {data}",
+      "foraDoHome": "Num jogo, fora do HOME",
+      "nadaForaDoHome": "Nada parado: o que dá para levar já está no HOME.",
+      "levarAoHome": "Levar ao HOME",
+      "semCatalogo": "Sem catálogo deste jogo. {aqui} Pokémon aqui agora.",
+      "nadaPego": "Nada pego neste jogo ainda",
+      "pegasNoHome": "Pegas neste jogo: {noHome} de {pegas} já no HOME",
+      "faltamAgora": "{faltam} pegáveis agora",
+      "trancadasAtras": "{vagas} atrás de {trofeu}"
     }
   }
 }

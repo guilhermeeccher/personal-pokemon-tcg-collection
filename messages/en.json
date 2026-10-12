@@ -23,6 +23,7 @@
       "repetidas": "Duplicates",
       "colecoes": "Collections",
       "precos": "Prices",
+      "visaoGeralDex": "Overview",
       "pokedex": "Pokédex",
       "caixas": "Boxes",
       "cadastrarDex": "Add Pokémon",
@@ -864,6 +865,7 @@
     "dexRegistroNaoEncontrado": "Record not found.",
     "dexNaoTransferivel": "HOME does not accept this Pokémon from {jogo}.",
     "dexTrofeuNaoEncontrado": "Trophy not found.",
+    "dexTrofeuCalculado": "This HOME trophy counts on its own, from the Pokémon in HOME.",
     "dexPlanoNaoEncontrado": "Plan not found.",
     "dexTarefaNaoEncontrada": "Task not found."
   },
@@ -1041,6 +1043,8 @@
       "soFalta": "Only what's left",
       "libera": "Unlocks {quantidade} species",
       "conquistadoEm": "Earned on {data}",
+      "conquistado": "Earned",
+      "contaSozinho": "Counts on its own, from the Pokémon in HOME.",
       "depoisDe": "After: {trofeus}",
       "data": "Date earned",
       "confirmar": "Confirm",
@@ -1094,6 +1098,26 @@
       "criar": "Create plan",
       "novoPlano": "New plan",
       "historico": "History ({quantidade})"
+    },
+    "visaoGeral": {
+      "titulo": "Overview",
+      "cosmeticas": "Cosmetic view in HOME: {normal} normal, {shiny} shiny.",
+      "colecoes": "Collections",
+      "livingDex": "Living Dex",
+      "shinyNoHome": "Shiny: {feitas} of {total} in HOME",
+      "parado": "Stopped",
+      "completa": "Complete",
+      "planoAtivo": "Active plan",
+      "semPlano": "No active plan.",
+      "ate": "Until {data}",
+      "foraDoHome": "In a game, not in HOME",
+      "nadaForaDoHome": "Nothing waiting: what can go to HOME is already there.",
+      "levarAoHome": "Bring to HOME",
+      "semCatalogo": "No catalog for this game. {aqui} Pokémon here now.",
+      "nadaPego": "Nothing caught in this game yet",
+      "pegasNoHome": "Caught in this game: {noHome} of {pegas} already in HOME",
+      "faltamAgora": "{faltam} catchable now",
+      "trancadasAtras": "{vagas} behind {trofeu}"
     }
   }
 }

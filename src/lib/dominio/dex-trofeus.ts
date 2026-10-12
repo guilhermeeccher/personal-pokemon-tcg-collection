@@ -13,6 +13,11 @@
  *  - **marco**: um avanço ou algo que vale fazer (um líder de ginásio, um
  *    lendário, a Trainer Tower). Não mexe na dex.
  *
+ *  - **calculado**: só nos troféus do HOME (`jogo: "home"`), que ninguém
+ *    marca: valem quando os registros cumprem a regra declarada no arquivo
+ *    (`regra`: uma quantidade de vagas no HOME, uma região completa, uma
+ *    vista completa). Ver `dex-trofeus-home.ts`.
+ *
  * Uma espécie listada por mais de um checkpoint só destrava quando **todos**
  * estão conquistados: o Lugia do FireRed pede o ticket (Hall da Fama) e o
  * barco até a Navel Rock (Rainbow Pass).
@@ -28,10 +33,12 @@
  *
  * A platina não está no arquivo: é derivada, como o estado da vaga.
  */
-import { ehJogoDex } from "./dex-jogos";
 import { lerFaixas } from "./dex-disponibilidade";
+import type { TrilhaDex, VistaDex } from "./dex-grade";
+import { ehJogoDex } from "./dex-jogos";
+import { REGIOES, type Regiao } from "./escopo-pokedex";
 
-export const TIPOS_TROFEU = ["checkpoint", "marco"] as const;
+export const TIPOS_TROFEU = ["checkpoint", "marco", "calculado"] as const;
 export type TipoTrofeu = (typeof TIPOS_TROFEU)[number];
 
 export const NIVEIS_TROFEU = ["bronze", "prata", "ouro"] as const;
@@ -40,6 +47,46 @@ export type NivelTrofeu = (typeof NIVEIS_TROFEU)[number];
 /** Os idiomas da interface (`src/i18n/config.ts`); todo troféu tem os dois. */
 export const IDIOMAS_TROFEU = ["pt-BR", "en"] as const;
 export type IdiomaTrofeu = (typeof IDIOMAS_TROFEU)[number];
+
+/** O "jogo" dos troféus do HOME: não é um jogo, é a living dex inteira. */
+export const JOGO_HOME = "home";
+
+/**
+ * O que um troféu do HOME pede, declarado no arquivo (nunca código por
+ * troféu). Conta só o que conta na trilha (`contaNaTrilha`), como a Pokédex.
+ */
+export type RegraTrofeuHome =
+  /** Pelo menos N vagas no HOME na trilha, somando as duas vistas. */
+  | { tipo: "quantidade"; quantidade: number; trilha: TrilhaDex }
+  /** Toda vaga da vista principal da região no HOME. */
+  | { tipo: "regiao"; regiao: Regiao; trilha: TrilhaDex }
+  /** Toda vaga da vista no HOME: a principal inteira é a living dex. */
+  | { tipo: "vista"; vista: VistaDex; trilha: TrilhaDex };
+
+const TRILHAS: readonly TrilhaDex[] = ["normal", "shiny"];
+const VISTAS: readonly VistaDex[] = ["principal", "cosmeticas"];
+
+function lerRegra(bruto: unknown): RegraTrofeuHome | string {
+  const r = (bruto ?? {}) as Record<string, unknown>;
+  if (!TRILHAS.includes(r.trilha as TrilhaDex)) return "regra.trilha must be normal or shiny";
+  const trilha = r.trilha as TrilhaDex;
+  switch (r.tipo) {
+    case "quantidade":
+      return Number.isInteger(r.quantidade) && (r.quantidade as number) > 0
+        ? { tipo: "quantidade", quantidade: r.quantidade as number, trilha }
+        : "regra.quantidade must be a positive integer";
+    case "regiao":
+      return (REGIOES as readonly string[]).includes(r.regiao as string)
+        ? { tipo: "regiao", regiao: r.regiao as Regiao, trilha }
+        : `regra.regiao must be one of ${REGIOES.join(", ")}`;
+    case "vista":
+      return VISTAS.includes(r.vista as VistaDex)
+        ? { tipo: "vista", vista: r.vista as VistaDex, trilha }
+        : "regra.vista must be principal or cosmeticas";
+    default:
+      return "regra.tipo must be quantidade, regiao or vista";
+  }
+}
 
 export interface TextoTrofeu {
   titulo: string;
@@ -62,6 +109,8 @@ export interface TrofeuDex {
   libera: number[];
   /** De onde veio o que o checkpoint libera. Obrigatório no checkpoint. */
   fonte: string | null;
+  /** O que o troféu calculado (do HOME) pede; nulo nos outros. */
+  regra: RegraTrofeuHome | null;
 }
 
 const ID_TROFEU = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -88,7 +137,7 @@ export function lerSeedTrofeus(json: unknown): TrofeuDex[] {
     const erro = (msg: string) => problemas.push(`${onde}: ${msg}`);
 
     if (typeof t.id !== "string" || !ID_TROFEU.test(t.id)) erro("id must be lowercase words joined by hyphens");
-    if (typeof t.jogo !== "string" || !ehJogoDex(t.jogo)) erro(`unknown game "${String(t.jogo)}"`);
+    if (typeof t.jogo !== "string" || !(ehJogoDex(t.jogo) || t.jogo === JOGO_HOME)) erro(`unknown game "${String(t.jogo)}"`);
     else if (typeof t.id === "string" && !t.id.startsWith(`${t.jogo}-`)) erro(`id must start with "${t.jogo}-"`);
     if (!TIPOS_TROFEU.includes(t.tipo as TipoTrofeu)) erro(`tipo must be one of ${TIPOS_TROFEU.join(", ")}`);
     if (!NIVEIS_TROFEU.includes(t.nivel as NivelTrofeu)) erro(`nivel must be one of ${NIVEIS_TROFEU.join(", ")}`);
@@ -132,6 +181,13 @@ export function lerSeedTrofeus(json: unknown): TrofeuDex[] {
     if (t.tipo === "checkpoint" && libera.length === 0) erro("a checkpoint must list what it unlocks (libera)");
     if (t.tipo === "marco" && libera.length > 0) erro("a marco does not unlock species; make it a checkpoint");
     if (t.tipo === "checkpoint" && !textoNaoVazio(t.fonte)) erro("a checkpoint must say where its data came from (fonte)");
+    if ((t.jogo === JOGO_HOME) !== (t.tipo === "calculado")) erro("HOME trophies, and only they, are calculado");
+    let regra: RegraTrofeuHome | null = null;
+    if (t.tipo === "calculado") {
+      const r = lerRegra(t.regra);
+      if (typeof r === "string") erro(r);
+      else regra = r;
+    } else if (t.regra !== undefined) erro("only a calculado trophy has a regra");
 
     if (typeof t.id === "string") vistos.set(t.id, String(t.jogo));
     trofeus.push({
@@ -144,6 +200,7 @@ export function lerSeedTrofeus(json: unknown): TrofeuDex[] {
       requer: Array.isArray(requer) ? (requer as string[]) : [],
       libera,
       fonte: textoNaoVazio(t.fonte) ? t.fonte.trim() : null,
+      regra,
     });
   });
 

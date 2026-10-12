@@ -23,6 +23,8 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import type { RegraTrofeuHome } from "../dominio/dex-trofeus";
+
 // --- Enums ---------------------------------------------------------------
 
 /** Idiomas suportados pelo catálogo. `jp` reservado para o futuro (spec §2). */
@@ -964,7 +966,7 @@ export const dexRegistro = pgTable(
 
 // --- Living Dex, D3: troféus, planos e sessões ---------------------------
 
-export const tipoTrofeuDexEnum = pgEnum("tipo_trofeu_dex", ["checkpoint", "marco"]);
+export const tipoTrofeuDexEnum = pgEnum("tipo_trofeu_dex", ["checkpoint", "marco", "calculado"]);
 export const nivelTrofeuDexEnum = pgEnum("nivel_trofeu_dex", ["bronze", "prata", "ouro"]);
 /** Quem escreveu: o Claude numa sessão (`pnpm dex:aplicar`) ou o usuário na tela. */
 export const origemDexEnum = pgEnum("origem_dex", ["sessao", "manual"]);
@@ -1000,6 +1002,8 @@ export const dexTrofeu = pgTable(
     /** Números nacionais que o checkpoint destrava naquele jogo. */
     libera: integer("libera").array().notNull().default([]),
     fonte: text("fonte"),
+    /** O que o troféu calculado (do HOME) pede (`RegraTrofeuHome`); nulo nos outros. */
+    regra: jsonb("regra").$type<RegraTrofeuHome>(),
     ativo: boolean("ativo").notNull().default(true),
     criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
     atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),

@@ -24,9 +24,32 @@ const base = {
 const lerUm = (extra: Record<string, unknown>) => () => lerSeedTrofeus({ trofeus: [{ ...base, id: "firered-x", ...extra }] });
 
 describe("seed/dex-trofeus.json", () => {
-  it("lê sem erro e tem troféus dos três jogos dele", () => {
+  it("lê sem erro e tem troféus dos três jogos dele e do HOME", () => {
     const jogos = new Set(trofeus.map((t) => t.jogoId));
-    expect([...jogos].sort()).toEqual(["brilliant-diamond", "firered", "go"]);
+    expect([...jogos].sort()).toEqual(["brilliant-diamond", "firered", "go", "home"]);
+  });
+
+  it("os do HOME são calculados, com regra; os dos jogos, não", () => {
+    for (const t of trofeus) {
+      expect(t.tipo === "calculado").toBe(t.jogoId === "home");
+      expect(t.regra !== null).toBe(t.jogoId === "home");
+    }
+    const home = trofeus.filter((t) => t.jogoId === "home");
+    expect(home).toHaveLength(17);
+    expect(home.filter((t) => t.regra?.tipo === "regiao")).toHaveLength(9);
+  });
+
+  it("troféu calculado sem regra, regra fora do HOME ou HOME sem calculado são recusados", () => {
+    const home = { ...base, jogo: "home", id: "home-x", tipo: "calculado" };
+    expect(() => lerSeedTrofeus({ trofeus: [home] })).toThrow(/regra.trilha/);
+    expect(() => lerSeedTrofeus({ trofeus: [{ ...home, regra: { tipo: "regiao", regiao: "orre", trilha: "normal" } }] })).toThrow(
+      /regra.regiao/,
+    );
+    expect(() => lerSeedTrofeus({ trofeus: [{ ...home, tipo: "marco" }] })).toThrow(/only they, are calculado/);
+    expect(lerUm({ regra: { tipo: "quantidade", quantidade: 1, trilha: "normal" } })).toThrow(/only a calculado/);
+    expect(
+      lerSeedTrofeus({ trofeus: [{ ...home, regra: { tipo: "quantidade", quantidade: 100, trilha: "shiny" } }] })[0].regra,
+    ).toEqual({ tipo: "quantidade", quantidade: 100, trilha: "shiny" });
   });
 
   it("um troféu de líder por ginásio no FireRed e no BD", () => {

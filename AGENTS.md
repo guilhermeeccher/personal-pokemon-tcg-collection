@@ -611,6 +611,13 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
   that is not in that game's catalog. `requer` only points backwards in the file, so it can't loop.
 - **Earning a trophy is one row in `dex_trofeu_obtido`**, by screen (`manual`) or by session
   (`sessao`); undoing deletes the row.
+- **HOME trophies are calculated, never marked** (`jogo: "home"`, `tipo: "calculado"`,
+  `lib/dominio/dex-trofeus-home.ts`). Each declares its rule in the JSON (`regra`: a number of slots
+  in HOME, a region complete, a view complete, per track) — no code per trophy. They hold while the
+  records meet the rule and drop when a Pokémon leaves HOME, so they have no date and no row in
+  `dex_trofeu_obtido`: the screen, the Overview and `dex:estado` compute them
+  (`comTrofeusDoHome`). The API refuses to mark one (`dexTrofeuCalculado`) and so does a session
+  batch.
 
 ### Plans, tasks and planning sessions
 
