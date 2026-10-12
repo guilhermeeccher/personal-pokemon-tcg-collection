@@ -506,9 +506,12 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
   shiny track; a shiny fills the shiny track only. A form never released as shiny
   (`shiny_obtenivel = false`) stays in the grid and leaves only the shiny track's total. **In doubt,
   it stays obtainable** — a wrong `true` shows a slot to hunt, a wrong `false` hides one.
-- **Sections.** `base` always counts; `regional`, `genero`, `cosmetica` and `especial` are toggled by
-  the user (`dex_secao`, `lib/dominio/dex-secoes.ts`), all on by default. Toggling never touches a
-  record.
+- **Sections and views.** `base` always counts; `regional`, `genero` and `especial` are toggled by
+  the user (`dex_secao`, `lib/dominio/dex-secoes.ts`), all on by default, and a section that is off
+  also disappears from the add screen. Toggling never touches a record. **Cosmetic forms are not a
+  toggle but a view of their own** (`VistaDex`): 63 Alcremie, 20 Vivillon and 28 Unown used to flood
+  the grid, so they live beside the main view, with their own progress, the way the shiny track
+  lives beside the normal one. View and track are independent.
 - **The seed runs on every boot, not only on an empty table** — unlike the card seed. The file is the
   only source of this catalog and it is small, so a corrected classification reaches every install on
   the next boot. A slot that left the file is **deactivated, never deleted**: a user record may point
@@ -547,6 +550,19 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
   the one-way confirmation once per batch; `PATCH /api/dex/registros` (`{ ids, ... }`) fixes the other
   fields and leaves the location alone. A game marked as stopped keeps its records and takes no new
   ones; it can only be removed when no record sits in it.
+- **Each game has a catalog of what can be obtained in it** (`lib/dominio/dex-disponibilidade.ts`):
+  species as `livre` (playing that game alone), `troca` (other version's exclusive, or trade
+  evolution) or `evento` (ticket, purchase bonus, another game's save data); which forms exist
+  there; and which forms HOME does not accept from it (`transferivel = false`: Spinda from GO and
+  BDSP, Zygarde and Eternatus from GO…). **Like the HOME connection, this is checked data, never
+  filled from memory**: every game's comment says where its list came from and when. The add screen
+  shows only the game's catalog (with "show all" for a Pokémon from elsewhere); a game without a
+  catalog shows every slot. Lists are written as national-number ranges so a correction reads well
+  in a diff; a species in two lists fails a test. **Pokémon GO's list is the one that ages fastest**
+  — GO releases something almost every month.
+- **What HOME does not accept from a game never leaves it** — not to HOME and not to another game,
+  since every path between games goes through HOME (`dexNaoTransferivel`). Such a record stays in
+  the inventory and never shows up in "Take to HOME".
 - **"Take to HOME" is the cards' "what can be allocated now"** (`oportunidadesHome`): a slot not in
   HOME, in one track, that a Pokémon the user already has in a game would fill. A slot counts once,
   however many copies exist; with copies in two games, the suggestion comes from the two-way game,
