@@ -41,7 +41,11 @@ export interface FiltroGradeDex {
 }
 
 /** A vaga entra no total desta trilha? */
-export function contaNaTrilha(forma: FormaParaGrade, trilha: TrilhaDex, secoes: SecoesContadas): boolean {
+export function contaNaTrilha(
+  forma: Pick<FormaParaGrade, "categoria" | "shinyObtenivel">,
+  trilha: TrilhaDex,
+  secoes: SecoesContadas,
+): boolean {
   if (!categoriaConta(forma.categoria, secoes)) return false;
   return trilha === "normal" || forma.shinyObtenivel;
 }

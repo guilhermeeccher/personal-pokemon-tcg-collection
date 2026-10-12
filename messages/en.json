@@ -24,6 +24,7 @@
       "colecoes": "Collections",
       "precos": "Prices",
       "pokedex": "Pokédex",
+      "caixas": "Boxes",
       "cadastrarDex": "Add Pokémon",
       "meusJogos": "My games",
       "inventarioDex": "Inventory",
@@ -897,7 +898,18 @@
       "progresso": "{noHome} of {contam} in HOME",
       "progressoNoJogo": "{noJogo} caught, not in HOME yet",
       "filtroEstado": "State",
-      "registrarEsta": "Add"
+      "registrarEsta": "Add",
+      "posicaoNaCaixa": "Box {caixa} · slot {posicao}"
+    },
+    "caixas": {
+      "titulo": "HOME boxes",
+      "nomeCaixa": "{regiao} {indice}",
+      "faixa": "#{inicio}–#{fim}",
+      "caixaN": "Box {numero}",
+      "posicao": "Box {caixa} · slot {posicao}",
+      "irPara": "Go to",
+      "vazio": "No slots in the boxes for this track.",
+      "contagem": "{caixas} boxes · {vagas} slots"
     },
     "estado": {
       "falta": "Missing",

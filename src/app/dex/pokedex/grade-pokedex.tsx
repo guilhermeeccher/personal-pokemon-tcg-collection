@@ -22,6 +22,7 @@ import { BarraProgresso } from "@/app/_componentes/ds/barra-progresso";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { Painel } from "@/app/_componentes/painel";
+import { montarCaixasDex, posicoesNasCaixas } from "@/lib/dominio/dex-caixas";
 import { SECOES_LIGAVEIS, CATEGORIAS_FORMA_DEX, type SecaoLigavel } from "@/lib/dominio/dex-classificacao";
 import {
   contaNaTrilha,
@@ -97,6 +98,11 @@ export function GradePokedex({
     [formas, vista, regiao, categoria, busca, filtroEstado, estados, trilha],
   );
   const totaisVisiveis = useMemo(() => contarVagasDex(visiveis, secoes), [visiveis, secoes]);
+  /* Caixa e posição no HOME, na trilha e com as seções de agora (`dex-caixas.ts`). */
+  const posicoes = useMemo(
+    () => posicoesNasCaixas(montarCaixasDex(formas, trilha, secoes)),
+    [formas, trilha, secoes],
+  );
 
   async function alternarSecao(secao: SecaoLigavel) {
     const conta = !secoes[secao];
@@ -276,6 +282,7 @@ export function GradePokedex({
             const foraDaConta = !categoriaConta(f.categoria, secoes);
             const conta = contaNaTrilha(f, trilha, secoes);
             const estado = estadoDaVaga(estados, f.id, trilha);
+            const naCaixa = posicoes.get(f.id);
             return (
               <li
                 key={f.id}
@@ -301,6 +308,11 @@ export function GradePokedex({
                 </span>
                 <span className="text-sm font-semibold text-strong">{f.especie}</span>
                 {rotulo.forma(f) && <span className="text-xs text-muted">{rotulo.forma(f)}</span>}
+                {naCaixa && (
+                  <span className="font-mono text-xs tabular-nums text-muted">
+                    {t("pokedex.posicaoNaCaixa", { caixa: String(naCaixa.caixa), posicao: String(naCaixa.posicao) })}
+                  </span>
+                )}
                 <div className="flex flex-wrap justify-center gap-1">
                   {estado !== "falta" && (
                     <Distintivo tom={estado === "no_home" ? "sucesso" : "aviso"}>{t(`estado.${estado}`)}</Distintivo>

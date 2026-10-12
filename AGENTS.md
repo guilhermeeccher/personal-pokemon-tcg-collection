@@ -533,6 +533,13 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
 - **Sprites come from the PokeAPI sprites CDN at display time** (`urlSpriteDex`), the small ones, not
   HOME's renders: a grid shows hundreds of slots and a HOME render is ~80 KB against ~0.6 KB. No
   sprite file enters the repository.
+- **HOME boxes are computed, never stored** (`lib/dominio/dex-caixas.ts`, screen `/dex/caixas`).
+  30 slots per box in catalog order, **every region starting a new box**, one sequence per track,
+  only what counts in that track (`contaNaTrilha`). Users arrange their real HOME boxes by these
+  positions, so treat the order as a contract: a change to `ordem`, to the region ranges or to which
+  slots count moves Pokémon in somebody's boxes. The arrangement follows SuperEffective's "Fully
+  Sorted by Regions" (the known differences are listed in the module's comment), and a test pins
+  the positions at every region change.
 
 ### Games and records — `dex_jogo_possuido`, `dex_registro`
 

@@ -24,6 +24,7 @@
       "colecoes": "Coleções",
       "precos": "Preços",
       "pokedex": "Pokédex",
+      "caixas": "Caixas",
       "cadastrarDex": "Cadastrar",
       "meusJogos": "Meus jogos",
       "inventarioDex": "Inventário",
@@ -897,7 +898,18 @@
       "progresso": "{noHome} de {contam} no HOME",
       "progressoNoJogo": "{noJogo} pego(s), ainda fora do HOME",
       "filtroEstado": "Estado",
-      "registrarEsta": "Registrar"
+      "registrarEsta": "Registrar",
+      "posicaoNaCaixa": "Caixa {caixa} · posição {posicao}"
+    },
+    "caixas": {
+      "titulo": "Caixas do HOME",
+      "nomeCaixa": "{regiao} {indice}",
+      "faixa": "#{inicio}–#{fim}",
+      "caixaN": "Caixa {numero}",
+      "posicao": "Caixa {caixa} · posição {posicao}",
+      "irPara": "Ir para",
+      "vazio": "Nenhuma vaga nas caixas desta trilha.",
+      "contagem": "{caixas} caixas · {vagas} vagas"
     },
     "estado": {
       "falta": "Falta",
