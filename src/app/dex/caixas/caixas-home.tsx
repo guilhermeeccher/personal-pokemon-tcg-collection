@@ -2,8 +2,8 @@
 
 /**
  * Caixas do HOME — a Living Dex arrumada como as caixas do HOME: 30 vagas
- * por caixa (6 × 5), cada região começando numa caixa nova, uma sequência
- * por trilha (`dex-caixas.ts`). Cada vaga mostra o estado na trilha e leva ao
+ * por caixa (6 × 5), cada região começando numa caixa nova e as cosméticas
+ * em caixas próprias no fim, uma sequência por trilha (`dex-caixas.ts`). Cada vaga mostra o estado na trilha e leva ao
  * cadastro, como na Pokédex. As seções se ligam na Pokédex; aqui só se lê.
  */
 
@@ -54,6 +54,7 @@ export function CaixasHome({
   const estados = useMemo(() => mapearEstadosDex(registros), [registros]);
   const caixas = useMemo(() => montarCaixasDex(formas, trilha, secoes), [formas, trilha, secoes]);
   const totalVagas = caixas.reduce((s, c) => s + c.vagas.length, 0);
+  const primeiraCosmetica = caixas.find((c) => c.vista === "cosmeticas");
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 p-4 sm:p-8">
@@ -85,6 +86,11 @@ export function CaixasHome({
               </a>
             ) : null;
           })}
+          {primeiraCosmetica && (
+            <a href={`#caixa-${primeiraCosmetica.numero}`} className={classesOpcao(false)}>
+              {t("vista.cosmeticas")}
+            </a>
+          )}
         </nav>
       </div>
 
@@ -98,7 +104,10 @@ export function CaixasHome({
                 <h2 className="text-sm font-semibold text-strong">
                   {t("caixas.caixaN", { numero: String(caixa.numero) })}
                   <span className="ml-2 font-normal text-muted">
-                    {t("caixas.nomeCaixa", { regiao: NOME_REGIAO[caixa.regiao], indice: String(caixa.indiceNaRegiao) })}
+                    {t("caixas.nomeCaixa", {
+                      grupo: caixa.regiao ? NOME_REGIAO[caixa.regiao] : t("vista.cosmeticas"),
+                      indice: String(caixa.indice),
+                    })}
                   </span>
                 </h2>
                 <span className="font-mono text-xs tabular-nums text-muted">

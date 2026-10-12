@@ -19,56 +19,62 @@ const caixas = montarCaixasDex(formas, "normal", todas);
 const pos = posicoesNasCaixas(caixas);
 
 describe("caixas do HOME", () => {
-  it("cada região começa numa caixa nova, e só a última da região sobra", () => {
-    const porRegiao = new Map<string, number[]>();
-    for (const c of caixas) porRegiao.set(c.regiao, [...(porRegiao.get(c.regiao) ?? []), c.vagas.length]);
-    const resumo = Object.fromEntries([...porRegiao].map(([r, tamanhos]) => [r, `${tamanhos.length}×, última ${tamanhos.at(-1)}`]));
+  it("principais por região, cada uma começando numa caixa nova; cosméticas corridas no fim", () => {
+    const grupos = new Map<string, number[]>();
+    for (const c of caixas) {
+      const g = c.regiao ?? "cosmeticas";
+      grupos.set(g, [...(grupos.get(g) ?? []), c.vagas.length]);
+    }
+    const resumo = Object.fromEntries([...grupos].map(([g, tamanhos]) => [g, `${tamanhos.length}×, última ${tamanhos.at(-1)}`]));
     expect(resumo).toEqual({
-      kanto: "8×, última 8",
-      johto: "6×, última 6",
+      kanto: "7×, última 30",
+      johto: "5×, última 9",
       hoenn: "6×, última 8",
-      sinnoh: "5×, última 30",
-      unova: "6×, última 30",
-      kalos: "5×, última 6",
-      alola: "4×, última 11",
-      galar: "6×, última 17",
-      paldea: "5×, última 11",
+      sinnoh: "5×, última 26",
+      unova: "6×, última 24",
+      kalos: "3×, última 26",
+      alola: "4×, última 4",
+      galar: "4×, última 12",
+      paldea: "5×, última 5",
+      cosmeticas: "6×, última 13",
     });
-    for (const tamanhos of porRegiao.values()) for (const t of tamanhos.slice(0, -1)) expect(t).toBe(VAGAS_POR_CAIXA);
+    for (const tamanhos of grupos.values()) for (const t of tamanhos.slice(0, -1)) expect(t).toBe(VAGAS_POR_CAIXA);
+    expect(caixas.map((c) => c.vista).lastIndexOf("principal")).toBeLessThan(caixas.map((c) => c.vista).indexOf("cosmeticas"));
   });
 
   /*
-   * Posições conferidas em 2026-10-12 no "Fully Sorted by Regions" do
-   * SuperEffective (sem as caixas de reserva vazias dele): 1.376 das 1.387
-   * vagas na mesma caixa e posição; as 11 restantes são a ordem interna do
-   * Vivillon e das cores de Flabébé/Floette/Florges (ver `dex-caixas.ts`).
+   * Posições fixadas em 2026-10-12, quando o usuário passou a arrumar o HOME
+   * por elas. Mudar uma é mover Pokémon nas caixas dele: só com aviso.
    */
-  it("bate com o arranjo de referência nas viradas de região", () => {
+  it("as posições combinadas não mudam", () => {
     const esperado: Record<string, [number, number]> = {
       bulbasaur: [1, 1],
       pikachu: [2, 1],
-      mew: [8, 8],
-      chikorita: [9, 1],
-      celebi: [14, 6],
-      treecko: [15, 1],
-      turtwig: [21, 1],
-      arceus: [25, 30],
-      victini: [26, 1],
-      chespin: [32, 1],
-      greninja: [32, 9],
-      bunnelby: [32, 10],
-      rowlet: [37, 1],
-      rockruff: [37, 27],
-      lycanroc: [37, 28],
-      grookey: [41, 1],
-      sprigatito: [47, 1],
-      pecharunt: [51, 11],
+      raichu: [2, 3],
+      mew: [7, 30],
+      chikorita: [8, 1],
+      celebi: [12, 9],
+      treecko: [13, 1],
+      turtwig: [19, 1],
+      arceus: [23, 26],
+      victini: [24, 1],
+      chespin: [30, 1],
+      vivillon: [30, 17],
+      rowlet: [33, 1],
+      grookey: [37, 1],
+      sprigatito: [41, 1],
+      pecharunt: [45, 5],
+      "pikachu-original-cap": [46, 1],
+      "unown-b": [46, 9],
+      "vivillon-polar": [47, 17],
+      "alcremie-ruby-swirl-star-sweet": [50, 19],
+      "dudunsparce-three-segment": [51, 11],
     };
     for (const [id, [caixa, posicao]] of Object.entries(esperado)) expect(pos.get(id)).toEqual({ caixa, posicao });
     expect(caixas).toHaveLength(51);
   });
 
-  it("a ordem dentro da caixa é a do catálogo, com as cosméticas na espécie", () => {
+  it("a forma base fica na principal; a cosmética, nas caixas do fim", () => {
     expect(caixas[0].vagas.slice(20, 26).map((f) => f.id)).toEqual([
       "rattata",
       "rattata-femea",
@@ -77,7 +83,9 @@ describe("caixas do HOME", () => {
       "raticate-femea",
       "raticate-alola",
     ]);
-    expect(caixas[1].vagas.slice(0, 3).map((f) => f.id)).toEqual(["pikachu", "pikachu-femea", "pikachu-original-cap"]);
+    expect(caixas[1].vagas.slice(0, 3).map((f) => f.id)).toEqual(["pikachu", "pikachu-femea", "raichu"]);
+    expect(caixas.find((c) => c.vista === "principal" && c.vagas.some((f) => f.id === "unown"))).toBeDefined();
+    for (const c of caixas) for (const f of c.vagas) expect(f.categoria === "cosmetica").toBe(c.vista === "cosmeticas");
   });
 
   it("seção desligada sai e a região se reorganiza; as outras regiões não mudam de caixa", () => {

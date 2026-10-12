@@ -903,7 +903,7 @@
     },
     "caixas": {
       "titulo": "HOME boxes",
-      "nomeCaixa": "{regiao} {indice}",
+      "nomeCaixa": "{grupo} {indice}",
       "faixa": "#{inicio}–#{fim}",
       "caixaN": "Box {numero}",
       "posicao": "Box {caixa} · slot {posicao}",
