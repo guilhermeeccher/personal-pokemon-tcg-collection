@@ -4,27 +4,35 @@
  * Grade da Pokédex da Living Dex — todas as vagas do HOME, por região, nas
  * duas trilhas (normal e shiny).
  *
- * Nesta fase a grade é só de leitura: mostra o catálogo e quantas vagas
- * contam em cada trilha. O estado de cada vaga (falta, no jogo, no HOME)
- * chega com o cadastro de registros.
+ * Cada vaga mostra o estado na trilha escolhida (falta, no jogo, no HOME),
+ * derivado dos registros a cada render (`dex-estado.ts`), e leva ao cadastro
+ * com a forma e a trilha já escolhidas.
  *
  * O catálogo inteiro vem do servidor de uma vez (~1.400 linhas, poucas
  * dezenas de KB): filtrar por região, seção e busca é local, sem ida ao
  * banco a cada clique. A única escrita é ligar e desligar seção.
  */
 
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
+import { BarraProgresso } from "@/app/_componentes/ds/barra-progresso";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { Painel } from "@/app/_componentes/painel";
 import { SECOES_LIGAVEIS, CATEGORIAS_FORMA_DEX, type SecaoLigavel } from "@/lib/dominio/dex-classificacao";
 import { contaNaTrilha, contarVagasDex, filtrarFormasDex, type TrilhaDex } from "@/lib/dominio/dex-grade";
+import {
+  estadoDaVaga,
+  mapearEstadosDex,
+  progressoDex,
+  type EstadoVagaDex,
+} from "@/lib/dominio/dex-estado";
 import { categoriaConta, type SecoesContadas } from "@/lib/dominio/dex-secoes";
 import { NOME_REGIAO, REGIOES, type Regiao } from "@/lib/dominio/escopo-pokedex";
-import type { FormaDexDTO } from "@/lib/dominio/tipos-cliente";
+import type { FormaDexDTO, RegistroEstadoDTO } from "@/lib/dominio/tipos-cliente";
 import { urlSpriteDex } from "@/lib/imagens";
 
 const classesOpcao = (ativa: boolean) =>
@@ -32,12 +40,24 @@ const classesOpcao = (ativa: boolean) =>
     ativa ? "border-accent bg-accent text-accent-fg" : "border-line text-muted hover:bg-surface-hover"
   }`;
 
+const ESTADOS: readonly EstadoVagaDex[] = ["falta", "no_jogo", "no_home"];
+
+/* Moldura da vaga por estado: no HOME é a cor de sucesso; no jogo, aviso
+   (pego, falta transferir); em falta, o sprite apagado. */
+const MOLDURA: Record<EstadoVagaDex, string> = {
+  falta: "border-hairline",
+  no_jogo: "border-warning/60",
+  no_home: "border-success/60 bg-success-soft",
+};
+
 export function GradePokedex({
   formas,
   secoesIniciais,
+  registros,
 }: {
   formas: FormaDexDTO[];
   secoesIniciais: SecoesContadas;
+  registros: RegistroEstadoDTO[];
 }) {
   const t = useTranslations("dex");
   const [secoes, setSecoes] = useState<SecoesContadas>(secoesIniciais);
@@ -47,11 +67,17 @@ export function GradePokedex({
   const [regiao, setRegiao] = useState<Regiao | "todas">("kanto");
   const [categoria, setCategoria] = useState<(typeof CATEGORIAS_FORMA_DEX)[number] | "todas">("todas");
   const [busca, setBusca] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState<EstadoVagaDex | "todos">("todos");
 
-  const totais = useMemo(() => contarVagasDex(formas, secoes), [formas, secoes]);
+  const estados = useMemo(() => mapearEstadosDex(registros), [registros]);
+  const progresso = useMemo(() => progressoDex(formas, estados, secoes), [formas, estados, secoes]);
+
   const visiveis = useMemo(
-    () => filtrarFormasDex(formas, { regiao, categoria, busca }),
-    [formas, regiao, categoria, busca],
+    () =>
+      filtrarFormasDex(formas, { regiao, categoria, busca }).filter(
+        (f) => filtroEstado === "todos" || estadoDaVaga(estados, f.id, trilha) === filtroEstado,
+      ),
+    [formas, regiao, categoria, busca, filtroEstado, estados, trilha],
   );
   const totaisVisiveis = useMemo(() => contarVagasDex(visiveis, secoes), [visiveis, secoes]);
 
@@ -79,15 +105,28 @@ export function GradePokedex({
       <CabecalhoPagina titulo={t("pokedex.titulo")} descricao={t("pokedex.descricao")} />
 
       <Painel className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
-          <span className="text-sm text-muted">
-            {t("pokedex.totalNormal")}{" "}
-            <strong className="font-mono tabular-nums text-strong">{totais.normal}</strong>
-          </span>
-          <span className="text-sm text-muted">
-            {t("pokedex.totalShiny")}{" "}
-            <strong className="font-mono tabular-nums text-strong">{totais.shiny}</strong>
-          </span>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {(["normal", "shiny"] as const).map((tr) => (
+            <div key={tr} className="flex flex-col gap-1">
+              <BarraProgresso
+                valor={progresso[tr].noHome}
+                maximo={progresso[tr].contam}
+                tom={tr === "shiny" ? "acento" : "primario"}
+                rotulo={t(`trilha.${tr}`)}
+              />
+              <span className="text-sm text-strong">
+                {t("pokedex.progresso", {
+                  noHome: String(progresso[tr].noHome),
+                  contam: String(progresso[tr].contam),
+                })}
+              </span>
+              {progresso[tr].noJogo > 0 && (
+                <span className="text-xs text-muted">
+                  {t("pokedex.progressoNoJogo", { noJogo: String(progresso[tr].noJogo) })}
+                </span>
+              )}
+            </div>
+          ))}
         </div>
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-medium">{t("pokedex.secoesQueContam")}</legend>
@@ -151,6 +190,21 @@ export function GradePokedex({
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
+            <span className="font-medium">{t("pokedex.filtroEstado")}</span>
+            <select
+              value={filtroEstado}
+              onChange={(e) => setFiltroEstado(e.target.value as typeof filtroEstado)}
+              className="w-full max-w-xs rounded border border-line bg-transparent p-2"
+            >
+              <option value="todos">{t("pokedex.todas")}</option>
+              {ESTADOS.map((e) => (
+                <option key={e} value={e}>
+                  {t(`estado.${e}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">{t("pokedex.secao")}</span>
             <select
               value={categoria}
@@ -184,13 +238,17 @@ export function GradePokedex({
             const semShiny = trilha === "shiny" && !f.shinyObtenivel;
             const foraDaConta = !categoriaConta(f.categoria, secoes);
             const conta = contaNaTrilha(f, trilha, secoes);
+            const estado = estadoDaVaga(estados, f.id, trilha);
             return (
               <li
                 key={f.id}
-                className={`flex flex-col items-center gap-1 rounded-card border border-hairline bg-surface p-2 text-center shadow-1 ${
-                  conta ? "" : "opacity-60"
-                }`}
+                className={`rounded-card border bg-surface shadow-1 ${MOLDURA[estado]} ${conta ? "" : "opacity-60"}`}
               >
+                <Link
+                  href={`/dex/cadastrar?forma=${encodeURIComponent(f.id)}${trilha === "shiny" ? "&shiny=1" : ""}`}
+                  title={t("pokedex.registrarEsta")}
+                  className="flex h-full flex-col items-center gap-1 p-2 text-center"
+                >
                 {/* eslint-disable-next-line @next/next/no-img-element -- sprite externo pequeno (PokeAPI, pixel art ~0,6 KB), centenas por tela; mesma convenção da vaga vazia de Pokédex. */}
                 <img
                   src={urlSpriteDex(f.sprite, trilha === "shiny")}
@@ -198,7 +256,7 @@ export function GradePokedex({
                   width={72}
                   height={72}
                   loading="lazy"
-                  className={semShiny ? "opacity-40 grayscale" : ""}
+                  className={semShiny || estado === "falta" ? "opacity-40 grayscale" : ""}
                   style={{ imageRendering: "pixelated" }}
                 />
                 <span className="font-mono text-xs tabular-nums text-muted">
@@ -207,10 +265,14 @@ export function GradePokedex({
                 <span className="text-sm font-semibold text-strong">{f.especie}</span>
                 {f.forma && <span className="text-xs text-muted">{f.forma}</span>}
                 <div className="flex flex-wrap justify-center gap-1">
+                  {estado !== "falta" && (
+                    <Distintivo tom={estado === "no_home" ? "sucesso" : "aviso"}>{t(`estado.${estado}`)}</Distintivo>
+                  )}
                   {f.categoria !== "base" && <Distintivo>{t(`categoria.${f.categoria}`)}</Distintivo>}
                   {semShiny && <Distintivo tom="aviso">{t("pokedex.semShiny")}</Distintivo>}
                   {foraDaConta && <Distintivo>{t("pokedex.foraDaConta")}</Distintivo>}
                 </div>
+                </Link>
               </li>
             );
           })}

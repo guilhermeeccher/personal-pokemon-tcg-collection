@@ -23,7 +23,9 @@
       "repetidas": "Repetidas",
       "colecoes": "Coleções",
       "precos": "Preços",
-      "pokedex": "Pokédex"
+      "pokedex": "Pokédex",
+      "cadastrarDex": "Cadastrar",
+      "meusJogos": "Meus jogos"
     }
   },
   "seletorLocale": {
@@ -844,7 +846,18 @@
     "precosJaConsultados": "As {total} cartas especiais já foram consultadas nas últimas {horas} h; não há o que atualizar agora.",
     "semCartasEspeciais": "Nenhuma carta especial (todas menos comum e incomum) no inventário para consultar.",
     "rodadaDePrecoNaoEncontrada": "Pesquisa de preços não encontrada.",
-    "rodadaDePrecoEmAndamento": "Esta pesquisa ainda está em andamento. Espere ela terminar para excluir."
+    "rodadaDePrecoEmAndamento": "Esta pesquisa ainda está em andamento. Espere ela terminar para excluir.",
+    "dexFormaDesconhecida": "A forma {forma} não está no catálogo da Living Dex.",
+    "dexJogoDesconhecido": "O jogo {jogo} não está no catálogo.",
+    "dexLocalNaoPossuido": "{jogo} não está entre os seus jogos ativos.",
+    "dexNadaEntraEmSoEnvio": "Nenhum Pokémon entra em {jogo}: ele só envia ao HOME.",
+    "dexLetsGoSoDoProprio": "{jogo} só recebe Pokémon que vieram de Let's Go.",
+    "dexDataInvalida": "Data inválida: {data}.",
+    "dexConfirmarSemVolta": "O Pokémon sai de {jogo} e não volta mais: o HOME não devolve nada a esse jogo.",
+    "dexJogoJaPossuido": "{jogo} já está na sua lista.",
+    "dexJogoNaoEncontrado": "Jogo não encontrado.",
+    "dexJogoComRegistros": "{jogo} tem {quantidade} Pokémon registrado(s) nele. Mova-os ou marque o jogo como parado.",
+    "dexRegistroNaoEncontrado": "Registro não encontrado."
   },
   "dex": {
     "categoria": {
@@ -862,8 +875,6 @@
     "pokedex": {
       "titulo": "Pokédex",
       "descricao": "Todas as vagas do Pokémon HOME: uma por espécie e por forma que o HOME guarda, nas trilhas normal e shiny.",
-      "totalNormal": "Vagas na trilha normal:",
-      "totalShiny": "Vagas na trilha shiny:",
       "secoesQueContam": "Seções que contam no progresso",
       "baseSempre": "A base conta sempre.",
       "secoesAjuda": "A base conta sempre. Uma seção desligada continua na grade, marcada como fora da conta; ligar ou desligar não mexe em nenhum registro.",
@@ -877,7 +888,92 @@
       "semShiny": "Sem shiny",
       "foraDaConta": "Fora da conta",
       "catalogoVazio": "O catálogo da Living Dex está vazio. Rode pnpm seed:dex com o módulo ligado.",
-      "nadaEncontrado": "Nenhuma vaga com esses filtros."
+      "nadaEncontrado": "Nenhuma vaga com esses filtros.",
+      "progresso": "{noHome} de {contam} no HOME",
+      "progressoNoJogo": "{noJogo} pego(s), ainda fora do HOME",
+      "filtroEstado": "Estado",
+      "registrarEsta": "Registrar"
+    },
+    "estado": {
+      "falta": "Falta",
+      "no_jogo": "No jogo",
+      "no_home": "No HOME"
+    },
+    "conexao": {
+      "ida_e_volta": "Vai e volta do HOME",
+      "so_envio": "Só envia ao HOME"
+    },
+    "home": "HOME",
+    "jogos": {
+      "titulo": "Meus jogos",
+      "descricao": "Os jogos que você tem. É daqui que saem a origem e o local de cada Pokémon registrado.",
+      "nenhum": "Nenhum jogo cadastrado ainda. Adicione abaixo os jogos que você tem.",
+      "adicionar": "Adicionar jogo",
+      "jogo": "Jogo",
+      "desde": "Desde",
+      "notas": "Notas",
+      "placeholderNotas": "Save, versão, observação",
+      "todosCadastrados": "Todos os jogos do catálogo já estão na sua lista.",
+      "registrosAqui": "{quantidade} Pokémon neste jogo agora",
+      "ativo": "Jogando",
+      "inativo": "Parado",
+      "desativar": "Marcar como parado",
+      "reativar": "Voltar a jogar",
+      "remover": "Remover",
+      "confirmarRemover": "Remover {jogo} da sua lista?",
+      "salvar": "Salvar",
+      "editar": "Editar",
+      "cancelar": "Cancelar",
+      "avisoSoEnvio": "Pokémon que sai deste jogo para o HOME não volta, e nenhum Pokémon de outro jogo entra nele.",
+      "erro": "Não foi possível salvar. Tente de novo."
+    },
+    "cadastrar": {
+      "titulo": "Cadastrar Pokémon",
+      "descricao": "Registre um Pokémon que você tem: a forma, de que jogo veio e onde ele está agora.",
+      "semJogos": "Cadastre antes os jogos que você tem, em Meus jogos.",
+      "irParaJogos": "Ir para Meus jogos",
+      "buscarForma": "Pokémon",
+      "placeholderBuscarForma": "Nome, forma ou número",
+      "escolhaUmaForma": "Busque e escolha a forma.",
+      "trocarForma": "Trocar",
+      "shiny": "Shiny",
+      "jogoOrigem": "Veio de",
+      "seusJogos": "Seus jogos",
+      "outrosJogos": "Outros jogos (troca, evento)",
+      "local": "Está em",
+      "capturadoEm": "Capturado em",
+      "notas": "Notas",
+      "placeholderNotas": "Apelido, bola, evento…",
+      "registrar": "Registrar",
+      "registrado": "{nome} registrado.",
+      "avisoSemShiny": "Esta forma consta como nunca liberada em shiny. Se você tem uma, a lista está desatualizada: registre e avise na próxima sessão.",
+      "erro": "Não foi possível registrar. Tente de novo.",
+      "mais": "+{quantidade} resultado(s): refine a busca."
+    },
+    "registros": {
+      "titulo": "Registros",
+      "filtroLocal": "Onde está",
+      "todos": "Todos",
+      "buscar": "Buscar",
+      "nenhum": "Nenhum registro com esses filtros.",
+      "vazio": "Nenhum Pokémon registrado ainda.",
+      "origem": "veio de {jogo}",
+      "enviarHome": "Enviar ao HOME",
+      "moverPara": "Mover para…",
+      "mover": "Mover",
+      "editar": "Editar",
+      "remover": "Remover",
+      "confirmarRemover": "Apagar o registro de {nome}? Use para lançamento errado; para tirar do jogo, mova.",
+      "confirmarSemVoltaTitulo": "Esta transferência não tem volta",
+      "confirmar": "Transferir mesmo assim",
+      "cancelar": "Cancelar",
+      "salvar": "Salvar",
+      "editarTitulo": "Corrigir registro",
+      "pagina": "Página {pagina} de {total}",
+      "anterior": "Anterior",
+      "proxima": "Próxima",
+      "total": "{total} registro(s)",
+      "erro": "Não foi possível concluir. Tente de novo."
     }
   }
 }

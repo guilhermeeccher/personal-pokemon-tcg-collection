@@ -53,7 +53,11 @@ export const GRUPOS: readonly GrupoNav[] = [
 /** Módulo opcional (`MODULO_LIVING_DEX=1`), depois de Coleções. */
 export const GRUPO_LIVING_DEX: GrupoNav = {
   chaveTitulo: "grupos.livingDex",
-  itens: [{ href: "/dex/pokedex", chaveLabel: "itens.pokedex", icone: "book-open" }],
+  itens: [
+    { href: "/dex/pokedex", chaveLabel: "itens.pokedex", icone: "book-open" },
+    { href: "/dex/cadastrar", chaveLabel: "itens.cadastrarDex", icone: "circle-plus" },
+    { href: "/dex/jogos", chaveLabel: "itens.meusJogos", icone: "gamepad-2" },
+  ],
 };
 
 /** Os grupos que a barra lateral mostra, conforme os módulos ligados. */

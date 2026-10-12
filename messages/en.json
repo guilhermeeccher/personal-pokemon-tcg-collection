@@ -23,7 +23,9 @@
       "repetidas": "Duplicates",
       "colecoes": "Collections",
       "precos": "Prices",
-      "pokedex": "Pokédex"
+      "pokedex": "Pokédex",
+      "cadastrarDex": "Add Pokémon",
+      "meusJogos": "My games"
     }
   },
   "seletorLocale": {
@@ -844,7 +846,18 @@
     "precosJaConsultados": "All {total} special cards were already looked up in the last {horas} h; nothing to update right now.",
     "semCartasEspeciais": "No special card (all but common and uncommon) in the inventory to look up.",
     "rodadaDePrecoNaoEncontrada": "Price lookup not found.",
-    "rodadaDePrecoEmAndamento": "This lookup is still running. Wait for it to finish before deleting it."
+    "rodadaDePrecoEmAndamento": "This lookup is still running. Wait for it to finish before deleting it.",
+    "dexFormaDesconhecida": "The form {forma} is not in the Living Dex catalog.",
+    "dexJogoDesconhecido": "The game {jogo} is not in the catalog.",
+    "dexLocalNaoPossuido": "{jogo} is not one of your active games.",
+    "dexNadaEntraEmSoEnvio": "No Pokémon enters {jogo}: it only sends to HOME.",
+    "dexLetsGoSoDoProprio": "{jogo} only takes Pokémon that came from Let's Go.",
+    "dexDataInvalida": "Invalid date: {data}.",
+    "dexConfirmarSemVolta": "The Pokémon leaves {jogo} and never comes back: HOME returns nothing to that game.",
+    "dexJogoJaPossuido": "{jogo} is already on your list.",
+    "dexJogoNaoEncontrado": "Game not found.",
+    "dexJogoComRegistros": "{jogo} has {quantidade} recorded Pokémon in it. Move them or mark the game as stopped.",
+    "dexRegistroNaoEncontrado": "Record not found."
   },
   "dex": {
     "categoria": {
@@ -862,8 +875,6 @@
     "pokedex": {
       "titulo": "Pokédex",
       "descricao": "Every Pokémon HOME slot: one per species and per form HOME stores, in the normal and shiny tracks.",
-      "totalNormal": "Slots in the normal track:",
-      "totalShiny": "Slots in the shiny track:",
       "secoesQueContam": "Sections that count toward progress",
       "baseSempre": "Base always counts.",
       "secoesAjuda": "Base always counts. A section that is off stays in the grid, marked as not counted; turning it on or off does not touch any record.",
@@ -877,7 +888,92 @@
       "semShiny": "No shiny",
       "foraDaConta": "Not counted",
       "catalogoVazio": "The Living Dex catalog is empty. Run pnpm seed:dex with the module on.",
-      "nadaEncontrado": "No slot matches these filters."
+      "nadaEncontrado": "No slot matches these filters.",
+      "progresso": "{noHome} of {contam} in HOME",
+      "progressoNoJogo": "{noJogo} caught, not in HOME yet",
+      "filtroEstado": "State",
+      "registrarEsta": "Add"
+    },
+    "estado": {
+      "falta": "Missing",
+      "no_jogo": "In a game",
+      "no_home": "In HOME"
+    },
+    "conexao": {
+      "ida_e_volta": "Goes to HOME and back",
+      "so_envio": "Only sends to HOME"
+    },
+    "home": "HOME",
+    "jogos": {
+      "titulo": "My games",
+      "descricao": "The games you own. The origin and the location of every recorded Pokémon come from here.",
+      "nenhum": "No games yet. Add the games you own below.",
+      "adicionar": "Add game",
+      "jogo": "Game",
+      "desde": "Since",
+      "notas": "Notes",
+      "placeholderNotas": "Save file, version, remarks",
+      "todosCadastrados": "Every game in the catalog is already on your list.",
+      "registrosAqui": "{quantidade} Pokémon in this game now",
+      "ativo": "Playing",
+      "inativo": "Stopped",
+      "desativar": "Mark as stopped",
+      "reativar": "Playing again",
+      "remover": "Remove",
+      "confirmarRemover": "Remove {jogo} from your list?",
+      "salvar": "Save",
+      "editar": "Edit",
+      "cancelar": "Cancel",
+      "avisoSoEnvio": "A Pokémon that leaves this game for HOME never comes back, and no Pokémon from another game enters it.",
+      "erro": "Could not save. Try again."
+    },
+    "cadastrar": {
+      "titulo": "Add Pokémon",
+      "descricao": "Record a Pokémon you have: its form, the game it came from and where it is now.",
+      "semJogos": "First add the games you own, in My games.",
+      "irParaJogos": "Go to My games",
+      "buscarForma": "Pokémon",
+      "placeholderBuscarForma": "Name, form or number",
+      "escolhaUmaForma": "Search and pick the form.",
+      "trocarForma": "Change",
+      "shiny": "Shiny",
+      "jogoOrigem": "Came from",
+      "seusJogos": "Your games",
+      "outrosJogos": "Other games (trade, event)",
+      "local": "Is in",
+      "capturadoEm": "Caught on",
+      "notas": "Notes",
+      "placeholderNotas": "Nickname, ball, event…",
+      "registrar": "Add",
+      "registrado": "{nome} added.",
+      "avisoSemShiny": "This form is listed as never released as shiny. If you have one, the list is outdated: record it and mention it in the next session.",
+      "erro": "Could not add it. Try again.",
+      "mais": "+{quantidade} more result(s): refine the search."
+    },
+    "registros": {
+      "titulo": "Records",
+      "filtroLocal": "Where it is",
+      "todos": "All",
+      "buscar": "Search",
+      "nenhum": "No record matches these filters.",
+      "vazio": "No Pokémon recorded yet.",
+      "origem": "from {jogo}",
+      "enviarHome": "Send to HOME",
+      "moverPara": "Move to…",
+      "mover": "Move",
+      "editar": "Edit",
+      "remover": "Delete",
+      "confirmarRemover": "Delete the record of {nome}? Use it for a wrong entry; to take it out of a game, move it.",
+      "confirmarSemVoltaTitulo": "This transfer is one-way",
+      "confirmar": "Transfer anyway",
+      "cancelar": "Cancel",
+      "salvar": "Save",
+      "editarTitulo": "Fix record",
+      "pagina": "Page {pagina} of {total}",
+      "anterior": "Previous",
+      "proxima": "Next",
+      "total": "{total} record(s)",
+      "erro": "Could not finish. Try again."
     }
   }
 }
