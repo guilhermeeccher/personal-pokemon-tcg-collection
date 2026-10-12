@@ -835,3 +835,72 @@ export const semEstoqueLiga = pgTable(
   },
   (t) => [unique("sem_estoque_liga_unica").on(t.chave, t.qualidade)],
 );
+
+// --- Living Dex (módulo opcional, `MODULO_LIVING_DEX=1`) ------------------
+//
+// Catálogo de vagas do Pokémon HOME. Nenhuma tabela deste bloco aponta para
+// as de cartas, nem o contrário: o módulo divide o app e o banco, não os
+// dados. As tabelas existem em toda instalação, vazias quando o módulo está
+// desligado — migration condicionada a variável de ambiente deixaria
+// instalações com schemas diferentes, e a próxima migration quebraria em
+// metade delas.
+
+/** Seção da vaga (`lib/dominio/dex-classificacao.ts`). `base` conta sempre. */
+export const categoriaFormaDexEnum = pgEnum("categoria_forma_dex", [
+  "base",
+  "regional",
+  "genero",
+  "cosmetica",
+  "especial",
+]);
+
+/**
+ * Uma vaga possível no HOME: uma espécie numa forma. Só o seed escreve
+ * (`scripts/seed-dex.ts`, a partir de `seed/dex-forma.csv`).
+ *
+ * `ativa = false` quando a vaga saiu do seed (forma reclassificada). Diferente
+ * do catálogo de cartas, aqui o seed É a fonte, então quem não está nele não
+ * existe mais — mas a linha não é apagada, porque um registro do usuário pode
+ * apontar para ela.
+ */
+export const dexForma = pgTable(
+  "dex_forma",
+  {
+    /** `raichu-alola`, `pikachu-femea`; a base usa o nome da espécie (`raichu`). */
+    id: text("id").primaryKey(),
+    /** Número da Pokédex Nacional. A região sai dele, não é coluna. */
+    numero: integer("numero").notNull(),
+    /** Nome da espécie, em inglês — o mesmo nome que o Brasil usa. */
+    especie: text("especie").notNull(),
+    /** Nome da forma em inglês; nulo na base sem nome (Bulbasaur). */
+    forma: text("forma"),
+    categoria: categoriaFormaDexEnum("categoria").notNull(),
+    geracao: integer("geracao").notNull(),
+    lendario: boolean("lendario").notNull().default(false),
+    mitico: boolean("mitico").notNull().default(false),
+    /** `false` = nunca liberada em shiny; fica fora do total da trilha shiny. */
+    shinyObtenivel: boolean("shiny_obtenivel").notNull().default(true),
+    /** Caminho no repositório PokeAPI/sprites, sem extensão (`201-b`, `female/25`). */
+    sprite: text("sprite").notNull(),
+    /** Posição na ordem das caixas do HOME ordenadas por forma. */
+    ordem: integer("ordem").notNull(),
+    ativa: boolean("ativa").notNull().default(true),
+    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+    atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("dex_forma_numero_idx").on(t.numero),
+    index("dex_forma_ordem_idx").on(t.ordem),
+  ],
+);
+
+/**
+ * Quais seções entram no progresso (spec §3.4). Uma linha por seção ligável;
+ * seção sem linha usa o padrão de `lib/dominio/dex-secoes.ts`. `base` não tem
+ * linha: conta sempre. Ligar ou desligar não toca registro nenhum.
+ */
+export const dexSecao = pgTable("dex_secao", {
+  categoria: categoriaFormaDexEnum("categoria").primaryKey(),
+  conta: boolean("conta").notNull(),
+  atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+});

@@ -21,7 +21,9 @@
     "verificar:imagens-cdn": "tsx scripts/verificar-imagens-cdn.ts",
     "fundir:copias-duplicadas": "tsx scripts/fundir-copias-duplicadas.ts",
     "derivar:dex-ids": "tsx scripts/derivar-dex-ids.ts",
-    "importar:tipos-catalogo": "tsx scripts/importar-tipos-catalogo.ts"
+    "importar:tipos-catalogo": "tsx scripts/importar-tipos-catalogo.ts",
+    "seed:dex": "tsx scripts/seed-dex.ts",
+    "gerar:seed-dex": "tsx scripts/gerar-seed-dex.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

@@ -18,6 +18,9 @@ services:
       # bater com o destino do volume nomeado `imagens_locais` abaixo,
       # que usa a MESMA variável de propósito.
       IMAGENS_LOCAIS_DIR: ${IMAGENS_LOCAIS_DIR:-/dados/imagens-locais}
+      # Módulo opcional Living Dex (ver `.env.example` e `lib/modulos.ts`).
+      # Vazio = desligado.
+      MODULO_LIVING_DEX: ${MODULO_LIVING_DEX:-}
     # Bind mount só-leitura do clone local de tcgdex/cards-database, usado
     # por `pnpm importar:catalogo-repo` (scripts/importar-catalogo-repo.ts)
     # para popular o catálogo japonês sem depender de api.tcgdex.net (IP
