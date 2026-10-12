@@ -32,8 +32,10 @@ import {
 } from "@/lib/dominio/dex-estado";
 import { categoriaConta, type SecoesContadas } from "@/lib/dominio/dex-secoes";
 import { NOME_REGIAO, REGIOES, type Regiao } from "@/lib/dominio/escopo-pokedex";
-import type { FormaDexDTO, RegistroEstadoDTO } from "@/lib/dominio/tipos-cliente";
+import type { FormaDexDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 import { urlSpriteDex } from "@/lib/imagens";
+
+import { PainelOportunidades } from "./painel-oportunidades";
 
 const classesOpcao = (ativa: boolean) =>
   `rounded-pill border px-3 py-1 text-xs font-semibold [transition:var(--transition-control)] ${
@@ -57,7 +59,7 @@ export function GradePokedex({
 }: {
   formas: FormaDexDTO[];
   secoesIniciais: SecoesContadas;
-  registros: RegistroEstadoDTO[];
+  registros: RegistroDexDTO[];
 }) {
   const t = useTranslations("dex");
   const [secoes, setSecoes] = useState<SecoesContadas>(secoesIniciais);
@@ -102,7 +104,9 @@ export function GradePokedex({
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 p-4 sm:p-8">
-      <CabecalhoPagina titulo={t("pokedex.titulo")} descricao={t("pokedex.descricao")} />
+      <CabecalhoPagina titulo={t("pokedex.titulo")} />
+
+      <PainelOportunidades formas={formas} registros={registros} />
 
       <Painel className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -147,7 +151,6 @@ export function GradePokedex({
               </button>
             ))}
           </div>
-          <p className="text-xs text-muted">{t("pokedex.secoesAjuda")}</p>
           {erro && <p className="text-xs text-danger-fg">{erro}</p>}
         </fieldset>
       </Painel>
@@ -245,7 +248,7 @@ export function GradePokedex({
                 className={`rounded-card border bg-surface shadow-1 ${MOLDURA[estado]} ${conta ? "" : "opacity-60"}`}
               >
                 <Link
-                  href={`/dex/cadastrar?forma=${encodeURIComponent(f.id)}${trilha === "shiny" ? "&shiny=1" : ""}`}
+                  href={`/dex/cadastrar?busca=${f.numero}`}
                   title={t("pokedex.registrarEsta")}
                   className="flex h-full flex-col items-center gap-1 p-2 text-center"
                 >

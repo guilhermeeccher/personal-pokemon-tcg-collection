@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
 import { db } from "@/lib/db/client";
-import { lerSecoesDex, listarFormasDex, listarRegistrosParaEstado } from "@/lib/db/dex";
+import { lerSecoesDex, listarFormasDex, listarRegistrosDex } from "@/lib/db/dex";
 import { moduloLivingDexAtivo } from "@/lib/modulos";
 
 import { GradePokedex } from "./grade-pokedex";
@@ -21,7 +21,7 @@ export default async function PokedexPage() {
   const [formas, secoes, registros] = await Promise.all([
     listarFormasDex(db),
     lerSecoesDex(db),
-    listarRegistrosParaEstado(db),
+    listarRegistrosDex(db),
   ]);
   return <GradePokedex formas={formas} secoesIniciais={secoes} registros={registros} />;
 }

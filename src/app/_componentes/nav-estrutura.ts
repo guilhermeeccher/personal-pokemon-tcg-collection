@@ -56,6 +56,7 @@ export const GRUPO_LIVING_DEX: GrupoNav = {
   itens: [
     { href: "/dex/pokedex", chaveLabel: "itens.pokedex", icone: "book-open" },
     { href: "/dex/cadastrar", chaveLabel: "itens.cadastrarDex", icone: "circle-plus" },
+    { href: "/dex/inventario", chaveLabel: "itens.inventarioDex", icone: "library" },
     { href: "/dex/jogos", chaveLabel: "itens.meusJogos", icone: "gamepad-2" },
   ],
 };

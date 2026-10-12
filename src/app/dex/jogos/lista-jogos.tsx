@@ -70,7 +70,7 @@ export function ListaJogos({ jogos }: { jogos: JogoPossuidoDTO[] }) {
 
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-6 p-4 sm:p-8">
-      <CabecalhoPagina titulo={t("jogos.titulo")} descricao={t("jogos.descricao")} />
+      <CabecalhoPagina titulo={t("jogos.titulo")} />
       {erro && <Alerta tom="perigo">{erro}</Alerta>}
 
       {jogos.length === 0 ? (
@@ -86,7 +86,6 @@ export function ListaJogos({ jogos }: { jogos: JogoPossuidoDTO[] }) {
                 </Distintivo>
                 <Distintivo>{j.ativo ? t("jogos.ativo") : t("jogos.inativo")}</Distintivo>
               </div>
-              {j.conexaoHome === "so_envio" && <p className="text-xs text-muted">{t("jogos.avisoSoEnvio")}</p>}
               <p className="text-sm text-muted">
                 {t("jogos.registrosAqui", { quantidade: String(j.registrosAqui) })}
                 {j.desde && ` · ${t("jogos.desde")} ${j.desde}`}
