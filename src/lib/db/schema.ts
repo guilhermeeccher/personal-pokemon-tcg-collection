@@ -904,3 +904,55 @@ export const dexSecao = pgTable("dex_secao", {
   conta: boolean("conta").notNull(),
   atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * Um jogo do catálogo fixo (`lib/dominio/dex-jogos.ts`) que o usuário tem.
+ * `jogo_id` é texto validado pelo domínio, não enum: o catálogo cresce a
+ * cada lançamento, e enum novo é migration a cada jogo.
+ *
+ * Um por jogo. `ativo = false` quando ele para de jogar: o histórico fica,
+ * e nenhum registro novo pode ser posto lá.
+ */
+export const dexJogoPossuido = pgTable(
+  "dex_jogo_possuido",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    jogoId: text("jogo_id").notNull(),
+    desde: date("desde"),
+    notas: text("notas"),
+    ativo: boolean("ativo").notNull().default(true),
+    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+    atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique("dex_jogo_possuido_jogo_unico").on(t.jogoId)],
+);
+
+/**
+ * Um Pokémon que o usuário tem, em algum lugar (spec §5). O estado da vaga
+ * (falta, no jogo, no HOME) sai daqui a cada leitura e nunca é gravado.
+ *
+ * `jogo_origem` e `local` guardam o id do catálogo de jogos, não o do jogo
+ * possuído: a origem é um fato do Pokémon, que pode ter vindo de um jogo que
+ * o usuário não tem (troca); e `local` também vale `home`.
+ *
+ * A FK para `dex_forma` é `restrict`: uma vaga que sai do seed é inativada,
+ * nunca apagada (ver `dex_forma`), então o registro nunca fica órfão.
+ */
+export const dexRegistro = pgTable(
+  "dex_registro",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    formaId: text("forma_id")
+      .notNull()
+      .references(() => dexForma.id, { onDelete: "restrict" }),
+    shiny: boolean("shiny").notNull().default(false),
+    jogoOrigem: text("jogo_origem").notNull(),
+    /** `home`, ou o id do jogo onde ele está. */
+    local: text("local").notNull(),
+    capturadoEm: date("capturado_em"),
+    notas: text("notas"),
+    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+    atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("dex_registro_forma_idx").on(t.formaId), index("dex_registro_local_idx").on(t.local)],
+);

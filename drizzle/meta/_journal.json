@@ -169,6 +169,13 @@
       "when": 1791765312232,
       "tag": "0023_living_dex_catalogo",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791767155103,
+      "tag": "0024_living_dex_jogos_e_registros",
+      "breakpoints": true
     }
   ]
 }

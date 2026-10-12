@@ -413,3 +413,38 @@ export interface FormaDexDTO {
   shinyObtenivel: boolean;
   sprite: string;
 }
+
+/** Um jogo que o usuário tem (`dex_jogo_possuido`), com o catálogo resolvido. */
+export interface JogoPossuidoDTO {
+  id: string;
+  jogoId: string;
+  nome: string;
+  conexaoHome: "ida_e_volta" | "so_envio";
+  desde: string | null;
+  notas: string | null;
+  ativo: boolean;
+  /** Registros que estão neste jogo agora. */
+  registrosAqui: number;
+}
+
+/** Um registro da Living Dex, com a vaga resolvida para a tela. */
+export interface RegistroDexDTO {
+  id: string;
+  formaId: string;
+  numero: number;
+  especie: string;
+  forma: string | null;
+  sprite: string;
+  shiny: boolean;
+  jogoOrigem: string;
+  local: string;
+  capturadoEm: string | null;
+  notas: string | null;
+}
+
+/** O que a grade precisa saber de cada registro para derivar o estado. */
+export interface RegistroEstadoDTO {
+  formaId: string;
+  shiny: boolean;
+  local: string;
+}
