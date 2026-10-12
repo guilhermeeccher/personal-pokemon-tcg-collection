@@ -31,14 +31,14 @@ ekans,23,Ekans,,base,1,f,f,t,23,29
 arbok,24,Arbok,,base,1,f,f,t,24,30
 pikachu,25,Pikachu,,base,1,f,f,t,25,31
 pikachu-femea,25,Pikachu,Female,genero,1,f,f,t,female/25,32
-pikachu-original-cap,25,Pikachu,Original Cap,especial,1,f,f,f,10094,33
-pikachu-hoenn-cap,25,Pikachu,Hoenn Cap,especial,1,f,f,f,10095,34
-pikachu-sinnoh-cap,25,Pikachu,Sinnoh Cap,especial,1,f,f,f,10096,35
-pikachu-unova-cap,25,Pikachu,Unova Cap,especial,1,f,f,f,10097,36
-pikachu-kalos-cap,25,Pikachu,Kalos Cap,especial,1,f,f,f,10098,37
-pikachu-alola-cap,25,Pikachu,Alola Cap,especial,1,f,f,f,10099,38
-pikachu-partner-cap,25,Pikachu,Partner Cap,especial,1,f,f,t,10148,39
-pikachu-world-cap,25,Pikachu,World Cap,especial,1,f,f,f,10160,40
+pikachu-original-cap,25,Pikachu,Original Cap,cosmetica,1,f,f,f,10094,33
+pikachu-hoenn-cap,25,Pikachu,Hoenn Cap,cosmetica,1,f,f,f,10095,34
+pikachu-sinnoh-cap,25,Pikachu,Sinnoh Cap,cosmetica,1,f,f,f,10096,35
+pikachu-unova-cap,25,Pikachu,Unova Cap,cosmetica,1,f,f,f,10097,36
+pikachu-kalos-cap,25,Pikachu,Kalos Cap,cosmetica,1,f,f,f,10098,37
+pikachu-alola-cap,25,Pikachu,Alola Cap,cosmetica,1,f,f,f,10099,38
+pikachu-partner-cap,25,Pikachu,Partner Cap,cosmetica,1,f,f,t,10148,39
+pikachu-world-cap,25,Pikachu,World Cap,cosmetica,1,f,f,f,10160,40
 raichu,26,Raichu,,base,1,f,f,t,26,41
 raichu-femea,26,Raichu,Female,genero,1,f,f,t,female/26,42
 raichu-alola,26,Raichu,Alolan Form,regional,1,f,f,t,10100,43
@@ -1083,7 +1083,7 @@ kartana,798,Kartana,,base,7,f,f,t,798,1081
 guzzlord,799,Guzzlord,,base,7,f,f,t,799,1082
 necrozma,800,Necrozma,,base,7,t,f,t,800,1083
 magearna,801,Magearna,,base,7,f,t,f,801,1084
-magearna-original,801,Magearna,Original Color,especial,7,f,t,f,10147,1085
+magearna-original,801,Magearna,Original Color,cosmetica,7,f,t,f,10147,1085
 marshadow,802,Marshadow,,base,7,f,t,t,802,1086
 poipole,803,Poipole,,base,7,f,f,t,803,1087
 naganadel,804,Naganadel,,base,7,f,f,t,804,1088
@@ -1243,7 +1243,7 @@ kubfu,891,Kubfu,,base,8,t,f,f,891,1241
 urshifu,892,Urshifu,Single Strike Style,base,8,t,f,f,892,1242
 urshifu-rapid-strike,892,Urshifu,Rapid Strike Style,especial,8,t,f,f,10191,1243
 zarude,893,Zarude,,base,8,f,t,f,893,1244
-zarude-dada,893,Zarude,Dada,especial,8,f,t,f,10192,1245
+zarude-dada,893,Zarude,Dada,cosmetica,8,f,t,f,10192,1245
 regieleki,894,Regieleki,,base,8,t,f,t,894,1246
 regidrago,895,Regidrago,,base,8,t,f,t,895,1247
 glastrier,896,Glastrier,,base,8,t,f,f,896,1248
@@ -1343,7 +1343,7 @@ annihilape,979,Annihilape,,base,9,f,f,t,979,1341
 clodsire,980,Clodsire,,base,9,f,f,t,980,1342
 farigiraf,981,Farigiraf,,base,9,f,f,t,981,1343
 dudunsparce,982,Dudunsparce,Two-Segment Form,base,9,f,f,t,982,1344
-dudunsparce-three-segment,982,Dudunsparce,Three-Segment Form,especial,9,f,f,t,10255,1345
+dudunsparce-three-segment,982,Dudunsparce,Three-Segment Form,cosmetica,9,f,f,t,10255,1345
 kingambit,983,Kingambit,,base,9,f,f,t,983,1346
 great-tusk,984,Great Tusk,,base,9,f,f,t,984,1347
 scream-tail,985,Scream Tail,,base,9,f,f,t,985,1348

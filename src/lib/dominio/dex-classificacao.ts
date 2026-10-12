@@ -129,7 +129,7 @@ interface Regra {
 /*
  * As regras, na ordem em que são testadas — a primeira que casa decide.
  * A ordem importa num caso só: `pikachu-alola-cap` contém `-alola` e tem
- * que cair em `especial` (boné) antes de chegar em `regional`.
+ * que cair em `cosmetica` (boné) antes de chegar em `regional`.
  */
 const REGRAS: readonly Regra[] = [
   /*
@@ -180,23 +180,29 @@ const REGRAS: readonly Regra[] = [
   { padrao: /^alcremie-/, destino: "cosmetica" },
   { padrao: /^maushold-family-of-three$|^tatsugiri-/, destino: "cosmetica" },
   { padrao: /^minior-(orange|yellow|green|blue|indigo|violet)$/, destino: "cosmetica" },
+  /*
+   * Movidas de `especial` em 2026-10-11, pelo próprio critério desta seção:
+   * os bonés de Pikachu (o homestretch não os lista, o SuperEffective lista;
+   * existem no HOME e vão e voltam de SwSh e SV), a Magearna Original Color,
+   * o Zarude Dada e o Dudunsparce de três segmentos só mudam a aparência.
+   * Estar em `especial` pela origem (evento) os punha na vista principal.
+   */
+  { padrao: /^pikachu-(original|hoenn|sinnoh|unova|kalos|alola|partner|world)-cap$/, destino: "cosmetica" },
+  { padrao: /^magearna-original$|^zarude-dada$|^dudunsparce-three-segment$/, destino: "cosmetica" },
 
   /*
-   * Especial: armazenável e com diferença de jogo (tipo, habilidade, golpe)
-   * ou de origem (boné, evento).
-   *  - Bonés de Pikachu: o homestretch não lista, o SuperEffective lista; eles
-   *    existem no HOME e vão e voltam de SwSh e SV.
+   * Especial: armazenável e com diferença de jogo (tipo, habilidade, golpe,
+   *    status). Forma que só muda a aparência é cosmética, mesmo vinda de evento.
    *  - Greninja Battle Bond: igual na tela, mas é forma própria no HOME (o
    *    SuperEffective lista; o homestretch não).
    *  - Floette Eterna: entrou com o Legends Z-A (o homestretch lista).
    */
-  { padrao: /^pikachu-(original|hoenn|sinnoh|unova|kalos|alola|partner|world)-cap$/, destino: "especial" },
   { padrao: /^(deoxys|wormadam|rotom|basculin|pumpkaboo|gourgeist|zygarde|oricorio|lycanroc|squawkabilly)-/, destino: "especial" },
   { padrao: /^shaymin-sky$|^hoopa-unbound$|^keldeo-resolute$|^floette-eternal$/, destino: "especial" },
   { padrao: /^(tornadus|thundurus|landorus|enamorus)-therian$/, destino: "especial" },
-  { padrao: /^greninja-battle-bond$|^rockruff-own-tempo$|^magearna-original$/, destino: "especial" },
-  { padrao: /^toxtricity-low-key$|^urshifu-rapid-strike$|^zarude-dada$|^ursaluna-bloodmoon$/, destino: "especial" },
-  { padrao: /^dudunsparce-three-segment$|^gimmighoul-roaming$/, destino: "especial" },
+  { padrao: /^greninja-battle-bond$|^rockruff-own-tempo$/, destino: "especial" },
+  { padrao: /^toxtricity-low-key$|^urshifu-rapid-strike$|^ursaluna-bloodmoon$/, destino: "especial" },
+  { padrao: /^gimmighoul-roaming$/, destino: "especial" },
 
   /* Regional: Alola, Galar, Hisui, Paldea (Tauros de Paldea inclusive). */
   { padrao: /-(alola|galar|hisui|paldea)(-|$)/, destino: "regional" },

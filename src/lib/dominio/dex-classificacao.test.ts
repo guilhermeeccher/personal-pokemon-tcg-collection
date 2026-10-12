@@ -72,9 +72,16 @@ describe("destinoDaForma — as decisões que as fontes divergiam", () => {
     expect(destinoDaForma(id)).toBe(destino);
   });
 
-  it("boné de Alola é especial, não regional — a ordem das regras importa", () => {
-    expect(destinoDaForma("pikachu-alola-cap")).toBe("especial");
+  it("boné de Alola é cosmético, não regional — a ordem das regras importa", () => {
+    expect(destinoDaForma("pikachu-alola-cap")).toBe("cosmetica");
   });
+
+  it.each(["pikachu-world-cap", "magearna-original", "zarude-dada", "dudunsparce-three-segment"])(
+    "%s só muda a aparência: cosmética",
+    (id) => {
+      expect(destinoDaForma(id)).toBe("cosmetica");
+    },
+  )
 
   it.each([
     ["raichu-alola", "regional"],

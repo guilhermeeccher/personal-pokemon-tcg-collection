@@ -78,3 +78,39 @@ export function contarVagasDex(
   }
   return { normal, shiny };
 }
+
+/**
+ * As vagas que têm uma fêmea separada (a base da espécie, ou o Sneasel de
+ * Hisui). É a "macho" do par: a tela diz isso, porque a PokeAPI às vezes
+ * nomeia a base ("Male") e às vezes não (Pikachu), e sem o rótulo a linha da
+ * base parece genérica ao lado da linha "Fêmea".
+ */
+export function formasComFemea(formas: readonly { id: string; numero: number; categoria: CategoriaFormaDex }[]): Set<string> {
+  const base = new Map(formas.filter((f) => f.categoria === "base").map((f) => [f.numero, f.id]));
+  const r = new Set<string>();
+  for (const f of formas) {
+    if (f.categoria !== "genero") continue;
+    const origem = f.id === "sneasel-hisui-femea" ? "sneasel-hisui" : base.get(f.numero);
+    if (origem) r.add(origem);
+  }
+  return r;
+}
+
+/**
+ * Rótulo da forma na tela: macho e fêmea no idioma da interface; o resto,
+ * o nome da PokeAPI (em inglês, como as espécies).
+ */
+export function rotuloDaForma(
+  f: { id: string; forma: string | null; categoria: CategoriaFormaDex },
+  comFemea: ReadonlySet<string>,
+  rotulos: { macho: string; femea: string },
+): string | null {
+  if (f.categoria === "genero") {
+    const resto = f.forma?.replace(/\s*\(?Female\)?$/, "").trim();
+    return resto ? `${resto} · ${rotulos.femea}` : rotulos.femea;
+  }
+  if (comFemea.has(f.id)) {
+    return f.forma && f.forma !== "Male" ? `${f.forma} · ${rotulos.macho}` : rotulos.macho;
+  }
+  return f.forma;
+}

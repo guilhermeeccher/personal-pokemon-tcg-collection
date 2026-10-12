@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { contaNaTrilha, contarVagasDex, filtrarFormasDex, type FormaParaGrade } from "./dex-grade";
+import {
+  contaNaTrilha,
+  contarVagasDex,
+  filtrarFormasDex,
+  formasComFemea,
+  rotuloDaForma,
+  type FormaParaGrade,
+} from "./dex-grade";
 import { resolverSecoes } from "./dex-secoes";
 
 const f = (numero: number, especie: string, extra: Partial<FormaParaGrade> = {}): FormaParaGrade => ({
@@ -67,5 +74,36 @@ describe("filtrarFormasDex", () => {
   it("busca por nome da espécie ou da forma, sem caixa nem acento", () => {
     expect(filtrarFormasDex(formas, { ...sem, busca: "rai" })).toHaveLength(1);
     expect(filtrarFormasDex(formas, { ...sem, busca: "world" })).toHaveLength(1);
+  });
+});
+
+describe("rótulo de macho e fêmea", () => {
+  const formas = [
+    { id: "pikachu", numero: 25, forma: null, categoria: "base" as const },
+    { id: "pikachu-femea", numero: 25, forma: "Female", categoria: "genero" as const },
+    { id: "pyroar", numero: 668, forma: "Male", categoria: "base" as const },
+    { id: "pyroar-female", numero: 668, forma: "Female", categoria: "genero" as const },
+    { id: "sneasel", numero: 215, forma: null, categoria: "base" as const },
+    { id: "sneasel-hisui", numero: 215, forma: "Hisuian Form", categoria: "regional" as const },
+    { id: "sneasel-hisui-femea", numero: 215, forma: "Hisuian Form (Female)", categoria: "genero" as const },
+    { id: "bulbasaur", numero: 1, forma: null, categoria: "base" as const },
+  ];
+  const comFemea = formasComFemea(formas);
+  const r = { macho: "Macho", femea: "Fêmea" };
+  const rotulo = (id: string) => rotuloDaForma(formas.find((f) => f.id === id)!, comFemea, r);
+
+  it("base com fêmea vira Macho, com ou sem nome da PokeAPI", () => {
+    expect(rotulo("pikachu")).toBe("Macho");
+    expect(rotulo("pyroar")).toBe("Macho");
+  });
+
+  it("fêmea vira Fêmea; forma regional mantém o nome", () => {
+    expect(rotulo("pikachu-femea")).toBe("Fêmea");
+    expect(rotulo("sneasel-hisui")).toBe("Hisuian Form · Macho");
+    expect(rotulo("sneasel-hisui-femea")).toBe("Hisuian Form · Fêmea");
+  });
+
+  it("espécie sem diferença de gênero fica como está", () => {
+    expect(rotulo("bulbasaur")).toBeNull();
   });
 });

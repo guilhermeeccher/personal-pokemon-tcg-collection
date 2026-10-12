@@ -109,3 +109,30 @@ describe("GO", () => {
     expect(naoTransferiveis().has("go:spinda")).toBe(true);
   });
 });
+
+describe("fêmeas no catálogo de cada jogo", () => {
+  /*
+   * Quem tem diferença de gênero ocupa duas vagas (base e fêmea). Se a forma
+   * de onde a fêmea sai existe no jogo, a fêmea também tem que existir — senão
+   * a tabela de cadastro daquele jogo não teria a linha para registrá-la.
+   */
+  const baseDaEspecie = new Map(formas.filter((f) => f.categoria === "base").map((f) => [f.numero, f.id]));
+  const femeas = formas.filter((f) => f.categoria === "genero");
+  const origemDaFemea = (id: string, numero: number) =>
+    id === "sneasel-hisui-femea" ? "sneasel-hisui" : baseDaEspecie.get(numero)!;
+
+  it.each(Object.keys(DISPONIBILIDADE))("%s: toda fêmea cuja forma de origem existe no jogo está no catálogo", (jogo) => {
+    const catalogo = ids(jogo);
+    const faltando = femeas
+      .filter((f) => catalogo.has(origemDaFemea(f.id, f.numero)) && !catalogo.has(f.id))
+      .map((f) => f.id);
+    expect(faltando).toEqual([]);
+  });
+
+  it("a fêmea sai pelo mesmo jeito que a base (troca, evento)", () => {
+    const fr = ids("firered");
+    expect(fr.get("venusaur-femea")?.como).toBe(fr.get("venusaur")?.como);
+    expect(fr.get("kadabra-femea")?.como).toBe("livre");
+    expect(fr.get("alakazam-femea")?.como).toBe("troca");
+  });
+});
