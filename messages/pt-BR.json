@@ -858,7 +858,8 @@
     "dexJogoJaPossuido": "{jogo} já está na sua lista.",
     "dexJogoNaoEncontrado": "Jogo não encontrado.",
     "dexJogoComRegistros": "{jogo} tem {quantidade} Pokémon registrado(s) nele. Mova-os ou marque o jogo como parado.",
-    "dexRegistroNaoEncontrado": "Registro não encontrado."
+    "dexRegistroNaoEncontrado": "Registro não encontrado.",
+    "dexNaoTransferivel": "O HOME não recebe este Pokémon de {jogo}."
   },
   "dex": {
     "categoria": {
@@ -941,7 +942,15 @@
       "semJogos": "Cadastre seus jogos primeiro.",
       "irParaJogos": "Meus jogos",
       "nada": "Nada com esse filtro.",
-      "erro": "Não foi possível cadastrar. Tente de novo."
+      "erro": "Não foi possível cadastrar. Tente de novo.",
+      "mostrarTodas": "Mostrar todas",
+      "como": {
+        "troca": "Troca",
+        "evento": "Evento"
+      },
+      "foraDoJogo": "Fora do jogo",
+      "naoVaiAoHome": "Não vai ao HOME",
+      "semCatalogo": "Sem catálogo deste jogo: mostrando todas."
     },
     "inventario": {
       "titulo": "Inventário",
@@ -988,6 +997,11 @@
       "titulo": "Transferência sem volta",
       "confirmar": "Transferir",
       "cancelar": "Cancelar"
+    },
+    "vista": {
+      "principal": "Principal",
+      "cosmeticas": "Cosméticas",
+      "rotulo": "Vista"
     }
   }
 }

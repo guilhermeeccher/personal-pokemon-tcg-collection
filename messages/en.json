@@ -858,7 +858,8 @@
     "dexJogoJaPossuido": "{jogo} is already on your list.",
     "dexJogoNaoEncontrado": "Game not found.",
     "dexJogoComRegistros": "{jogo} has {quantidade} recorded Pokémon in it. Move them or mark the game as stopped.",
-    "dexRegistroNaoEncontrado": "Record not found."
+    "dexRegistroNaoEncontrado": "Record not found.",
+    "dexNaoTransferivel": "HOME does not accept this Pokémon from {jogo}."
   },
   "dex": {
     "categoria": {
@@ -941,7 +942,15 @@
       "semJogos": "Add your games first.",
       "irParaJogos": "My games",
       "nada": "Nothing matches this filter.",
-      "erro": "Could not add them. Try again."
+      "erro": "Could not add them. Try again.",
+      "mostrarTodas": "Show all",
+      "como": {
+        "troca": "Trade",
+        "evento": "Event"
+      },
+      "foraDoJogo": "Not in this game",
+      "naoVaiAoHome": "Cannot go to HOME",
+      "semCatalogo": "No catalog for this game: showing everything."
     },
     "inventario": {
       "titulo": "Inventory",
@@ -988,6 +997,11 @@
       "titulo": "One-way transfer",
       "confirmar": "Transfer",
       "cancelar": "Cancel"
+    },
+    "vista": {
+      "principal": "Main",
+      "cosmeticas": "Cosmetic",
+      "rotulo": "View"
     }
   }
 }

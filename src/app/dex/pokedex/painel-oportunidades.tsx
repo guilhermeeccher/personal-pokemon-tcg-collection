@@ -17,6 +17,7 @@ import { Alerta } from "@/app/_componentes/alerta";
 import { Botao } from "@/app/_componentes/botao";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { Painel } from "@/app/_componentes/painel";
+import { naoTransferiveis } from "@/lib/dominio/dex-disponibilidade";
 import { oportunidadesHome } from "@/lib/dominio/dex-inventario";
 import { jogoDex, LOCAL_HOME } from "@/lib/dominio/dex-jogos";
 import type { FormaDexDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
@@ -37,7 +38,7 @@ export function PainelOportunidades({
   const [abertos, setAbertos] = useState<Record<string, boolean>>({});
 
   const formaPorId = useMemo(() => new Map(formas.map((f) => [f.id, f])), [formas]);
-  const grupos = useMemo(() => oportunidadesHome(registros), [registros]);
+  const grupos = useMemo(() => oportunidadesHome(registros, naoTransferiveis()), [registros]);
   const totalVagas = grupos.reduce((soma, g) => soma + g.itens.length, 0);
 
   return (

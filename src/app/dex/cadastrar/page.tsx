@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
 import { db } from "@/lib/db/client";
-import { listarFormasDex, listarJogosPossuidos, listarRegistrosDex } from "@/lib/db/dex";
+import { lerSecoesDex, listarFormasDex, listarJogosPossuidos, listarRegistrosDex } from "@/lib/db/dex";
 import { compararPorNome } from "@/lib/dominio/dex-inventario";
 import { moduloLivingDexAtivo } from "@/lib/modulos";
 
@@ -16,10 +16,11 @@ export default async function CadastrarPage({ searchParams }: PageProps<"/dex/ca
   await connection();
   if (!moduloLivingDexAtivo()) notFound();
 
-  const [formas, jogos, registros, params] = await Promise.all([
+  const [formas, jogos, registros, secoes, params] = await Promise.all([
     listarFormasDex(db),
     listarJogosPossuidos(db),
     listarRegistrosDex(db),
+    lerSecoesDex(db),
     searchParams,
   ]);
 
@@ -35,6 +36,7 @@ export default async function CadastrarPage({ searchParams }: PageProps<"/dex/ca
       formas={[...formas].sort(compararPorNome)}
       jogos={jogos.filter((j) => j.ativo)}
       tenho={tenho}
+      secoes={secoes}
       buscaInicial={typeof params.busca === "string" ? params.busca : ""}
     />
   );

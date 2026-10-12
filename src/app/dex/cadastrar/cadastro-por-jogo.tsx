@@ -6,8 +6,10 @@
  * a quantidade normal e a shiny. Um botão grava tudo; cada Pokémon vira um
  * registro, nascido no jogo e ainda nele.
  *
- * A tabela mostra todas as vagas, não só as que existem no jogo: o sistema
- * não tem a disponibilidade por jogo (spec §11). O filtro resolve.
+ * A tabela mostra só o que existe no jogo escolhido (`catalogoDoJogo`), com
+ * a marca de troca e de evento; "Mostrar todas" abre o resto, para o
+ * Pokémon que chegou de fora. Seções desligadas na Pokédex somem daqui, e
+ * as cosméticas ficam na vista delas, como na grade.
  *
  * 1.391 linhas com dois campos cada: a linha é memorizada e só redesenha
  * quando a quantidade dela muda.
@@ -25,7 +27,9 @@ import { classesEntrada } from "@/app/_componentes/campo";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { textosDasRecusas } from "@/app/_componentes/recusa";
 import { classesCelulaCabecalho, classesLinha, classesLinhaCabecalho, Tabela } from "@/app/_componentes/tabela";
-import { filtrarFormasDex } from "@/lib/dominio/dex-grade";
+import { catalogoDoJogo, type DisponibilidadeForma } from "@/lib/dominio/dex-disponibilidade";
+import { filtrarFormasDex, type VistaDex } from "@/lib/dominio/dex-grade";
+import { categoriaConta, type SecoesContadas } from "@/lib/dominio/dex-secoes";
 import { MAX_QUANTIDADE_POR_LINHA } from "@/lib/dominio/dex-registro";
 import type { FormaDexDTO, JogoPossuidoDTO } from "@/lib/dominio/tipos-cliente";
 
@@ -47,6 +51,8 @@ function lerQuantidade(texto: string): number {
 
 const LinhaForma = memo(function LinhaForma({
   forma,
+  disponibilidade,
+  comCatalogo,
   normal,
   shiny,
   tenhoNormal,
@@ -54,12 +60,16 @@ const LinhaForma = memo(function LinhaForma({
   aoMudar,
 }: {
   forma: FormaDexDTO;
+  /** `undefined` com catálogo = fora do jogo. */
+  disponibilidade: DisponibilidadeForma | undefined;
+  comCatalogo: boolean;
   normal: number;
   shiny: number;
   tenhoNormal: number;
   tenhoShiny: number;
   aoMudar: (formaId: string, trilha: Trilha, valor: number) => void;
 }) {
+  const t = useTranslations("dex");
   const marcada = normal + shiny > 0;
   const campo = (trilha: Trilha, valor: number) => (
     <input
@@ -81,6 +91,19 @@ const LinhaForma = memo(function LinhaForma({
       <td className="p-2">
         <span className="font-semibold text-strong">{forma.especie}</span>
         {forma.forma && <span className="ml-1 text-xs text-muted">{forma.forma}</span>}
+        {comCatalogo && !disponibilidade && (
+          <Distintivo className="ml-2">{t("cadastrar.foraDoJogo")}</Distintivo>
+        )}
+        {disponibilidade && disponibilidade.como !== "livre" && (
+          <Distintivo tom="aviso" className="ml-2">
+            {t(`cadastrar.como.${disponibilidade.como}`)}
+          </Distintivo>
+        )}
+        {disponibilidade && !disponibilidade.transferivel && (
+          <Distintivo tom="perigo" className="ml-2">
+            {t("cadastrar.naoVaiAoHome")}
+          </Distintivo>
+        )}
       </td>
       <td className="p-2 font-mono text-xs tabular-nums text-muted">{forma.numero}</td>
       <td className="p-2 text-xs tabular-nums">
@@ -97,11 +120,13 @@ export function CadastroPorJogo({
   formas,
   jogos,
   tenho,
+  secoes,
   buscaInicial,
 }: {
   formas: FormaDexDTO[];
   jogos: JogoPossuidoDTO[];
   tenho: Quantidades;
+  secoes: SecoesContadas;
   buscaInicial: string;
 }) {
   const t = useTranslations("dex");
@@ -111,17 +136,24 @@ export function CadastroPorJogo({
   const [jogoId, setJogoId] = useState(jogos[0]?.jogoId ?? "");
   const [filtro, setFiltro] = useState(buscaInicial);
   const [soQueNaoTenho, setSoQueNaoTenho] = useState(false);
+  const [vista, setVista] = useState<VistaDex>("principal");
+  const [mostrarTodas, setMostrarTodas] = useState(false);
   const [quantidades, setQuantidades] = useState<Quantidades>({});
   const [enviando, setEnviando] = useState(false);
   const [erros, setErros] = useState<string[]>([]);
   const [sucesso, setSucesso] = useState<string | null>(null);
 
+  const catalogo = useMemo(() => catalogoDoJogo(jogoId, formas), [jogoId, formas]);
+
   const visiveis = useMemo(
     () =>
-      filtrarFormasDex(formas, { regiao: "todas", categoria: "todas", busca: filtro }).filter(
-        (f) => !soQueNaoTenho || !tenho[f.id],
+      filtrarFormasDex(formas, { vista, regiao: "todas", categoria: "todas", busca: filtro }).filter(
+        (f) =>
+          categoriaConta(f.categoria, secoes) &&
+          (mostrarTodas || !catalogo || catalogo.has(f.id)) &&
+          (!soQueNaoTenho || !tenho[f.id]),
       ),
-    [formas, filtro, soQueNaoTenho, tenho],
+    [formas, vista, filtro, secoes, mostrarTodas, catalogo, soQueNaoTenho, tenho],
   );
 
   const total = useMemo(
@@ -202,6 +234,19 @@ export function CadastroPorJogo({
             </button>
           ))}
         </div>
+        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("vista.rotulo")}>
+          {(["principal", "cosmeticas"] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={vista === v}
+              onClick={() => setVista(v)}
+              className={classesOpcao(vista === v)}
+            >
+              {t(`vista.${v}`)}
+            </button>
+          ))}
+        </div>
         <div className="flex flex-wrap items-center gap-3">
           <input
             aria-label={t("cadastrar.filtrar")}
@@ -214,6 +259,14 @@ export function CadastroPorJogo({
             <input type="checkbox" checked={soQueNaoTenho} onChange={(e) => setSoQueNaoTenho(e.target.checked)} />
             {t("cadastrar.soQueNaoTenho")}
           </label>
+          {catalogo ? (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={mostrarTodas} onChange={(e) => setMostrarTodas(e.target.checked)} />
+              {t("cadastrar.mostrarTodas")}
+            </label>
+          ) : (
+            <span className="text-xs text-muted">{t("cadastrar.semCatalogo")}</span>
+          )}
           <div className="ml-auto flex gap-2">
             {total > 0 && (
               <Botao tamanho="sm" onClick={() => setQuantidades({})} disabled={enviando}>
@@ -253,6 +306,8 @@ export function CadastroPorJogo({
             <LinhaForma
               key={f.id}
               forma={f}
+              disponibilidade={catalogo?.get(f.id)}
+              comCatalogo={catalogo !== null}
               normal={quantidades[f.id]?.normal ?? 0}
               shiny={quantidades[f.id]?.shiny ?? 0}
               tenhoNormal={tenho[f.id]?.normal ?? 0}

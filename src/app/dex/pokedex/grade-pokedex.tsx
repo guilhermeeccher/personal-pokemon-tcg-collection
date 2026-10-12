@@ -23,7 +23,14 @@ import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { Painel } from "@/app/_componentes/painel";
 import { SECOES_LIGAVEIS, CATEGORIAS_FORMA_DEX, type SecaoLigavel } from "@/lib/dominio/dex-classificacao";
-import { contaNaTrilha, contarVagasDex, filtrarFormasDex, type TrilhaDex } from "@/lib/dominio/dex-grade";
+import {
+  contaNaTrilha,
+  contarVagasDex,
+  filtrarFormasDex,
+  vistaDaCategoria,
+  type TrilhaDex,
+  type VistaDex,
+} from "@/lib/dominio/dex-grade";
 import {
   estadoDaVaga,
   mapearEstadosDex,
@@ -66,20 +73,26 @@ export function GradePokedex({
   const [salvando, setSalvando] = useState<SecaoLigavel | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [trilha, setTrilha] = useState<TrilhaDex>("normal");
+  const [vista, setVista] = useState<VistaDex>("principal");
   const [regiao, setRegiao] = useState<Regiao | "todas">("kanto");
   const [categoria, setCategoria] = useState<(typeof CATEGORIAS_FORMA_DEX)[number] | "todas">("todas");
   const [busca, setBusca] = useState("");
   const [filtroEstado, setFiltroEstado] = useState<EstadoVagaDex | "todos">("todos");
 
   const estados = useMemo(() => mapearEstadosDex(registros), [registros]);
-  const progresso = useMemo(() => progressoDex(formas, estados, secoes), [formas, estados, secoes]);
+  const formasDaVista = useMemo(() => formas.filter((f) => vistaDaCategoria(f.categoria) === vista), [formas, vista]);
+  const progresso = useMemo(
+    () => progressoDex(formasDaVista, estados, secoes),
+    [formasDaVista, estados, secoes],
+  );
+  const categoriasDaVista = CATEGORIAS_FORMA_DEX.filter((c) => vistaDaCategoria(c) === vista);
 
   const visiveis = useMemo(
     () =>
-      filtrarFormasDex(formas, { regiao, categoria, busca }).filter(
+      filtrarFormasDex(formas, { vista, regiao, categoria, busca }).filter(
         (f) => filtroEstado === "todos" || estadoDaVaga(estados, f.id, trilha) === filtroEstado,
       ),
-    [formas, regiao, categoria, busca, filtroEstado, estados, trilha],
+    [formas, vista, regiao, categoria, busca, filtroEstado, estados, trilha],
   );
   const totaisVisiveis = useMemo(() => contarVagasDex(visiveis, secoes), [visiveis, secoes]);
 
@@ -108,6 +121,23 @@ export function GradePokedex({
 
       <PainelOportunidades formas={formas} registros={registros} />
 
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t("vista.rotulo")}>
+        {(["principal", "cosmeticas"] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            aria-pressed={vista === v}
+            onClick={() => {
+              setVista(v);
+              setCategoria("todas");
+            }}
+            className={classesOpcao(vista === v)}
+          >
+            {t(`vista.${v}`)}
+          </button>
+        ))}
+      </div>
+
       <Painel className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           {(["normal", "shiny"] as const).map((tr) => (
@@ -132,27 +162,29 @@ export function GradePokedex({
             </div>
           ))}
         </div>
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-medium">{t("pokedex.secoesQueContam")}</legend>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={classesOpcao(true)} title={t("pokedex.baseSempre")}>
-              {t("categoria.base")}
-            </span>
-            {SECOES_LIGAVEIS.map((secao) => (
-              <button
-                key={secao}
-                type="button"
-                aria-pressed={secoes[secao]}
-                disabled={salvando !== null}
-                onClick={() => alternarSecao(secao)}
-                className={classesOpcao(secoes[secao])}
-              >
-                {t(`categoria.${secao}`)}
-              </button>
-            ))}
-          </div>
-          {erro && <p className="text-xs text-danger-fg">{erro}</p>}
-        </fieldset>
+        {vista === "principal" && (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-sm font-medium">{t("pokedex.secoesQueContam")}</legend>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={classesOpcao(true)} title={t("pokedex.baseSempre")}>
+                {t("categoria.base")}
+              </span>
+              {SECOES_LIGAVEIS.map((secao) => (
+                <button
+                  key={secao}
+                  type="button"
+                  aria-pressed={secoes[secao]}
+                  disabled={salvando !== null}
+                  onClick={() => alternarSecao(secao)}
+                  className={classesOpcao(secoes[secao])}
+                >
+                  {t(`categoria.${secao}`)}
+                </button>
+              ))}
+            </div>
+            {erro && <p className="text-xs text-danger-fg">{erro}</p>}
+          </fieldset>
+        )}
       </Painel>
 
       <div className="flex flex-col gap-3">
@@ -215,7 +247,7 @@ export function GradePokedex({
               className="w-full max-w-xs rounded border border-line bg-transparent p-2"
             >
               <option value="todas">{t("pokedex.todas")}</option>
-              {CATEGORIAS_FORMA_DEX.map((c) => (
+              {categoriasDaVista.map((c) => (
                 <option key={c} value={c}>
                   {t(`categoria.${c}`)}
                 </option>
