@@ -1,0 +1,1 @@
+ALTER TABLE "dex_forma" ADD COLUMN "forma_pt" text;

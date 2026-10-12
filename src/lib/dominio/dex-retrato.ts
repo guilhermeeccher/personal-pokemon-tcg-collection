@@ -83,7 +83,11 @@ export interface Retrato {
   tarefasFechadas: { plano: string; titulo: string; status: string; concluidaEm: string }[];
 }
 
-const nomeDaForma = (f: { especie: string; forma: string | null }) => (f.forma ? `${f.especie} (${f.forma})` : f.especie);
+/** Nome da vaga no retrato: o português oficial e o inglês, que é o das fontes de pesquisa. */
+const nomeDaForma = (f: { especie: string; forma: string | null; formaPt?: string | null }) => {
+  if (!f.forma) return f.especie;
+  return f.formaPt && f.formaPt !== f.forma ? `${f.especie} (${f.formaPt} · ${f.forma})` : `${f.especie} (${f.forma})`;
+};
 
 export function montarRetrato(e: EntradaRetrato): Retrato {
   const mapa = mapearEstadosDex(e.registros);

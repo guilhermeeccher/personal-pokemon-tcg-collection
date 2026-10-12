@@ -71,6 +71,7 @@ async function main() {
             numero: sql`excluded.numero`,
             especie: sql`excluded.especie`,
             forma: sql`excluded.forma`,
+            formaPt: sql`excluded.forma_pt`,
             categoria: sql`excluded.categoria`,
             geracao: sql`excluded.geracao`,
             lendario: sql`excluded.lendario`,

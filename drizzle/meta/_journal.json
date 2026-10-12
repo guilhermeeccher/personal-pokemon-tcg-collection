@@ -183,6 +183,13 @@
       "when": 1791808512086,
       "tag": "0025_living_dex_trofeus_planos",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791812372137,
+      "tag": "0026_living_dex_forma_pt",
+      "breakpoints": true
     }
   ]
 }

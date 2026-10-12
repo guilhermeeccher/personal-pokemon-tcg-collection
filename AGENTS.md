@@ -517,6 +517,15 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
 - **Gender pairs are labelled on screen.** A species with a gender difference has two slots, and the
   screens say which is which (`rotuloDaForma`: male and female in the interface language). PokeAPI
   names the male "Male" for some species and leaves it blank for others; do not rely on its name.
+- **Form names in Portuguese are official names only, never a translation of ours**
+  (`lib/dominio/dex-nomes-forma.ts`, column `forma_pt`). Species names stay in English, as Brazil
+  uses them. HOME has no Brazilian Portuguese yet, and PokeAPI has no Portuguese form names, so the
+  sources are, in order: Pokémon GO's Brazilian Portuguese text (the only game with these names;
+  each entry keeps the text key) and the Portuguese card names in the TCGdex catalog. A form neither
+  of them names keeps its English name — the one HOME shows — and is listed as such. `gerar:seed-dex`
+  fails on a form name with no entry, and a test fails on an entry no slot uses. The screen shows
+  `forma_pt` when the interface is in Portuguese; the search matches both names. When HOME gets
+  Portuguese, its names replace these.
 - **The seed runs on every boot, not only on an empty table** — unlike the card seed. The file is the
   only source of this catalog and it is small, so a corrected classification reaches every install on
   the next boot. A slot that left the file is **deactivated, never deleted**: a user record may point

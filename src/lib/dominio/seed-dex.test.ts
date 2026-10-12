@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import type { FormaDex } from "./dex-classificacao";
 import { lerRegistrosCsv } from "./seed-catalogo";
-import { COLUNAS_DEX_FORMA, converterLinhaDexForma, serializarSeedDex } from "./seed-dex";
+import { COLUNAS_DEX_FORMA, converterLinhaDexForma, serializarSeedDex, type VagaSeedDex } from "./seed-dex";
 
-const vagas: FormaDex[] = [
+const vagas: VagaSeedDex[] = [
   {
     id: "bulbasaur",
     numero: 1,
     especie: "Bulbasaur",
     forma: null,
+    formaPt: null,
     categoria: "base",
     geracao: 1,
     lendario: false,
@@ -23,6 +23,7 @@ const vagas: FormaDex[] = [
     numero: 128,
     especie: "Tauros",
     forma: 'Paldean Form, "Combat Breed"',
+    formaPt: 'Forma de Paldea, "Espécie de Combate"',
     categoria: "regional",
     geracao: 1,
     lendario: false,
@@ -42,7 +43,7 @@ describe("seed/dex-forma.csv — ida e volta", () => {
 
   it("forma nula sai como campo vazio sem aspas, e volta nula", () => {
     const texto = serializarSeedDex(vagas.slice(0, 1));
-    expect(texto.split("\n")[1]).toBe("bulbasaur,1,Bulbasaur,,base,1,f,f,t,1,1");
+    expect(texto.split("\n")[1]).toBe("bulbasaur,1,Bulbasaur,,,base,1,f,f,t,1,1");
   });
 
   it("categoria desconhecida aborta a leitura", () => {

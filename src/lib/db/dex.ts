@@ -32,6 +32,7 @@ export async function listarFormasDex(db: Db): Promise<FormaDexDTO[]> {
       numero: dexForma.numero,
       especie: dexForma.especie,
       forma: dexForma.forma,
+      formaPt: dexForma.formaPt,
       categoria: dexForma.categoria,
       geracao: dexForma.geracao,
       lendario: dexForma.lendario,

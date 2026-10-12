@@ -874,6 +874,11 @@ export const dexForma = pgTable(
     especie: text("especie").notNull(),
     /** Nome da forma em inglês; nulo na base sem nome (Bulbasaur). */
     forma: text("forma"),
+    /**
+     * Nome oficial da forma em português (`dex-nomes-forma.ts`); nulo quando
+     * não há nome oficial, e a tela mostra o inglês, como o HOME.
+     */
+    formaPt: text("forma_pt"),
     categoria: categoriaFormaDexEnum("categoria").notNull(),
     geracao: integer("geracao").notNull(),
     lendario: boolean("lendario").notNull().default(false),

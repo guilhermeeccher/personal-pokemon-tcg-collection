@@ -18,11 +18,15 @@ import type { RegistroCsv } from "./seed-catalogo";
 
 export type LinhaSeedDexForma = typeof dexForma.$inferInsert;
 
+/** Uma vaga do seed: a classificação mais o nome da forma em português (`dex-nomes-forma.ts`). */
+export type VagaSeedDex = FormaDex & { formaPt: string | null };
+
 export const COLUNAS_DEX_FORMA = [
   "id",
   "numero",
   "especie",
   "forma",
+  "forma_pt",
   "categoria",
   "geracao",
   "lendario",
@@ -70,6 +74,7 @@ export function converterLinhaDexForma(registro: RegistroCsv): LinhaSeedDexForma
     numero: inteiro(registro, "numero"),
     especie: exigir(registro, "especie"),
     forma: registro.forma ?? null,
+    formaPt: registro.forma_pt ?? null,
     categoria: categoria(registro),
     geracao: inteiro(registro, "geracao"),
     lendario: booleano(registro, "lendario"),
@@ -89,7 +94,7 @@ function campoCsv(valor: string | number | boolean | null): string {
 }
 
 /** Serializa as vagas no formato que `converterLinhaDexForma` lê. */
-export function serializarSeedDex(vagas: readonly FormaDex[]): string {
+export function serializarSeedDex(vagas: readonly VagaSeedDex[]): string {
   const linhas = [COLUNAS_DEX_FORMA.join(",")];
   for (const v of vagas) {
     linhas.push(
@@ -98,6 +103,7 @@ export function serializarSeedDex(vagas: readonly FormaDex[]): string {
         v.numero,
         v.especie,
         v.forma,
+        v.formaPt,
         v.categoria,
         v.geracao,
         v.lendario,

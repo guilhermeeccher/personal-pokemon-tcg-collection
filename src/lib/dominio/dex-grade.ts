@@ -25,6 +25,8 @@ export interface FormaParaGrade {
   numero: number;
   especie: string;
   forma: string | null;
+  /** Nome oficial da forma em português, quando existe (`dex-nomes-forma.ts`). */
+  formaPt?: string | null;
   categoria: CategoriaFormaDex;
   shinyObtenivel: boolean;
 }
@@ -34,7 +36,7 @@ export interface FiltroGradeDex {
   vista?: VistaDex;
   regiao: Regiao | "todas";
   categoria: CategoriaFormaDex | "todas";
-  /** Nome da espécie, da forma, ou número da Pokédex. */
+  /** Nome da espécie, da forma (em inglês ou português), ou número da Pokédex. */
   busca: string;
 }
 
@@ -61,7 +63,11 @@ export function filtrarFormasDex<T extends FormaParaGrade>(formas: readonly T[],
     if (filtro.categoria !== "todas" && f.categoria !== filtro.categoria) return false;
     if (!busca) return true;
     if (numeroBuscado !== null) return f.numero === numeroBuscado;
-    return normalizar(f.especie).includes(busca) || normalizar(f.forma ?? "").includes(busca);
+    return (
+      normalizar(f.especie).includes(busca) ||
+      normalizar(f.forma ?? "").includes(busca) ||
+      normalizar(f.formaPt ?? "").includes(busca)
+    );
   });
 }
 
@@ -97,20 +103,22 @@ export function formasComFemea(formas: readonly { id: string; numero: number; ca
 }
 
 /**
- * Rótulo da forma na tela: macho e fêmea no idioma da interface; o resto,
- * o nome da PokeAPI (em inglês, como as espécies).
+ * Rótulo da forma na tela: macho e fêmea no idioma da interface; o resto, o
+ * nome oficial em português quando a interface está em português e ele
+ * existe, senão o nome da PokeAPI em inglês — o mesmo que o HOME mostra.
  */
 export function rotuloDaForma(
-  f: { id: string; forma: string | null; categoria: CategoriaFormaDex },
+  f: { id: string; forma: string | null; formaPt?: string | null; categoria: CategoriaFormaDex },
   comFemea: ReadonlySet<string>,
-  rotulos: { macho: string; femea: string },
+  rotulos: { macho: string; femea: string; portugues?: boolean },
 ): string | null {
+  const nome = rotulos.portugues && f.formaPt ? f.formaPt : f.forma;
   if (f.categoria === "genero") {
-    const resto = f.forma?.replace(/\s*\(?Female\)?$/, "").trim();
+    const resto = nome?.replace(/\s*\(?Female\)?$/, "").trim();
     return resto ? `${resto} · ${rotulos.femea}` : rotulos.femea;
   }
   if (comFemea.has(f.id)) {
-    return f.forma && f.forma !== "Male" ? `${f.forma} · ${rotulos.macho}` : rotulos.macho;
+    return nome && f.forma !== "Male" ? `${nome} · ${rotulos.macho}` : rotulos.macho;
   }
-  return f.forma;
+  return nome;
 }

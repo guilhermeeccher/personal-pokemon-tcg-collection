@@ -1,1392 +1,1392 @@
-id,numero,especie,forma,categoria,geracao,lendario,mitico,shiny_obtenivel,sprite,ordem
-bulbasaur,1,Bulbasaur,,base,1,f,f,t,1,1
-ivysaur,2,Ivysaur,,base,1,f,f,t,2,2
-venusaur,3,Venusaur,,base,1,f,f,t,3,3
-venusaur-femea,3,Venusaur,Female,genero,1,f,f,t,female/3,4
-charmander,4,Charmander,,base,1,f,f,t,4,5
-charmeleon,5,Charmeleon,,base,1,f,f,t,5,6
-charizard,6,Charizard,,base,1,f,f,t,6,7
-squirtle,7,Squirtle,,base,1,f,f,t,7,8
-wartortle,8,Wartortle,,base,1,f,f,t,8,9
-blastoise,9,Blastoise,,base,1,f,f,t,9,10
-caterpie,10,Caterpie,,base,1,f,f,t,10,11
-metapod,11,Metapod,,base,1,f,f,t,11,12
-butterfree,12,Butterfree,,base,1,f,f,t,12,13
-butterfree-femea,12,Butterfree,Female,genero,1,f,f,t,female/12,14
-weedle,13,Weedle,,base,1,f,f,t,13,15
-kakuna,14,Kakuna,,base,1,f,f,t,14,16
-beedrill,15,Beedrill,,base,1,f,f,t,15,17
-pidgey,16,Pidgey,,base,1,f,f,t,16,18
-pidgeotto,17,Pidgeotto,,base,1,f,f,t,17,19
-pidgeot,18,Pidgeot,,base,1,f,f,t,18,20
-rattata,19,Rattata,,base,1,f,f,t,19,21
-rattata-femea,19,Rattata,Female,genero,1,f,f,t,female/19,22
-rattata-alola,19,Rattata,Alolan Form,regional,1,f,f,t,10091,23
-raticate,20,Raticate,,base,1,f,f,t,20,24
-raticate-femea,20,Raticate,Female,genero,1,f,f,t,female/20,25
-raticate-alola,20,Raticate,Alolan Form,regional,1,f,f,t,10092,26
-spearow,21,Spearow,,base,1,f,f,t,21,27
-fearow,22,Fearow,,base,1,f,f,t,22,28
-ekans,23,Ekans,,base,1,f,f,t,23,29
-arbok,24,Arbok,,base,1,f,f,t,24,30
-pikachu,25,Pikachu,,base,1,f,f,t,25,31
-pikachu-femea,25,Pikachu,Female,genero,1,f,f,t,female/25,32
-pikachu-original-cap,25,Pikachu,Original Cap,cosmetica,1,f,f,f,10094,33
-pikachu-hoenn-cap,25,Pikachu,Hoenn Cap,cosmetica,1,f,f,f,10095,34
-pikachu-sinnoh-cap,25,Pikachu,Sinnoh Cap,cosmetica,1,f,f,f,10096,35
-pikachu-unova-cap,25,Pikachu,Unova Cap,cosmetica,1,f,f,f,10097,36
-pikachu-kalos-cap,25,Pikachu,Kalos Cap,cosmetica,1,f,f,f,10098,37
-pikachu-alola-cap,25,Pikachu,Alola Cap,cosmetica,1,f,f,f,10099,38
-pikachu-partner-cap,25,Pikachu,Partner Cap,cosmetica,1,f,f,t,10148,39
-pikachu-world-cap,25,Pikachu,World Cap,cosmetica,1,f,f,f,10160,40
-raichu,26,Raichu,,base,1,f,f,t,26,41
-raichu-femea,26,Raichu,Female,genero,1,f,f,t,female/26,42
-raichu-alola,26,Raichu,Alolan Form,regional,1,f,f,t,10100,43
-sandshrew,27,Sandshrew,,base,1,f,f,t,27,44
-sandshrew-alola,27,Sandshrew,Alolan Form,regional,1,f,f,t,10101,45
-sandslash,28,Sandslash,,base,1,f,f,t,28,46
-sandslash-alola,28,Sandslash,Alolan Form,regional,1,f,f,t,10102,47
-nidoran-f,29,Nidoran♀,,base,1,f,f,t,29,48
-nidorina,30,Nidorina,,base,1,f,f,t,30,49
-nidoqueen,31,Nidoqueen,,base,1,f,f,t,31,50
-nidoran-m,32,Nidoran♂,,base,1,f,f,t,32,51
-nidorino,33,Nidorino,,base,1,f,f,t,33,52
-nidoking,34,Nidoking,,base,1,f,f,t,34,53
-clefairy,35,Clefairy,,base,1,f,f,t,35,54
-clefable,36,Clefable,,base,1,f,f,t,36,55
-vulpix,37,Vulpix,,base,1,f,f,t,37,56
-vulpix-alola,37,Vulpix,Alolan Form,regional,1,f,f,t,10103,57
-ninetales,38,Ninetales,,base,1,f,f,t,38,58
-ninetales-alola,38,Ninetales,Alolan Form,regional,1,f,f,t,10104,59
-jigglypuff,39,Jigglypuff,,base,1,f,f,t,39,60
-wigglytuff,40,Wigglytuff,,base,1,f,f,t,40,61
-zubat,41,Zubat,,base,1,f,f,t,41,62
-zubat-femea,41,Zubat,Female,genero,1,f,f,t,female/41,63
-golbat,42,Golbat,,base,1,f,f,t,42,64
-golbat-femea,42,Golbat,Female,genero,1,f,f,t,female/42,65
-oddish,43,Oddish,,base,1,f,f,t,43,66
-gloom,44,Gloom,,base,1,f,f,t,44,67
-gloom-femea,44,Gloom,Female,genero,1,f,f,t,female/44,68
-vileplume,45,Vileplume,,base,1,f,f,t,45,69
-vileplume-femea,45,Vileplume,Female,genero,1,f,f,t,female/45,70
-paras,46,Paras,,base,1,f,f,t,46,71
-parasect,47,Parasect,,base,1,f,f,t,47,72
-venonat,48,Venonat,,base,1,f,f,t,48,73
-venomoth,49,Venomoth,,base,1,f,f,t,49,74
-diglett,50,Diglett,,base,1,f,f,t,50,75
-diglett-alola,50,Diglett,Alolan Form,regional,1,f,f,t,10105,76
-dugtrio,51,Dugtrio,,base,1,f,f,t,51,77
-dugtrio-alola,51,Dugtrio,Alolan Form,regional,1,f,f,t,10106,78
-meowth,52,Meowth,,base,1,f,f,t,52,79
-meowth-alola,52,Meowth,Alolan Form,regional,1,f,f,t,10107,80
-meowth-galar,52,Meowth,Galarian Form,regional,1,f,f,t,10161,81
-persian,53,Persian,,base,1,f,f,t,53,82
-persian-alola,53,Persian,Alolan Form,regional,1,f,f,t,10108,83
-psyduck,54,Psyduck,,base,1,f,f,t,54,84
-golduck,55,Golduck,,base,1,f,f,t,55,85
-mankey,56,Mankey,,base,1,f,f,t,56,86
-primeape,57,Primeape,,base,1,f,f,t,57,87
-growlithe,58,Growlithe,,base,1,f,f,t,58,88
-growlithe-hisui,58,Growlithe,Hisuian Form,regional,1,f,f,t,10229,89
-arcanine,59,Arcanine,,base,1,f,f,t,59,90
-arcanine-hisui,59,Arcanine,Hisuian Form,regional,1,f,f,t,10230,91
-poliwag,60,Poliwag,,base,1,f,f,t,60,92
-poliwhirl,61,Poliwhirl,,base,1,f,f,t,61,93
-poliwrath,62,Poliwrath,,base,1,f,f,t,62,94
-abra,63,Abra,,base,1,f,f,t,63,95
-kadabra,64,Kadabra,,base,1,f,f,t,64,96
-kadabra-femea,64,Kadabra,Female,genero,1,f,f,t,female/64,97
-alakazam,65,Alakazam,,base,1,f,f,t,65,98
-alakazam-femea,65,Alakazam,Female,genero,1,f,f,t,female/65,99
-machop,66,Machop,,base,1,f,f,t,66,100
-machoke,67,Machoke,,base,1,f,f,t,67,101
-machamp,68,Machamp,,base,1,f,f,t,68,102
-bellsprout,69,Bellsprout,,base,1,f,f,t,69,103
-weepinbell,70,Weepinbell,,base,1,f,f,t,70,104
-victreebel,71,Victreebel,,base,1,f,f,t,71,105
-tentacool,72,Tentacool,,base,1,f,f,t,72,106
-tentacruel,73,Tentacruel,,base,1,f,f,t,73,107
-geodude,74,Geodude,,base,1,f,f,t,74,108
-geodude-alola,74,Geodude,Alolan Form,regional,1,f,f,t,10109,109
-graveler,75,Graveler,,base,1,f,f,t,75,110
-graveler-alola,75,Graveler,Alolan Form,regional,1,f,f,t,10110,111
-golem,76,Golem,,base,1,f,f,t,76,112
-golem-alola,76,Golem,Alolan Form,regional,1,f,f,t,10111,113
-ponyta,77,Ponyta,,base,1,f,f,t,77,114
-ponyta-galar,77,Ponyta,Galarian Form,regional,1,f,f,t,10162,115
-rapidash,78,Rapidash,,base,1,f,f,t,78,116
-rapidash-galar,78,Rapidash,Galarian Form,regional,1,f,f,t,10163,117
-slowpoke,79,Slowpoke,,base,1,f,f,t,79,118
-slowpoke-galar,79,Slowpoke,Galarian Form,regional,1,f,f,t,10164,119
-slowbro,80,Slowbro,,base,1,f,f,t,80,120
-slowbro-galar,80,Slowbro,Galarian Form,regional,1,f,f,t,10165,121
-magnemite,81,Magnemite,,base,1,f,f,t,81,122
-magneton,82,Magneton,,base,1,f,f,t,82,123
-farfetchd,83,Farfetch’d,,base,1,f,f,t,83,124
-farfetchd-galar,83,Farfetch’d,Galarian Form,regional,1,f,f,t,10166,125
-doduo,84,Doduo,,base,1,f,f,t,84,126
-doduo-femea,84,Doduo,Female,genero,1,f,f,t,female/84,127
-dodrio,85,Dodrio,,base,1,f,f,t,85,128
-dodrio-femea,85,Dodrio,Female,genero,1,f,f,t,female/85,129
-seel,86,Seel,,base,1,f,f,t,86,130
-dewgong,87,Dewgong,,base,1,f,f,t,87,131
-grimer,88,Grimer,,base,1,f,f,t,88,132
-grimer-alola,88,Grimer,Alolan Form,regional,1,f,f,t,10112,133
-muk,89,Muk,,base,1,f,f,t,89,134
-muk-alola,89,Muk,Alolan Form,regional,1,f,f,t,10113,135
-shellder,90,Shellder,,base,1,f,f,t,90,136
-cloyster,91,Cloyster,,base,1,f,f,t,91,137
-gastly,92,Gastly,,base,1,f,f,t,92,138
-haunter,93,Haunter,,base,1,f,f,t,93,139
-gengar,94,Gengar,,base,1,f,f,t,94,140
-onix,95,Onix,,base,1,f,f,t,95,141
-drowzee,96,Drowzee,,base,1,f,f,t,96,142
-hypno,97,Hypno,,base,1,f,f,t,97,143
-hypno-femea,97,Hypno,Female,genero,1,f,f,t,female/97,144
-krabby,98,Krabby,,base,1,f,f,t,98,145
-kingler,99,Kingler,,base,1,f,f,t,99,146
-voltorb,100,Voltorb,,base,1,f,f,t,100,147
-voltorb-hisui,100,Voltorb,Hisuian Form,regional,1,f,f,t,10231,148
-electrode,101,Electrode,,base,1,f,f,t,101,149
-electrode-hisui,101,Electrode,Hisuian Form,regional,1,f,f,t,10232,150
-exeggcute,102,Exeggcute,,base,1,f,f,t,102,151
-exeggutor,103,Exeggutor,,base,1,f,f,t,103,152
-exeggutor-alola,103,Exeggutor,Alolan Form,regional,1,f,f,t,10114,153
-cubone,104,Cubone,,base,1,f,f,t,104,154
-marowak,105,Marowak,,base,1,f,f,t,105,155
-marowak-alola,105,Marowak,Alolan Form,regional,1,f,f,t,10115,156
-hitmonlee,106,Hitmonlee,,base,1,f,f,t,106,157
-hitmonchan,107,Hitmonchan,,base,1,f,f,t,107,158
-lickitung,108,Lickitung,,base,1,f,f,t,108,159
-koffing,109,Koffing,,base,1,f,f,t,109,160
-weezing,110,Weezing,,base,1,f,f,t,110,161
-weezing-galar,110,Weezing,Galarian Form,regional,1,f,f,t,10167,162
-rhyhorn,111,Rhyhorn,,base,1,f,f,t,111,163
-rhyhorn-femea,111,Rhyhorn,Female,genero,1,f,f,t,female/111,164
-rhydon,112,Rhydon,,base,1,f,f,t,112,165
-rhydon-femea,112,Rhydon,Female,genero,1,f,f,t,female/112,166
-chansey,113,Chansey,,base,1,f,f,t,113,167
-tangela,114,Tangela,,base,1,f,f,t,114,168
-kangaskhan,115,Kangaskhan,,base,1,f,f,t,115,169
-horsea,116,Horsea,,base,1,f,f,t,116,170
-seadra,117,Seadra,,base,1,f,f,t,117,171
-goldeen,118,Goldeen,,base,1,f,f,t,118,172
-goldeen-femea,118,Goldeen,Female,genero,1,f,f,t,female/118,173
-seaking,119,Seaking,,base,1,f,f,t,119,174
-seaking-femea,119,Seaking,Female,genero,1,f,f,t,female/119,175
-staryu,120,Staryu,,base,1,f,f,t,120,176
-starmie,121,Starmie,,base,1,f,f,t,121,177
-mr-mime,122,Mr. Mime,,base,1,f,f,t,122,178
-mr-mime-galar,122,Mr. Mime,Galarian Form,regional,1,f,f,t,10168,179
-scyther,123,Scyther,,base,1,f,f,t,123,180
-scyther-femea,123,Scyther,Female,genero,1,f,f,t,female/123,181
-jynx,124,Jynx,,base,1,f,f,t,124,182
-electabuzz,125,Electabuzz,,base,1,f,f,t,125,183
-magmar,126,Magmar,,base,1,f,f,t,126,184
-pinsir,127,Pinsir,,base,1,f,f,t,127,185
-tauros,128,Tauros,,base,1,f,f,t,128,186
-tauros-paldea-combat-breed,128,Tauros,Paldean Form (Combat Breed),regional,1,f,f,t,10250,187
-tauros-paldea-blaze-breed,128,Tauros,Paldean Form (Blaze Breed),regional,1,f,f,t,10251,188
-tauros-paldea-aqua-breed,128,Tauros,Paldean Form (Aqua Breed),regional,1,f,f,t,10252,189
-magikarp,129,Magikarp,,base,1,f,f,t,129,190
-magikarp-femea,129,Magikarp,Female,genero,1,f,f,t,female/129,191
-gyarados,130,Gyarados,,base,1,f,f,t,130,192
-gyarados-femea,130,Gyarados,Female,genero,1,f,f,t,female/130,193
-lapras,131,Lapras,,base,1,f,f,t,131,194
-ditto,132,Ditto,,base,1,f,f,t,132,195
-eevee,133,Eevee,,base,1,f,f,t,133,196
-eevee-femea,133,Eevee,Female,genero,1,f,f,t,female/133,197
-vaporeon,134,Vaporeon,,base,1,f,f,t,134,198
-jolteon,135,Jolteon,,base,1,f,f,t,135,199
-flareon,136,Flareon,,base,1,f,f,t,136,200
-porygon,137,Porygon,,base,1,f,f,t,137,201
-omanyte,138,Omanyte,,base,1,f,f,t,138,202
-omastar,139,Omastar,,base,1,f,f,t,139,203
-kabuto,140,Kabuto,,base,1,f,f,t,140,204
-kabutops,141,Kabutops,,base,1,f,f,t,141,205
-aerodactyl,142,Aerodactyl,,base,1,f,f,t,142,206
-snorlax,143,Snorlax,,base,1,f,f,t,143,207
-articuno,144,Articuno,,base,1,t,f,t,144,208
-articuno-galar,144,Articuno,Galarian Form,regional,1,t,f,t,10169,209
-zapdos,145,Zapdos,,base,1,t,f,t,145,210
-zapdos-galar,145,Zapdos,Galarian Form,regional,1,t,f,t,10170,211
-moltres,146,Moltres,,base,1,t,f,t,146,212
-moltres-galar,146,Moltres,Galarian Form,regional,1,t,f,t,10171,213
-dratini,147,Dratini,,base,1,f,f,t,147,214
-dragonair,148,Dragonair,,base,1,f,f,t,148,215
-dragonite,149,Dragonite,,base,1,f,f,t,149,216
-mewtwo,150,Mewtwo,,base,1,t,f,t,150,217
-mew,151,Mew,,base,1,f,t,t,151,218
-chikorita,152,Chikorita,,base,2,f,f,t,152,219
-bayleef,153,Bayleef,,base,2,f,f,t,153,220
-meganium,154,Meganium,,base,2,f,f,t,154,221
-meganium-femea,154,Meganium,Female,genero,2,f,f,t,female/154,222
-cyndaquil,155,Cyndaquil,,base,2,f,f,t,155,223
-quilava,156,Quilava,,base,2,f,f,t,156,224
-typhlosion,157,Typhlosion,,base,2,f,f,t,157,225
-typhlosion-hisui,157,Typhlosion,Hisuian Form,regional,2,f,f,t,10233,226
-totodile,158,Totodile,,base,2,f,f,t,158,227
-croconaw,159,Croconaw,,base,2,f,f,t,159,228
-feraligatr,160,Feraligatr,,base,2,f,f,t,160,229
-sentret,161,Sentret,,base,2,f,f,t,161,230
-furret,162,Furret,,base,2,f,f,t,162,231
-hoothoot,163,Hoothoot,,base,2,f,f,t,163,232
-noctowl,164,Noctowl,,base,2,f,f,t,164,233
-ledyba,165,Ledyba,,base,2,f,f,t,165,234
-ledyba-femea,165,Ledyba,Female,genero,2,f,f,t,female/165,235
-ledian,166,Ledian,,base,2,f,f,t,166,236
-ledian-femea,166,Ledian,Female,genero,2,f,f,t,female/166,237
-spinarak,167,Spinarak,,base,2,f,f,t,167,238
-ariados,168,Ariados,,base,2,f,f,t,168,239
-crobat,169,Crobat,,base,2,f,f,t,169,240
-chinchou,170,Chinchou,,base,2,f,f,t,170,241
-lanturn,171,Lanturn,,base,2,f,f,t,171,242
-pichu,172,Pichu,,base,2,f,f,t,172,243
-cleffa,173,Cleffa,,base,2,f,f,t,173,244
-igglybuff,174,Igglybuff,,base,2,f,f,t,174,245
-togepi,175,Togepi,,base,2,f,f,t,175,246
-togetic,176,Togetic,,base,2,f,f,t,176,247
-natu,177,Natu,,base,2,f,f,t,177,248
-xatu,178,Xatu,,base,2,f,f,t,178,249
-xatu-femea,178,Xatu,Female,genero,2,f,f,t,female/178,250
-mareep,179,Mareep,,base,2,f,f,t,179,251
-flaaffy,180,Flaaffy,,base,2,f,f,t,180,252
-ampharos,181,Ampharos,,base,2,f,f,t,181,253
-bellossom,182,Bellossom,,base,2,f,f,t,182,254
-marill,183,Marill,,base,2,f,f,t,183,255
-azumarill,184,Azumarill,,base,2,f,f,t,184,256
-sudowoodo,185,Sudowoodo,,base,2,f,f,t,185,257
-sudowoodo-femea,185,Sudowoodo,Female,genero,2,f,f,t,female/185,258
-politoed,186,Politoed,,base,2,f,f,t,186,259
-politoed-femea,186,Politoed,Female,genero,2,f,f,t,female/186,260
-hoppip,187,Hoppip,,base,2,f,f,t,187,261
-skiploom,188,Skiploom,,base,2,f,f,t,188,262
-jumpluff,189,Jumpluff,,base,2,f,f,t,189,263
-aipom,190,Aipom,,base,2,f,f,t,190,264
-aipom-femea,190,Aipom,Female,genero,2,f,f,t,female/190,265
-sunkern,191,Sunkern,,base,2,f,f,t,191,266
-sunflora,192,Sunflora,,base,2,f,f,t,192,267
-yanma,193,Yanma,,base,2,f,f,t,193,268
-wooper,194,Wooper,,base,2,f,f,t,194,269
-wooper-femea,194,Wooper,Female,genero,2,f,f,t,female/194,270
-wooper-paldea,194,Wooper,Paldean Form,regional,2,f,f,t,10253,271
-quagsire,195,Quagsire,,base,2,f,f,t,195,272
-quagsire-femea,195,Quagsire,Female,genero,2,f,f,t,female/195,273
-espeon,196,Espeon,,base,2,f,f,t,196,274
-umbreon,197,Umbreon,,base,2,f,f,t,197,275
-murkrow,198,Murkrow,,base,2,f,f,t,198,276
-murkrow-femea,198,Murkrow,Female,genero,2,f,f,t,female/198,277
-slowking,199,Slowking,,base,2,f,f,t,199,278
-slowking-galar,199,Slowking,Galarian Form,regional,2,f,f,t,10172,279
-misdreavus,200,Misdreavus,,base,2,f,f,t,200,280
-unown,201,Unown,A,base,2,f,f,t,201,281
-unown-b,201,Unown,B,cosmetica,2,f,f,t,201-b,282
-unown-c,201,Unown,C,cosmetica,2,f,f,t,201-c,283
-unown-d,201,Unown,D,cosmetica,2,f,f,t,201-d,284
-unown-e,201,Unown,E,cosmetica,2,f,f,t,201-e,285
-unown-f,201,Unown,F,cosmetica,2,f,f,t,201-f,286
-unown-g,201,Unown,G,cosmetica,2,f,f,t,201-g,287
-unown-h,201,Unown,H,cosmetica,2,f,f,t,201-h,288
-unown-i,201,Unown,I,cosmetica,2,f,f,t,201-i,289
-unown-j,201,Unown,J,cosmetica,2,f,f,t,201-j,290
-unown-k,201,Unown,K,cosmetica,2,f,f,t,201-k,291
-unown-l,201,Unown,L,cosmetica,2,f,f,t,201-l,292
-unown-m,201,Unown,M,cosmetica,2,f,f,t,201-m,293
-unown-n,201,Unown,N,cosmetica,2,f,f,t,201-n,294
-unown-o,201,Unown,O,cosmetica,2,f,f,t,201-o,295
-unown-p,201,Unown,P,cosmetica,2,f,f,t,201-p,296
-unown-q,201,Unown,Q,cosmetica,2,f,f,t,201-q,297
-unown-r,201,Unown,R,cosmetica,2,f,f,t,201-r,298
-unown-s,201,Unown,S,cosmetica,2,f,f,t,201-s,299
-unown-t,201,Unown,T,cosmetica,2,f,f,t,201-t,300
-unown-u,201,Unown,U,cosmetica,2,f,f,t,201-u,301
-unown-v,201,Unown,V,cosmetica,2,f,f,t,201-v,302
-unown-w,201,Unown,W,cosmetica,2,f,f,t,201-w,303
-unown-x,201,Unown,X,cosmetica,2,f,f,t,201-x,304
-unown-y,201,Unown,Y,cosmetica,2,f,f,t,201-y,305
-unown-z,201,Unown,Z,cosmetica,2,f,f,t,201-z,306
-unown-exclamation,201,Unown,!,cosmetica,2,f,f,t,201-exclamation,307
-unown-question,201,Unown,?,cosmetica,2,f,f,t,201-question,308
-wobbuffet,202,Wobbuffet,,base,2,f,f,t,202,309
-wobbuffet-femea,202,Wobbuffet,Female,genero,2,f,f,t,female/202,310
-girafarig,203,Girafarig,,base,2,f,f,t,203,311
-girafarig-femea,203,Girafarig,Female,genero,2,f,f,t,female/203,312
-pineco,204,Pineco,,base,2,f,f,t,204,313
-forretress,205,Forretress,,base,2,f,f,t,205,314
-dunsparce,206,Dunsparce,,base,2,f,f,t,206,315
-gligar,207,Gligar,,base,2,f,f,t,207,316
-gligar-femea,207,Gligar,Female,genero,2,f,f,t,female/207,317
-steelix,208,Steelix,,base,2,f,f,t,208,318
-steelix-femea,208,Steelix,Female,genero,2,f,f,t,female/208,319
-snubbull,209,Snubbull,,base,2,f,f,t,209,320
-granbull,210,Granbull,,base,2,f,f,t,210,321
-qwilfish,211,Qwilfish,,base,2,f,f,t,211,322
-qwilfish-hisui,211,Qwilfish,Hisuian Form,regional,2,f,f,t,10234,323
-scizor,212,Scizor,,base,2,f,f,t,212,324
-scizor-femea,212,Scizor,Female,genero,2,f,f,t,female/212,325
-shuckle,213,Shuckle,,base,2,f,f,t,213,326
-heracross,214,Heracross,,base,2,f,f,t,214,327
-heracross-femea,214,Heracross,Female,genero,2,f,f,t,female/214,328
-sneasel,215,Sneasel,,base,2,f,f,t,215,329
-sneasel-femea,215,Sneasel,Female,genero,2,f,f,t,female/215,330
-sneasel-hisui,215,Sneasel,Hisuian Form,regional,2,f,f,t,10235,331
-sneasel-hisui-femea,215,Sneasel,Hisuian Form (Female),genero,2,f,f,t,female/10235,332
-teddiursa,216,Teddiursa,,base,2,f,f,t,216,333
-ursaring,217,Ursaring,,base,2,f,f,t,217,334
-ursaring-femea,217,Ursaring,Female,genero,2,f,f,t,female/217,335
-slugma,218,Slugma,,base,2,f,f,t,218,336
-magcargo,219,Magcargo,,base,2,f,f,t,219,337
-swinub,220,Swinub,,base,2,f,f,t,220,338
-piloswine,221,Piloswine,,base,2,f,f,t,221,339
-piloswine-femea,221,Piloswine,Female,genero,2,f,f,t,female/221,340
-corsola,222,Corsola,,base,2,f,f,t,222,341
-corsola-galar,222,Corsola,Galarian Form,regional,2,f,f,t,10173,342
-remoraid,223,Remoraid,,base,2,f,f,t,223,343
-octillery,224,Octillery,,base,2,f,f,t,224,344
-octillery-femea,224,Octillery,Female,genero,2,f,f,t,female/224,345
-delibird,225,Delibird,,base,2,f,f,t,225,346
-mantine,226,Mantine,,base,2,f,f,t,226,347
-skarmory,227,Skarmory,,base,2,f,f,t,227,348
-houndour,228,Houndour,,base,2,f,f,t,228,349
-houndoom,229,Houndoom,,base,2,f,f,t,229,350
-houndoom-femea,229,Houndoom,Female,genero,2,f,f,t,female/229,351
-kingdra,230,Kingdra,,base,2,f,f,t,230,352
-phanpy,231,Phanpy,,base,2,f,f,t,231,353
-donphan,232,Donphan,,base,2,f,f,t,232,354
-donphan-femea,232,Donphan,Female,genero,2,f,f,t,female/232,355
-porygon2,233,Porygon2,,base,2,f,f,t,233,356
-stantler,234,Stantler,,base,2,f,f,t,234,357
-smeargle,235,Smeargle,,base,2,f,f,t,235,358
-tyrogue,236,Tyrogue,,base,2,f,f,t,236,359
-hitmontop,237,Hitmontop,,base,2,f,f,t,237,360
-smoochum,238,Smoochum,,base,2,f,f,t,238,361
-elekid,239,Elekid,,base,2,f,f,t,239,362
-magby,240,Magby,,base,2,f,f,t,240,363
-miltank,241,Miltank,,base,2,f,f,t,241,364
-blissey,242,Blissey,,base,2,f,f,t,242,365
-raikou,243,Raikou,,base,2,t,f,t,243,366
-entei,244,Entei,,base,2,t,f,t,244,367
-suicune,245,Suicune,,base,2,t,f,t,245,368
-larvitar,246,Larvitar,,base,2,f,f,t,246,369
-pupitar,247,Pupitar,,base,2,f,f,t,247,370
-tyranitar,248,Tyranitar,,base,2,f,f,t,248,371
-lugia,249,Lugia,,base,2,t,f,t,249,372
-ho-oh,250,Ho-Oh,,base,2,t,f,t,250,373
-celebi,251,Celebi,,base,2,f,t,t,251,374
-treecko,252,Treecko,,base,3,f,f,t,252,375
-grovyle,253,Grovyle,,base,3,f,f,t,253,376
-sceptile,254,Sceptile,,base,3,f,f,t,254,377
-torchic,255,Torchic,,base,3,f,f,t,255,378
-torchic-femea,255,Torchic,Female,genero,3,f,f,t,female/255,379
-combusken,256,Combusken,,base,3,f,f,t,256,380
-combusken-femea,256,Combusken,Female,genero,3,f,f,t,female/256,381
-blaziken,257,Blaziken,,base,3,f,f,t,257,382
-blaziken-femea,257,Blaziken,Female,genero,3,f,f,t,female/257,383
-mudkip,258,Mudkip,,base,3,f,f,t,258,384
-marshtomp,259,Marshtomp,,base,3,f,f,t,259,385
-swampert,260,Swampert,,base,3,f,f,t,260,386
-poochyena,261,Poochyena,,base,3,f,f,t,261,387
-mightyena,262,Mightyena,,base,3,f,f,t,262,388
-zigzagoon,263,Zigzagoon,,base,3,f,f,t,263,389
-zigzagoon-galar,263,Zigzagoon,Galarian Form,regional,3,f,f,t,10174,390
-linoone,264,Linoone,,base,3,f,f,t,264,391
-linoone-galar,264,Linoone,Galarian Form,regional,3,f,f,t,10175,392
-wurmple,265,Wurmple,,base,3,f,f,t,265,393
-silcoon,266,Silcoon,,base,3,f,f,t,266,394
-beautifly,267,Beautifly,,base,3,f,f,t,267,395
-beautifly-femea,267,Beautifly,Female,genero,3,f,f,t,female/267,396
-cascoon,268,Cascoon,,base,3,f,f,t,268,397
-dustox,269,Dustox,,base,3,f,f,t,269,398
-dustox-femea,269,Dustox,Female,genero,3,f,f,t,female/269,399
-lotad,270,Lotad,,base,3,f,f,t,270,400
-lombre,271,Lombre,,base,3,f,f,t,271,401
-ludicolo,272,Ludicolo,,base,3,f,f,t,272,402
-ludicolo-femea,272,Ludicolo,Female,genero,3,f,f,t,female/272,403
-seedot,273,Seedot,,base,3,f,f,t,273,404
-nuzleaf,274,Nuzleaf,,base,3,f,f,t,274,405
-nuzleaf-femea,274,Nuzleaf,Female,genero,3,f,f,t,female/274,406
-shiftry,275,Shiftry,,base,3,f,f,t,275,407
-shiftry-femea,275,Shiftry,Female,genero,3,f,f,t,female/275,408
-taillow,276,Taillow,,base,3,f,f,t,276,409
-swellow,277,Swellow,,base,3,f,f,t,277,410
-wingull,278,Wingull,,base,3,f,f,t,278,411
-pelipper,279,Pelipper,,base,3,f,f,t,279,412
-ralts,280,Ralts,,base,3,f,f,t,280,413
-kirlia,281,Kirlia,,base,3,f,f,t,281,414
-gardevoir,282,Gardevoir,,base,3,f,f,t,282,415
-surskit,283,Surskit,,base,3,f,f,t,283,416
-masquerain,284,Masquerain,,base,3,f,f,t,284,417
-shroomish,285,Shroomish,,base,3,f,f,t,285,418
-breloom,286,Breloom,,base,3,f,f,t,286,419
-slakoth,287,Slakoth,,base,3,f,f,t,287,420
-vigoroth,288,Vigoroth,,base,3,f,f,t,288,421
-slaking,289,Slaking,,base,3,f,f,t,289,422
-nincada,290,Nincada,,base,3,f,f,t,290,423
-ninjask,291,Ninjask,,base,3,f,f,t,291,424
-shedinja,292,Shedinja,,base,3,f,f,t,292,425
-whismur,293,Whismur,,base,3,f,f,t,293,426
-loudred,294,Loudred,,base,3,f,f,t,294,427
-exploud,295,Exploud,,base,3,f,f,t,295,428
-makuhita,296,Makuhita,,base,3,f,f,t,296,429
-hariyama,297,Hariyama,,base,3,f,f,t,297,430
-azurill,298,Azurill,,base,3,f,f,t,298,431
-nosepass,299,Nosepass,,base,3,f,f,t,299,432
-skitty,300,Skitty,,base,3,f,f,t,300,433
-delcatty,301,Delcatty,,base,3,f,f,t,301,434
-sableye,302,Sableye,,base,3,f,f,t,302,435
-mawile,303,Mawile,,base,3,f,f,t,303,436
-aron,304,Aron,,base,3,f,f,t,304,437
-lairon,305,Lairon,,base,3,f,f,t,305,438
-aggron,306,Aggron,,base,3,f,f,t,306,439
-meditite,307,Meditite,,base,3,f,f,t,307,440
-meditite-femea,307,Meditite,Female,genero,3,f,f,t,female/307,441
-medicham,308,Medicham,,base,3,f,f,t,308,442
-medicham-femea,308,Medicham,Female,genero,3,f,f,t,female/308,443
-electrike,309,Electrike,,base,3,f,f,t,309,444
-manectric,310,Manectric,,base,3,f,f,t,310,445
-plusle,311,Plusle,,base,3,f,f,t,311,446
-minun,312,Minun,,base,3,f,f,t,312,447
-volbeat,313,Volbeat,,base,3,f,f,t,313,448
-illumise,314,Illumise,,base,3,f,f,t,314,449
-roselia,315,Roselia,,base,3,f,f,t,315,450
-roselia-femea,315,Roselia,Female,genero,3,f,f,t,female/315,451
-gulpin,316,Gulpin,,base,3,f,f,t,316,452
-gulpin-femea,316,Gulpin,Female,genero,3,f,f,t,female/316,453
-swalot,317,Swalot,,base,3,f,f,t,317,454
-swalot-femea,317,Swalot,Female,genero,3,f,f,t,female/317,455
-carvanha,318,Carvanha,,base,3,f,f,t,318,456
-sharpedo,319,Sharpedo,,base,3,f,f,t,319,457
-wailmer,320,Wailmer,,base,3,f,f,t,320,458
-wailord,321,Wailord,,base,3,f,f,t,321,459
-numel,322,Numel,,base,3,f,f,t,322,460
-numel-femea,322,Numel,Female,genero,3,f,f,t,female/322,461
-camerupt,323,Camerupt,,base,3,f,f,t,323,462
-camerupt-femea,323,Camerupt,Female,genero,3,f,f,t,female/323,463
-torkoal,324,Torkoal,,base,3,f,f,t,324,464
-spoink,325,Spoink,,base,3,f,f,t,325,465
-grumpig,326,Grumpig,,base,3,f,f,t,326,466
-spinda,327,Spinda,,base,3,f,f,t,327,467
-trapinch,328,Trapinch,,base,3,f,f,t,328,468
-vibrava,329,Vibrava,,base,3,f,f,t,329,469
-flygon,330,Flygon,,base,3,f,f,t,330,470
-cacnea,331,Cacnea,,base,3,f,f,t,331,471
-cacturne,332,Cacturne,,base,3,f,f,t,332,472
-cacturne-femea,332,Cacturne,Female,genero,3,f,f,t,female/332,473
-swablu,333,Swablu,,base,3,f,f,t,333,474
-altaria,334,Altaria,,base,3,f,f,t,334,475
-zangoose,335,Zangoose,,base,3,f,f,t,335,476
-seviper,336,Seviper,,base,3,f,f,t,336,477
-lunatone,337,Lunatone,,base,3,f,f,t,337,478
-solrock,338,Solrock,,base,3,f,f,t,338,479
-barboach,339,Barboach,,base,3,f,f,t,339,480
-whiscash,340,Whiscash,,base,3,f,f,t,340,481
-corphish,341,Corphish,,base,3,f,f,t,341,482
-crawdaunt,342,Crawdaunt,,base,3,f,f,t,342,483
-baltoy,343,Baltoy,,base,3,f,f,t,343,484
-claydol,344,Claydol,,base,3,f,f,t,344,485
-lileep,345,Lileep,,base,3,f,f,t,345,486
-cradily,346,Cradily,,base,3,f,f,t,346,487
-anorith,347,Anorith,,base,3,f,f,t,347,488
-armaldo,348,Armaldo,,base,3,f,f,t,348,489
-feebas,349,Feebas,,base,3,f,f,t,349,490
-milotic,350,Milotic,,base,3,f,f,t,350,491
-milotic-femea,350,Milotic,Female,genero,3,f,f,t,female/350,492
-castform,351,Castform,Normal,base,3,f,f,t,351,493
-kecleon,352,Kecleon,,base,3,f,f,t,352,494
-shuppet,353,Shuppet,,base,3,f,f,t,353,495
-banette,354,Banette,,base,3,f,f,t,354,496
-duskull,355,Duskull,,base,3,f,f,t,355,497
-dusclops,356,Dusclops,,base,3,f,f,t,356,498
-tropius,357,Tropius,,base,3,f,f,t,357,499
-chimecho,358,Chimecho,,base,3,f,f,t,358,500
-absol,359,Absol,,base,3,f,f,t,359,501
-wynaut,360,Wynaut,,base,3,f,f,t,360,502
-snorunt,361,Snorunt,,base,3,f,f,t,361,503
-glalie,362,Glalie,,base,3,f,f,t,362,504
-spheal,363,Spheal,,base,3,f,f,t,363,505
-sealeo,364,Sealeo,,base,3,f,f,t,364,506
-walrein,365,Walrein,,base,3,f,f,t,365,507
-clamperl,366,Clamperl,,base,3,f,f,t,366,508
-huntail,367,Huntail,,base,3,f,f,t,367,509
-gorebyss,368,Gorebyss,,base,3,f,f,t,368,510
-relicanth,369,Relicanth,,base,3,f,f,t,369,511
-relicanth-femea,369,Relicanth,Female,genero,3,f,f,t,female/369,512
-luvdisc,370,Luvdisc,,base,3,f,f,t,370,513
-bagon,371,Bagon,,base,3,f,f,t,371,514
-shelgon,372,Shelgon,,base,3,f,f,t,372,515
-salamence,373,Salamence,,base,3,f,f,t,373,516
-beldum,374,Beldum,,base,3,f,f,t,374,517
-metang,375,Metang,,base,3,f,f,t,375,518
-metagross,376,Metagross,,base,3,f,f,t,376,519
-regirock,377,Regirock,,base,3,t,f,t,377,520
-regice,378,Regice,,base,3,t,f,t,378,521
-registeel,379,Registeel,,base,3,t,f,t,379,522
-latias,380,Latias,,base,3,t,f,t,380,523
-latios,381,Latios,,base,3,t,f,t,381,524
-kyogre,382,Kyogre,Kyogre,base,3,t,f,t,382,525
-groudon,383,Groudon,Groudon,base,3,t,f,t,383,526
-rayquaza,384,Rayquaza,,base,3,t,f,t,384,527
-jirachi,385,Jirachi,,base,3,f,t,t,385,528
-deoxys,386,Deoxys,Normal Forme,base,3,f,t,t,386,529
-deoxys-attack,386,Deoxys,Attack Forme,especial,3,f,t,t,10001,530
-deoxys-defense,386,Deoxys,Defense Forme,especial,3,f,t,t,10002,531
-deoxys-speed,386,Deoxys,Speed Forme,especial,3,f,t,t,10003,532
-turtwig,387,Turtwig,,base,4,f,f,t,387,533
-grotle,388,Grotle,,base,4,f,f,t,388,534
-torterra,389,Torterra,,base,4,f,f,t,389,535
-chimchar,390,Chimchar,,base,4,f,f,t,390,536
-monferno,391,Monferno,,base,4,f,f,t,391,537
-infernape,392,Infernape,,base,4,f,f,t,392,538
-piplup,393,Piplup,,base,4,f,f,t,393,539
-prinplup,394,Prinplup,,base,4,f,f,t,394,540
-empoleon,395,Empoleon,,base,4,f,f,t,395,541
-starly,396,Starly,,base,4,f,f,t,396,542
-starly-femea,396,Starly,Female,genero,4,f,f,t,female/396,543
-staravia,397,Staravia,,base,4,f,f,t,397,544
-staravia-femea,397,Staravia,Female,genero,4,f,f,t,female/397,545
-staraptor,398,Staraptor,,base,4,f,f,t,398,546
-staraptor-femea,398,Staraptor,Female,genero,4,f,f,t,female/398,547
-bidoof,399,Bidoof,,base,4,f,f,t,399,548
-bidoof-femea,399,Bidoof,Female,genero,4,f,f,t,female/399,549
-bibarel,400,Bibarel,,base,4,f,f,t,400,550
-bibarel-femea,400,Bibarel,Female,genero,4,f,f,t,female/400,551
-kricketot,401,Kricketot,,base,4,f,f,t,401,552
-kricketot-femea,401,Kricketot,Female,genero,4,f,f,t,female/401,553
-kricketune,402,Kricketune,,base,4,f,f,t,402,554
-kricketune-femea,402,Kricketune,Female,genero,4,f,f,t,female/402,555
-shinx,403,Shinx,,base,4,f,f,t,403,556
-shinx-femea,403,Shinx,Female,genero,4,f,f,t,female/403,557
-luxio,404,Luxio,,base,4,f,f,t,404,558
-luxio-femea,404,Luxio,Female,genero,4,f,f,t,female/404,559
-luxray,405,Luxray,,base,4,f,f,t,405,560
-luxray-femea,405,Luxray,Female,genero,4,f,f,t,female/405,561
-budew,406,Budew,,base,4,f,f,t,406,562
-roserade,407,Roserade,,base,4,f,f,t,407,563
-roserade-femea,407,Roserade,Female,genero,4,f,f,t,female/407,564
-cranidos,408,Cranidos,,base,4,f,f,t,408,565
-rampardos,409,Rampardos,,base,4,f,f,t,409,566
-shieldon,410,Shieldon,,base,4,f,f,t,410,567
-bastiodon,411,Bastiodon,,base,4,f,f,t,411,568
-burmy,412,Burmy,Plant Cloak,base,4,f,f,t,412,569
-burmy-sandy,412,Burmy,Sandy Cloak,cosmetica,4,f,f,t,412-sandy,570
-burmy-trash,412,Burmy,Trash Cloak,cosmetica,4,f,f,t,412-trash,571
-wormadam,413,Wormadam,Plant Cloak,base,4,f,f,t,413,572
-wormadam-sandy,413,Wormadam,Sandy Cloak,especial,4,f,f,t,10004,573
-wormadam-trash,413,Wormadam,Trash Cloak,especial,4,f,f,t,10005,574
-mothim,414,Mothim,,base,4,f,f,t,414,575
-combee,415,Combee,,base,4,f,f,t,415,576
-combee-femea,415,Combee,Female,genero,4,f,f,t,female/415,577
-vespiquen,416,Vespiquen,,base,4,f,f,t,416,578
-pachirisu,417,Pachirisu,,base,4,f,f,t,417,579
-pachirisu-femea,417,Pachirisu,Female,genero,4,f,f,t,female/417,580
-buizel,418,Buizel,,base,4,f,f,t,418,581
-buizel-femea,418,Buizel,Female,genero,4,f,f,t,female/418,582
-floatzel,419,Floatzel,,base,4,f,f,t,419,583
-floatzel-femea,419,Floatzel,Female,genero,4,f,f,t,female/419,584
-cherubi,420,Cherubi,,base,4,f,f,t,420,585
-cherrim,421,Cherrim,Overcast Form,base,4,f,f,t,421,586
-shellos,422,Shellos,West Sea,base,4,f,f,t,422,587
-shellos-east,422,Shellos,East Sea,cosmetica,4,f,f,t,422-east,588
-gastrodon,423,Gastrodon,West Sea,base,4,f,f,t,423,589
-gastrodon-east,423,Gastrodon,East Sea,cosmetica,4,f,f,t,423-east,590
-ambipom,424,Ambipom,,base,4,f,f,t,424,591
-ambipom-femea,424,Ambipom,Female,genero,4,f,f,t,female/424,592
-drifloon,425,Drifloon,,base,4,f,f,t,425,593
-drifblim,426,Drifblim,,base,4,f,f,t,426,594
-buneary,427,Buneary,,base,4,f,f,t,427,595
-lopunny,428,Lopunny,,base,4,f,f,t,428,596
-mismagius,429,Mismagius,,base,4,f,f,t,429,597
-honchkrow,430,Honchkrow,,base,4,f,f,t,430,598
-glameow,431,Glameow,,base,4,f,f,t,431,599
-purugly,432,Purugly,,base,4,f,f,t,432,600
-chingling,433,Chingling,,base,4,f,f,t,433,601
-stunky,434,Stunky,,base,4,f,f,t,434,602
-skuntank,435,Skuntank,,base,4,f,f,t,435,603
-bronzor,436,Bronzor,,base,4,f,f,t,436,604
-bronzong,437,Bronzong,,base,4,f,f,t,437,605
-bonsly,438,Bonsly,,base,4,f,f,t,438,606
-mime-jr,439,Mime Jr.,,base,4,f,f,t,439,607
-happiny,440,Happiny,,base,4,f,f,t,440,608
-chatot,441,Chatot,,base,4,f,f,t,441,609
-spiritomb,442,Spiritomb,,base,4,f,f,t,442,610
-gible,443,Gible,,base,4,f,f,t,443,611
-gible-femea,443,Gible,Female,genero,4,f,f,t,female/443,612
-gabite,444,Gabite,,base,4,f,f,t,444,613
-gabite-femea,444,Gabite,Female,genero,4,f,f,t,female/444,614
-garchomp,445,Garchomp,,base,4,f,f,t,445,615
-garchomp-femea,445,Garchomp,Female,genero,4,f,f,t,female/445,616
-munchlax,446,Munchlax,,base,4,f,f,t,446,617
-riolu,447,Riolu,,base,4,f,f,t,447,618
-lucario,448,Lucario,,base,4,f,f,t,448,619
-hippopotas,449,Hippopotas,,base,4,f,f,t,449,620
-hippopotas-femea,449,Hippopotas,Female,genero,4,f,f,t,female/449,621
-hippowdon,450,Hippowdon,,base,4,f,f,t,450,622
-hippowdon-femea,450,Hippowdon,Female,genero,4,f,f,t,female/450,623
-skorupi,451,Skorupi,,base,4,f,f,t,451,624
-drapion,452,Drapion,,base,4,f,f,t,452,625
-croagunk,453,Croagunk,,base,4,f,f,t,453,626
-croagunk-femea,453,Croagunk,Female,genero,4,f,f,t,female/453,627
-toxicroak,454,Toxicroak,,base,4,f,f,t,454,628
-toxicroak-femea,454,Toxicroak,Female,genero,4,f,f,t,female/454,629
-carnivine,455,Carnivine,,base,4,f,f,t,455,630
-finneon,456,Finneon,,base,4,f,f,t,456,631
-finneon-femea,456,Finneon,Female,genero,4,f,f,t,female/456,632
-lumineon,457,Lumineon,,base,4,f,f,t,457,633
-lumineon-femea,457,Lumineon,Female,genero,4,f,f,t,female/457,634
-mantyke,458,Mantyke,,base,4,f,f,t,458,635
-snover,459,Snover,,base,4,f,f,t,459,636
-snover-femea,459,Snover,Female,genero,4,f,f,t,female/459,637
-abomasnow,460,Abomasnow,,base,4,f,f,t,460,638
-abomasnow-femea,460,Abomasnow,Female,genero,4,f,f,t,female/460,639
-weavile,461,Weavile,,base,4,f,f,t,461,640
-weavile-femea,461,Weavile,Female,genero,4,f,f,t,female/461,641
-magnezone,462,Magnezone,,base,4,f,f,t,462,642
-lickilicky,463,Lickilicky,,base,4,f,f,t,463,643
-rhyperior,464,Rhyperior,,base,4,f,f,t,464,644
-rhyperior-femea,464,Rhyperior,Female,genero,4,f,f,t,female/464,645
-tangrowth,465,Tangrowth,,base,4,f,f,t,465,646
-tangrowth-femea,465,Tangrowth,Female,genero,4,f,f,t,female/465,647
-electivire,466,Electivire,,base,4,f,f,t,466,648
-magmortar,467,Magmortar,,base,4,f,f,t,467,649
-togekiss,468,Togekiss,,base,4,f,f,t,468,650
-yanmega,469,Yanmega,,base,4,f,f,t,469,651
-leafeon,470,Leafeon,,base,4,f,f,t,470,652
-glaceon,471,Glaceon,,base,4,f,f,t,471,653
-gliscor,472,Gliscor,,base,4,f,f,t,472,654
-mamoswine,473,Mamoswine,,base,4,f,f,t,473,655
-mamoswine-femea,473,Mamoswine,Female,genero,4,f,f,t,female/473,656
-porygon-z,474,Porygon-Z,,base,4,f,f,t,474,657
-gallade,475,Gallade,,base,4,f,f,t,475,658
-probopass,476,Probopass,,base,4,f,f,t,476,659
-dusknoir,477,Dusknoir,,base,4,f,f,t,477,660
-froslass,478,Froslass,,base,4,f,f,t,478,661
-rotom,479,Rotom,Rotom,base,4,f,f,t,479,662
-rotom-heat,479,Rotom,Heat Rotom,especial,4,f,f,t,10008,663
-rotom-wash,479,Rotom,Wash Rotom,especial,4,f,f,t,10009,664
-rotom-frost,479,Rotom,Frost Rotom,especial,4,f,f,t,10010,665
-rotom-fan,479,Rotom,Fan Rotom,especial,4,f,f,t,10011,666
-rotom-mow,479,Rotom,Mow Rotom,especial,4,f,f,t,10012,667
-uxie,480,Uxie,,base,4,t,f,t,480,668
-mesprit,481,Mesprit,,base,4,t,f,t,481,669
-azelf,482,Azelf,,base,4,t,f,t,482,670
-dialga,483,Dialga,,base,4,t,f,t,483,671
-palkia,484,Palkia,,base,4,t,f,t,484,672
-heatran,485,Heatran,,base,4,t,f,t,485,673
-regigigas,486,Regigigas,,base,4,t,f,t,486,674
-giratina,487,Giratina,Altered Forme,base,4,t,f,t,487,675
-cresselia,488,Cresselia,,base,4,t,f,t,488,676
-phione,489,Phione,,base,4,f,t,t,489,677
-manaphy,490,Manaphy,,base,4,f,t,t,490,678
-darkrai,491,Darkrai,,base,4,f,t,t,491,679
-shaymin,492,Shaymin,Land Forme,base,4,f,t,t,492,680
-shaymin-sky,492,Shaymin,Sky Forme,especial,4,f,t,t,10006,681
-arceus,493,Arceus,Normal Type,base,4,f,t,t,493,682
-victini,494,Victini,,base,5,f,t,f,494,683
-snivy,495,Snivy,,base,5,f,f,t,495,684
-servine,496,Servine,,base,5,f,f,t,496,685
-serperior,497,Serperior,,base,5,f,f,t,497,686
-tepig,498,Tepig,,base,5,f,f,t,498,687
-pignite,499,Pignite,,base,5,f,f,t,499,688
-emboar,500,Emboar,,base,5,f,f,t,500,689
-oshawott,501,Oshawott,,base,5,f,f,t,501,690
-dewott,502,Dewott,,base,5,f,f,t,502,691
-samurott,503,Samurott,,base,5,f,f,t,503,692
-samurott-hisui,503,Samurott,Hisuian Form,regional,5,f,f,t,10236,693
-patrat,504,Patrat,,base,5,f,f,t,504,694
-watchog,505,Watchog,,base,5,f,f,t,505,695
-lillipup,506,Lillipup,,base,5,f,f,t,506,696
-herdier,507,Herdier,,base,5,f,f,t,507,697
-stoutland,508,Stoutland,,base,5,f,f,t,508,698
-purrloin,509,Purrloin,,base,5,f,f,t,509,699
-liepard,510,Liepard,,base,5,f,f,t,510,700
-pansage,511,Pansage,,base,5,f,f,t,511,701
-simisage,512,Simisage,,base,5,f,f,t,512,702
-pansear,513,Pansear,,base,5,f,f,t,513,703
-simisear,514,Simisear,,base,5,f,f,t,514,704
-panpour,515,Panpour,,base,5,f,f,t,515,705
-simipour,516,Simipour,,base,5,f,f,t,516,706
-munna,517,Munna,,base,5,f,f,t,517,707
-musharna,518,Musharna,,base,5,f,f,t,518,708
-pidove,519,Pidove,,base,5,f,f,t,519,709
-tranquill,520,Tranquill,,base,5,f,f,t,520,710
-unfezant,521,Unfezant,,base,5,f,f,t,521,711
-unfezant-femea,521,Unfezant,Female,genero,5,f,f,t,female/521,712
-blitzle,522,Blitzle,,base,5,f,f,t,522,713
-zebstrika,523,Zebstrika,,base,5,f,f,t,523,714
-roggenrola,524,Roggenrola,,base,5,f,f,t,524,715
-boldore,525,Boldore,,base,5,f,f,t,525,716
-gigalith,526,Gigalith,,base,5,f,f,t,526,717
-woobat,527,Woobat,,base,5,f,f,t,527,718
-swoobat,528,Swoobat,,base,5,f,f,t,528,719
-drilbur,529,Drilbur,,base,5,f,f,t,529,720
-excadrill,530,Excadrill,,base,5,f,f,t,530,721
-audino,531,Audino,,base,5,f,f,t,531,722
-timburr,532,Timburr,,base,5,f,f,t,532,723
-gurdurr,533,Gurdurr,,base,5,f,f,t,533,724
-conkeldurr,534,Conkeldurr,,base,5,f,f,t,534,725
-tympole,535,Tympole,,base,5,f,f,t,535,726
-palpitoad,536,Palpitoad,,base,5,f,f,t,536,727
-seismitoad,537,Seismitoad,,base,5,f,f,t,537,728
-throh,538,Throh,,base,5,f,f,t,538,729
-sawk,539,Sawk,,base,5,f,f,t,539,730
-sewaddle,540,Sewaddle,,base,5,f,f,t,540,731
-swadloon,541,Swadloon,,base,5,f,f,t,541,732
-leavanny,542,Leavanny,,base,5,f,f,t,542,733
-venipede,543,Venipede,,base,5,f,f,t,543,734
-whirlipede,544,Whirlipede,,base,5,f,f,t,544,735
-scolipede,545,Scolipede,,base,5,f,f,t,545,736
-cottonee,546,Cottonee,,base,5,f,f,t,546,737
-whimsicott,547,Whimsicott,,base,5,f,f,t,547,738
-petilil,548,Petilil,,base,5,f,f,t,548,739
-lilligant,549,Lilligant,,base,5,f,f,t,549,740
-lilligant-hisui,549,Lilligant,Hisuian Form,regional,5,f,f,t,10237,741
-basculin,550,Basculin,Red-Striped Form,base,5,f,f,t,550,742
-basculin-blue-striped,550,Basculin,Blue-Striped Form,especial,5,f,f,t,10016,743
-basculin-white-striped,550,Basculin,White-Striped Form,especial,5,f,f,t,10247,744
-sandile,551,Sandile,,base,5,f,f,t,551,745
-krokorok,552,Krokorok,,base,5,f,f,t,552,746
-krookodile,553,Krookodile,,base,5,f,f,t,553,747
-darumaka,554,Darumaka,,base,5,f,f,t,554,748
-darumaka-galar,554,Darumaka,Galarian Form,regional,5,f,f,t,10176,749
-darmanitan,555,Darmanitan,Standard Mode,base,5,f,f,t,555,750
-darmanitan-galar-standard,555,Darmanitan,Galarian Form,regional,5,f,f,t,10177,751
-maractus,556,Maractus,,base,5,f,f,t,556,752
-dwebble,557,Dwebble,,base,5,f,f,t,557,753
-crustle,558,Crustle,,base,5,f,f,t,558,754
-scraggy,559,Scraggy,,base,5,f,f,t,559,755
-scrafty,560,Scrafty,,base,5,f,f,t,560,756
-sigilyph,561,Sigilyph,,base,5,f,f,t,561,757
-yamask,562,Yamask,,base,5,f,f,t,562,758
-yamask-galar,562,Yamask,Galarian Form,regional,5,f,f,t,10179,759
-cofagrigus,563,Cofagrigus,,base,5,f,f,t,563,760
-tirtouga,564,Tirtouga,,base,5,f,f,t,564,761
-carracosta,565,Carracosta,,base,5,f,f,t,565,762
-archen,566,Archen,,base,5,f,f,t,566,763
-archeops,567,Archeops,,base,5,f,f,t,567,764
-trubbish,568,Trubbish,,base,5,f,f,t,568,765
-garbodor,569,Garbodor,,base,5,f,f,t,569,766
-zorua,570,Zorua,,base,5,f,f,t,570,767
-zorua-hisui,570,Zorua,Hisuian Form,regional,5,f,f,t,10238,768
-zoroark,571,Zoroark,,base,5,f,f,t,571,769
-zoroark-hisui,571,Zoroark,Hisuian Form,regional,5,f,f,t,10239,770
-minccino,572,Minccino,,base,5,f,f,t,572,771
-cinccino,573,Cinccino,,base,5,f,f,t,573,772
-gothita,574,Gothita,,base,5,f,f,t,574,773
-gothorita,575,Gothorita,,base,5,f,f,t,575,774
-gothitelle,576,Gothitelle,,base,5,f,f,t,576,775
-solosis,577,Solosis,,base,5,f,f,t,577,776
-duosion,578,Duosion,,base,5,f,f,t,578,777
-reuniclus,579,Reuniclus,,base,5,f,f,t,579,778
-ducklett,580,Ducklett,,base,5,f,f,t,580,779
-swanna,581,Swanna,,base,5,f,f,t,581,780
-vanillite,582,Vanillite,,base,5,f,f,t,582,781
-vanillish,583,Vanillish,,base,5,f,f,t,583,782
-vanilluxe,584,Vanilluxe,,base,5,f,f,t,584,783
-deerling,585,Deerling,Spring Form,base,5,f,f,t,585,784
-deerling-summer,585,Deerling,Summer Form,cosmetica,5,f,f,t,585-summer,785
-deerling-autumn,585,Deerling,Autumn Form,cosmetica,5,f,f,t,585-autumn,786
-deerling-winter,585,Deerling,Winter Form,cosmetica,5,f,f,t,585-winter,787
-sawsbuck,586,Sawsbuck,Spring Form,base,5,f,f,t,586,788
-sawsbuck-summer,586,Sawsbuck,Summer Form,cosmetica,5,f,f,t,586-summer,789
-sawsbuck-autumn,586,Sawsbuck,Autumn Form,cosmetica,5,f,f,t,586-autumn,790
-sawsbuck-winter,586,Sawsbuck,Winter Form,cosmetica,5,f,f,t,586-winter,791
-emolga,587,Emolga,,base,5,f,f,t,587,792
-karrablast,588,Karrablast,,base,5,f,f,t,588,793
-escavalier,589,Escavalier,,base,5,f,f,t,589,794
-foongus,590,Foongus,,base,5,f,f,t,590,795
-amoonguss,591,Amoonguss,,base,5,f,f,t,591,796
-frillish,592,Frillish,Male,base,5,f,f,t,592,797
-frillish-female,592,Frillish,Female,genero,5,f,f,t,592-female,798
-jellicent,593,Jellicent,Male,base,5,f,f,t,593,799
-jellicent-female,593,Jellicent,Female,genero,5,f,f,t,593-female,800
-alomomola,594,Alomomola,,base,5,f,f,t,594,801
-joltik,595,Joltik,,base,5,f,f,t,595,802
-galvantula,596,Galvantula,,base,5,f,f,t,596,803
-ferroseed,597,Ferroseed,,base,5,f,f,t,597,804
-ferrothorn,598,Ferrothorn,,base,5,f,f,t,598,805
-klink,599,Klink,,base,5,f,f,t,599,806
-klang,600,Klang,,base,5,f,f,t,600,807
-klinklang,601,Klinklang,,base,5,f,f,t,601,808
-tynamo,602,Tynamo,,base,5,f,f,t,602,809
-eelektrik,603,Eelektrik,,base,5,f,f,t,603,810
-eelektross,604,Eelektross,,base,5,f,f,t,604,811
-elgyem,605,Elgyem,,base,5,f,f,t,605,812
-beheeyem,606,Beheeyem,,base,5,f,f,t,606,813
-litwick,607,Litwick,,base,5,f,f,t,607,814
-lampent,608,Lampent,,base,5,f,f,t,608,815
-chandelure,609,Chandelure,,base,5,f,f,t,609,816
-axew,610,Axew,,base,5,f,f,t,610,817
-fraxure,611,Fraxure,,base,5,f,f,t,611,818
-haxorus,612,Haxorus,,base,5,f,f,t,612,819
-cubchoo,613,Cubchoo,,base,5,f,f,t,613,820
-beartic,614,Beartic,,base,5,f,f,t,614,821
-cryogonal,615,Cryogonal,,base,5,f,f,t,615,822
-shelmet,616,Shelmet,,base,5,f,f,t,616,823
-accelgor,617,Accelgor,,base,5,f,f,t,617,824
-stunfisk,618,Stunfisk,,base,5,f,f,t,618,825
-stunfisk-galar,618,Stunfisk,Galarian Form,regional,5,f,f,t,10180,826
-mienfoo,619,Mienfoo,,base,5,f,f,t,619,827
-mienshao,620,Mienshao,,base,5,f,f,t,620,828
-druddigon,621,Druddigon,,base,5,f,f,t,621,829
-golett,622,Golett,,base,5,f,f,t,622,830
-golurk,623,Golurk,,base,5,f,f,t,623,831
-pawniard,624,Pawniard,,base,5,f,f,t,624,832
-bisharp,625,Bisharp,,base,5,f,f,t,625,833
-bouffalant,626,Bouffalant,,base,5,f,f,t,626,834
-rufflet,627,Rufflet,,base,5,f,f,t,627,835
-braviary,628,Braviary,,base,5,f,f,t,628,836
-braviary-hisui,628,Braviary,Hisuian Form,regional,5,f,f,t,10240,837
-vullaby,629,Vullaby,,base,5,f,f,t,629,838
-mandibuzz,630,Mandibuzz,,base,5,f,f,t,630,839
-heatmor,631,Heatmor,,base,5,f,f,t,631,840
-durant,632,Durant,,base,5,f,f,t,632,841
-deino,633,Deino,,base,5,f,f,t,633,842
-zweilous,634,Zweilous,,base,5,f,f,t,634,843
-hydreigon,635,Hydreigon,,base,5,f,f,t,635,844
-larvesta,636,Larvesta,,base,5,f,f,t,636,845
-volcarona,637,Volcarona,,base,5,f,f,t,637,846
-cobalion,638,Cobalion,,base,5,t,f,t,638,847
-terrakion,639,Terrakion,,base,5,t,f,t,639,848
-virizion,640,Virizion,,base,5,t,f,t,640,849
-tornadus,641,Tornadus,Incarnate Forme,base,5,t,f,t,641,850
-tornadus-therian,641,Tornadus,Therian Forme,especial,5,t,f,t,10019,851
-thundurus,642,Thundurus,Incarnate Forme,base,5,t,f,t,642,852
-thundurus-therian,642,Thundurus,Therian Forme,especial,5,t,f,t,10020,853
-reshiram,643,Reshiram,,base,5,t,f,t,643,854
-zekrom,644,Zekrom,,base,5,t,f,t,644,855
-landorus,645,Landorus,Incarnate Forme,base,5,t,f,t,645,856
-landorus-therian,645,Landorus,Therian Forme,especial,5,t,f,t,10021,857
-kyurem,646,Kyurem,Kyurem,base,5,t,f,t,646,858
-keldeo,647,Keldeo,Ordinary Form,base,5,f,t,t,647,859
-keldeo-resolute,647,Keldeo,Resolute Form,especial,5,f,t,t,10024,860
-meloetta,648,Meloetta,Aria Forme,base,5,f,t,t,648,861
-genesect,649,Genesect,,base,5,f,t,t,649,862
-chespin,650,Chespin,,base,6,f,f,t,650,863
-quilladin,651,Quilladin,,base,6,f,f,t,651,864
-chesnaught,652,Chesnaught,,base,6,f,f,t,652,865
-fennekin,653,Fennekin,,base,6,f,f,t,653,866
-braixen,654,Braixen,,base,6,f,f,t,654,867
-delphox,655,Delphox,,base,6,f,f,t,655,868
-froakie,656,Froakie,,base,6,f,f,t,656,869
-frogadier,657,Frogadier,,base,6,f,f,t,657,870
-greninja,658,Greninja,,base,6,f,f,t,658,871
-greninja-battle-bond,658,Greninja,Battle Bond,especial,6,f,f,f,10116,872
-bunnelby,659,Bunnelby,,base,6,f,f,t,659,873
-diggersby,660,Diggersby,,base,6,f,f,t,660,874
-fletchling,661,Fletchling,,base,6,f,f,t,661,875
-fletchinder,662,Fletchinder,,base,6,f,f,t,662,876
-talonflame,663,Talonflame,,base,6,f,f,t,663,877
-scatterbug,664,Scatterbug,,base,6,f,f,t,664,878
-spewpa,665,Spewpa,,base,6,f,f,t,665,879
-vivillon,666,Vivillon,Meadow Pattern,base,6,f,f,t,666,880
-vivillon-icy-snow,666,Vivillon,Icy Snow Pattern,cosmetica,6,f,f,t,666-icy-snow,881
-vivillon-polar,666,Vivillon,Polar Pattern,cosmetica,6,f,f,t,666-polar,882
-vivillon-tundra,666,Vivillon,Tundra Pattern,cosmetica,6,f,f,t,666-tundra,883
-vivillon-continental,666,Vivillon,Continental Pattern,cosmetica,6,f,f,t,666-continental,884
-vivillon-garden,666,Vivillon,Garden Pattern,cosmetica,6,f,f,t,666-garden,885
-vivillon-elegant,666,Vivillon,Elegant Pattern,cosmetica,6,f,f,t,666-elegant,886
-vivillon-modern,666,Vivillon,Modern Pattern,cosmetica,6,f,f,t,666-modern,887
-vivillon-marine,666,Vivillon,Marine Pattern,cosmetica,6,f,f,t,666-marine,888
-vivillon-archipelago,666,Vivillon,Archipelago Pattern,cosmetica,6,f,f,t,666-archipelago,889
-vivillon-high-plains,666,Vivillon,High Plains Pattern,cosmetica,6,f,f,t,666-high-plains,890
-vivillon-sandstorm,666,Vivillon,Sandstorm Pattern,cosmetica,6,f,f,t,666-sandstorm,891
-vivillon-river,666,Vivillon,River Pattern,cosmetica,6,f,f,t,666-river,892
-vivillon-monsoon,666,Vivillon,Monsoon Pattern,cosmetica,6,f,f,t,666-monsoon,893
-vivillon-savanna,666,Vivillon,Savanna Pattern,cosmetica,6,f,f,t,666-savanna,894
-vivillon-sun,666,Vivillon,Sun Pattern,cosmetica,6,f,f,t,666-sun,895
-vivillon-ocean,666,Vivillon,Ocean Pattern,cosmetica,6,f,f,t,666-ocean,896
-vivillon-jungle,666,Vivillon,Jungle Pattern,cosmetica,6,f,f,t,666-jungle,897
-vivillon-fancy,666,Vivillon,Fancy Pattern,cosmetica,6,f,f,t,666-fancy,898
-vivillon-poke-ball,666,Vivillon,Poké Ball Pattern,cosmetica,6,f,f,f,666-poke-ball,899
-litleo,667,Litleo,,base,6,f,f,t,667,900
-pyroar,668,Pyroar,Male,base,6,f,f,t,668,901
-pyroar-female,668,Pyroar,Female,genero,6,f,f,t,668-female,902
-flabebe,669,Flabébé,Red Flower,base,6,f,f,t,669,903
-flabebe-yellow,669,Flabébé,Yellow Flower,cosmetica,6,f,f,t,669-yellow,904
-flabebe-orange,669,Flabébé,Orange Flower,cosmetica,6,f,f,t,669-orange,905
-flabebe-blue,669,Flabébé,Blue Flower,cosmetica,6,f,f,t,669-blue,906
-flabebe-white,669,Flabébé,White Flower,cosmetica,6,f,f,t,669-white,907
-floette,670,Floette,Red Flower,base,6,f,f,t,670,908
-floette-yellow,670,Floette,Yellow Flower,cosmetica,6,f,f,t,670-yellow,909
-floette-orange,670,Floette,Orange Flower,cosmetica,6,f,f,t,670-orange,910
-floette-blue,670,Floette,Blue Flower,cosmetica,6,f,f,t,670-blue,911
-floette-white,670,Floette,White Flower,cosmetica,6,f,f,t,670-white,912
-floette-eternal,670,Floette,Eternal Flower,especial,6,f,f,f,10061,913
-florges,671,Florges,Red Flower,base,6,f,f,t,671,914
-florges-yellow,671,Florges,Yellow Flower,cosmetica,6,f,f,t,671-yellow,915
-florges-orange,671,Florges,Orange Flower,cosmetica,6,f,f,t,671-orange,916
-florges-blue,671,Florges,Blue Flower,cosmetica,6,f,f,t,671-blue,917
-florges-white,671,Florges,White Flower,cosmetica,6,f,f,t,671-white,918
-skiddo,672,Skiddo,,base,6,f,f,t,672,919
-gogoat,673,Gogoat,,base,6,f,f,t,673,920
-pancham,674,Pancham,,base,6,f,f,t,674,921
-pangoro,675,Pangoro,,base,6,f,f,t,675,922
-furfrou,676,Furfrou,Natural Form,base,6,f,f,t,676,923
-furfrou-heart,676,Furfrou,Heart Trim,cosmetica,6,f,f,t,676-heart,924
-furfrou-star,676,Furfrou,Star Trim,cosmetica,6,f,f,t,676-star,925
-furfrou-diamond,676,Furfrou,Diamond Trim,cosmetica,6,f,f,t,676-diamond,926
-furfrou-debutante,676,Furfrou,Debutante Trim,cosmetica,6,f,f,t,676-debutante,927
-furfrou-matron,676,Furfrou,Matron Trim,cosmetica,6,f,f,t,676-matron,928
-furfrou-dandy,676,Furfrou,Dandy Trim,cosmetica,6,f,f,t,676-dandy,929
-furfrou-la-reine,676,Furfrou,La Reine Trim,cosmetica,6,f,f,t,676-la-reine,930
-furfrou-kabuki,676,Furfrou,Kabuki Trim,cosmetica,6,f,f,t,676-kabuki,931
-furfrou-pharaoh,676,Furfrou,Pharaoh Trim,cosmetica,6,f,f,t,676-pharaoh,932
-espurr,677,Espurr,,base,6,f,f,t,677,933
-meowstic,678,Meowstic,Male,base,6,f,f,t,678,934
-meowstic-female,678,Meowstic,Female,genero,6,f,f,t,10025,935
-honedge,679,Honedge,,base,6,f,f,t,679,936
-doublade,680,Doublade,,base,6,f,f,t,680,937
-aegislash,681,Aegislash,Shield Forme,base,6,f,f,t,681,938
-spritzee,682,Spritzee,,base,6,f,f,t,682,939
-aromatisse,683,Aromatisse,,base,6,f,f,t,683,940
-swirlix,684,Swirlix,,base,6,f,f,t,684,941
-slurpuff,685,Slurpuff,,base,6,f,f,t,685,942
-inkay,686,Inkay,,base,6,f,f,t,686,943
-malamar,687,Malamar,,base,6,f,f,t,687,944
-binacle,688,Binacle,,base,6,f,f,t,688,945
-barbaracle,689,Barbaracle,,base,6,f,f,t,689,946
-skrelp,690,Skrelp,,base,6,f,f,t,690,947
-dragalge,691,Dragalge,,base,6,f,f,t,691,948
-clauncher,692,Clauncher,,base,6,f,f,t,692,949
-clawitzer,693,Clawitzer,,base,6,f,f,t,693,950
-helioptile,694,Helioptile,,base,6,f,f,t,694,951
-heliolisk,695,Heliolisk,,base,6,f,f,t,695,952
-tyrunt,696,Tyrunt,,base,6,f,f,t,696,953
-tyrantrum,697,Tyrantrum,,base,6,f,f,t,697,954
-amaura,698,Amaura,,base,6,f,f,t,698,955
-aurorus,699,Aurorus,,base,6,f,f,t,699,956
-sylveon,700,Sylveon,,base,6,f,f,t,700,957
-hawlucha,701,Hawlucha,,base,6,f,f,t,701,958
-dedenne,702,Dedenne,,base,6,f,f,t,702,959
-carbink,703,Carbink,,base,6,f,f,t,703,960
-goomy,704,Goomy,,base,6,f,f,t,704,961
-sliggoo,705,Sliggoo,,base,6,f,f,t,705,962
-sliggoo-hisui,705,Sliggoo,Hisuian Form,regional,6,f,f,t,10241,963
-goodra,706,Goodra,,base,6,f,f,t,706,964
-goodra-hisui,706,Goodra,Hisuian Form,regional,6,f,f,t,10242,965
-klefki,707,Klefki,,base,6,f,f,t,707,966
-phantump,708,Phantump,,base,6,f,f,t,708,967
-trevenant,709,Trevenant,,base,6,f,f,t,709,968
-pumpkaboo,710,Pumpkaboo,Average Size,base,6,f,f,t,710,969
-pumpkaboo-small,710,Pumpkaboo,Small Size,especial,6,f,f,t,10027,970
-pumpkaboo-large,710,Pumpkaboo,Large Size,especial,6,f,f,t,10028,971
-pumpkaboo-super,710,Pumpkaboo,Super Size,especial,6,f,f,t,10029,972
-gourgeist,711,Gourgeist,Average Size,base,6,f,f,t,711,973
-gourgeist-small,711,Gourgeist,Small Size,especial,6,f,f,t,10030,974
-gourgeist-large,711,Gourgeist,Large Size,especial,6,f,f,t,10031,975
-gourgeist-super,711,Gourgeist,Super Size,especial,6,f,f,t,10032,976
-bergmite,712,Bergmite,,base,6,f,f,t,712,977
-avalugg,713,Avalugg,,base,6,f,f,t,713,978
-avalugg-hisui,713,Avalugg,Hisuian Form,regional,6,f,f,t,10243,979
-noibat,714,Noibat,,base,6,f,f,t,714,980
-noivern,715,Noivern,,base,6,f,f,t,715,981
-xerneas,716,Xerneas,Neutral Mode,base,6,t,f,t,716,982
-yveltal,717,Yveltal,,base,6,t,f,t,717,983
-zygarde,718,Zygarde,50% Forme,base,6,t,f,t,718,984
-zygarde-10,718,Zygarde,10% Forme,especial,6,t,f,t,10181,985
-zygarde-10-power-construct,718,Zygarde,10% Forme,especial,6,t,f,t,10118,986
-zygarde-50-power-construct,718,Zygarde,50% Forme,especial,6,t,f,t,10119,987
-diancie,719,Diancie,,base,6,f,t,t,719,988
-hoopa,720,Hoopa,Hoopa Confined,base,6,f,t,f,720,989
-hoopa-unbound,720,Hoopa,Hoopa Unbound,especial,6,f,t,f,10086,990
-volcanion,721,Volcanion,,base,6,f,t,t,721,991
-rowlet,722,Rowlet,,base,7,f,f,t,722,992
-dartrix,723,Dartrix,,base,7,f,f,t,723,993
-decidueye,724,Decidueye,,base,7,f,f,t,724,994
-decidueye-hisui,724,Decidueye,Hisuian Form,regional,7,f,f,t,10244,995
-litten,725,Litten,,base,7,f,f,t,725,996
-torracat,726,Torracat,,base,7,f,f,t,726,997
-incineroar,727,Incineroar,,base,7,f,f,t,727,998
-popplio,728,Popplio,,base,7,f,f,t,728,999
-brionne,729,Brionne,,base,7,f,f,t,729,1000
-primarina,730,Primarina,,base,7,f,f,t,730,1001
-pikipek,731,Pikipek,,base,7,f,f,t,731,1002
-trumbeak,732,Trumbeak,,base,7,f,f,t,732,1003
-toucannon,733,Toucannon,,base,7,f,f,t,733,1004
-yungoos,734,Yungoos,,base,7,f,f,t,734,1005
-gumshoos,735,Gumshoos,,base,7,f,f,t,735,1006
-grubbin,736,Grubbin,,base,7,f,f,t,736,1007
-charjabug,737,Charjabug,,base,7,f,f,t,737,1008
-vikavolt,738,Vikavolt,,base,7,f,f,t,738,1009
-crabrawler,739,Crabrawler,,base,7,f,f,t,739,1010
-crabominable,740,Crabominable,,base,7,f,f,t,740,1011
-oricorio,741,Oricorio,Baile Style,base,7,f,f,t,741,1012
-oricorio-pom-pom,741,Oricorio,Pom-Pom Style,especial,7,f,f,t,10123,1013
-oricorio-pau,741,Oricorio,Pa’u Style,especial,7,f,f,t,10124,1014
-oricorio-sensu,741,Oricorio,Sensu Style,especial,7,f,f,t,10125,1015
-cutiefly,742,Cutiefly,,base,7,f,f,t,742,1016
-ribombee,743,Ribombee,,base,7,f,f,t,743,1017
-rockruff,744,Rockruff,,base,7,f,f,t,744,1018
-rockruff-own-tempo,744,Rockruff,Own Tempo,especial,7,f,f,t,10151,1019
-lycanroc,745,Lycanroc,Midday Form,base,7,f,f,t,745,1020
-lycanroc-midnight,745,Lycanroc,Midnight Form,especial,7,f,f,t,10126,1021
-lycanroc-dusk,745,Lycanroc,Dusk Form,especial,7,f,f,t,10152,1022
-wishiwashi,746,Wishiwashi,Solo Form,base,7,f,f,t,746,1023
-mareanie,747,Mareanie,,base,7,f,f,t,747,1024
-toxapex,748,Toxapex,,base,7,f,f,t,748,1025
-mudbray,749,Mudbray,,base,7,f,f,t,749,1026
-mudsdale,750,Mudsdale,,base,7,f,f,t,750,1027
-dewpider,751,Dewpider,,base,7,f,f,t,751,1028
-araquanid,752,Araquanid,,base,7,f,f,t,752,1029
-fomantis,753,Fomantis,,base,7,f,f,t,753,1030
-lurantis,754,Lurantis,,base,7,f,f,t,754,1031
-morelull,755,Morelull,,base,7,f,f,t,755,1032
-shiinotic,756,Shiinotic,,base,7,f,f,t,756,1033
-salandit,757,Salandit,,base,7,f,f,t,757,1034
-salazzle,758,Salazzle,,base,7,f,f,t,758,1035
-stufful,759,Stufful,,base,7,f,f,t,759,1036
-bewear,760,Bewear,,base,7,f,f,t,760,1037
-bounsweet,761,Bounsweet,,base,7,f,f,t,761,1038
-steenee,762,Steenee,,base,7,f,f,t,762,1039
-tsareena,763,Tsareena,,base,7,f,f,t,763,1040
-comfey,764,Comfey,,base,7,f,f,t,764,1041
-oranguru,765,Oranguru,,base,7,f,f,t,765,1042
-passimian,766,Passimian,,base,7,f,f,t,766,1043
-wimpod,767,Wimpod,,base,7,f,f,t,767,1044
-golisopod,768,Golisopod,,base,7,f,f,t,768,1045
-sandygast,769,Sandygast,,base,7,f,f,t,769,1046
-palossand,770,Palossand,,base,7,f,f,t,770,1047
-pyukumuku,771,Pyukumuku,,base,7,f,f,t,771,1048
-type-null,772,Type: Null,,base,7,t,f,t,772,1049
-silvally,773,Silvally,Type: Normal,base,7,t,f,t,773,1050
-minior,774,Minior,Red Core,base,7,f,f,t,10136,1051
-minior-orange,774,Minior,Orange Core,cosmetica,7,f,f,t,10137,1052
-minior-yellow,774,Minior,Yellow Core,cosmetica,7,f,f,t,10138,1053
-minior-green,774,Minior,Green Core,cosmetica,7,f,f,t,10139,1054
-minior-blue,774,Minior,Blue Core,cosmetica,7,f,f,t,10140,1055
-minior-indigo,774,Minior,Indigo Core,cosmetica,7,f,f,t,10141,1056
-minior-violet,774,Minior,Violet Core,cosmetica,7,f,f,t,10142,1057
-komala,775,Komala,,base,7,f,f,t,775,1058
-turtonator,776,Turtonator,,base,7,f,f,t,776,1059
-togedemaru,777,Togedemaru,,base,7,f,f,t,777,1060
-mimikyu,778,Mimikyu,Disguised Form,base,7,f,f,t,778,1061
-bruxish,779,Bruxish,,base,7,f,f,t,779,1062
-drampa,780,Drampa,,base,7,f,f,t,780,1063
-dhelmise,781,Dhelmise,,base,7,f,f,t,781,1064
-jangmo-o,782,Jangmo-o,,base,7,f,f,t,782,1065
-hakamo-o,783,Hakamo-o,,base,7,f,f,t,783,1066
-kommo-o,784,Kommo-o,,base,7,f,f,t,784,1067
-tapu-koko,785,Tapu Koko,,base,7,t,f,t,785,1068
-tapu-lele,786,Tapu Lele,,base,7,t,f,t,786,1069
-tapu-bulu,787,Tapu Bulu,,base,7,t,f,t,787,1070
-tapu-fini,788,Tapu Fini,,base,7,t,f,t,788,1071
-cosmog,789,Cosmog,,base,7,t,f,f,789,1072
-cosmoem,790,Cosmoem,,base,7,t,f,f,790,1073
-solgaleo,791,Solgaleo,,base,7,t,f,t,791,1074
-lunala,792,Lunala,,base,7,t,f,t,792,1075
-nihilego,793,Nihilego,,base,7,f,f,t,793,1076
-buzzwole,794,Buzzwole,,base,7,f,f,t,794,1077
-pheromosa,795,Pheromosa,,base,7,f,f,t,795,1078
-xurkitree,796,Xurkitree,,base,7,f,f,t,796,1079
-celesteela,797,Celesteela,,base,7,f,f,t,797,1080
-kartana,798,Kartana,,base,7,f,f,t,798,1081
-guzzlord,799,Guzzlord,,base,7,f,f,t,799,1082
-necrozma,800,Necrozma,,base,7,t,f,t,800,1083
-magearna,801,Magearna,,base,7,f,t,f,801,1084
-magearna-original,801,Magearna,Original Color,cosmetica,7,f,t,f,10147,1085
-marshadow,802,Marshadow,,base,7,f,t,t,802,1086
-poipole,803,Poipole,,base,7,f,f,t,803,1087
-naganadel,804,Naganadel,,base,7,f,f,t,804,1088
-stakataka,805,Stakataka,,base,7,f,f,t,805,1089
-blacephalon,806,Blacephalon,,base,7,f,f,t,806,1090
-zeraora,807,Zeraora,,base,7,f,t,t,807,1091
-meltan,808,Meltan,,base,7,f,t,t,808,1092
-melmetal,809,Melmetal,,base,7,f,t,t,809,1093
-grookey,810,Grookey,,base,8,f,f,t,810,1094
-thwackey,811,Thwackey,,base,8,f,f,t,811,1095
-rillaboom,812,Rillaboom,,base,8,f,f,t,812,1096
-scorbunny,813,Scorbunny,,base,8,f,f,t,813,1097
-raboot,814,Raboot,,base,8,f,f,t,814,1098
-cinderace,815,Cinderace,,base,8,f,f,t,815,1099
-sobble,816,Sobble,,base,8,f,f,t,816,1100
-drizzile,817,Drizzile,,base,8,f,f,t,817,1101
-inteleon,818,Inteleon,,base,8,f,f,t,818,1102
-skwovet,819,Skwovet,,base,8,f,f,t,819,1103
-greedent,820,Greedent,,base,8,f,f,t,820,1104
-rookidee,821,Rookidee,,base,8,f,f,t,821,1105
-corvisquire,822,Corvisquire,,base,8,f,f,t,822,1106
-corviknight,823,Corviknight,,base,8,f,f,t,823,1107
-blipbug,824,Blipbug,,base,8,f,f,t,824,1108
-dottler,825,Dottler,,base,8,f,f,t,825,1109
-orbeetle,826,Orbeetle,,base,8,f,f,t,826,1110
-nickit,827,Nickit,,base,8,f,f,t,827,1111
-thievul,828,Thievul,,base,8,f,f,t,828,1112
-gossifleur,829,Gossifleur,,base,8,f,f,t,829,1113
-eldegoss,830,Eldegoss,,base,8,f,f,t,830,1114
-wooloo,831,Wooloo,,base,8,f,f,t,831,1115
-dubwool,832,Dubwool,,base,8,f,f,t,832,1116
-chewtle,833,Chewtle,,base,8,f,f,t,833,1117
-drednaw,834,Drednaw,,base,8,f,f,t,834,1118
-yamper,835,Yamper,,base,8,f,f,t,835,1119
-boltund,836,Boltund,,base,8,f,f,t,836,1120
-rolycoly,837,Rolycoly,,base,8,f,f,t,837,1121
-carkol,838,Carkol,,base,8,f,f,t,838,1122
-coalossal,839,Coalossal,,base,8,f,f,t,839,1123
-applin,840,Applin,,base,8,f,f,t,840,1124
-flapple,841,Flapple,,base,8,f,f,t,841,1125
-appletun,842,Appletun,,base,8,f,f,t,842,1126
-silicobra,843,Silicobra,,base,8,f,f,t,843,1127
-sandaconda,844,Sandaconda,,base,8,f,f,t,844,1128
-cramorant,845,Cramorant,,base,8,f,f,t,845,1129
-arrokuda,846,Arrokuda,,base,8,f,f,t,846,1130
-barraskewda,847,Barraskewda,,base,8,f,f,t,847,1131
-toxel,848,Toxel,,base,8,f,f,t,848,1132
-toxtricity,849,Toxtricity,Amped Form,base,8,f,f,t,849,1133
-toxtricity-low-key,849,Toxtricity,Low Key Form,especial,8,f,f,t,10184,1134
-sizzlipede,850,Sizzlipede,,base,8,f,f,t,850,1135
-centiskorch,851,Centiskorch,,base,8,f,f,t,851,1136
-clobbopus,852,Clobbopus,,base,8,f,f,t,852,1137
-grapploct,853,Grapploct,,base,8,f,f,t,853,1138
-sinistea,854,Sinistea,Phony Form,base,8,f,f,t,854,1139
-sinistea-antique,854,Sinistea,Antique Form,cosmetica,8,f,f,t,854-antique,1140
-polteageist,855,Polteageist,Phony Form,base,8,f,f,t,855,1141
-polteageist-antique,855,Polteageist,Antique Form,cosmetica,8,f,f,t,855-antique,1142
-hatenna,856,Hatenna,,base,8,f,f,t,856,1143
-hattrem,857,Hattrem,,base,8,f,f,t,857,1144
-hatterene,858,Hatterene,,base,8,f,f,t,858,1145
-impidimp,859,Impidimp,,base,8,f,f,t,859,1146
-morgrem,860,Morgrem,,base,8,f,f,t,860,1147
-grimmsnarl,861,Grimmsnarl,,base,8,f,f,t,861,1148
-obstagoon,862,Obstagoon,,base,8,f,f,t,862,1149
-perrserker,863,Perrserker,,base,8,f,f,t,863,1150
-cursola,864,Cursola,,base,8,f,f,t,864,1151
-sirfetchd,865,Sirfetch’d,,base,8,f,f,t,865,1152
-mr-rime,866,Mr. Rime,,base,8,f,f,t,866,1153
-runerigus,867,Runerigus,,base,8,f,f,t,867,1154
-milcery,868,Milcery,,base,8,f,f,t,868,1155
-alcremie,869,Alcremie,Vanilla Cream Strawberry Sweet,base,8,f,f,t,869,1156
-alcremie-vanilla-cream-berry-sweet,869,Alcremie,Vanilla Cream Berry Sweet,cosmetica,8,f,f,t,869-vanilla-cream-berry-sweet,1157
-alcremie-vanilla-cream-love-sweet,869,Alcremie,Vanilla Cream Love Sweet,cosmetica,8,f,f,t,869-vanilla-cream-love-sweet,1158
-alcremie-vanilla-cream-star-sweet,869,Alcremie,Vanilla Cream Star Sweet,cosmetica,8,f,f,t,869-vanilla-cream-star-sweet,1159
-alcremie-vanilla-cream-clover-sweet,869,Alcremie,Vanilla Cream Clover Sweet,cosmetica,8,f,f,t,869-vanilla-cream-clover-sweet,1160
-alcremie-vanilla-cream-flower-sweet,869,Alcremie,Vanilla Cream Flower Sweet,cosmetica,8,f,f,t,869-vanilla-cream-flower-sweet,1161
-alcremie-vanilla-cream-ribbon-sweet,869,Alcremie,Vanilla Cream Ribbon Sweet,cosmetica,8,f,f,t,869-vanilla-cream-ribbon-sweet,1162
-alcremie-ruby-cream-strawberry-sweet,869,Alcremie,Ruby Cream Strawberry Sweet,cosmetica,8,f,f,t,869-ruby-cream-strawberry-sweet,1163
-alcremie-ruby-cream-berry-sweet,869,Alcremie,Ruby Cream Berry Sweet,cosmetica,8,f,f,t,869-ruby-cream-berry-sweet,1164
-alcremie-ruby-cream-love-sweet,869,Alcremie,Ruby Cream Love Sweet,cosmetica,8,f,f,t,869-ruby-cream-love-sweet,1165
-alcremie-ruby-cream-star-sweet,869,Alcremie,Ruby Cream Star Sweet,cosmetica,8,f,f,t,869-ruby-cream-star-sweet,1166
-alcremie-ruby-cream-clover-sweet,869,Alcremie,Ruby Cream Clover Sweet,cosmetica,8,f,f,t,869-ruby-cream-clover-sweet,1167
-alcremie-ruby-cream-flower-sweet,869,Alcremie,Ruby Cream Flower Sweet,cosmetica,8,f,f,t,869-ruby-cream-flower-sweet,1168
-alcremie-ruby-cream-ribbon-sweet,869,Alcremie,Ruby Cream Ribbon Sweet,cosmetica,8,f,f,t,869-ruby-cream-ribbon-sweet,1169
-alcremie-matcha-cream-strawberry-sweet,869,Alcremie,Matcha Cream Strawberry Sweet,cosmetica,8,f,f,t,869-matcha-cream-strawberry-sweet,1170
-alcremie-matcha-cream-berry-sweet,869,Alcremie,Matcha Cream Berry Sweet,cosmetica,8,f,f,t,869-matcha-cream-berry-sweet,1171
-alcremie-matcha-cream-love-sweet,869,Alcremie,Matcha Cream Love Sweet,cosmetica,8,f,f,t,869-matcha-cream-love-sweet,1172
-alcremie-matcha-cream-star-sweet,869,Alcremie,Matcha Cream Star Sweet,cosmetica,8,f,f,t,869-matcha-cream-star-sweet,1173
-alcremie-matcha-cream-clover-sweet,869,Alcremie,Matcha Cream Clover Sweet,cosmetica,8,f,f,t,869-matcha-cream-clover-sweet,1174
-alcremie-matcha-cream-flower-sweet,869,Alcremie,Matcha Cream Flower Sweet,cosmetica,8,f,f,t,869-matcha-cream-flower-sweet,1175
-alcremie-matcha-cream-ribbon-sweet,869,Alcremie,Matcha Cream Ribbon Sweet,cosmetica,8,f,f,t,869-matcha-cream-ribbon-sweet,1176
-alcremie-mint-cream-strawberry-sweet,869,Alcremie,Mint Cream Strawberry Sweet,cosmetica,8,f,f,t,869-mint-cream-strawberry-sweet,1177
-alcremie-mint-cream-berry-sweet,869,Alcremie,Mint Cream Berry Sweet,cosmetica,8,f,f,t,869-mint-cream-berry-sweet,1178
-alcremie-mint-cream-love-sweet,869,Alcremie,Mint Cream Love Sweet,cosmetica,8,f,f,t,869-mint-cream-love-sweet,1179
-alcremie-mint-cream-star-sweet,869,Alcremie,Mint Cream Star Sweet,cosmetica,8,f,f,t,869-mint-cream-star-sweet,1180
-alcremie-mint-cream-clover-sweet,869,Alcremie,Mint Cream Clover Sweet,cosmetica,8,f,f,t,869-mint-cream-clover-sweet,1181
-alcremie-mint-cream-flower-sweet,869,Alcremie,Mint Cream Flower Sweet,cosmetica,8,f,f,t,869-mint-cream-flower-sweet,1182
-alcremie-mint-cream-ribbon-sweet,869,Alcremie,Mint Cream Ribbon Sweet,cosmetica,8,f,f,t,869-mint-cream-ribbon-sweet,1183
-alcremie-lemon-cream-strawberry-sweet,869,Alcremie,Lemon Cream Strawberry Sweet,cosmetica,8,f,f,t,869-lemon-cream-strawberry-sweet,1184
-alcremie-lemon-cream-berry-sweet,869,Alcremie,Lemon Cream Berry Sweet,cosmetica,8,f,f,t,869-lemon-cream-berry-sweet,1185
-alcremie-lemon-cream-love-sweet,869,Alcremie,Lemon Cream Love Sweet,cosmetica,8,f,f,t,869-lemon-cream-love-sweet,1186
-alcremie-lemon-cream-star-sweet,869,Alcremie,Lemon Cream Star Sweet,cosmetica,8,f,f,t,869-lemon-cream-star-sweet,1187
-alcremie-lemon-cream-clover-sweet,869,Alcremie,Lemon Cream Clover Sweet,cosmetica,8,f,f,t,869-lemon-cream-clover-sweet,1188
-alcremie-lemon-cream-flower-sweet,869,Alcremie,Lemon Cream Flower Sweet,cosmetica,8,f,f,t,869-lemon-cream-flower-sweet,1189
-alcremie-lemon-cream-ribbon-sweet,869,Alcremie,Lemon Cream Ribbon Sweet,cosmetica,8,f,f,t,869-lemon-cream-ribbon-sweet,1190
-alcremie-salted-cream-strawberry-sweet,869,Alcremie,Salted Cream Strawberry Sweet,cosmetica,8,f,f,t,869-salted-cream-strawberry-sweet,1191
-alcremie-salted-cream-berry-sweet,869,Alcremie,Salted Cream Berry Sweet,cosmetica,8,f,f,t,869-salted-cream-berry-sweet,1192
-alcremie-salted-cream-love-sweet,869,Alcremie,Salted Cream Love Sweet,cosmetica,8,f,f,t,869-salted-cream-love-sweet,1193
-alcremie-salted-cream-star-sweet,869,Alcremie,Salted Cream Star Sweet,cosmetica,8,f,f,t,869-salted-cream-star-sweet,1194
-alcremie-salted-cream-clover-sweet,869,Alcremie,Salted Cream Clover Sweet,cosmetica,8,f,f,t,869-salted-cream-clover-sweet,1195
-alcremie-salted-cream-flower-sweet,869,Alcremie,Salted Cream Flower Sweet,cosmetica,8,f,f,t,869-salted-cream-flower-sweet,1196
-alcremie-salted-cream-ribbon-sweet,869,Alcremie,Salted Cream Ribbon Sweet,cosmetica,8,f,f,t,869-salted-cream-ribbon-sweet,1197
-alcremie-ruby-swirl-strawberry-sweet,869,Alcremie,Ruby Swirl Strawberry Sweet,cosmetica,8,f,f,t,869-ruby-swirl-strawberry-sweet,1198
-alcremie-ruby-swirl-berry-sweet,869,Alcremie,Ruby Swirl Berry Sweet,cosmetica,8,f,f,t,869-ruby-swirl-berry-sweet,1199
-alcremie-ruby-swirl-love-sweet,869,Alcremie,Ruby Swirl Love Sweet,cosmetica,8,f,f,t,869-ruby-swirl-love-sweet,1200
-alcremie-ruby-swirl-star-sweet,869,Alcremie,Ruby Swirl Star Sweet,cosmetica,8,f,f,t,869-ruby-swirl-star-sweet,1201
-alcremie-ruby-swirl-clover-sweet,869,Alcremie,Ruby Swirl Clover Sweet,cosmetica,8,f,f,t,869-ruby-swirl-clover-sweet,1202
-alcremie-ruby-swirl-flower-sweet,869,Alcremie,Ruby Swirl Flower Sweet,cosmetica,8,f,f,t,869-ruby-swirl-flower-sweet,1203
-alcremie-ruby-swirl-ribbon-sweet,869,Alcremie,Ruby Swirl Ribbon Sweet,cosmetica,8,f,f,t,869-ruby-swirl-ribbon-sweet,1204
-alcremie-caramel-swirl-strawberry-sweet,869,Alcremie,Caramel Swirl Strawberry Sweet,cosmetica,8,f,f,t,869-caramel-swirl-strawberry-sweet,1205
-alcremie-caramel-swirl-berry-sweet,869,Alcremie,Caramel Swirl Berry Sweet,cosmetica,8,f,f,t,869-caramel-swirl-berry-sweet,1206
-alcremie-caramel-swirl-love-sweet,869,Alcremie,Caramel Swirl Love Sweet,cosmetica,8,f,f,t,869-caramel-swirl-love-sweet,1207
-alcremie-caramel-swirl-star-sweet,869,Alcremie,Caramel Swirl Star Sweet,cosmetica,8,f,f,t,869-caramel-swirl-star-sweet,1208
-alcremie-caramel-swirl-clover-sweet,869,Alcremie,Caramel Swirl Clover Sweet,cosmetica,8,f,f,t,869-caramel-swirl-clover-sweet,1209
-alcremie-caramel-swirl-flower-sweet,869,Alcremie,Caramel Swirl Flower Sweet,cosmetica,8,f,f,t,869-caramel-swirl-flower-sweet,1210
-alcremie-caramel-swirl-ribbon-sweet,869,Alcremie,Caramel Swirl Ribbon Sweet,cosmetica,8,f,f,t,869-caramel-swirl-ribbon-sweet,1211
-alcremie-rainbow-swirl-strawberry-sweet,869,Alcremie,Rainbow Swirl Strawberry Sweet,cosmetica,8,f,f,t,869-rainbow-swirl-strawberry-sweet,1212
-alcremie-rainbow-swirl-berry-sweet,869,Alcremie,Rainbow Swirl Berry Sweet,cosmetica,8,f,f,t,869-rainbow-swirl-berry-sweet,1213
-alcremie-rainbow-swirl-love-sweet,869,Alcremie,Rainbow Swirl Love Sweet,cosmetica,8,f,f,t,869-rainbow-swirl-love-sweet,1214
-alcremie-rainbow-swirl-star-sweet,869,Alcremie,Rainbow Swirl Star Sweet,cosmetica,8,f,f,t,869-rainbow-swirl-star-sweet,1215
-alcremie-rainbow-swirl-clover-sweet,869,Alcremie,Rainbow Swirl Clover Sweet,cosmetica,8,f,f,t,869-rainbow-swirl-clover-sweet,1216
-alcremie-rainbow-swirl-flower-sweet,869,Alcremie,Rainbow Swirl Flower Sweet,cosmetica,8,f,f,t,869-rainbow-swirl-flower-sweet,1217
-alcremie-rainbow-swirl-ribbon-sweet,869,Alcremie,Rainbow Swirl Ribbon Sweet,cosmetica,8,f,f,t,869-rainbow-swirl-ribbon-sweet,1218
-falinks,870,Falinks,,base,8,f,f,t,870,1219
-pincurchin,871,Pincurchin,,base,8,f,f,t,871,1220
-snom,872,Snom,,base,8,f,f,t,872,1221
-frosmoth,873,Frosmoth,,base,8,f,f,t,873,1222
-stonjourner,874,Stonjourner,,base,8,f,f,t,874,1223
-eiscue,875,Eiscue,Ice Face,base,8,f,f,t,875,1224
-indeedee,876,Indeedee,Male,base,8,f,f,t,876,1225
-indeedee-female,876,Indeedee,Female,genero,8,f,f,t,10186,1226
-morpeko,877,Morpeko,Full Belly Mode,base,8,f,f,t,877,1227
-cufant,878,Cufant,,base,8,f,f,t,878,1228
-copperajah,879,Copperajah,,base,8,f,f,t,879,1229
-dracozolt,880,Dracozolt,,base,8,f,f,t,880,1230
-arctozolt,881,Arctozolt,,base,8,f,f,t,881,1231
-dracovish,882,Dracovish,,base,8,f,f,t,882,1232
-arctovish,883,Arctovish,,base,8,f,f,t,883,1233
-duraludon,884,Duraludon,,base,8,f,f,t,884,1234
-dreepy,885,Dreepy,,base,8,f,f,t,885,1235
-drakloak,886,Drakloak,,base,8,f,f,t,886,1236
-dragapult,887,Dragapult,,base,8,f,f,t,887,1237
-zacian,888,Zacian,Hero of Many Battles,base,8,t,f,t,888,1238
-zamazenta,889,Zamazenta,Hero of Many Battles,base,8,t,f,t,889,1239
-eternatus,890,Eternatus,,base,8,t,f,t,890,1240
-kubfu,891,Kubfu,,base,8,t,f,f,891,1241
-urshifu,892,Urshifu,Single Strike Style,base,8,t,f,f,892,1242
-urshifu-rapid-strike,892,Urshifu,Rapid Strike Style,especial,8,t,f,f,10191,1243
-zarude,893,Zarude,,base,8,f,t,f,893,1244
-zarude-dada,893,Zarude,Dada,cosmetica,8,f,t,f,10192,1245
-regieleki,894,Regieleki,,base,8,t,f,t,894,1246
-regidrago,895,Regidrago,,base,8,t,f,t,895,1247
-glastrier,896,Glastrier,,base,8,t,f,f,896,1248
-spectrier,897,Spectrier,,base,8,t,f,f,897,1249
-calyrex,898,Calyrex,,base,8,t,f,f,898,1250
-wyrdeer,899,Wyrdeer,,base,8,f,f,t,899,1251
-kleavor,900,Kleavor,,base,8,f,f,t,900,1252
-ursaluna,901,Ursaluna,,base,8,f,f,t,901,1253
-ursaluna-bloodmoon,901,Ursaluna,Bloodmoon,especial,8,f,f,f,10272,1254
-basculegion,902,Basculegion,Male,base,8,f,f,t,902,1255
-basculegion-female,902,Basculegion,Female,genero,8,f,f,t,10248,1256
-sneasler,903,Sneasler,,base,8,f,f,t,903,1257
-overqwil,904,Overqwil,,base,8,f,f,t,904,1258
-enamorus,905,Enamorus,Incarnate Forme,base,8,t,f,t,905,1259
-enamorus-therian,905,Enamorus,Therian Forme,especial,8,t,f,t,10249,1260
-sprigatito,906,Sprigatito,,base,9,f,f,t,906,1261
-floragato,907,Floragato,,base,9,f,f,t,907,1262
-meowscarada,908,Meowscarada,,base,9,f,f,t,908,1263
-fuecoco,909,Fuecoco,,base,9,f,f,t,909,1264
-crocalor,910,Crocalor,,base,9,f,f,t,910,1265
-skeledirge,911,Skeledirge,,base,9,f,f,t,911,1266
-quaxly,912,Quaxly,,base,9,f,f,t,912,1267
-quaxwell,913,Quaxwell,,base,9,f,f,t,913,1268
-quaquaval,914,Quaquaval,,base,9,f,f,t,914,1269
-lechonk,915,Lechonk,,base,9,f,f,t,915,1270
-oinkologne,916,Oinkologne,Male,base,9,f,f,t,916,1271
-oinkologne-female,916,Oinkologne,Female,genero,9,f,f,t,10254,1272
-tarountula,917,Tarountula,,base,9,f,f,t,917,1273
-spidops,918,Spidops,,base,9,f,f,t,918,1274
-nymble,919,Nymble,,base,9,f,f,t,919,1275
-lokix,920,Lokix,,base,9,f,f,t,920,1276
-pawmi,921,Pawmi,,base,9,f,f,t,921,1277
-pawmo,922,Pawmo,,base,9,f,f,t,922,1278
-pawmot,923,Pawmot,,base,9,f,f,t,923,1279
-tandemaus,924,Tandemaus,,base,9,f,f,t,924,1280
-maushold,925,Maushold,Family of Four,base,9,f,f,t,925,1281
-maushold-family-of-three,925,Maushold,Family of Three,cosmetica,9,f,f,t,10257,1282
-fidough,926,Fidough,,base,9,f,f,t,926,1283
-dachsbun,927,Dachsbun,,base,9,f,f,t,927,1284
-smoliv,928,Smoliv,,base,9,f,f,t,928,1285
-dolliv,929,Dolliv,,base,9,f,f,t,929,1286
-arboliva,930,Arboliva,,base,9,f,f,t,930,1287
-squawkabilly,931,Squawkabilly,Green Plumage,base,9,f,f,t,931,1288
-squawkabilly-blue-plumage,931,Squawkabilly,Blue Plumage,especial,9,f,f,t,10260,1289
-squawkabilly-yellow-plumage,931,Squawkabilly,Yellow Plumage,especial,9,f,f,t,10261,1290
-squawkabilly-white-plumage,931,Squawkabilly,White Plumage,especial,9,f,f,t,10262,1291
-nacli,932,Nacli,,base,9,f,f,t,932,1292
-naclstack,933,Naclstack,,base,9,f,f,t,933,1293
-garganacl,934,Garganacl,,base,9,f,f,t,934,1294
-charcadet,935,Charcadet,,base,9,f,f,t,935,1295
-armarouge,936,Armarouge,,base,9,f,f,t,936,1296
-ceruledge,937,Ceruledge,,base,9,f,f,t,937,1297
-tadbulb,938,Tadbulb,,base,9,f,f,t,938,1298
-bellibolt,939,Bellibolt,,base,9,f,f,t,939,1299
-wattrel,940,Wattrel,,base,9,f,f,t,940,1300
-kilowattrel,941,Kilowattrel,,base,9,f,f,t,941,1301
-maschiff,942,Maschiff,,base,9,f,f,t,942,1302
-mabosstiff,943,Mabosstiff,,base,9,f,f,t,943,1303
-shroodle,944,Shroodle,,base,9,f,f,t,944,1304
-grafaiai,945,Grafaiai,,base,9,f,f,t,945,1305
-bramblin,946,Bramblin,,base,9,f,f,t,946,1306
-brambleghast,947,Brambleghast,,base,9,f,f,t,947,1307
-toedscool,948,Toedscool,,base,9,f,f,t,948,1308
-toedscruel,949,Toedscruel,,base,9,f,f,t,949,1309
-klawf,950,Klawf,,base,9,f,f,t,950,1310
-capsakid,951,Capsakid,,base,9,f,f,t,951,1311
-scovillain,952,Scovillain,,base,9,f,f,t,952,1312
-rellor,953,Rellor,,base,9,f,f,t,953,1313
-rabsca,954,Rabsca,,base,9,f,f,t,954,1314
-flittle,955,Flittle,,base,9,f,f,t,955,1315
-espathra,956,Espathra,,base,9,f,f,t,956,1316
-tinkatink,957,Tinkatink,,base,9,f,f,t,957,1317
-tinkatuff,958,Tinkatuff,,base,9,f,f,t,958,1318
-tinkaton,959,Tinkaton,,base,9,f,f,t,959,1319
-wiglett,960,Wiglett,,base,9,f,f,t,960,1320
-wugtrio,961,Wugtrio,,base,9,f,f,t,961,1321
-bombirdier,962,Bombirdier,,base,9,f,f,t,962,1322
-finizen,963,Finizen,,base,9,f,f,t,963,1323
-palafin,964,Palafin,Zero Form,base,9,f,f,t,964,1324
-varoom,965,Varoom,,base,9,f,f,t,965,1325
-revavroom,966,Revavroom,,base,9,f,f,t,966,1326
-cyclizar,967,Cyclizar,,base,9,f,f,t,967,1327
-orthworm,968,Orthworm,,base,9,f,f,t,968,1328
-glimmet,969,Glimmet,,base,9,f,f,t,969,1329
-glimmora,970,Glimmora,,base,9,f,f,t,970,1330
-greavard,971,Greavard,,base,9,f,f,t,971,1331
-houndstone,972,Houndstone,,base,9,f,f,t,972,1332
-flamigo,973,Flamigo,,base,9,f,f,t,973,1333
-cetoddle,974,Cetoddle,,base,9,f,f,t,974,1334
-cetitan,975,Cetitan,,base,9,f,f,t,975,1335
-veluza,976,Veluza,,base,9,f,f,t,976,1336
-dondozo,977,Dondozo,,base,9,f,f,t,977,1337
-tatsugiri,978,Tatsugiri,Curly Form,base,9,f,f,t,978,1338
-tatsugiri-droopy,978,Tatsugiri,Droopy Form,cosmetica,9,f,f,t,10258,1339
-tatsugiri-stretchy,978,Tatsugiri,Stretchy Form,cosmetica,9,f,f,t,10259,1340
-annihilape,979,Annihilape,,base,9,f,f,t,979,1341
-clodsire,980,Clodsire,,base,9,f,f,t,980,1342
-farigiraf,981,Farigiraf,,base,9,f,f,t,981,1343
-dudunsparce,982,Dudunsparce,Two-Segment Form,base,9,f,f,t,982,1344
-dudunsparce-three-segment,982,Dudunsparce,Three-Segment Form,cosmetica,9,f,f,t,10255,1345
-kingambit,983,Kingambit,,base,9,f,f,t,983,1346
-great-tusk,984,Great Tusk,,base,9,f,f,t,984,1347
-scream-tail,985,Scream Tail,,base,9,f,f,t,985,1348
-brute-bonnet,986,Brute Bonnet,,base,9,f,f,t,986,1349
-flutter-mane,987,Flutter Mane,,base,9,f,f,t,987,1350
-slither-wing,988,Slither Wing,,base,9,f,f,t,988,1351
-sandy-shocks,989,Sandy Shocks,,base,9,f,f,t,989,1352
-iron-treads,990,Iron Treads,,base,9,f,f,t,990,1353
-iron-bundle,991,Iron Bundle,,base,9,f,f,t,991,1354
-iron-hands,992,Iron Hands,,base,9,f,f,t,992,1355
-iron-jugulis,993,Iron Jugulis,,base,9,f,f,t,993,1356
-iron-moth,994,Iron Moth,,base,9,f,f,t,994,1357
-iron-thorns,995,Iron Thorns,,base,9,f,f,t,995,1358
-frigibax,996,Frigibax,,base,9,f,f,t,996,1359
-arctibax,997,Arctibax,,base,9,f,f,t,997,1360
-baxcalibur,998,Baxcalibur,,base,9,f,f,t,998,1361
-gimmighoul,999,Gimmighoul,Chest Form,base,9,f,f,t,999,1362
-gimmighoul-roaming,999,Gimmighoul,Roaming Form,especial,9,f,f,t,10263,1363
-gholdengo,1000,Gholdengo,,base,9,f,f,t,1000,1364
-wo-chien,1001,Wo-Chien,,base,9,t,f,t,1001,1365
-chien-pao,1002,Chien-Pao,,base,9,t,f,t,1002,1366
-ting-lu,1003,Ting-Lu,,base,9,t,f,t,1003,1367
-chi-yu,1004,Chi-Yu,,base,9,t,f,t,1004,1368
-roaring-moon,1005,Roaring Moon,,base,9,f,f,t,1005,1369
-iron-valiant,1006,Iron Valiant,,base,9,f,f,t,1006,1370
-koraidon,1007,Koraidon,Apex Build,base,9,t,f,t,1007,1371
-miraidon,1008,Miraidon,Ultimate Mode,base,9,t,f,t,1008,1372
-walking-wake,1009,Walking Wake,,base,9,f,f,f,1009,1373
-iron-leaves,1010,Iron Leaves,,base,9,f,f,f,1010,1374
-dipplin,1011,Dipplin,,base,9,f,f,t,1011,1375
-poltchageist,1012,Poltchageist,Counterfeit Form,base,9,f,f,t,1012,1376
-poltchageist-artisan,1012,Poltchageist,Artisan Form,cosmetica,9,f,f,t,1012-artisan,1377
-sinistcha,1013,Sinistcha,Unremarkable Form,base,9,f,f,t,1013,1378
-sinistcha-masterpiece,1013,Sinistcha,Masterpiece Form,cosmetica,9,f,f,t,1013-masterpiece,1379
-okidogi,1014,Okidogi,,base,9,t,f,f,1014,1380
-munkidori,1015,Munkidori,,base,9,t,f,f,1015,1381
-fezandipiti,1016,Fezandipiti,,base,9,t,f,f,1016,1382
-ogerpon,1017,Ogerpon,Teal Mask,base,9,t,f,f,1017,1383
-archaludon,1018,Archaludon,,base,9,f,f,t,1018,1384
-hydrapple,1019,Hydrapple,,base,9,f,f,t,1019,1385
-gouging-fire,1020,Gouging Fire,,base,9,f,f,f,1020,1386
-raging-bolt,1021,Raging Bolt,,base,9,f,f,f,1021,1387
-iron-boulder,1022,Iron Boulder,,base,9,f,f,f,1022,1388
-iron-crown,1023,Iron Crown,,base,9,f,f,f,1023,1389
-terapagos,1024,Terapagos,Normal Form,base,9,t,f,f,1024,1390
-pecharunt,1025,Pecharunt,,base,9,f,t,f,1025,1391
+id,numero,especie,forma,forma_pt,categoria,geracao,lendario,mitico,shiny_obtenivel,sprite,ordem
+bulbasaur,1,Bulbasaur,,,base,1,f,f,t,1,1
+ivysaur,2,Ivysaur,,,base,1,f,f,t,2,2
+venusaur,3,Venusaur,,,base,1,f,f,t,3,3
+venusaur-femea,3,Venusaur,Female,,genero,1,f,f,t,female/3,4
+charmander,4,Charmander,,,base,1,f,f,t,4,5
+charmeleon,5,Charmeleon,,,base,1,f,f,t,5,6
+charizard,6,Charizard,,,base,1,f,f,t,6,7
+squirtle,7,Squirtle,,,base,1,f,f,t,7,8
+wartortle,8,Wartortle,,,base,1,f,f,t,8,9
+blastoise,9,Blastoise,,,base,1,f,f,t,9,10
+caterpie,10,Caterpie,,,base,1,f,f,t,10,11
+metapod,11,Metapod,,,base,1,f,f,t,11,12
+butterfree,12,Butterfree,,,base,1,f,f,t,12,13
+butterfree-femea,12,Butterfree,Female,,genero,1,f,f,t,female/12,14
+weedle,13,Weedle,,,base,1,f,f,t,13,15
+kakuna,14,Kakuna,,,base,1,f,f,t,14,16
+beedrill,15,Beedrill,,,base,1,f,f,t,15,17
+pidgey,16,Pidgey,,,base,1,f,f,t,16,18
+pidgeotto,17,Pidgeotto,,,base,1,f,f,t,17,19
+pidgeot,18,Pidgeot,,,base,1,f,f,t,18,20
+rattata,19,Rattata,,,base,1,f,f,t,19,21
+rattata-femea,19,Rattata,Female,,genero,1,f,f,t,female/19,22
+rattata-alola,19,Rattata,Alolan Form,Forma de Alola,regional,1,f,f,t,10091,23
+raticate,20,Raticate,,,base,1,f,f,t,20,24
+raticate-femea,20,Raticate,Female,,genero,1,f,f,t,female/20,25
+raticate-alola,20,Raticate,Alolan Form,Forma de Alola,regional,1,f,f,t,10092,26
+spearow,21,Spearow,,,base,1,f,f,t,21,27
+fearow,22,Fearow,,,base,1,f,f,t,22,28
+ekans,23,Ekans,,,base,1,f,f,t,23,29
+arbok,24,Arbok,,,base,1,f,f,t,24,30
+pikachu,25,Pikachu,,,base,1,f,f,t,25,31
+pikachu-femea,25,Pikachu,Female,,genero,1,f,f,t,female/25,32
+pikachu-original-cap,25,Pikachu,Original Cap,,cosmetica,1,f,f,f,10094,33
+pikachu-hoenn-cap,25,Pikachu,Hoenn Cap,,cosmetica,1,f,f,f,10095,34
+pikachu-sinnoh-cap,25,Pikachu,Sinnoh Cap,,cosmetica,1,f,f,f,10096,35
+pikachu-unova-cap,25,Pikachu,Unova Cap,,cosmetica,1,f,f,f,10097,36
+pikachu-kalos-cap,25,Pikachu,Kalos Cap,,cosmetica,1,f,f,f,10098,37
+pikachu-alola-cap,25,Pikachu,Alola Cap,,cosmetica,1,f,f,f,10099,38
+pikachu-partner-cap,25,Pikachu,Partner Cap,,cosmetica,1,f,f,t,10148,39
+pikachu-world-cap,25,Pikachu,World Cap,,cosmetica,1,f,f,f,10160,40
+raichu,26,Raichu,,,base,1,f,f,t,26,41
+raichu-femea,26,Raichu,Female,,genero,1,f,f,t,female/26,42
+raichu-alola,26,Raichu,Alolan Form,Forma de Alola,regional,1,f,f,t,10100,43
+sandshrew,27,Sandshrew,,,base,1,f,f,t,27,44
+sandshrew-alola,27,Sandshrew,Alolan Form,Forma de Alola,regional,1,f,f,t,10101,45
+sandslash,28,Sandslash,,,base,1,f,f,t,28,46
+sandslash-alola,28,Sandslash,Alolan Form,Forma de Alola,regional,1,f,f,t,10102,47
+nidoran-f,29,Nidoran♀,,,base,1,f,f,t,29,48
+nidorina,30,Nidorina,,,base,1,f,f,t,30,49
+nidoqueen,31,Nidoqueen,,,base,1,f,f,t,31,50
+nidoran-m,32,Nidoran♂,,,base,1,f,f,t,32,51
+nidorino,33,Nidorino,,,base,1,f,f,t,33,52
+nidoking,34,Nidoking,,,base,1,f,f,t,34,53
+clefairy,35,Clefairy,,,base,1,f,f,t,35,54
+clefable,36,Clefable,,,base,1,f,f,t,36,55
+vulpix,37,Vulpix,,,base,1,f,f,t,37,56
+vulpix-alola,37,Vulpix,Alolan Form,Forma de Alola,regional,1,f,f,t,10103,57
+ninetales,38,Ninetales,,,base,1,f,f,t,38,58
+ninetales-alola,38,Ninetales,Alolan Form,Forma de Alola,regional,1,f,f,t,10104,59
+jigglypuff,39,Jigglypuff,,,base,1,f,f,t,39,60
+wigglytuff,40,Wigglytuff,,,base,1,f,f,t,40,61
+zubat,41,Zubat,,,base,1,f,f,t,41,62
+zubat-femea,41,Zubat,Female,,genero,1,f,f,t,female/41,63
+golbat,42,Golbat,,,base,1,f,f,t,42,64
+golbat-femea,42,Golbat,Female,,genero,1,f,f,t,female/42,65
+oddish,43,Oddish,,,base,1,f,f,t,43,66
+gloom,44,Gloom,,,base,1,f,f,t,44,67
+gloom-femea,44,Gloom,Female,,genero,1,f,f,t,female/44,68
+vileplume,45,Vileplume,,,base,1,f,f,t,45,69
+vileplume-femea,45,Vileplume,Female,,genero,1,f,f,t,female/45,70
+paras,46,Paras,,,base,1,f,f,t,46,71
+parasect,47,Parasect,,,base,1,f,f,t,47,72
+venonat,48,Venonat,,,base,1,f,f,t,48,73
+venomoth,49,Venomoth,,,base,1,f,f,t,49,74
+diglett,50,Diglett,,,base,1,f,f,t,50,75
+diglett-alola,50,Diglett,Alolan Form,Forma de Alola,regional,1,f,f,t,10105,76
+dugtrio,51,Dugtrio,,,base,1,f,f,t,51,77
+dugtrio-alola,51,Dugtrio,Alolan Form,Forma de Alola,regional,1,f,f,t,10106,78
+meowth,52,Meowth,,,base,1,f,f,t,52,79
+meowth-alola,52,Meowth,Alolan Form,Forma de Alola,regional,1,f,f,t,10107,80
+meowth-galar,52,Meowth,Galarian Form,Forma de Galar,regional,1,f,f,t,10161,81
+persian,53,Persian,,,base,1,f,f,t,53,82
+persian-alola,53,Persian,Alolan Form,Forma de Alola,regional,1,f,f,t,10108,83
+psyduck,54,Psyduck,,,base,1,f,f,t,54,84
+golduck,55,Golduck,,,base,1,f,f,t,55,85
+mankey,56,Mankey,,,base,1,f,f,t,56,86
+primeape,57,Primeape,,,base,1,f,f,t,57,87
+growlithe,58,Growlithe,,,base,1,f,f,t,58,88
+growlithe-hisui,58,Growlithe,Hisuian Form,Forma de Hisui,regional,1,f,f,t,10229,89
+arcanine,59,Arcanine,,,base,1,f,f,t,59,90
+arcanine-hisui,59,Arcanine,Hisuian Form,Forma de Hisui,regional,1,f,f,t,10230,91
+poliwag,60,Poliwag,,,base,1,f,f,t,60,92
+poliwhirl,61,Poliwhirl,,,base,1,f,f,t,61,93
+poliwrath,62,Poliwrath,,,base,1,f,f,t,62,94
+abra,63,Abra,,,base,1,f,f,t,63,95
+kadabra,64,Kadabra,,,base,1,f,f,t,64,96
+kadabra-femea,64,Kadabra,Female,,genero,1,f,f,t,female/64,97
+alakazam,65,Alakazam,,,base,1,f,f,t,65,98
+alakazam-femea,65,Alakazam,Female,,genero,1,f,f,t,female/65,99
+machop,66,Machop,,,base,1,f,f,t,66,100
+machoke,67,Machoke,,,base,1,f,f,t,67,101
+machamp,68,Machamp,,,base,1,f,f,t,68,102
+bellsprout,69,Bellsprout,,,base,1,f,f,t,69,103
+weepinbell,70,Weepinbell,,,base,1,f,f,t,70,104
+victreebel,71,Victreebel,,,base,1,f,f,t,71,105
+tentacool,72,Tentacool,,,base,1,f,f,t,72,106
+tentacruel,73,Tentacruel,,,base,1,f,f,t,73,107
+geodude,74,Geodude,,,base,1,f,f,t,74,108
+geodude-alola,74,Geodude,Alolan Form,Forma de Alola,regional,1,f,f,t,10109,109
+graveler,75,Graveler,,,base,1,f,f,t,75,110
+graveler-alola,75,Graveler,Alolan Form,Forma de Alola,regional,1,f,f,t,10110,111
+golem,76,Golem,,,base,1,f,f,t,76,112
+golem-alola,76,Golem,Alolan Form,Forma de Alola,regional,1,f,f,t,10111,113
+ponyta,77,Ponyta,,,base,1,f,f,t,77,114
+ponyta-galar,77,Ponyta,Galarian Form,Forma de Galar,regional,1,f,f,t,10162,115
+rapidash,78,Rapidash,,,base,1,f,f,t,78,116
+rapidash-galar,78,Rapidash,Galarian Form,Forma de Galar,regional,1,f,f,t,10163,117
+slowpoke,79,Slowpoke,,,base,1,f,f,t,79,118
+slowpoke-galar,79,Slowpoke,Galarian Form,Forma de Galar,regional,1,f,f,t,10164,119
+slowbro,80,Slowbro,,,base,1,f,f,t,80,120
+slowbro-galar,80,Slowbro,Galarian Form,Forma de Galar,regional,1,f,f,t,10165,121
+magnemite,81,Magnemite,,,base,1,f,f,t,81,122
+magneton,82,Magneton,,,base,1,f,f,t,82,123
+farfetchd,83,Farfetch’d,,,base,1,f,f,t,83,124
+farfetchd-galar,83,Farfetch’d,Galarian Form,Forma de Galar,regional,1,f,f,t,10166,125
+doduo,84,Doduo,,,base,1,f,f,t,84,126
+doduo-femea,84,Doduo,Female,,genero,1,f,f,t,female/84,127
+dodrio,85,Dodrio,,,base,1,f,f,t,85,128
+dodrio-femea,85,Dodrio,Female,,genero,1,f,f,t,female/85,129
+seel,86,Seel,,,base,1,f,f,t,86,130
+dewgong,87,Dewgong,,,base,1,f,f,t,87,131
+grimer,88,Grimer,,,base,1,f,f,t,88,132
+grimer-alola,88,Grimer,Alolan Form,Forma de Alola,regional,1,f,f,t,10112,133
+muk,89,Muk,,,base,1,f,f,t,89,134
+muk-alola,89,Muk,Alolan Form,Forma de Alola,regional,1,f,f,t,10113,135
+shellder,90,Shellder,,,base,1,f,f,t,90,136
+cloyster,91,Cloyster,,,base,1,f,f,t,91,137
+gastly,92,Gastly,,,base,1,f,f,t,92,138
+haunter,93,Haunter,,,base,1,f,f,t,93,139
+gengar,94,Gengar,,,base,1,f,f,t,94,140
+onix,95,Onix,,,base,1,f,f,t,95,141
+drowzee,96,Drowzee,,,base,1,f,f,t,96,142
+hypno,97,Hypno,,,base,1,f,f,t,97,143
+hypno-femea,97,Hypno,Female,,genero,1,f,f,t,female/97,144
+krabby,98,Krabby,,,base,1,f,f,t,98,145
+kingler,99,Kingler,,,base,1,f,f,t,99,146
+voltorb,100,Voltorb,,,base,1,f,f,t,100,147
+voltorb-hisui,100,Voltorb,Hisuian Form,Forma de Hisui,regional,1,f,f,t,10231,148
+electrode,101,Electrode,,,base,1,f,f,t,101,149
+electrode-hisui,101,Electrode,Hisuian Form,Forma de Hisui,regional,1,f,f,t,10232,150
+exeggcute,102,Exeggcute,,,base,1,f,f,t,102,151
+exeggutor,103,Exeggutor,,,base,1,f,f,t,103,152
+exeggutor-alola,103,Exeggutor,Alolan Form,Forma de Alola,regional,1,f,f,t,10114,153
+cubone,104,Cubone,,,base,1,f,f,t,104,154
+marowak,105,Marowak,,,base,1,f,f,t,105,155
+marowak-alola,105,Marowak,Alolan Form,Forma de Alola,regional,1,f,f,t,10115,156
+hitmonlee,106,Hitmonlee,,,base,1,f,f,t,106,157
+hitmonchan,107,Hitmonchan,,,base,1,f,f,t,107,158
+lickitung,108,Lickitung,,,base,1,f,f,t,108,159
+koffing,109,Koffing,,,base,1,f,f,t,109,160
+weezing,110,Weezing,,,base,1,f,f,t,110,161
+weezing-galar,110,Weezing,Galarian Form,Forma de Galar,regional,1,f,f,t,10167,162
+rhyhorn,111,Rhyhorn,,,base,1,f,f,t,111,163
+rhyhorn-femea,111,Rhyhorn,Female,,genero,1,f,f,t,female/111,164
+rhydon,112,Rhydon,,,base,1,f,f,t,112,165
+rhydon-femea,112,Rhydon,Female,,genero,1,f,f,t,female/112,166
+chansey,113,Chansey,,,base,1,f,f,t,113,167
+tangela,114,Tangela,,,base,1,f,f,t,114,168
+kangaskhan,115,Kangaskhan,,,base,1,f,f,t,115,169
+horsea,116,Horsea,,,base,1,f,f,t,116,170
+seadra,117,Seadra,,,base,1,f,f,t,117,171
+goldeen,118,Goldeen,,,base,1,f,f,t,118,172
+goldeen-femea,118,Goldeen,Female,,genero,1,f,f,t,female/118,173
+seaking,119,Seaking,,,base,1,f,f,t,119,174
+seaking-femea,119,Seaking,Female,,genero,1,f,f,t,female/119,175
+staryu,120,Staryu,,,base,1,f,f,t,120,176
+starmie,121,Starmie,,,base,1,f,f,t,121,177
+mr-mime,122,Mr. Mime,,,base,1,f,f,t,122,178
+mr-mime-galar,122,Mr. Mime,Galarian Form,Forma de Galar,regional,1,f,f,t,10168,179
+scyther,123,Scyther,,,base,1,f,f,t,123,180
+scyther-femea,123,Scyther,Female,,genero,1,f,f,t,female/123,181
+jynx,124,Jynx,,,base,1,f,f,t,124,182
+electabuzz,125,Electabuzz,,,base,1,f,f,t,125,183
+magmar,126,Magmar,,,base,1,f,f,t,126,184
+pinsir,127,Pinsir,,,base,1,f,f,t,127,185
+tauros,128,Tauros,,,base,1,f,f,t,128,186
+tauros-paldea-combat-breed,128,Tauros,Paldean Form (Combat Breed),Forma de Paldea (Espécie de Combate),regional,1,f,f,t,10250,187
+tauros-paldea-blaze-breed,128,Tauros,Paldean Form (Blaze Breed),Forma de Paldea (Espécie Labareda),regional,1,f,f,t,10251,188
+tauros-paldea-aqua-breed,128,Tauros,Paldean Form (Aqua Breed),Forma de Paldea (Espécie Aquática),regional,1,f,f,t,10252,189
+magikarp,129,Magikarp,,,base,1,f,f,t,129,190
+magikarp-femea,129,Magikarp,Female,,genero,1,f,f,t,female/129,191
+gyarados,130,Gyarados,,,base,1,f,f,t,130,192
+gyarados-femea,130,Gyarados,Female,,genero,1,f,f,t,female/130,193
+lapras,131,Lapras,,,base,1,f,f,t,131,194
+ditto,132,Ditto,,,base,1,f,f,t,132,195
+eevee,133,Eevee,,,base,1,f,f,t,133,196
+eevee-femea,133,Eevee,Female,,genero,1,f,f,t,female/133,197
+vaporeon,134,Vaporeon,,,base,1,f,f,t,134,198
+jolteon,135,Jolteon,,,base,1,f,f,t,135,199
+flareon,136,Flareon,,,base,1,f,f,t,136,200
+porygon,137,Porygon,,,base,1,f,f,t,137,201
+omanyte,138,Omanyte,,,base,1,f,f,t,138,202
+omastar,139,Omastar,,,base,1,f,f,t,139,203
+kabuto,140,Kabuto,,,base,1,f,f,t,140,204
+kabutops,141,Kabutops,,,base,1,f,f,t,141,205
+aerodactyl,142,Aerodactyl,,,base,1,f,f,t,142,206
+snorlax,143,Snorlax,,,base,1,f,f,t,143,207
+articuno,144,Articuno,,,base,1,t,f,t,144,208
+articuno-galar,144,Articuno,Galarian Form,Forma de Galar,regional,1,t,f,t,10169,209
+zapdos,145,Zapdos,,,base,1,t,f,t,145,210
+zapdos-galar,145,Zapdos,Galarian Form,Forma de Galar,regional,1,t,f,t,10170,211
+moltres,146,Moltres,,,base,1,t,f,t,146,212
+moltres-galar,146,Moltres,Galarian Form,Forma de Galar,regional,1,t,f,t,10171,213
+dratini,147,Dratini,,,base,1,f,f,t,147,214
+dragonair,148,Dragonair,,,base,1,f,f,t,148,215
+dragonite,149,Dragonite,,,base,1,f,f,t,149,216
+mewtwo,150,Mewtwo,,,base,1,t,f,t,150,217
+mew,151,Mew,,,base,1,f,t,t,151,218
+chikorita,152,Chikorita,,,base,2,f,f,t,152,219
+bayleef,153,Bayleef,,,base,2,f,f,t,153,220
+meganium,154,Meganium,,,base,2,f,f,t,154,221
+meganium-femea,154,Meganium,Female,,genero,2,f,f,t,female/154,222
+cyndaquil,155,Cyndaquil,,,base,2,f,f,t,155,223
+quilava,156,Quilava,,,base,2,f,f,t,156,224
+typhlosion,157,Typhlosion,,,base,2,f,f,t,157,225
+typhlosion-hisui,157,Typhlosion,Hisuian Form,Forma de Hisui,regional,2,f,f,t,10233,226
+totodile,158,Totodile,,,base,2,f,f,t,158,227
+croconaw,159,Croconaw,,,base,2,f,f,t,159,228
+feraligatr,160,Feraligatr,,,base,2,f,f,t,160,229
+sentret,161,Sentret,,,base,2,f,f,t,161,230
+furret,162,Furret,,,base,2,f,f,t,162,231
+hoothoot,163,Hoothoot,,,base,2,f,f,t,163,232
+noctowl,164,Noctowl,,,base,2,f,f,t,164,233
+ledyba,165,Ledyba,,,base,2,f,f,t,165,234
+ledyba-femea,165,Ledyba,Female,,genero,2,f,f,t,female/165,235
+ledian,166,Ledian,,,base,2,f,f,t,166,236
+ledian-femea,166,Ledian,Female,,genero,2,f,f,t,female/166,237
+spinarak,167,Spinarak,,,base,2,f,f,t,167,238
+ariados,168,Ariados,,,base,2,f,f,t,168,239
+crobat,169,Crobat,,,base,2,f,f,t,169,240
+chinchou,170,Chinchou,,,base,2,f,f,t,170,241
+lanturn,171,Lanturn,,,base,2,f,f,t,171,242
+pichu,172,Pichu,,,base,2,f,f,t,172,243
+cleffa,173,Cleffa,,,base,2,f,f,t,173,244
+igglybuff,174,Igglybuff,,,base,2,f,f,t,174,245
+togepi,175,Togepi,,,base,2,f,f,t,175,246
+togetic,176,Togetic,,,base,2,f,f,t,176,247
+natu,177,Natu,,,base,2,f,f,t,177,248
+xatu,178,Xatu,,,base,2,f,f,t,178,249
+xatu-femea,178,Xatu,Female,,genero,2,f,f,t,female/178,250
+mareep,179,Mareep,,,base,2,f,f,t,179,251
+flaaffy,180,Flaaffy,,,base,2,f,f,t,180,252
+ampharos,181,Ampharos,,,base,2,f,f,t,181,253
+bellossom,182,Bellossom,,,base,2,f,f,t,182,254
+marill,183,Marill,,,base,2,f,f,t,183,255
+azumarill,184,Azumarill,,,base,2,f,f,t,184,256
+sudowoodo,185,Sudowoodo,,,base,2,f,f,t,185,257
+sudowoodo-femea,185,Sudowoodo,Female,,genero,2,f,f,t,female/185,258
+politoed,186,Politoed,,,base,2,f,f,t,186,259
+politoed-femea,186,Politoed,Female,,genero,2,f,f,t,female/186,260
+hoppip,187,Hoppip,,,base,2,f,f,t,187,261
+skiploom,188,Skiploom,,,base,2,f,f,t,188,262
+jumpluff,189,Jumpluff,,,base,2,f,f,t,189,263
+aipom,190,Aipom,,,base,2,f,f,t,190,264
+aipom-femea,190,Aipom,Female,,genero,2,f,f,t,female/190,265
+sunkern,191,Sunkern,,,base,2,f,f,t,191,266
+sunflora,192,Sunflora,,,base,2,f,f,t,192,267
+yanma,193,Yanma,,,base,2,f,f,t,193,268
+wooper,194,Wooper,,,base,2,f,f,t,194,269
+wooper-femea,194,Wooper,Female,,genero,2,f,f,t,female/194,270
+wooper-paldea,194,Wooper,Paldean Form,Forma de Paldea,regional,2,f,f,t,10253,271
+quagsire,195,Quagsire,,,base,2,f,f,t,195,272
+quagsire-femea,195,Quagsire,Female,,genero,2,f,f,t,female/195,273
+espeon,196,Espeon,,,base,2,f,f,t,196,274
+umbreon,197,Umbreon,,,base,2,f,f,t,197,275
+murkrow,198,Murkrow,,,base,2,f,f,t,198,276
+murkrow-femea,198,Murkrow,Female,,genero,2,f,f,t,female/198,277
+slowking,199,Slowking,,,base,2,f,f,t,199,278
+slowking-galar,199,Slowking,Galarian Form,Forma de Galar,regional,2,f,f,t,10172,279
+misdreavus,200,Misdreavus,,,base,2,f,f,t,200,280
+unown,201,Unown,A,,base,2,f,f,t,201,281
+unown-b,201,Unown,B,,cosmetica,2,f,f,t,201-b,282
+unown-c,201,Unown,C,,cosmetica,2,f,f,t,201-c,283
+unown-d,201,Unown,D,,cosmetica,2,f,f,t,201-d,284
+unown-e,201,Unown,E,,cosmetica,2,f,f,t,201-e,285
+unown-f,201,Unown,F,,cosmetica,2,f,f,t,201-f,286
+unown-g,201,Unown,G,,cosmetica,2,f,f,t,201-g,287
+unown-h,201,Unown,H,,cosmetica,2,f,f,t,201-h,288
+unown-i,201,Unown,I,,cosmetica,2,f,f,t,201-i,289
+unown-j,201,Unown,J,,cosmetica,2,f,f,t,201-j,290
+unown-k,201,Unown,K,,cosmetica,2,f,f,t,201-k,291
+unown-l,201,Unown,L,,cosmetica,2,f,f,t,201-l,292
+unown-m,201,Unown,M,,cosmetica,2,f,f,t,201-m,293
+unown-n,201,Unown,N,,cosmetica,2,f,f,t,201-n,294
+unown-o,201,Unown,O,,cosmetica,2,f,f,t,201-o,295
+unown-p,201,Unown,P,,cosmetica,2,f,f,t,201-p,296
+unown-q,201,Unown,Q,,cosmetica,2,f,f,t,201-q,297
+unown-r,201,Unown,R,,cosmetica,2,f,f,t,201-r,298
+unown-s,201,Unown,S,,cosmetica,2,f,f,t,201-s,299
+unown-t,201,Unown,T,,cosmetica,2,f,f,t,201-t,300
+unown-u,201,Unown,U,,cosmetica,2,f,f,t,201-u,301
+unown-v,201,Unown,V,,cosmetica,2,f,f,t,201-v,302
+unown-w,201,Unown,W,,cosmetica,2,f,f,t,201-w,303
+unown-x,201,Unown,X,,cosmetica,2,f,f,t,201-x,304
+unown-y,201,Unown,Y,,cosmetica,2,f,f,t,201-y,305
+unown-z,201,Unown,Z,,cosmetica,2,f,f,t,201-z,306
+unown-exclamation,201,Unown,!,,cosmetica,2,f,f,t,201-exclamation,307
+unown-question,201,Unown,?,,cosmetica,2,f,f,t,201-question,308
+wobbuffet,202,Wobbuffet,,,base,2,f,f,t,202,309
+wobbuffet-femea,202,Wobbuffet,Female,,genero,2,f,f,t,female/202,310
+girafarig,203,Girafarig,,,base,2,f,f,t,203,311
+girafarig-femea,203,Girafarig,Female,,genero,2,f,f,t,female/203,312
+pineco,204,Pineco,,,base,2,f,f,t,204,313
+forretress,205,Forretress,,,base,2,f,f,t,205,314
+dunsparce,206,Dunsparce,,,base,2,f,f,t,206,315
+gligar,207,Gligar,,,base,2,f,f,t,207,316
+gligar-femea,207,Gligar,Female,,genero,2,f,f,t,female/207,317
+steelix,208,Steelix,,,base,2,f,f,t,208,318
+steelix-femea,208,Steelix,Female,,genero,2,f,f,t,female/208,319
+snubbull,209,Snubbull,,,base,2,f,f,t,209,320
+granbull,210,Granbull,,,base,2,f,f,t,210,321
+qwilfish,211,Qwilfish,,,base,2,f,f,t,211,322
+qwilfish-hisui,211,Qwilfish,Hisuian Form,Forma de Hisui,regional,2,f,f,t,10234,323
+scizor,212,Scizor,,,base,2,f,f,t,212,324
+scizor-femea,212,Scizor,Female,,genero,2,f,f,t,female/212,325
+shuckle,213,Shuckle,,,base,2,f,f,t,213,326
+heracross,214,Heracross,,,base,2,f,f,t,214,327
+heracross-femea,214,Heracross,Female,,genero,2,f,f,t,female/214,328
+sneasel,215,Sneasel,,,base,2,f,f,t,215,329
+sneasel-femea,215,Sneasel,Female,,genero,2,f,f,t,female/215,330
+sneasel-hisui,215,Sneasel,Hisuian Form,Forma de Hisui,regional,2,f,f,t,10235,331
+sneasel-hisui-femea,215,Sneasel,Hisuian Form (Female),Forma de Hisui,genero,2,f,f,t,female/10235,332
+teddiursa,216,Teddiursa,,,base,2,f,f,t,216,333
+ursaring,217,Ursaring,,,base,2,f,f,t,217,334
+ursaring-femea,217,Ursaring,Female,,genero,2,f,f,t,female/217,335
+slugma,218,Slugma,,,base,2,f,f,t,218,336
+magcargo,219,Magcargo,,,base,2,f,f,t,219,337
+swinub,220,Swinub,,,base,2,f,f,t,220,338
+piloswine,221,Piloswine,,,base,2,f,f,t,221,339
+piloswine-femea,221,Piloswine,Female,,genero,2,f,f,t,female/221,340
+corsola,222,Corsola,,,base,2,f,f,t,222,341
+corsola-galar,222,Corsola,Galarian Form,Forma de Galar,regional,2,f,f,t,10173,342
+remoraid,223,Remoraid,,,base,2,f,f,t,223,343
+octillery,224,Octillery,,,base,2,f,f,t,224,344
+octillery-femea,224,Octillery,Female,,genero,2,f,f,t,female/224,345
+delibird,225,Delibird,,,base,2,f,f,t,225,346
+mantine,226,Mantine,,,base,2,f,f,t,226,347
+skarmory,227,Skarmory,,,base,2,f,f,t,227,348
+houndour,228,Houndour,,,base,2,f,f,t,228,349
+houndoom,229,Houndoom,,,base,2,f,f,t,229,350
+houndoom-femea,229,Houndoom,Female,,genero,2,f,f,t,female/229,351
+kingdra,230,Kingdra,,,base,2,f,f,t,230,352
+phanpy,231,Phanpy,,,base,2,f,f,t,231,353
+donphan,232,Donphan,,,base,2,f,f,t,232,354
+donphan-femea,232,Donphan,Female,,genero,2,f,f,t,female/232,355
+porygon2,233,Porygon2,,,base,2,f,f,t,233,356
+stantler,234,Stantler,,,base,2,f,f,t,234,357
+smeargle,235,Smeargle,,,base,2,f,f,t,235,358
+tyrogue,236,Tyrogue,,,base,2,f,f,t,236,359
+hitmontop,237,Hitmontop,,,base,2,f,f,t,237,360
+smoochum,238,Smoochum,,,base,2,f,f,t,238,361
+elekid,239,Elekid,,,base,2,f,f,t,239,362
+magby,240,Magby,,,base,2,f,f,t,240,363
+miltank,241,Miltank,,,base,2,f,f,t,241,364
+blissey,242,Blissey,,,base,2,f,f,t,242,365
+raikou,243,Raikou,,,base,2,t,f,t,243,366
+entei,244,Entei,,,base,2,t,f,t,244,367
+suicune,245,Suicune,,,base,2,t,f,t,245,368
+larvitar,246,Larvitar,,,base,2,f,f,t,246,369
+pupitar,247,Pupitar,,,base,2,f,f,t,247,370
+tyranitar,248,Tyranitar,,,base,2,f,f,t,248,371
+lugia,249,Lugia,,,base,2,t,f,t,249,372
+ho-oh,250,Ho-Oh,,,base,2,t,f,t,250,373
+celebi,251,Celebi,,,base,2,f,t,t,251,374
+treecko,252,Treecko,,,base,3,f,f,t,252,375
+grovyle,253,Grovyle,,,base,3,f,f,t,253,376
+sceptile,254,Sceptile,,,base,3,f,f,t,254,377
+torchic,255,Torchic,,,base,3,f,f,t,255,378
+torchic-femea,255,Torchic,Female,,genero,3,f,f,t,female/255,379
+combusken,256,Combusken,,,base,3,f,f,t,256,380
+combusken-femea,256,Combusken,Female,,genero,3,f,f,t,female/256,381
+blaziken,257,Blaziken,,,base,3,f,f,t,257,382
+blaziken-femea,257,Blaziken,Female,,genero,3,f,f,t,female/257,383
+mudkip,258,Mudkip,,,base,3,f,f,t,258,384
+marshtomp,259,Marshtomp,,,base,3,f,f,t,259,385
+swampert,260,Swampert,,,base,3,f,f,t,260,386
+poochyena,261,Poochyena,,,base,3,f,f,t,261,387
+mightyena,262,Mightyena,,,base,3,f,f,t,262,388
+zigzagoon,263,Zigzagoon,,,base,3,f,f,t,263,389
+zigzagoon-galar,263,Zigzagoon,Galarian Form,Forma de Galar,regional,3,f,f,t,10174,390
+linoone,264,Linoone,,,base,3,f,f,t,264,391
+linoone-galar,264,Linoone,Galarian Form,Forma de Galar,regional,3,f,f,t,10175,392
+wurmple,265,Wurmple,,,base,3,f,f,t,265,393
+silcoon,266,Silcoon,,,base,3,f,f,t,266,394
+beautifly,267,Beautifly,,,base,3,f,f,t,267,395
+beautifly-femea,267,Beautifly,Female,,genero,3,f,f,t,female/267,396
+cascoon,268,Cascoon,,,base,3,f,f,t,268,397
+dustox,269,Dustox,,,base,3,f,f,t,269,398
+dustox-femea,269,Dustox,Female,,genero,3,f,f,t,female/269,399
+lotad,270,Lotad,,,base,3,f,f,t,270,400
+lombre,271,Lombre,,,base,3,f,f,t,271,401
+ludicolo,272,Ludicolo,,,base,3,f,f,t,272,402
+ludicolo-femea,272,Ludicolo,Female,,genero,3,f,f,t,female/272,403
+seedot,273,Seedot,,,base,3,f,f,t,273,404
+nuzleaf,274,Nuzleaf,,,base,3,f,f,t,274,405
+nuzleaf-femea,274,Nuzleaf,Female,,genero,3,f,f,t,female/274,406
+shiftry,275,Shiftry,,,base,3,f,f,t,275,407
+shiftry-femea,275,Shiftry,Female,,genero,3,f,f,t,female/275,408
+taillow,276,Taillow,,,base,3,f,f,t,276,409
+swellow,277,Swellow,,,base,3,f,f,t,277,410
+wingull,278,Wingull,,,base,3,f,f,t,278,411
+pelipper,279,Pelipper,,,base,3,f,f,t,279,412
+ralts,280,Ralts,,,base,3,f,f,t,280,413
+kirlia,281,Kirlia,,,base,3,f,f,t,281,414
+gardevoir,282,Gardevoir,,,base,3,f,f,t,282,415
+surskit,283,Surskit,,,base,3,f,f,t,283,416
+masquerain,284,Masquerain,,,base,3,f,f,t,284,417
+shroomish,285,Shroomish,,,base,3,f,f,t,285,418
+breloom,286,Breloom,,,base,3,f,f,t,286,419
+slakoth,287,Slakoth,,,base,3,f,f,t,287,420
+vigoroth,288,Vigoroth,,,base,3,f,f,t,288,421
+slaking,289,Slaking,,,base,3,f,f,t,289,422
+nincada,290,Nincada,,,base,3,f,f,t,290,423
+ninjask,291,Ninjask,,,base,3,f,f,t,291,424
+shedinja,292,Shedinja,,,base,3,f,f,t,292,425
+whismur,293,Whismur,,,base,3,f,f,t,293,426
+loudred,294,Loudred,,,base,3,f,f,t,294,427
+exploud,295,Exploud,,,base,3,f,f,t,295,428
+makuhita,296,Makuhita,,,base,3,f,f,t,296,429
+hariyama,297,Hariyama,,,base,3,f,f,t,297,430
+azurill,298,Azurill,,,base,3,f,f,t,298,431
+nosepass,299,Nosepass,,,base,3,f,f,t,299,432
+skitty,300,Skitty,,,base,3,f,f,t,300,433
+delcatty,301,Delcatty,,,base,3,f,f,t,301,434
+sableye,302,Sableye,,,base,3,f,f,t,302,435
+mawile,303,Mawile,,,base,3,f,f,t,303,436
+aron,304,Aron,,,base,3,f,f,t,304,437
+lairon,305,Lairon,,,base,3,f,f,t,305,438
+aggron,306,Aggron,,,base,3,f,f,t,306,439
+meditite,307,Meditite,,,base,3,f,f,t,307,440
+meditite-femea,307,Meditite,Female,,genero,3,f,f,t,female/307,441
+medicham,308,Medicham,,,base,3,f,f,t,308,442
+medicham-femea,308,Medicham,Female,,genero,3,f,f,t,female/308,443
+electrike,309,Electrike,,,base,3,f,f,t,309,444
+manectric,310,Manectric,,,base,3,f,f,t,310,445
+plusle,311,Plusle,,,base,3,f,f,t,311,446
+minun,312,Minun,,,base,3,f,f,t,312,447
+volbeat,313,Volbeat,,,base,3,f,f,t,313,448
+illumise,314,Illumise,,,base,3,f,f,t,314,449
+roselia,315,Roselia,,,base,3,f,f,t,315,450
+roselia-femea,315,Roselia,Female,,genero,3,f,f,t,female/315,451
+gulpin,316,Gulpin,,,base,3,f,f,t,316,452
+gulpin-femea,316,Gulpin,Female,,genero,3,f,f,t,female/316,453
+swalot,317,Swalot,,,base,3,f,f,t,317,454
+swalot-femea,317,Swalot,Female,,genero,3,f,f,t,female/317,455
+carvanha,318,Carvanha,,,base,3,f,f,t,318,456
+sharpedo,319,Sharpedo,,,base,3,f,f,t,319,457
+wailmer,320,Wailmer,,,base,3,f,f,t,320,458
+wailord,321,Wailord,,,base,3,f,f,t,321,459
+numel,322,Numel,,,base,3,f,f,t,322,460
+numel-femea,322,Numel,Female,,genero,3,f,f,t,female/322,461
+camerupt,323,Camerupt,,,base,3,f,f,t,323,462
+camerupt-femea,323,Camerupt,Female,,genero,3,f,f,t,female/323,463
+torkoal,324,Torkoal,,,base,3,f,f,t,324,464
+spoink,325,Spoink,,,base,3,f,f,t,325,465
+grumpig,326,Grumpig,,,base,3,f,f,t,326,466
+spinda,327,Spinda,,,base,3,f,f,t,327,467
+trapinch,328,Trapinch,,,base,3,f,f,t,328,468
+vibrava,329,Vibrava,,,base,3,f,f,t,329,469
+flygon,330,Flygon,,,base,3,f,f,t,330,470
+cacnea,331,Cacnea,,,base,3,f,f,t,331,471
+cacturne,332,Cacturne,,,base,3,f,f,t,332,472
+cacturne-femea,332,Cacturne,Female,,genero,3,f,f,t,female/332,473
+swablu,333,Swablu,,,base,3,f,f,t,333,474
+altaria,334,Altaria,,,base,3,f,f,t,334,475
+zangoose,335,Zangoose,,,base,3,f,f,t,335,476
+seviper,336,Seviper,,,base,3,f,f,t,336,477
+lunatone,337,Lunatone,,,base,3,f,f,t,337,478
+solrock,338,Solrock,,,base,3,f,f,t,338,479
+barboach,339,Barboach,,,base,3,f,f,t,339,480
+whiscash,340,Whiscash,,,base,3,f,f,t,340,481
+corphish,341,Corphish,,,base,3,f,f,t,341,482
+crawdaunt,342,Crawdaunt,,,base,3,f,f,t,342,483
+baltoy,343,Baltoy,,,base,3,f,f,t,343,484
+claydol,344,Claydol,,,base,3,f,f,t,344,485
+lileep,345,Lileep,,,base,3,f,f,t,345,486
+cradily,346,Cradily,,,base,3,f,f,t,346,487
+anorith,347,Anorith,,,base,3,f,f,t,347,488
+armaldo,348,Armaldo,,,base,3,f,f,t,348,489
+feebas,349,Feebas,,,base,3,f,f,t,349,490
+milotic,350,Milotic,,,base,3,f,f,t,350,491
+milotic-femea,350,Milotic,Female,,genero,3,f,f,t,female/350,492
+castform,351,Castform,Normal,Forma Normal,base,3,f,f,t,351,493
+kecleon,352,Kecleon,,,base,3,f,f,t,352,494
+shuppet,353,Shuppet,,,base,3,f,f,t,353,495
+banette,354,Banette,,,base,3,f,f,t,354,496
+duskull,355,Duskull,,,base,3,f,f,t,355,497
+dusclops,356,Dusclops,,,base,3,f,f,t,356,498
+tropius,357,Tropius,,,base,3,f,f,t,357,499
+chimecho,358,Chimecho,,,base,3,f,f,t,358,500
+absol,359,Absol,,,base,3,f,f,t,359,501
+wynaut,360,Wynaut,,,base,3,f,f,t,360,502
+snorunt,361,Snorunt,,,base,3,f,f,t,361,503
+glalie,362,Glalie,,,base,3,f,f,t,362,504
+spheal,363,Spheal,,,base,3,f,f,t,363,505
+sealeo,364,Sealeo,,,base,3,f,f,t,364,506
+walrein,365,Walrein,,,base,3,f,f,t,365,507
+clamperl,366,Clamperl,,,base,3,f,f,t,366,508
+huntail,367,Huntail,,,base,3,f,f,t,367,509
+gorebyss,368,Gorebyss,,,base,3,f,f,t,368,510
+relicanth,369,Relicanth,,,base,3,f,f,t,369,511
+relicanth-femea,369,Relicanth,Female,,genero,3,f,f,t,female/369,512
+luvdisc,370,Luvdisc,,,base,3,f,f,t,370,513
+bagon,371,Bagon,,,base,3,f,f,t,371,514
+shelgon,372,Shelgon,,,base,3,f,f,t,372,515
+salamence,373,Salamence,,,base,3,f,f,t,373,516
+beldum,374,Beldum,,,base,3,f,f,t,374,517
+metang,375,Metang,,,base,3,f,f,t,375,518
+metagross,376,Metagross,,,base,3,f,f,t,376,519
+regirock,377,Regirock,,,base,3,t,f,t,377,520
+regice,378,Regice,,,base,3,t,f,t,378,521
+registeel,379,Registeel,,,base,3,t,f,t,379,522
+latias,380,Latias,,,base,3,t,f,t,380,523
+latios,381,Latios,,,base,3,t,f,t,381,524
+kyogre,382,Kyogre,Kyogre,,base,3,t,f,t,382,525
+groudon,383,Groudon,Groudon,,base,3,t,f,t,383,526
+rayquaza,384,Rayquaza,,,base,3,t,f,t,384,527
+jirachi,385,Jirachi,,,base,3,f,t,t,385,528
+deoxys,386,Deoxys,Normal Forme,Forma Normal,base,3,f,t,t,386,529
+deoxys-attack,386,Deoxys,Attack Forme,Forma Ataque,especial,3,f,t,t,10001,530
+deoxys-defense,386,Deoxys,Defense Forme,Forma Defesa,especial,3,f,t,t,10002,531
+deoxys-speed,386,Deoxys,Speed Forme,Forma Velocidade,especial,3,f,t,t,10003,532
+turtwig,387,Turtwig,,,base,4,f,f,t,387,533
+grotle,388,Grotle,,,base,4,f,f,t,388,534
+torterra,389,Torterra,,,base,4,f,f,t,389,535
+chimchar,390,Chimchar,,,base,4,f,f,t,390,536
+monferno,391,Monferno,,,base,4,f,f,t,391,537
+infernape,392,Infernape,,,base,4,f,f,t,392,538
+piplup,393,Piplup,,,base,4,f,f,t,393,539
+prinplup,394,Prinplup,,,base,4,f,f,t,394,540
+empoleon,395,Empoleon,,,base,4,f,f,t,395,541
+starly,396,Starly,,,base,4,f,f,t,396,542
+starly-femea,396,Starly,Female,,genero,4,f,f,t,female/396,543
+staravia,397,Staravia,,,base,4,f,f,t,397,544
+staravia-femea,397,Staravia,Female,,genero,4,f,f,t,female/397,545
+staraptor,398,Staraptor,,,base,4,f,f,t,398,546
+staraptor-femea,398,Staraptor,Female,,genero,4,f,f,t,female/398,547
+bidoof,399,Bidoof,,,base,4,f,f,t,399,548
+bidoof-femea,399,Bidoof,Female,,genero,4,f,f,t,female/399,549
+bibarel,400,Bibarel,,,base,4,f,f,t,400,550
+bibarel-femea,400,Bibarel,Female,,genero,4,f,f,t,female/400,551
+kricketot,401,Kricketot,,,base,4,f,f,t,401,552
+kricketot-femea,401,Kricketot,Female,,genero,4,f,f,t,female/401,553
+kricketune,402,Kricketune,,,base,4,f,f,t,402,554
+kricketune-femea,402,Kricketune,Female,,genero,4,f,f,t,female/402,555
+shinx,403,Shinx,,,base,4,f,f,t,403,556
+shinx-femea,403,Shinx,Female,,genero,4,f,f,t,female/403,557
+luxio,404,Luxio,,,base,4,f,f,t,404,558
+luxio-femea,404,Luxio,Female,,genero,4,f,f,t,female/404,559
+luxray,405,Luxray,,,base,4,f,f,t,405,560
+luxray-femea,405,Luxray,Female,,genero,4,f,f,t,female/405,561
+budew,406,Budew,,,base,4,f,f,t,406,562
+roserade,407,Roserade,,,base,4,f,f,t,407,563
+roserade-femea,407,Roserade,Female,,genero,4,f,f,t,female/407,564
+cranidos,408,Cranidos,,,base,4,f,f,t,408,565
+rampardos,409,Rampardos,,,base,4,f,f,t,409,566
+shieldon,410,Shieldon,,,base,4,f,f,t,410,567
+bastiodon,411,Bastiodon,,,base,4,f,f,t,411,568
+burmy,412,Burmy,Plant Cloak,Manto Vegetal,base,4,f,f,t,412,569
+burmy-sandy,412,Burmy,Sandy Cloak,Manto Arenoso,cosmetica,4,f,f,t,412-sandy,570
+burmy-trash,412,Burmy,Trash Cloak,Manto de Lixo,cosmetica,4,f,f,t,412-trash,571
+wormadam,413,Wormadam,Plant Cloak,Manto Vegetal,base,4,f,f,t,413,572
+wormadam-sandy,413,Wormadam,Sandy Cloak,Manto Arenoso,especial,4,f,f,t,10004,573
+wormadam-trash,413,Wormadam,Trash Cloak,Manto de Lixo,especial,4,f,f,t,10005,574
+mothim,414,Mothim,,,base,4,f,f,t,414,575
+combee,415,Combee,,,base,4,f,f,t,415,576
+combee-femea,415,Combee,Female,,genero,4,f,f,t,female/415,577
+vespiquen,416,Vespiquen,,,base,4,f,f,t,416,578
+pachirisu,417,Pachirisu,,,base,4,f,f,t,417,579
+pachirisu-femea,417,Pachirisu,Female,,genero,4,f,f,t,female/417,580
+buizel,418,Buizel,,,base,4,f,f,t,418,581
+buizel-femea,418,Buizel,Female,,genero,4,f,f,t,female/418,582
+floatzel,419,Floatzel,,,base,4,f,f,t,419,583
+floatzel-femea,419,Floatzel,Female,,genero,4,f,f,t,female/419,584
+cherubi,420,Cherubi,,,base,4,f,f,t,420,585
+cherrim,421,Cherrim,Overcast Form,Forma Nublada,base,4,f,f,t,421,586
+shellos,422,Shellos,West Sea,Mar Ocidental,base,4,f,f,t,422,587
+shellos-east,422,Shellos,East Sea,Mar Leste,cosmetica,4,f,f,t,422-east,588
+gastrodon,423,Gastrodon,West Sea,Mar Ocidental,base,4,f,f,t,423,589
+gastrodon-east,423,Gastrodon,East Sea,Mar Leste,cosmetica,4,f,f,t,423-east,590
+ambipom,424,Ambipom,,,base,4,f,f,t,424,591
+ambipom-femea,424,Ambipom,Female,,genero,4,f,f,t,female/424,592
+drifloon,425,Drifloon,,,base,4,f,f,t,425,593
+drifblim,426,Drifblim,,,base,4,f,f,t,426,594
+buneary,427,Buneary,,,base,4,f,f,t,427,595
+lopunny,428,Lopunny,,,base,4,f,f,t,428,596
+mismagius,429,Mismagius,,,base,4,f,f,t,429,597
+honchkrow,430,Honchkrow,,,base,4,f,f,t,430,598
+glameow,431,Glameow,,,base,4,f,f,t,431,599
+purugly,432,Purugly,,,base,4,f,f,t,432,600
+chingling,433,Chingling,,,base,4,f,f,t,433,601
+stunky,434,Stunky,,,base,4,f,f,t,434,602
+skuntank,435,Skuntank,,,base,4,f,f,t,435,603
+bronzor,436,Bronzor,,,base,4,f,f,t,436,604
+bronzong,437,Bronzong,,,base,4,f,f,t,437,605
+bonsly,438,Bonsly,,,base,4,f,f,t,438,606
+mime-jr,439,Mime Jr.,,,base,4,f,f,t,439,607
+happiny,440,Happiny,,,base,4,f,f,t,440,608
+chatot,441,Chatot,,,base,4,f,f,t,441,609
+spiritomb,442,Spiritomb,,,base,4,f,f,t,442,610
+gible,443,Gible,,,base,4,f,f,t,443,611
+gible-femea,443,Gible,Female,,genero,4,f,f,t,female/443,612
+gabite,444,Gabite,,,base,4,f,f,t,444,613
+gabite-femea,444,Gabite,Female,,genero,4,f,f,t,female/444,614
+garchomp,445,Garchomp,,,base,4,f,f,t,445,615
+garchomp-femea,445,Garchomp,Female,,genero,4,f,f,t,female/445,616
+munchlax,446,Munchlax,,,base,4,f,f,t,446,617
+riolu,447,Riolu,,,base,4,f,f,t,447,618
+lucario,448,Lucario,,,base,4,f,f,t,448,619
+hippopotas,449,Hippopotas,,,base,4,f,f,t,449,620
+hippopotas-femea,449,Hippopotas,Female,,genero,4,f,f,t,female/449,621
+hippowdon,450,Hippowdon,,,base,4,f,f,t,450,622
+hippowdon-femea,450,Hippowdon,Female,,genero,4,f,f,t,female/450,623
+skorupi,451,Skorupi,,,base,4,f,f,t,451,624
+drapion,452,Drapion,,,base,4,f,f,t,452,625
+croagunk,453,Croagunk,,,base,4,f,f,t,453,626
+croagunk-femea,453,Croagunk,Female,,genero,4,f,f,t,female/453,627
+toxicroak,454,Toxicroak,,,base,4,f,f,t,454,628
+toxicroak-femea,454,Toxicroak,Female,,genero,4,f,f,t,female/454,629
+carnivine,455,Carnivine,,,base,4,f,f,t,455,630
+finneon,456,Finneon,,,base,4,f,f,t,456,631
+finneon-femea,456,Finneon,Female,,genero,4,f,f,t,female/456,632
+lumineon,457,Lumineon,,,base,4,f,f,t,457,633
+lumineon-femea,457,Lumineon,Female,,genero,4,f,f,t,female/457,634
+mantyke,458,Mantyke,,,base,4,f,f,t,458,635
+snover,459,Snover,,,base,4,f,f,t,459,636
+snover-femea,459,Snover,Female,,genero,4,f,f,t,female/459,637
+abomasnow,460,Abomasnow,,,base,4,f,f,t,460,638
+abomasnow-femea,460,Abomasnow,Female,,genero,4,f,f,t,female/460,639
+weavile,461,Weavile,,,base,4,f,f,t,461,640
+weavile-femea,461,Weavile,Female,,genero,4,f,f,t,female/461,641
+magnezone,462,Magnezone,,,base,4,f,f,t,462,642
+lickilicky,463,Lickilicky,,,base,4,f,f,t,463,643
+rhyperior,464,Rhyperior,,,base,4,f,f,t,464,644
+rhyperior-femea,464,Rhyperior,Female,,genero,4,f,f,t,female/464,645
+tangrowth,465,Tangrowth,,,base,4,f,f,t,465,646
+tangrowth-femea,465,Tangrowth,Female,,genero,4,f,f,t,female/465,647
+electivire,466,Electivire,,,base,4,f,f,t,466,648
+magmortar,467,Magmortar,,,base,4,f,f,t,467,649
+togekiss,468,Togekiss,,,base,4,f,f,t,468,650
+yanmega,469,Yanmega,,,base,4,f,f,t,469,651
+leafeon,470,Leafeon,,,base,4,f,f,t,470,652
+glaceon,471,Glaceon,,,base,4,f,f,t,471,653
+gliscor,472,Gliscor,,,base,4,f,f,t,472,654
+mamoswine,473,Mamoswine,,,base,4,f,f,t,473,655
+mamoswine-femea,473,Mamoswine,Female,,genero,4,f,f,t,female/473,656
+porygon-z,474,Porygon-Z,,,base,4,f,f,t,474,657
+gallade,475,Gallade,,,base,4,f,f,t,475,658
+probopass,476,Probopass,,,base,4,f,f,t,476,659
+dusknoir,477,Dusknoir,,,base,4,f,f,t,477,660
+froslass,478,Froslass,,,base,4,f,f,t,478,661
+rotom,479,Rotom,Rotom,Rotom,base,4,f,f,t,479,662
+rotom-heat,479,Rotom,Heat Rotom,Rotom Calor,especial,4,f,f,t,10008,663
+rotom-wash,479,Rotom,Wash Rotom,Rotom Lavagem,especial,4,f,f,t,10009,664
+rotom-frost,479,Rotom,Frost Rotom,Rotom Congelante,especial,4,f,f,t,10010,665
+rotom-fan,479,Rotom,Fan Rotom,Rotom Ventilador,especial,4,f,f,t,10011,666
+rotom-mow,479,Rotom,Mow Rotom,Rotom Corte,especial,4,f,f,t,10012,667
+uxie,480,Uxie,,,base,4,t,f,t,480,668
+mesprit,481,Mesprit,,,base,4,t,f,t,481,669
+azelf,482,Azelf,,,base,4,t,f,t,482,670
+dialga,483,Dialga,,,base,4,t,f,t,483,671
+palkia,484,Palkia,,,base,4,t,f,t,484,672
+heatran,485,Heatran,,,base,4,t,f,t,485,673
+regigigas,486,Regigigas,,,base,4,t,f,t,486,674
+giratina,487,Giratina,Altered Forme,Forma Alterada,base,4,t,f,t,487,675
+cresselia,488,Cresselia,,,base,4,t,f,t,488,676
+phione,489,Phione,,,base,4,f,t,t,489,677
+manaphy,490,Manaphy,,,base,4,f,t,t,490,678
+darkrai,491,Darkrai,,,base,4,f,t,t,491,679
+shaymin,492,Shaymin,Land Forme,Forma Terrestre,base,4,f,t,t,492,680
+shaymin-sky,492,Shaymin,Sky Forme,Forma Céu,especial,4,f,t,t,10006,681
+arceus,493,Arceus,Normal Type,Tipo Normal,base,4,f,t,t,493,682
+victini,494,Victini,,,base,5,f,t,f,494,683
+snivy,495,Snivy,,,base,5,f,f,t,495,684
+servine,496,Servine,,,base,5,f,f,t,496,685
+serperior,497,Serperior,,,base,5,f,f,t,497,686
+tepig,498,Tepig,,,base,5,f,f,t,498,687
+pignite,499,Pignite,,,base,5,f,f,t,499,688
+emboar,500,Emboar,,,base,5,f,f,t,500,689
+oshawott,501,Oshawott,,,base,5,f,f,t,501,690
+dewott,502,Dewott,,,base,5,f,f,t,502,691
+samurott,503,Samurott,,,base,5,f,f,t,503,692
+samurott-hisui,503,Samurott,Hisuian Form,Forma de Hisui,regional,5,f,f,t,10236,693
+patrat,504,Patrat,,,base,5,f,f,t,504,694
+watchog,505,Watchog,,,base,5,f,f,t,505,695
+lillipup,506,Lillipup,,,base,5,f,f,t,506,696
+herdier,507,Herdier,,,base,5,f,f,t,507,697
+stoutland,508,Stoutland,,,base,5,f,f,t,508,698
+purrloin,509,Purrloin,,,base,5,f,f,t,509,699
+liepard,510,Liepard,,,base,5,f,f,t,510,700
+pansage,511,Pansage,,,base,5,f,f,t,511,701
+simisage,512,Simisage,,,base,5,f,f,t,512,702
+pansear,513,Pansear,,,base,5,f,f,t,513,703
+simisear,514,Simisear,,,base,5,f,f,t,514,704
+panpour,515,Panpour,,,base,5,f,f,t,515,705
+simipour,516,Simipour,,,base,5,f,f,t,516,706
+munna,517,Munna,,,base,5,f,f,t,517,707
+musharna,518,Musharna,,,base,5,f,f,t,518,708
+pidove,519,Pidove,,,base,5,f,f,t,519,709
+tranquill,520,Tranquill,,,base,5,f,f,t,520,710
+unfezant,521,Unfezant,,,base,5,f,f,t,521,711
+unfezant-femea,521,Unfezant,Female,,genero,5,f,f,t,female/521,712
+blitzle,522,Blitzle,,,base,5,f,f,t,522,713
+zebstrika,523,Zebstrika,,,base,5,f,f,t,523,714
+roggenrola,524,Roggenrola,,,base,5,f,f,t,524,715
+boldore,525,Boldore,,,base,5,f,f,t,525,716
+gigalith,526,Gigalith,,,base,5,f,f,t,526,717
+woobat,527,Woobat,,,base,5,f,f,t,527,718
+swoobat,528,Swoobat,,,base,5,f,f,t,528,719
+drilbur,529,Drilbur,,,base,5,f,f,t,529,720
+excadrill,530,Excadrill,,,base,5,f,f,t,530,721
+audino,531,Audino,,,base,5,f,f,t,531,722
+timburr,532,Timburr,,,base,5,f,f,t,532,723
+gurdurr,533,Gurdurr,,,base,5,f,f,t,533,724
+conkeldurr,534,Conkeldurr,,,base,5,f,f,t,534,725
+tympole,535,Tympole,,,base,5,f,f,t,535,726
+palpitoad,536,Palpitoad,,,base,5,f,f,t,536,727
+seismitoad,537,Seismitoad,,,base,5,f,f,t,537,728
+throh,538,Throh,,,base,5,f,f,t,538,729
+sawk,539,Sawk,,,base,5,f,f,t,539,730
+sewaddle,540,Sewaddle,,,base,5,f,f,t,540,731
+swadloon,541,Swadloon,,,base,5,f,f,t,541,732
+leavanny,542,Leavanny,,,base,5,f,f,t,542,733
+venipede,543,Venipede,,,base,5,f,f,t,543,734
+whirlipede,544,Whirlipede,,,base,5,f,f,t,544,735
+scolipede,545,Scolipede,,,base,5,f,f,t,545,736
+cottonee,546,Cottonee,,,base,5,f,f,t,546,737
+whimsicott,547,Whimsicott,,,base,5,f,f,t,547,738
+petilil,548,Petilil,,,base,5,f,f,t,548,739
+lilligant,549,Lilligant,,,base,5,f,f,t,549,740
+lilligant-hisui,549,Lilligant,Hisuian Form,Forma de Hisui,regional,5,f,f,t,10237,741
+basculin,550,Basculin,Red-Striped Form,Listras Vermelhas,base,5,f,f,t,550,742
+basculin-blue-striped,550,Basculin,Blue-Striped Form,Listras Azuis,especial,5,f,f,t,10016,743
+basculin-white-striped,550,Basculin,White-Striped Form,Listras Brancas,especial,5,f,f,t,10247,744
+sandile,551,Sandile,,,base,5,f,f,t,551,745
+krokorok,552,Krokorok,,,base,5,f,f,t,552,746
+krookodile,553,Krookodile,,,base,5,f,f,t,553,747
+darumaka,554,Darumaka,,,base,5,f,f,t,554,748
+darumaka-galar,554,Darumaka,Galarian Form,Forma de Galar,regional,5,f,f,t,10176,749
+darmanitan,555,Darmanitan,Standard Mode,Modo Padrão,base,5,f,f,t,555,750
+darmanitan-galar-standard,555,Darmanitan,Galarian Form,Forma de Galar,regional,5,f,f,t,10177,751
+maractus,556,Maractus,,,base,5,f,f,t,556,752
+dwebble,557,Dwebble,,,base,5,f,f,t,557,753
+crustle,558,Crustle,,,base,5,f,f,t,558,754
+scraggy,559,Scraggy,,,base,5,f,f,t,559,755
+scrafty,560,Scrafty,,,base,5,f,f,t,560,756
+sigilyph,561,Sigilyph,,,base,5,f,f,t,561,757
+yamask,562,Yamask,,,base,5,f,f,t,562,758
+yamask-galar,562,Yamask,Galarian Form,Forma de Galar,regional,5,f,f,t,10179,759
+cofagrigus,563,Cofagrigus,,,base,5,f,f,t,563,760
+tirtouga,564,Tirtouga,,,base,5,f,f,t,564,761
+carracosta,565,Carracosta,,,base,5,f,f,t,565,762
+archen,566,Archen,,,base,5,f,f,t,566,763
+archeops,567,Archeops,,,base,5,f,f,t,567,764
+trubbish,568,Trubbish,,,base,5,f,f,t,568,765
+garbodor,569,Garbodor,,,base,5,f,f,t,569,766
+zorua,570,Zorua,,,base,5,f,f,t,570,767
+zorua-hisui,570,Zorua,Hisuian Form,Forma de Hisui,regional,5,f,f,t,10238,768
+zoroark,571,Zoroark,,,base,5,f,f,t,571,769
+zoroark-hisui,571,Zoroark,Hisuian Form,Forma de Hisui,regional,5,f,f,t,10239,770
+minccino,572,Minccino,,,base,5,f,f,t,572,771
+cinccino,573,Cinccino,,,base,5,f,f,t,573,772
+gothita,574,Gothita,,,base,5,f,f,t,574,773
+gothorita,575,Gothorita,,,base,5,f,f,t,575,774
+gothitelle,576,Gothitelle,,,base,5,f,f,t,576,775
+solosis,577,Solosis,,,base,5,f,f,t,577,776
+duosion,578,Duosion,,,base,5,f,f,t,578,777
+reuniclus,579,Reuniclus,,,base,5,f,f,t,579,778
+ducklett,580,Ducklett,,,base,5,f,f,t,580,779
+swanna,581,Swanna,,,base,5,f,f,t,581,780
+vanillite,582,Vanillite,,,base,5,f,f,t,582,781
+vanillish,583,Vanillish,,,base,5,f,f,t,583,782
+vanilluxe,584,Vanilluxe,,,base,5,f,f,t,584,783
+deerling,585,Deerling,Spring Form,Forma Primavera,base,5,f,f,t,585,784
+deerling-summer,585,Deerling,Summer Form,Forma Verão,cosmetica,5,f,f,t,585-summer,785
+deerling-autumn,585,Deerling,Autumn Form,Forma Outono,cosmetica,5,f,f,t,585-autumn,786
+deerling-winter,585,Deerling,Winter Form,Forma Inverno,cosmetica,5,f,f,t,585-winter,787
+sawsbuck,586,Sawsbuck,Spring Form,Forma Primavera,base,5,f,f,t,586,788
+sawsbuck-summer,586,Sawsbuck,Summer Form,Forma Verão,cosmetica,5,f,f,t,586-summer,789
+sawsbuck-autumn,586,Sawsbuck,Autumn Form,Forma Outono,cosmetica,5,f,f,t,586-autumn,790
+sawsbuck-winter,586,Sawsbuck,Winter Form,Forma Inverno,cosmetica,5,f,f,t,586-winter,791
+emolga,587,Emolga,,,base,5,f,f,t,587,792
+karrablast,588,Karrablast,,,base,5,f,f,t,588,793
+escavalier,589,Escavalier,,,base,5,f,f,t,589,794
+foongus,590,Foongus,,,base,5,f,f,t,590,795
+amoonguss,591,Amoonguss,,,base,5,f,f,t,591,796
+frillish,592,Frillish,Male,,base,5,f,f,t,592,797
+frillish-female,592,Frillish,Female,,genero,5,f,f,t,592-female,798
+jellicent,593,Jellicent,Male,,base,5,f,f,t,593,799
+jellicent-female,593,Jellicent,Female,,genero,5,f,f,t,593-female,800
+alomomola,594,Alomomola,,,base,5,f,f,t,594,801
+joltik,595,Joltik,,,base,5,f,f,t,595,802
+galvantula,596,Galvantula,,,base,5,f,f,t,596,803
+ferroseed,597,Ferroseed,,,base,5,f,f,t,597,804
+ferrothorn,598,Ferrothorn,,,base,5,f,f,t,598,805
+klink,599,Klink,,,base,5,f,f,t,599,806
+klang,600,Klang,,,base,5,f,f,t,600,807
+klinklang,601,Klinklang,,,base,5,f,f,t,601,808
+tynamo,602,Tynamo,,,base,5,f,f,t,602,809
+eelektrik,603,Eelektrik,,,base,5,f,f,t,603,810
+eelektross,604,Eelektross,,,base,5,f,f,t,604,811
+elgyem,605,Elgyem,,,base,5,f,f,t,605,812
+beheeyem,606,Beheeyem,,,base,5,f,f,t,606,813
+litwick,607,Litwick,,,base,5,f,f,t,607,814
+lampent,608,Lampent,,,base,5,f,f,t,608,815
+chandelure,609,Chandelure,,,base,5,f,f,t,609,816
+axew,610,Axew,,,base,5,f,f,t,610,817
+fraxure,611,Fraxure,,,base,5,f,f,t,611,818
+haxorus,612,Haxorus,,,base,5,f,f,t,612,819
+cubchoo,613,Cubchoo,,,base,5,f,f,t,613,820
+beartic,614,Beartic,,,base,5,f,f,t,614,821
+cryogonal,615,Cryogonal,,,base,5,f,f,t,615,822
+shelmet,616,Shelmet,,,base,5,f,f,t,616,823
+accelgor,617,Accelgor,,,base,5,f,f,t,617,824
+stunfisk,618,Stunfisk,,,base,5,f,f,t,618,825
+stunfisk-galar,618,Stunfisk,Galarian Form,Forma de Galar,regional,5,f,f,t,10180,826
+mienfoo,619,Mienfoo,,,base,5,f,f,t,619,827
+mienshao,620,Mienshao,,,base,5,f,f,t,620,828
+druddigon,621,Druddigon,,,base,5,f,f,t,621,829
+golett,622,Golett,,,base,5,f,f,t,622,830
+golurk,623,Golurk,,,base,5,f,f,t,623,831
+pawniard,624,Pawniard,,,base,5,f,f,t,624,832
+bisharp,625,Bisharp,,,base,5,f,f,t,625,833
+bouffalant,626,Bouffalant,,,base,5,f,f,t,626,834
+rufflet,627,Rufflet,,,base,5,f,f,t,627,835
+braviary,628,Braviary,,,base,5,f,f,t,628,836
+braviary-hisui,628,Braviary,Hisuian Form,Forma de Hisui,regional,5,f,f,t,10240,837
+vullaby,629,Vullaby,,,base,5,f,f,t,629,838
+mandibuzz,630,Mandibuzz,,,base,5,f,f,t,630,839
+heatmor,631,Heatmor,,,base,5,f,f,t,631,840
+durant,632,Durant,,,base,5,f,f,t,632,841
+deino,633,Deino,,,base,5,f,f,t,633,842
+zweilous,634,Zweilous,,,base,5,f,f,t,634,843
+hydreigon,635,Hydreigon,,,base,5,f,f,t,635,844
+larvesta,636,Larvesta,,,base,5,f,f,t,636,845
+volcarona,637,Volcarona,,,base,5,f,f,t,637,846
+cobalion,638,Cobalion,,,base,5,t,f,t,638,847
+terrakion,639,Terrakion,,,base,5,t,f,t,639,848
+virizion,640,Virizion,,,base,5,t,f,t,640,849
+tornadus,641,Tornadus,Incarnate Forme,Forma Materializada,base,5,t,f,t,641,850
+tornadus-therian,641,Tornadus,Therian Forme,Forma Therian,especial,5,t,f,t,10019,851
+thundurus,642,Thundurus,Incarnate Forme,Forma Materializada,base,5,t,f,t,642,852
+thundurus-therian,642,Thundurus,Therian Forme,Forma Therian,especial,5,t,f,t,10020,853
+reshiram,643,Reshiram,,,base,5,t,f,t,643,854
+zekrom,644,Zekrom,,,base,5,t,f,t,644,855
+landorus,645,Landorus,Incarnate Forme,Forma Materializada,base,5,t,f,t,645,856
+landorus-therian,645,Landorus,Therian Forme,Forma Therian,especial,5,t,f,t,10021,857
+kyurem,646,Kyurem,Kyurem,Kyurem,base,5,t,f,t,646,858
+keldeo,647,Keldeo,Ordinary Form,Forma Comum,base,5,f,t,t,647,859
+keldeo-resolute,647,Keldeo,Resolute Form,Forma Resoluta,especial,5,f,t,t,10024,860
+meloetta,648,Meloetta,Aria Forme,Forma Ária,base,5,f,t,t,648,861
+genesect,649,Genesect,,,base,5,f,t,t,649,862
+chespin,650,Chespin,,,base,6,f,f,t,650,863
+quilladin,651,Quilladin,,,base,6,f,f,t,651,864
+chesnaught,652,Chesnaught,,,base,6,f,f,t,652,865
+fennekin,653,Fennekin,,,base,6,f,f,t,653,866
+braixen,654,Braixen,,,base,6,f,f,t,654,867
+delphox,655,Delphox,,,base,6,f,f,t,655,868
+froakie,656,Froakie,,,base,6,f,f,t,656,869
+frogadier,657,Frogadier,,,base,6,f,f,t,657,870
+greninja,658,Greninja,,,base,6,f,f,t,658,871
+greninja-battle-bond,658,Greninja,Battle Bond,,especial,6,f,f,f,10116,872
+bunnelby,659,Bunnelby,,,base,6,f,f,t,659,873
+diggersby,660,Diggersby,,,base,6,f,f,t,660,874
+fletchling,661,Fletchling,,,base,6,f,f,t,661,875
+fletchinder,662,Fletchinder,,,base,6,f,f,t,662,876
+talonflame,663,Talonflame,,,base,6,f,f,t,663,877
+scatterbug,664,Scatterbug,,,base,6,f,f,t,664,878
+spewpa,665,Spewpa,,,base,6,f,f,t,665,879
+vivillon,666,Vivillon,Meadow Pattern,Padrão Prado,base,6,f,f,t,666,880
+vivillon-icy-snow,666,Vivillon,Icy Snow Pattern,Padrão Neve Congelada,cosmetica,6,f,f,t,666-icy-snow,881
+vivillon-polar,666,Vivillon,Polar Pattern,Padrão Polar,cosmetica,6,f,f,t,666-polar,882
+vivillon-tundra,666,Vivillon,Tundra Pattern,Padrão Tundra,cosmetica,6,f,f,t,666-tundra,883
+vivillon-continental,666,Vivillon,Continental Pattern,Padrão Continental,cosmetica,6,f,f,t,666-continental,884
+vivillon-garden,666,Vivillon,Garden Pattern,Padrão Jardim,cosmetica,6,f,f,t,666-garden,885
+vivillon-elegant,666,Vivillon,Elegant Pattern,Padrão Elegante,cosmetica,6,f,f,t,666-elegant,886
+vivillon-modern,666,Vivillon,Modern Pattern,Padrão Moderno,cosmetica,6,f,f,t,666-modern,887
+vivillon-marine,666,Vivillon,Marine Pattern,Padrão Marinho,cosmetica,6,f,f,t,666-marine,888
+vivillon-archipelago,666,Vivillon,Archipelago Pattern,Padrão Arquipélago,cosmetica,6,f,f,t,666-archipelago,889
+vivillon-high-plains,666,Vivillon,High Plains Pattern,Padrão Planalto,cosmetica,6,f,f,t,666-high-plains,890
+vivillon-sandstorm,666,Vivillon,Sandstorm Pattern,Padrão Deserto,cosmetica,6,f,f,t,666-sandstorm,891
+vivillon-river,666,Vivillon,River Pattern,Padrão Rio,cosmetica,6,f,f,t,666-river,892
+vivillon-monsoon,666,Vivillon,Monsoon Pattern,Padrão Monção,cosmetica,6,f,f,t,666-monsoon,893
+vivillon-savanna,666,Vivillon,Savanna Pattern,Padrão Savana,cosmetica,6,f,f,t,666-savanna,894
+vivillon-sun,666,Vivillon,Sun Pattern,Padrão Solar,cosmetica,6,f,f,t,666-sun,895
+vivillon-ocean,666,Vivillon,Ocean Pattern,Padrão Oceano,cosmetica,6,f,f,t,666-ocean,896
+vivillon-jungle,666,Vivillon,Jungle Pattern,Padrão Selva,cosmetica,6,f,f,t,666-jungle,897
+vivillon-fancy,666,Vivillon,Fancy Pattern,Padrão Chique,cosmetica,6,f,f,t,666-fancy,898
+vivillon-poke-ball,666,Vivillon,Poké Ball Pattern,Padrão Poké Bola,cosmetica,6,f,f,f,666-poke-ball,899
+litleo,667,Litleo,,,base,6,f,f,t,667,900
+pyroar,668,Pyroar,Male,,base,6,f,f,t,668,901
+pyroar-female,668,Pyroar,Female,,genero,6,f,f,t,668-female,902
+flabebe,669,Flabébé,Red Flower,Flor Vermelha,base,6,f,f,t,669,903
+flabebe-yellow,669,Flabébé,Yellow Flower,Flor Amarela,cosmetica,6,f,f,t,669-yellow,904
+flabebe-orange,669,Flabébé,Orange Flower,Flor Laranja,cosmetica,6,f,f,t,669-orange,905
+flabebe-blue,669,Flabébé,Blue Flower,Flor Azul,cosmetica,6,f,f,t,669-blue,906
+flabebe-white,669,Flabébé,White Flower,Flor Branca,cosmetica,6,f,f,t,669-white,907
+floette,670,Floette,Red Flower,Flor Vermelha,base,6,f,f,t,670,908
+floette-yellow,670,Floette,Yellow Flower,Flor Amarela,cosmetica,6,f,f,t,670-yellow,909
+floette-orange,670,Floette,Orange Flower,Flor Laranja,cosmetica,6,f,f,t,670-orange,910
+floette-blue,670,Floette,Blue Flower,Flor Azul,cosmetica,6,f,f,t,670-blue,911
+floette-white,670,Floette,White Flower,Flor Branca,cosmetica,6,f,f,t,670-white,912
+floette-eternal,670,Floette,Eternal Flower,,especial,6,f,f,f,10061,913
+florges,671,Florges,Red Flower,Flor Vermelha,base,6,f,f,t,671,914
+florges-yellow,671,Florges,Yellow Flower,Flor Amarela,cosmetica,6,f,f,t,671-yellow,915
+florges-orange,671,Florges,Orange Flower,Flor Laranja,cosmetica,6,f,f,t,671-orange,916
+florges-blue,671,Florges,Blue Flower,Flor Azul,cosmetica,6,f,f,t,671-blue,917
+florges-white,671,Florges,White Flower,Flor Branca,cosmetica,6,f,f,t,671-white,918
+skiddo,672,Skiddo,,,base,6,f,f,t,672,919
+gogoat,673,Gogoat,,,base,6,f,f,t,673,920
+pancham,674,Pancham,,,base,6,f,f,t,674,921
+pangoro,675,Pangoro,,,base,6,f,f,t,675,922
+furfrou,676,Furfrou,Natural Form,Forma Selvagem,base,6,f,f,t,676,923
+furfrou-heart,676,Furfrou,Heart Trim,Corte Coração,cosmetica,6,f,f,t,676-heart,924
+furfrou-star,676,Furfrou,Star Trim,Corte Estrela,cosmetica,6,f,f,t,676-star,925
+furfrou-diamond,676,Furfrou,Diamond Trim,Corte Diamante,cosmetica,6,f,f,t,676-diamond,926
+furfrou-debutante,676,Furfrou,Debutante Trim,Corte Debutante,cosmetica,6,f,f,t,676-debutante,927
+furfrou-matron,676,Furfrou,Matron Trim,Corte Madame,cosmetica,6,f,f,t,676-matron,928
+furfrou-dandy,676,Furfrou,Dandy Trim,Corte Cavalheiro,cosmetica,6,f,f,t,676-dandy,929
+furfrou-la-reine,676,Furfrou,La Reine Trim,Corte Aristocrático,cosmetica,6,f,f,t,676-la-reine,930
+furfrou-kabuki,676,Furfrou,Kabuki Trim,Corte Kabuki,cosmetica,6,f,f,t,676-kabuki,931
+furfrou-pharaoh,676,Furfrou,Pharaoh Trim,Corte Faraó,cosmetica,6,f,f,t,676-pharaoh,932
+espurr,677,Espurr,,,base,6,f,f,t,677,933
+meowstic,678,Meowstic,Male,,base,6,f,f,t,678,934
+meowstic-female,678,Meowstic,Female,,genero,6,f,f,t,10025,935
+honedge,679,Honedge,,,base,6,f,f,t,679,936
+doublade,680,Doublade,,,base,6,f,f,t,680,937
+aegislash,681,Aegislash,Shield Forme,Forma Escudo,base,6,f,f,t,681,938
+spritzee,682,Spritzee,,,base,6,f,f,t,682,939
+aromatisse,683,Aromatisse,,,base,6,f,f,t,683,940
+swirlix,684,Swirlix,,,base,6,f,f,t,684,941
+slurpuff,685,Slurpuff,,,base,6,f,f,t,685,942
+inkay,686,Inkay,,,base,6,f,f,t,686,943
+malamar,687,Malamar,,,base,6,f,f,t,687,944
+binacle,688,Binacle,,,base,6,f,f,t,688,945
+barbaracle,689,Barbaracle,,,base,6,f,f,t,689,946
+skrelp,690,Skrelp,,,base,6,f,f,t,690,947
+dragalge,691,Dragalge,,,base,6,f,f,t,691,948
+clauncher,692,Clauncher,,,base,6,f,f,t,692,949
+clawitzer,693,Clawitzer,,,base,6,f,f,t,693,950
+helioptile,694,Helioptile,,,base,6,f,f,t,694,951
+heliolisk,695,Heliolisk,,,base,6,f,f,t,695,952
+tyrunt,696,Tyrunt,,,base,6,f,f,t,696,953
+tyrantrum,697,Tyrantrum,,,base,6,f,f,t,697,954
+amaura,698,Amaura,,,base,6,f,f,t,698,955
+aurorus,699,Aurorus,,,base,6,f,f,t,699,956
+sylveon,700,Sylveon,,,base,6,f,f,t,700,957
+hawlucha,701,Hawlucha,,,base,6,f,f,t,701,958
+dedenne,702,Dedenne,,,base,6,f,f,t,702,959
+carbink,703,Carbink,,,base,6,f,f,t,703,960
+goomy,704,Goomy,,,base,6,f,f,t,704,961
+sliggoo,705,Sliggoo,,,base,6,f,f,t,705,962
+sliggoo-hisui,705,Sliggoo,Hisuian Form,Forma de Hisui,regional,6,f,f,t,10241,963
+goodra,706,Goodra,,,base,6,f,f,t,706,964
+goodra-hisui,706,Goodra,Hisuian Form,Forma de Hisui,regional,6,f,f,t,10242,965
+klefki,707,Klefki,,,base,6,f,f,t,707,966
+phantump,708,Phantump,,,base,6,f,f,t,708,967
+trevenant,709,Trevenant,,,base,6,f,f,t,709,968
+pumpkaboo,710,Pumpkaboo,Average Size,Tamanho Médio,base,6,f,f,t,710,969
+pumpkaboo-small,710,Pumpkaboo,Small Size,Tamanho Pequeno,especial,6,f,f,t,10027,970
+pumpkaboo-large,710,Pumpkaboo,Large Size,Tamanho Grande,especial,6,f,f,t,10028,971
+pumpkaboo-super,710,Pumpkaboo,Super Size,Tamanho Extragrande,especial,6,f,f,t,10029,972
+gourgeist,711,Gourgeist,Average Size,Tamanho Médio,base,6,f,f,t,711,973
+gourgeist-small,711,Gourgeist,Small Size,Tamanho Pequeno,especial,6,f,f,t,10030,974
+gourgeist-large,711,Gourgeist,Large Size,Tamanho Grande,especial,6,f,f,t,10031,975
+gourgeist-super,711,Gourgeist,Super Size,Tamanho Extragrande,especial,6,f,f,t,10032,976
+bergmite,712,Bergmite,,,base,6,f,f,t,712,977
+avalugg,713,Avalugg,,,base,6,f,f,t,713,978
+avalugg-hisui,713,Avalugg,Hisuian Form,Forma de Hisui,regional,6,f,f,t,10243,979
+noibat,714,Noibat,,,base,6,f,f,t,714,980
+noivern,715,Noivern,,,base,6,f,f,t,715,981
+xerneas,716,Xerneas,Neutral Mode,,base,6,t,f,t,716,982
+yveltal,717,Yveltal,,,base,6,t,f,t,717,983
+zygarde,718,Zygarde,50% Forme,Forma 50%,base,6,t,f,t,718,984
+zygarde-10,718,Zygarde,10% Forme,Forma 10%,especial,6,t,f,t,10181,985
+zygarde-10-power-construct,718,Zygarde,10% Forme,Forma 10%,especial,6,t,f,t,10118,986
+zygarde-50-power-construct,718,Zygarde,50% Forme,Forma 50%,especial,6,t,f,t,10119,987
+diancie,719,Diancie,,,base,6,f,t,t,719,988
+hoopa,720,Hoopa,Hoopa Confined,Hoopa Contido,base,6,f,t,f,720,989
+hoopa-unbound,720,Hoopa,Hoopa Unbound,Hoopa Libertado,especial,6,f,t,f,10086,990
+volcanion,721,Volcanion,,,base,6,f,t,t,721,991
+rowlet,722,Rowlet,,,base,7,f,f,t,722,992
+dartrix,723,Dartrix,,,base,7,f,f,t,723,993
+decidueye,724,Decidueye,,,base,7,f,f,t,724,994
+decidueye-hisui,724,Decidueye,Hisuian Form,Forma de Hisui,regional,7,f,f,t,10244,995
+litten,725,Litten,,,base,7,f,f,t,725,996
+torracat,726,Torracat,,,base,7,f,f,t,726,997
+incineroar,727,Incineroar,,,base,7,f,f,t,727,998
+popplio,728,Popplio,,,base,7,f,f,t,728,999
+brionne,729,Brionne,,,base,7,f,f,t,729,1000
+primarina,730,Primarina,,,base,7,f,f,t,730,1001
+pikipek,731,Pikipek,,,base,7,f,f,t,731,1002
+trumbeak,732,Trumbeak,,,base,7,f,f,t,732,1003
+toucannon,733,Toucannon,,,base,7,f,f,t,733,1004
+yungoos,734,Yungoos,,,base,7,f,f,t,734,1005
+gumshoos,735,Gumshoos,,,base,7,f,f,t,735,1006
+grubbin,736,Grubbin,,,base,7,f,f,t,736,1007
+charjabug,737,Charjabug,,,base,7,f,f,t,737,1008
+vikavolt,738,Vikavolt,,,base,7,f,f,t,738,1009
+crabrawler,739,Crabrawler,,,base,7,f,f,t,739,1010
+crabominable,740,Crabominable,,,base,7,f,f,t,740,1011
+oricorio,741,Oricorio,Baile Style,Estilo Flamenco,base,7,f,f,t,741,1012
+oricorio-pom-pom,741,Oricorio,Pom-Pom Style,Estilo Animado,especial,7,f,f,t,10123,1013
+oricorio-pau,741,Oricorio,Pa’u Style,Estilo Hula,especial,7,f,f,t,10124,1014
+oricorio-sensu,741,Oricorio,Sensu Style,Estilo Elegante,especial,7,f,f,t,10125,1015
+cutiefly,742,Cutiefly,,,base,7,f,f,t,742,1016
+ribombee,743,Ribombee,,,base,7,f,f,t,743,1017
+rockruff,744,Rockruff,,,base,7,f,f,t,744,1018
+rockruff-own-tempo,744,Rockruff,Own Tempo,,especial,7,f,f,t,10151,1019
+lycanroc,745,Lycanroc,Midday Form,Forma Diurna,base,7,f,f,t,745,1020
+lycanroc-midnight,745,Lycanroc,Midnight Form,Forma Noturna,especial,7,f,f,t,10126,1021
+lycanroc-dusk,745,Lycanroc,Dusk Form,Forma Crepúsculo,especial,7,f,f,t,10152,1022
+wishiwashi,746,Wishiwashi,Solo Form,Forma Individual,base,7,f,f,t,746,1023
+mareanie,747,Mareanie,,,base,7,f,f,t,747,1024
+toxapex,748,Toxapex,,,base,7,f,f,t,748,1025
+mudbray,749,Mudbray,,,base,7,f,f,t,749,1026
+mudsdale,750,Mudsdale,,,base,7,f,f,t,750,1027
+dewpider,751,Dewpider,,,base,7,f,f,t,751,1028
+araquanid,752,Araquanid,,,base,7,f,f,t,752,1029
+fomantis,753,Fomantis,,,base,7,f,f,t,753,1030
+lurantis,754,Lurantis,,,base,7,f,f,t,754,1031
+morelull,755,Morelull,,,base,7,f,f,t,755,1032
+shiinotic,756,Shiinotic,,,base,7,f,f,t,756,1033
+salandit,757,Salandit,,,base,7,f,f,t,757,1034
+salazzle,758,Salazzle,,,base,7,f,f,t,758,1035
+stufful,759,Stufful,,,base,7,f,f,t,759,1036
+bewear,760,Bewear,,,base,7,f,f,t,760,1037
+bounsweet,761,Bounsweet,,,base,7,f,f,t,761,1038
+steenee,762,Steenee,,,base,7,f,f,t,762,1039
+tsareena,763,Tsareena,,,base,7,f,f,t,763,1040
+comfey,764,Comfey,,,base,7,f,f,t,764,1041
+oranguru,765,Oranguru,,,base,7,f,f,t,765,1042
+passimian,766,Passimian,,,base,7,f,f,t,766,1043
+wimpod,767,Wimpod,,,base,7,f,f,t,767,1044
+golisopod,768,Golisopod,,,base,7,f,f,t,768,1045
+sandygast,769,Sandygast,,,base,7,f,f,t,769,1046
+palossand,770,Palossand,,,base,7,f,f,t,770,1047
+pyukumuku,771,Pyukumuku,,,base,7,f,f,t,771,1048
+type-null,772,Type: Null,,,base,7,t,f,t,772,1049
+silvally,773,Silvally,Type: Normal,Tipo: Normal,base,7,t,f,t,773,1050
+minior,774,Minior,Red Core,Núcleo Vermelho,base,7,f,f,t,10136,1051
+minior-orange,774,Minior,Orange Core,Núcleo Laranja,cosmetica,7,f,f,t,10137,1052
+minior-yellow,774,Minior,Yellow Core,Núcleo Amarelo,cosmetica,7,f,f,t,10138,1053
+minior-green,774,Minior,Green Core,Núcleo Verde,cosmetica,7,f,f,t,10139,1054
+minior-blue,774,Minior,Blue Core,Núcleo Azul,cosmetica,7,f,f,t,10140,1055
+minior-indigo,774,Minior,Indigo Core,Núcleo Anil,cosmetica,7,f,f,t,10141,1056
+minior-violet,774,Minior,Violet Core,Núcleo Violeta,cosmetica,7,f,f,t,10142,1057
+komala,775,Komala,,,base,7,f,f,t,775,1058
+turtonator,776,Turtonator,,,base,7,f,f,t,776,1059
+togedemaru,777,Togedemaru,,,base,7,f,f,t,777,1060
+mimikyu,778,Mimikyu,Disguised Form,Forma Mascarada,base,7,f,f,t,778,1061
+bruxish,779,Bruxish,,,base,7,f,f,t,779,1062
+drampa,780,Drampa,,,base,7,f,f,t,780,1063
+dhelmise,781,Dhelmise,,,base,7,f,f,t,781,1064
+jangmo-o,782,Jangmo-o,,,base,7,f,f,t,782,1065
+hakamo-o,783,Hakamo-o,,,base,7,f,f,t,783,1066
+kommo-o,784,Kommo-o,,,base,7,f,f,t,784,1067
+tapu-koko,785,Tapu Koko,,,base,7,t,f,t,785,1068
+tapu-lele,786,Tapu Lele,,,base,7,t,f,t,786,1069
+tapu-bulu,787,Tapu Bulu,,,base,7,t,f,t,787,1070
+tapu-fini,788,Tapu Fini,,,base,7,t,f,t,788,1071
+cosmog,789,Cosmog,,,base,7,t,f,f,789,1072
+cosmoem,790,Cosmoem,,,base,7,t,f,f,790,1073
+solgaleo,791,Solgaleo,,,base,7,t,f,t,791,1074
+lunala,792,Lunala,,,base,7,t,f,t,792,1075
+nihilego,793,Nihilego,,,base,7,f,f,t,793,1076
+buzzwole,794,Buzzwole,,,base,7,f,f,t,794,1077
+pheromosa,795,Pheromosa,,,base,7,f,f,t,795,1078
+xurkitree,796,Xurkitree,,,base,7,f,f,t,796,1079
+celesteela,797,Celesteela,,,base,7,f,f,t,797,1080
+kartana,798,Kartana,,,base,7,f,f,t,798,1081
+guzzlord,799,Guzzlord,,,base,7,f,f,t,799,1082
+necrozma,800,Necrozma,,,base,7,t,f,t,800,1083
+magearna,801,Magearna,,,base,7,f,t,f,801,1084
+magearna-original,801,Magearna,Original Color,,cosmetica,7,f,t,f,10147,1085
+marshadow,802,Marshadow,,,base,7,f,t,t,802,1086
+poipole,803,Poipole,,,base,7,f,f,t,803,1087
+naganadel,804,Naganadel,,,base,7,f,f,t,804,1088
+stakataka,805,Stakataka,,,base,7,f,f,t,805,1089
+blacephalon,806,Blacephalon,,,base,7,f,f,t,806,1090
+zeraora,807,Zeraora,,,base,7,f,t,t,807,1091
+meltan,808,Meltan,,,base,7,f,t,t,808,1092
+melmetal,809,Melmetal,,,base,7,f,t,t,809,1093
+grookey,810,Grookey,,,base,8,f,f,t,810,1094
+thwackey,811,Thwackey,,,base,8,f,f,t,811,1095
+rillaboom,812,Rillaboom,,,base,8,f,f,t,812,1096
+scorbunny,813,Scorbunny,,,base,8,f,f,t,813,1097
+raboot,814,Raboot,,,base,8,f,f,t,814,1098
+cinderace,815,Cinderace,,,base,8,f,f,t,815,1099
+sobble,816,Sobble,,,base,8,f,f,t,816,1100
+drizzile,817,Drizzile,,,base,8,f,f,t,817,1101
+inteleon,818,Inteleon,,,base,8,f,f,t,818,1102
+skwovet,819,Skwovet,,,base,8,f,f,t,819,1103
+greedent,820,Greedent,,,base,8,f,f,t,820,1104
+rookidee,821,Rookidee,,,base,8,f,f,t,821,1105
+corvisquire,822,Corvisquire,,,base,8,f,f,t,822,1106
+corviknight,823,Corviknight,,,base,8,f,f,t,823,1107
+blipbug,824,Blipbug,,,base,8,f,f,t,824,1108
+dottler,825,Dottler,,,base,8,f,f,t,825,1109
+orbeetle,826,Orbeetle,,,base,8,f,f,t,826,1110
+nickit,827,Nickit,,,base,8,f,f,t,827,1111
+thievul,828,Thievul,,,base,8,f,f,t,828,1112
+gossifleur,829,Gossifleur,,,base,8,f,f,t,829,1113
+eldegoss,830,Eldegoss,,,base,8,f,f,t,830,1114
+wooloo,831,Wooloo,,,base,8,f,f,t,831,1115
+dubwool,832,Dubwool,,,base,8,f,f,t,832,1116
+chewtle,833,Chewtle,,,base,8,f,f,t,833,1117
+drednaw,834,Drednaw,,,base,8,f,f,t,834,1118
+yamper,835,Yamper,,,base,8,f,f,t,835,1119
+boltund,836,Boltund,,,base,8,f,f,t,836,1120
+rolycoly,837,Rolycoly,,,base,8,f,f,t,837,1121
+carkol,838,Carkol,,,base,8,f,f,t,838,1122
+coalossal,839,Coalossal,,,base,8,f,f,t,839,1123
+applin,840,Applin,,,base,8,f,f,t,840,1124
+flapple,841,Flapple,,,base,8,f,f,t,841,1125
+appletun,842,Appletun,,,base,8,f,f,t,842,1126
+silicobra,843,Silicobra,,,base,8,f,f,t,843,1127
+sandaconda,844,Sandaconda,,,base,8,f,f,t,844,1128
+cramorant,845,Cramorant,,,base,8,f,f,t,845,1129
+arrokuda,846,Arrokuda,,,base,8,f,f,t,846,1130
+barraskewda,847,Barraskewda,,,base,8,f,f,t,847,1131
+toxel,848,Toxel,,,base,8,f,f,t,848,1132
+toxtricity,849,Toxtricity,Amped Form,Forma Aguda,base,8,f,f,t,849,1133
+toxtricity-low-key,849,Toxtricity,Low Key Form,Forma Grave,especial,8,f,f,t,10184,1134
+sizzlipede,850,Sizzlipede,,,base,8,f,f,t,850,1135
+centiskorch,851,Centiskorch,,,base,8,f,f,t,851,1136
+clobbopus,852,Clobbopus,,,base,8,f,f,t,852,1137
+grapploct,853,Grapploct,,,base,8,f,f,t,853,1138
+sinistea,854,Sinistea,Phony Form,Forma Falsificada,base,8,f,f,t,854,1139
+sinistea-antique,854,Sinistea,Antique Form,Forma Autêntica,cosmetica,8,f,f,t,854-antique,1140
+polteageist,855,Polteageist,Phony Form,Forma Falsificada,base,8,f,f,t,855,1141
+polteageist-antique,855,Polteageist,Antique Form,Forma Autêntica,cosmetica,8,f,f,t,855-antique,1142
+hatenna,856,Hatenna,,,base,8,f,f,t,856,1143
+hattrem,857,Hattrem,,,base,8,f,f,t,857,1144
+hatterene,858,Hatterene,,,base,8,f,f,t,858,1145
+impidimp,859,Impidimp,,,base,8,f,f,t,859,1146
+morgrem,860,Morgrem,,,base,8,f,f,t,860,1147
+grimmsnarl,861,Grimmsnarl,,,base,8,f,f,t,861,1148
+obstagoon,862,Obstagoon,,,base,8,f,f,t,862,1149
+perrserker,863,Perrserker,,,base,8,f,f,t,863,1150
+cursola,864,Cursola,,,base,8,f,f,t,864,1151
+sirfetchd,865,Sirfetch’d,,,base,8,f,f,t,865,1152
+mr-rime,866,Mr. Rime,,,base,8,f,f,t,866,1153
+runerigus,867,Runerigus,,,base,8,f,f,t,867,1154
+milcery,868,Milcery,,,base,8,f,f,t,868,1155
+alcremie,869,Alcremie,Vanilla Cream Strawberry Sweet,,base,8,f,f,t,869,1156
+alcremie-vanilla-cream-berry-sweet,869,Alcremie,Vanilla Cream Berry Sweet,,cosmetica,8,f,f,t,869-vanilla-cream-berry-sweet,1157
+alcremie-vanilla-cream-love-sweet,869,Alcremie,Vanilla Cream Love Sweet,,cosmetica,8,f,f,t,869-vanilla-cream-love-sweet,1158
+alcremie-vanilla-cream-star-sweet,869,Alcremie,Vanilla Cream Star Sweet,,cosmetica,8,f,f,t,869-vanilla-cream-star-sweet,1159
+alcremie-vanilla-cream-clover-sweet,869,Alcremie,Vanilla Cream Clover Sweet,,cosmetica,8,f,f,t,869-vanilla-cream-clover-sweet,1160
+alcremie-vanilla-cream-flower-sweet,869,Alcremie,Vanilla Cream Flower Sweet,,cosmetica,8,f,f,t,869-vanilla-cream-flower-sweet,1161
+alcremie-vanilla-cream-ribbon-sweet,869,Alcremie,Vanilla Cream Ribbon Sweet,,cosmetica,8,f,f,t,869-vanilla-cream-ribbon-sweet,1162
+alcremie-ruby-cream-strawberry-sweet,869,Alcremie,Ruby Cream Strawberry Sweet,,cosmetica,8,f,f,t,869-ruby-cream-strawberry-sweet,1163
+alcremie-ruby-cream-berry-sweet,869,Alcremie,Ruby Cream Berry Sweet,,cosmetica,8,f,f,t,869-ruby-cream-berry-sweet,1164
+alcremie-ruby-cream-love-sweet,869,Alcremie,Ruby Cream Love Sweet,,cosmetica,8,f,f,t,869-ruby-cream-love-sweet,1165
+alcremie-ruby-cream-star-sweet,869,Alcremie,Ruby Cream Star Sweet,,cosmetica,8,f,f,t,869-ruby-cream-star-sweet,1166
+alcremie-ruby-cream-clover-sweet,869,Alcremie,Ruby Cream Clover Sweet,,cosmetica,8,f,f,t,869-ruby-cream-clover-sweet,1167
+alcremie-ruby-cream-flower-sweet,869,Alcremie,Ruby Cream Flower Sweet,,cosmetica,8,f,f,t,869-ruby-cream-flower-sweet,1168
+alcremie-ruby-cream-ribbon-sweet,869,Alcremie,Ruby Cream Ribbon Sweet,,cosmetica,8,f,f,t,869-ruby-cream-ribbon-sweet,1169
+alcremie-matcha-cream-strawberry-sweet,869,Alcremie,Matcha Cream Strawberry Sweet,,cosmetica,8,f,f,t,869-matcha-cream-strawberry-sweet,1170
+alcremie-matcha-cream-berry-sweet,869,Alcremie,Matcha Cream Berry Sweet,,cosmetica,8,f,f,t,869-matcha-cream-berry-sweet,1171
+alcremie-matcha-cream-love-sweet,869,Alcremie,Matcha Cream Love Sweet,,cosmetica,8,f,f,t,869-matcha-cream-love-sweet,1172
+alcremie-matcha-cream-star-sweet,869,Alcremie,Matcha Cream Star Sweet,,cosmetica,8,f,f,t,869-matcha-cream-star-sweet,1173
+alcremie-matcha-cream-clover-sweet,869,Alcremie,Matcha Cream Clover Sweet,,cosmetica,8,f,f,t,869-matcha-cream-clover-sweet,1174
+alcremie-matcha-cream-flower-sweet,869,Alcremie,Matcha Cream Flower Sweet,,cosmetica,8,f,f,t,869-matcha-cream-flower-sweet,1175
+alcremie-matcha-cream-ribbon-sweet,869,Alcremie,Matcha Cream Ribbon Sweet,,cosmetica,8,f,f,t,869-matcha-cream-ribbon-sweet,1176
+alcremie-mint-cream-strawberry-sweet,869,Alcremie,Mint Cream Strawberry Sweet,,cosmetica,8,f,f,t,869-mint-cream-strawberry-sweet,1177
+alcremie-mint-cream-berry-sweet,869,Alcremie,Mint Cream Berry Sweet,,cosmetica,8,f,f,t,869-mint-cream-berry-sweet,1178
+alcremie-mint-cream-love-sweet,869,Alcremie,Mint Cream Love Sweet,,cosmetica,8,f,f,t,869-mint-cream-love-sweet,1179
+alcremie-mint-cream-star-sweet,869,Alcremie,Mint Cream Star Sweet,,cosmetica,8,f,f,t,869-mint-cream-star-sweet,1180
+alcremie-mint-cream-clover-sweet,869,Alcremie,Mint Cream Clover Sweet,,cosmetica,8,f,f,t,869-mint-cream-clover-sweet,1181
+alcremie-mint-cream-flower-sweet,869,Alcremie,Mint Cream Flower Sweet,,cosmetica,8,f,f,t,869-mint-cream-flower-sweet,1182
+alcremie-mint-cream-ribbon-sweet,869,Alcremie,Mint Cream Ribbon Sweet,,cosmetica,8,f,f,t,869-mint-cream-ribbon-sweet,1183
+alcremie-lemon-cream-strawberry-sweet,869,Alcremie,Lemon Cream Strawberry Sweet,,cosmetica,8,f,f,t,869-lemon-cream-strawberry-sweet,1184
+alcremie-lemon-cream-berry-sweet,869,Alcremie,Lemon Cream Berry Sweet,,cosmetica,8,f,f,t,869-lemon-cream-berry-sweet,1185
+alcremie-lemon-cream-love-sweet,869,Alcremie,Lemon Cream Love Sweet,,cosmetica,8,f,f,t,869-lemon-cream-love-sweet,1186
+alcremie-lemon-cream-star-sweet,869,Alcremie,Lemon Cream Star Sweet,,cosmetica,8,f,f,t,869-lemon-cream-star-sweet,1187
+alcremie-lemon-cream-clover-sweet,869,Alcremie,Lemon Cream Clover Sweet,,cosmetica,8,f,f,t,869-lemon-cream-clover-sweet,1188
+alcremie-lemon-cream-flower-sweet,869,Alcremie,Lemon Cream Flower Sweet,,cosmetica,8,f,f,t,869-lemon-cream-flower-sweet,1189
+alcremie-lemon-cream-ribbon-sweet,869,Alcremie,Lemon Cream Ribbon Sweet,,cosmetica,8,f,f,t,869-lemon-cream-ribbon-sweet,1190
+alcremie-salted-cream-strawberry-sweet,869,Alcremie,Salted Cream Strawberry Sweet,,cosmetica,8,f,f,t,869-salted-cream-strawberry-sweet,1191
+alcremie-salted-cream-berry-sweet,869,Alcremie,Salted Cream Berry Sweet,,cosmetica,8,f,f,t,869-salted-cream-berry-sweet,1192
+alcremie-salted-cream-love-sweet,869,Alcremie,Salted Cream Love Sweet,,cosmetica,8,f,f,t,869-salted-cream-love-sweet,1193
+alcremie-salted-cream-star-sweet,869,Alcremie,Salted Cream Star Sweet,,cosmetica,8,f,f,t,869-salted-cream-star-sweet,1194
+alcremie-salted-cream-clover-sweet,869,Alcremie,Salted Cream Clover Sweet,,cosmetica,8,f,f,t,869-salted-cream-clover-sweet,1195
+alcremie-salted-cream-flower-sweet,869,Alcremie,Salted Cream Flower Sweet,,cosmetica,8,f,f,t,869-salted-cream-flower-sweet,1196
+alcremie-salted-cream-ribbon-sweet,869,Alcremie,Salted Cream Ribbon Sweet,,cosmetica,8,f,f,t,869-salted-cream-ribbon-sweet,1197
+alcremie-ruby-swirl-strawberry-sweet,869,Alcremie,Ruby Swirl Strawberry Sweet,,cosmetica,8,f,f,t,869-ruby-swirl-strawberry-sweet,1198
+alcremie-ruby-swirl-berry-sweet,869,Alcremie,Ruby Swirl Berry Sweet,,cosmetica,8,f,f,t,869-ruby-swirl-berry-sweet,1199
+alcremie-ruby-swirl-love-sweet,869,Alcremie,Ruby Swirl Love Sweet,,cosmetica,8,f,f,t,869-ruby-swirl-love-sweet,1200
+alcremie-ruby-swirl-star-sweet,869,Alcremie,Ruby Swirl Star Sweet,,cosmetica,8,f,f,t,869-ruby-swirl-star-sweet,1201
+alcremie-ruby-swirl-clover-sweet,869,Alcremie,Ruby Swirl Clover Sweet,,cosmetica,8,f,f,t,869-ruby-swirl-clover-sweet,1202
+alcremie-ruby-swirl-flower-sweet,869,Alcremie,Ruby Swirl Flower Sweet,,cosmetica,8,f,f,t,869-ruby-swirl-flower-sweet,1203
+alcremie-ruby-swirl-ribbon-sweet,869,Alcremie,Ruby Swirl Ribbon Sweet,,cosmetica,8,f,f,t,869-ruby-swirl-ribbon-sweet,1204
+alcremie-caramel-swirl-strawberry-sweet,869,Alcremie,Caramel Swirl Strawberry Sweet,,cosmetica,8,f,f,t,869-caramel-swirl-strawberry-sweet,1205
+alcremie-caramel-swirl-berry-sweet,869,Alcremie,Caramel Swirl Berry Sweet,,cosmetica,8,f,f,t,869-caramel-swirl-berry-sweet,1206
+alcremie-caramel-swirl-love-sweet,869,Alcremie,Caramel Swirl Love Sweet,,cosmetica,8,f,f,t,869-caramel-swirl-love-sweet,1207
+alcremie-caramel-swirl-star-sweet,869,Alcremie,Caramel Swirl Star Sweet,,cosmetica,8,f,f,t,869-caramel-swirl-star-sweet,1208
+alcremie-caramel-swirl-clover-sweet,869,Alcremie,Caramel Swirl Clover Sweet,,cosmetica,8,f,f,t,869-caramel-swirl-clover-sweet,1209
+alcremie-caramel-swirl-flower-sweet,869,Alcremie,Caramel Swirl Flower Sweet,,cosmetica,8,f,f,t,869-caramel-swirl-flower-sweet,1210
+alcremie-caramel-swirl-ribbon-sweet,869,Alcremie,Caramel Swirl Ribbon Sweet,,cosmetica,8,f,f,t,869-caramel-swirl-ribbon-sweet,1211
+alcremie-rainbow-swirl-strawberry-sweet,869,Alcremie,Rainbow Swirl Strawberry Sweet,,cosmetica,8,f,f,t,869-rainbow-swirl-strawberry-sweet,1212
+alcremie-rainbow-swirl-berry-sweet,869,Alcremie,Rainbow Swirl Berry Sweet,,cosmetica,8,f,f,t,869-rainbow-swirl-berry-sweet,1213
+alcremie-rainbow-swirl-love-sweet,869,Alcremie,Rainbow Swirl Love Sweet,,cosmetica,8,f,f,t,869-rainbow-swirl-love-sweet,1214
+alcremie-rainbow-swirl-star-sweet,869,Alcremie,Rainbow Swirl Star Sweet,,cosmetica,8,f,f,t,869-rainbow-swirl-star-sweet,1215
+alcremie-rainbow-swirl-clover-sweet,869,Alcremie,Rainbow Swirl Clover Sweet,,cosmetica,8,f,f,t,869-rainbow-swirl-clover-sweet,1216
+alcremie-rainbow-swirl-flower-sweet,869,Alcremie,Rainbow Swirl Flower Sweet,,cosmetica,8,f,f,t,869-rainbow-swirl-flower-sweet,1217
+alcremie-rainbow-swirl-ribbon-sweet,869,Alcremie,Rainbow Swirl Ribbon Sweet,,cosmetica,8,f,f,t,869-rainbow-swirl-ribbon-sweet,1218
+falinks,870,Falinks,,,base,8,f,f,t,870,1219
+pincurchin,871,Pincurchin,,,base,8,f,f,t,871,1220
+snom,872,Snom,,,base,8,f,f,t,872,1221
+frosmoth,873,Frosmoth,,,base,8,f,f,t,873,1222
+stonjourner,874,Stonjourner,,,base,8,f,f,t,874,1223
+eiscue,875,Eiscue,Ice Face,Cara de Gelo,base,8,f,f,t,875,1224
+indeedee,876,Indeedee,Male,,base,8,f,f,t,876,1225
+indeedee-female,876,Indeedee,Female,,genero,8,f,f,t,10186,1226
+morpeko,877,Morpeko,Full Belly Mode,Forma Saciada,base,8,f,f,t,877,1227
+cufant,878,Cufant,,,base,8,f,f,t,878,1228
+copperajah,879,Copperajah,,,base,8,f,f,t,879,1229
+dracozolt,880,Dracozolt,,,base,8,f,f,t,880,1230
+arctozolt,881,Arctozolt,,,base,8,f,f,t,881,1231
+dracovish,882,Dracovish,,,base,8,f,f,t,882,1232
+arctovish,883,Arctovish,,,base,8,f,f,t,883,1233
+duraludon,884,Duraludon,,,base,8,f,f,t,884,1234
+dreepy,885,Dreepy,,,base,8,f,f,t,885,1235
+drakloak,886,Drakloak,,,base,8,f,f,t,886,1236
+dragapult,887,Dragapult,,,base,8,f,f,t,887,1237
+zacian,888,Zacian,Hero of Many Battles,Herói Veterano,base,8,t,f,t,888,1238
+zamazenta,889,Zamazenta,Hero of Many Battles,Herói Veterano,base,8,t,f,t,889,1239
+eternatus,890,Eternatus,,,base,8,t,f,t,890,1240
+kubfu,891,Kubfu,,,base,8,t,f,f,891,1241
+urshifu,892,Urshifu,Single Strike Style,Estilo Golpe Decisivo,base,8,t,f,f,892,1242
+urshifu-rapid-strike,892,Urshifu,Rapid Strike Style,Estilo Golpe Fluido,especial,8,t,f,f,10191,1243
+zarude,893,Zarude,,,base,8,f,t,f,893,1244
+zarude-dada,893,Zarude,Dada,,cosmetica,8,f,t,f,10192,1245
+regieleki,894,Regieleki,,,base,8,t,f,t,894,1246
+regidrago,895,Regidrago,,,base,8,t,f,t,895,1247
+glastrier,896,Glastrier,,,base,8,t,f,f,896,1248
+spectrier,897,Spectrier,,,base,8,t,f,f,897,1249
+calyrex,898,Calyrex,,,base,8,t,f,f,898,1250
+wyrdeer,899,Wyrdeer,,,base,8,f,f,t,899,1251
+kleavor,900,Kleavor,,,base,8,f,f,t,900,1252
+ursaluna,901,Ursaluna,,,base,8,f,f,t,901,1253
+ursaluna-bloodmoon,901,Ursaluna,Bloodmoon,Lua Sangrenta,especial,8,f,f,f,10272,1254
+basculegion,902,Basculegion,Male,,base,8,f,f,t,902,1255
+basculegion-female,902,Basculegion,Female,,genero,8,f,f,t,10248,1256
+sneasler,903,Sneasler,,,base,8,f,f,t,903,1257
+overqwil,904,Overqwil,,,base,8,f,f,t,904,1258
+enamorus,905,Enamorus,Incarnate Forme,Forma Materializada,base,8,t,f,t,905,1259
+enamorus-therian,905,Enamorus,Therian Forme,Forma Therian,especial,8,t,f,t,10249,1260
+sprigatito,906,Sprigatito,,,base,9,f,f,t,906,1261
+floragato,907,Floragato,,,base,9,f,f,t,907,1262
+meowscarada,908,Meowscarada,,,base,9,f,f,t,908,1263
+fuecoco,909,Fuecoco,,,base,9,f,f,t,909,1264
+crocalor,910,Crocalor,,,base,9,f,f,t,910,1265
+skeledirge,911,Skeledirge,,,base,9,f,f,t,911,1266
+quaxly,912,Quaxly,,,base,9,f,f,t,912,1267
+quaxwell,913,Quaxwell,,,base,9,f,f,t,913,1268
+quaquaval,914,Quaquaval,,,base,9,f,f,t,914,1269
+lechonk,915,Lechonk,,,base,9,f,f,t,915,1270
+oinkologne,916,Oinkologne,Male,,base,9,f,f,t,916,1271
+oinkologne-female,916,Oinkologne,Female,,genero,9,f,f,t,10254,1272
+tarountula,917,Tarountula,,,base,9,f,f,t,917,1273
+spidops,918,Spidops,,,base,9,f,f,t,918,1274
+nymble,919,Nymble,,,base,9,f,f,t,919,1275
+lokix,920,Lokix,,,base,9,f,f,t,920,1276
+pawmi,921,Pawmi,,,base,9,f,f,t,921,1277
+pawmo,922,Pawmo,,,base,9,f,f,t,922,1278
+pawmot,923,Pawmot,,,base,9,f,f,t,923,1279
+tandemaus,924,Tandemaus,,,base,9,f,f,t,924,1280
+maushold,925,Maushold,Family of Four,Família Quádrupla,base,9,f,f,t,925,1281
+maushold-family-of-three,925,Maushold,Family of Three,Família Tripla,cosmetica,9,f,f,t,10257,1282
+fidough,926,Fidough,,,base,9,f,f,t,926,1283
+dachsbun,927,Dachsbun,,,base,9,f,f,t,927,1284
+smoliv,928,Smoliv,,,base,9,f,f,t,928,1285
+dolliv,929,Dolliv,,,base,9,f,f,t,929,1286
+arboliva,930,Arboliva,,,base,9,f,f,t,930,1287
+squawkabilly,931,Squawkabilly,Green Plumage,Plumagem Verde,base,9,f,f,t,931,1288
+squawkabilly-blue-plumage,931,Squawkabilly,Blue Plumage,Plumagem Azul,especial,9,f,f,t,10260,1289
+squawkabilly-yellow-plumage,931,Squawkabilly,Yellow Plumage,Plumagem Amarela,especial,9,f,f,t,10261,1290
+squawkabilly-white-plumage,931,Squawkabilly,White Plumage,Plumagem Branca,especial,9,f,f,t,10262,1291
+nacli,932,Nacli,,,base,9,f,f,t,932,1292
+naclstack,933,Naclstack,,,base,9,f,f,t,933,1293
+garganacl,934,Garganacl,,,base,9,f,f,t,934,1294
+charcadet,935,Charcadet,,,base,9,f,f,t,935,1295
+armarouge,936,Armarouge,,,base,9,f,f,t,936,1296
+ceruledge,937,Ceruledge,,,base,9,f,f,t,937,1297
+tadbulb,938,Tadbulb,,,base,9,f,f,t,938,1298
+bellibolt,939,Bellibolt,,,base,9,f,f,t,939,1299
+wattrel,940,Wattrel,,,base,9,f,f,t,940,1300
+kilowattrel,941,Kilowattrel,,,base,9,f,f,t,941,1301
+maschiff,942,Maschiff,,,base,9,f,f,t,942,1302
+mabosstiff,943,Mabosstiff,,,base,9,f,f,t,943,1303
+shroodle,944,Shroodle,,,base,9,f,f,t,944,1304
+grafaiai,945,Grafaiai,,,base,9,f,f,t,945,1305
+bramblin,946,Bramblin,,,base,9,f,f,t,946,1306
+brambleghast,947,Brambleghast,,,base,9,f,f,t,947,1307
+toedscool,948,Toedscool,,,base,9,f,f,t,948,1308
+toedscruel,949,Toedscruel,,,base,9,f,f,t,949,1309
+klawf,950,Klawf,,,base,9,f,f,t,950,1310
+capsakid,951,Capsakid,,,base,9,f,f,t,951,1311
+scovillain,952,Scovillain,,,base,9,f,f,t,952,1312
+rellor,953,Rellor,,,base,9,f,f,t,953,1313
+rabsca,954,Rabsca,,,base,9,f,f,t,954,1314
+flittle,955,Flittle,,,base,9,f,f,t,955,1315
+espathra,956,Espathra,,,base,9,f,f,t,956,1316
+tinkatink,957,Tinkatink,,,base,9,f,f,t,957,1317
+tinkatuff,958,Tinkatuff,,,base,9,f,f,t,958,1318
+tinkaton,959,Tinkaton,,,base,9,f,f,t,959,1319
+wiglett,960,Wiglett,,,base,9,f,f,t,960,1320
+wugtrio,961,Wugtrio,,,base,9,f,f,t,961,1321
+bombirdier,962,Bombirdier,,,base,9,f,f,t,962,1322
+finizen,963,Finizen,,,base,9,f,f,t,963,1323
+palafin,964,Palafin,Zero Form,Forma Zero,base,9,f,f,t,964,1324
+varoom,965,Varoom,,,base,9,f,f,t,965,1325
+revavroom,966,Revavroom,,,base,9,f,f,t,966,1326
+cyclizar,967,Cyclizar,,,base,9,f,f,t,967,1327
+orthworm,968,Orthworm,,,base,9,f,f,t,968,1328
+glimmet,969,Glimmet,,,base,9,f,f,t,969,1329
+glimmora,970,Glimmora,,,base,9,f,f,t,970,1330
+greavard,971,Greavard,,,base,9,f,f,t,971,1331
+houndstone,972,Houndstone,,,base,9,f,f,t,972,1332
+flamigo,973,Flamigo,,,base,9,f,f,t,973,1333
+cetoddle,974,Cetoddle,,,base,9,f,f,t,974,1334
+cetitan,975,Cetitan,,,base,9,f,f,t,975,1335
+veluza,976,Veluza,,,base,9,f,f,t,976,1336
+dondozo,977,Dondozo,,,base,9,f,f,t,977,1337
+tatsugiri,978,Tatsugiri,Curly Form,Forma Curvada,base,9,f,f,t,978,1338
+tatsugiri-droopy,978,Tatsugiri,Droopy Form,Forma Pendular,cosmetica,9,f,f,t,10258,1339
+tatsugiri-stretchy,978,Tatsugiri,Stretchy Form,Forma Estendida,cosmetica,9,f,f,t,10259,1340
+annihilape,979,Annihilape,,,base,9,f,f,t,979,1341
+clodsire,980,Clodsire,,,base,9,f,f,t,980,1342
+farigiraf,981,Farigiraf,,,base,9,f,f,t,981,1343
+dudunsparce,982,Dudunsparce,Two-Segment Form,Forma Bissegmentar,base,9,f,f,t,982,1344
+dudunsparce-three-segment,982,Dudunsparce,Three-Segment Form,Forma Trissegmentar,cosmetica,9,f,f,t,10255,1345
+kingambit,983,Kingambit,,,base,9,f,f,t,983,1346
+great-tusk,984,Great Tusk,,,base,9,f,f,t,984,1347
+scream-tail,985,Scream Tail,,,base,9,f,f,t,985,1348
+brute-bonnet,986,Brute Bonnet,,,base,9,f,f,t,986,1349
+flutter-mane,987,Flutter Mane,,,base,9,f,f,t,987,1350
+slither-wing,988,Slither Wing,,,base,9,f,f,t,988,1351
+sandy-shocks,989,Sandy Shocks,,,base,9,f,f,t,989,1352
+iron-treads,990,Iron Treads,,,base,9,f,f,t,990,1353
+iron-bundle,991,Iron Bundle,,,base,9,f,f,t,991,1354
+iron-hands,992,Iron Hands,,,base,9,f,f,t,992,1355
+iron-jugulis,993,Iron Jugulis,,,base,9,f,f,t,993,1356
+iron-moth,994,Iron Moth,,,base,9,f,f,t,994,1357
+iron-thorns,995,Iron Thorns,,,base,9,f,f,t,995,1358
+frigibax,996,Frigibax,,,base,9,f,f,t,996,1359
+arctibax,997,Arctibax,,,base,9,f,f,t,997,1360
+baxcalibur,998,Baxcalibur,,,base,9,f,f,t,998,1361
+gimmighoul,999,Gimmighoul,Chest Form,,base,9,f,f,t,999,1362
+gimmighoul-roaming,999,Gimmighoul,Roaming Form,,especial,9,f,f,t,10263,1363
+gholdengo,1000,Gholdengo,,,base,9,f,f,t,1000,1364
+wo-chien,1001,Wo-Chien,,,base,9,t,f,t,1001,1365
+chien-pao,1002,Chien-Pao,,,base,9,t,f,t,1002,1366
+ting-lu,1003,Ting-Lu,,,base,9,t,f,t,1003,1367
+chi-yu,1004,Chi-Yu,,,base,9,t,f,t,1004,1368
+roaring-moon,1005,Roaring Moon,,,base,9,f,f,t,1005,1369
+iron-valiant,1006,Iron Valiant,,,base,9,f,f,t,1006,1370
+koraidon,1007,Koraidon,Apex Build,Versão Plena,base,9,t,f,t,1007,1371
+miraidon,1008,Miraidon,Ultimate Mode,Modo Supremo,base,9,t,f,t,1008,1372
+walking-wake,1009,Walking Wake,,,base,9,f,f,f,1009,1373
+iron-leaves,1010,Iron Leaves,,,base,9,f,f,f,1010,1374
+dipplin,1011,Dipplin,,,base,9,f,f,t,1011,1375
+poltchageist,1012,Poltchageist,Counterfeit Form,,base,9,f,f,t,1012,1376
+poltchageist-artisan,1012,Poltchageist,Artisan Form,,cosmetica,9,f,f,t,1012-artisan,1377
+sinistcha,1013,Sinistcha,Unremarkable Form,,base,9,f,f,t,1013,1378
+sinistcha-masterpiece,1013,Sinistcha,Masterpiece Form,,cosmetica,9,f,f,t,1013-masterpiece,1379
+okidogi,1014,Okidogi,,,base,9,t,f,f,1014,1380
+munkidori,1015,Munkidori,,,base,9,t,f,f,1015,1381
+fezandipiti,1016,Fezandipiti,,,base,9,t,f,f,1016,1382
+ogerpon,1017,Ogerpon,Teal Mask,Máscara Turquesa,base,9,t,f,f,1017,1383
+archaludon,1018,Archaludon,,,base,9,f,f,t,1018,1384
+hydrapple,1019,Hydrapple,,,base,9,f,f,t,1019,1385
+gouging-fire,1020,Gouging Fire,,,base,9,f,f,f,1020,1386
+raging-bolt,1021,Raging Bolt,,,base,9,f,f,f,1021,1387
+iron-boulder,1022,Iron Boulder,,,base,9,f,f,f,1022,1388
+iron-crown,1023,Iron Crown,,,base,9,f,f,f,1023,1389
+terapagos,1024,Terapagos,Normal Form,Forma Normal,base,9,t,f,f,1024,1390
+pecharunt,1025,Pecharunt,,,base,9,f,t,f,1025,1391

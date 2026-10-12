@@ -406,6 +406,8 @@ export interface FormaDexDTO {
   numero: number;
   especie: string;
   forma: string | null;
+  /** Nome oficial da forma em português; nulo quando não há (a tela mostra o inglês). */
+  formaPt: string | null;
   categoria: "base" | "regional" | "genero" | "cosmetica" | "especial";
   geracao: number;
   lendario: boolean;

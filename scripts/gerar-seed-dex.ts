@@ -6,10 +6,12 @@
  * (`git clone --depth 1`). Zero requisição de rede: lê arquivo local, como o
  * importador do catálogo de cartas lê o clone da TCGdex.
  *
- * A classificação vive em `lib/dominio/dex-classificacao.ts`. Se a PokeAPI
- * trouxer uma forma que nenhuma regra conhece, ou uma forma sem nome, este
- * script **falha e lista quais são** — e nada é escrito. A decisão de onde a
- * forma entra é de quem mantém o projeto, numa regra nova, nunca do script.
+ * A classificação vive em `lib/dominio/dex-classificacao.ts` e o nome da
+ * forma em português em `lib/dominio/dex-nomes-forma.ts`. Se a PokeAPI
+ * trouxer uma forma que nenhuma regra conhece, uma forma sem nome, ou um nome
+ * de forma que a tabela de nomes em português não conhece, este script
+ * **falha e lista quais são** — e nada é escrito. A decisão é de quem mantém
+ * o projeto, numa regra nova, nunca do script.
  *
  * Depois de regerar: conferir o `git diff seed/dex-forma.csv` (o arquivo não
  * é comprimido para esse diff ser legível) e rodar `pnpm seed:dex`.
@@ -23,8 +25,9 @@ import {
   type FormaPokeapi,
   type PokemonPokeapi,
 } from "../src/lib/dominio/dex-classificacao";
+import { nomeDaFormaPt } from "../src/lib/dominio/dex-nomes-forma";
 import { analisarCsv, type CampoCsv } from "../src/lib/dominio/seed-catalogo";
-import { serializarSeedDex } from "../src/lib/dominio/seed-dex";
+import { serializarSeedDex, type VagaSeedDex } from "../src/lib/dominio/seed-dex";
 
 /** `local_language_id` do inglês na PokeAPI. */
 const IDIOMA_INGLES = "9";
@@ -125,7 +128,7 @@ function main() {
     };
   });
 
-  const { vagas, semClassificacao, semNome } = classificarFormasDex({ formas, pokemons, especies });
+  const { vagas: classificadas, semClassificacao, semNome } = classificarFormasDex({ formas, pokemons, especies });
 
   if (semClassificacao.length > 0 || semNome.length > 0) {
     if (semClassificacao.length > 0) {
@@ -141,6 +144,22 @@ function main() {
     return;
   }
 
+  const semNomePt = new Set<string>();
+  const vagas: VagaSeedDex[] = classificadas.map((v) => {
+    const formaPt = nomeDaFormaPt(v.forma);
+    if (formaPt === undefined) semNomePt.add(v.forma ?? "");
+    return { ...v, formaPt: formaPt ?? null };
+  });
+
+  if (semNomePt.size > 0) {
+    console.error(`Form names with no Portuguese rule (${semNomePt.size}):`);
+    for (const nome of semNomePt) console.error(`  ${nome}`);
+    console.error("\nNothing was written. Add the official name, or list the form as having none, in");
+    console.error("src/lib/dominio/dex-nomes-forma.ts.");
+    process.exitCode = 1;
+    return;
+  }
+
   fs.writeFileSync(ARQUIVO_SAIDA, serializarSeedDex(vagas));
 
   const porCategoria = new Map<string, number>();
@@ -148,6 +167,7 @@ function main() {
   console.log(`gerar:seed-dex — ${vagas.length} slots written to ${ARQUIVO_SAIDA}`);
   for (const [categoria, total] of porCategoria) console.log(`  ${categoria}: ${total}`);
   console.log(`  no shiny released: ${vagas.filter((v) => !v.shinyObtenivel).length}`);
+  console.log(`  with a Portuguese form name: ${vagas.filter((v) => v.formaPt !== null).length}`);
 }
 
 main();
