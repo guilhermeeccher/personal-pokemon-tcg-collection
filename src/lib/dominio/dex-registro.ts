@@ -159,3 +159,87 @@ export function lerDadosRegistro(corpo: unknown): DadosRegistroDex | string {
     notas,
   };
 }
+
+/** Teto por linha do cadastro por jogo: digitar 999 por engano não cria 999 registros. */
+export const MAX_QUANTIDADE_POR_LINHA = 99;
+
+export interface LoteCadastroDex {
+  jogoId: string;
+  itens: { formaId: string; normal: number; shiny: number }[];
+}
+
+/** Lê o corpo do cadastro por jogo; devolve a frase do problema ou o lote. */
+export function lerLoteCadastro(corpo: unknown): LoteCadastroDex | string {
+  if (typeof corpo !== "object" || corpo === null) return "Corpo inválido (objeto esperado).";
+  const c = corpo as { jogoId?: unknown; itens?: unknown };
+  if (typeof c.jogoId !== "string" || c.jogoId === "") return "jogoId ausente ou vazio.";
+  if (!Array.isArray(c.itens) || c.itens.length === 0) return "itens ausente ou vazio.";
+  const itens: LoteCadastroDex["itens"] = [];
+  for (const item of c.itens) {
+    const i = item as { formaId?: unknown; normal?: unknown; shiny?: unknown };
+    const qtd = (v: unknown) => (v === undefined ? 0 : v);
+    const normal = qtd(i?.normal);
+    const shiny = qtd(i?.shiny);
+    if (typeof i?.formaId !== "string" || i.formaId === "") return "item sem formaId.";
+    for (const q of [normal, shiny]) {
+      if (typeof q !== "number" || !Number.isInteger(q) || q < 0 || q > MAX_QUANTIDADE_POR_LINHA) {
+        return `quantidade inválida em ${i.formaId} (inteiro de 0 a ${MAX_QUANTIDADE_POR_LINHA}).`;
+      }
+    }
+    itens.push({ formaId: i.formaId, normal: normal as number, shiny: shiny as number });
+  }
+  return { jogoId: c.jogoId, itens };
+}
+
+/**
+ * Expande o lote em um registro por Pokémon, todos nascidos no jogo e
+ * ainda nele. As recusas vêm juntas; com qualquer uma, nada é gravado.
+ */
+export function expandirLoteCadastro(
+  lote: LoteCadastroDex,
+  ctx: ContextoRegistroDex,
+): { ok: true; registros: DadosRegistroDex[] } | { ok: false; recusas: Recusa[] } {
+  const registros: DadosRegistroDex[] = [];
+  const recusas: Recusa[] = [];
+  const vistas = new Set<string>();
+  for (const item of lote.itens) {
+    for (const [shiny, quantidade] of [
+      [false, item.normal],
+      [true, item.shiny],
+    ] as const) {
+      if (quantidade === 0) continue;
+      const dados: DadosRegistroDex = {
+        formaId: item.formaId,
+        shiny,
+        jogoOrigem: lote.jogoId,
+        local: lote.jogoId,
+        capturadoEm: null,
+        notas: null,
+      };
+      for (const r of validarNovoRegistro(dados, ctx)) {
+        const k = JSON.stringify(r);
+        if (!vistas.has(k)) recusas.push(r);
+        vistas.add(k);
+      }
+      for (let i = 0; i < quantidade; i++) registros.push(dados);
+    }
+  }
+  if (recusas.length > 0) return { ok: false, recusas };
+  return { ok: true, registros };
+}
+
+/**
+ * Valida o envio de vários registros de uma vez ("enviar todas deste jogo").
+ * Recusa de verdade vem primeiro; só depois o pedido de confirmação, uma vez
+ * só para o lote inteiro.
+ */
+export function validarMovimentoEmLote(movimentos: readonly MovimentoDex[], ctx: ContextoRegistroDex): Recusa | null {
+  let confirmacao: Recusa | null = null;
+  for (const m of movimentos) {
+    const r = validarMovimento(m, ctx);
+    if (!r) continue;
+    if (!ehPedidoDeConfirmacao(r)) return r;
+    confirmacao ??= r;
+  }
+  return confirmacao;
+}

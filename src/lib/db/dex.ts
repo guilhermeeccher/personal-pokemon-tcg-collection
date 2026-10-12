@@ -1,25 +1,22 @@
 /**
  * Consultas da Living Dex. Nenhuma toca tabela de cartas.
  */
-import { and, asc, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { asc, eq, inArray, sql } from "drizzle-orm";
 
 import type { CategoriaFormaDex, SecaoLigavel } from "@/lib/dominio/dex-classificacao";
 import { ehJogoDex, jogoDex, ordemJogo } from "@/lib/dominio/dex-jogos";
 import {
   ehPedidoDeConfirmacao,
-  validarMovimento,
+  expandirLoteCadastro,
+  validarMovimentoEmLote,
   validarNovoRegistro,
   type ContextoRegistroDex,
   type DadosRegistroDex,
+  type LoteCadastroDex,
 } from "@/lib/dominio/dex-registro";
 import { resolverSecoes, type SecoesContadas } from "@/lib/dominio/dex-secoes";
 import { recusa, type Recusa } from "@/lib/dominio/recusa";
-import type {
-  FormaDexDTO,
-  JogoPossuidoDTO,
-  RegistroDexDTO,
-  RegistroEstadoDTO,
-} from "@/lib/dominio/tipos-cliente";
+import type { FormaDexDTO, JogoPossuidoDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 
 import type { db as dbPadrao } from "./client";
 import { dexForma, dexJogoPossuido, dexRegistro, dexSecao } from "./schema";
@@ -40,6 +37,7 @@ export async function listarFormasDex(db: Db): Promise<FormaDexDTO[]> {
       mitico: dexForma.mitico,
       shinyObtenivel: dexForma.shinyObtenivel,
       sprite: dexForma.sprite,
+      ordem: dexForma.ordem,
     })
     .from(dexForma)
     .where(eq(dexForma.ativa, true))
@@ -156,129 +154,107 @@ export async function carregarContextoRegistro(db: Db): Promise<ContextoRegistro
   };
 }
 
-/** Todos os registros, só com o que deriva o estado das vagas. */
-export async function listarRegistrosParaEstado(db: Db): Promise<RegistroEstadoDTO[]> {
+/**
+ * Todos os registros, na ordem de entrada. A tela agrupa, filtra e deriva
+ * o estado a partir daqui: são no máximo alguns milhares de linhas curtas,
+ * e uma ida ao banco por filtro custaria mais que a lista inteira.
+ */
+export async function listarRegistrosDex(db: Db): Promise<RegistroDexDTO[]> {
   return db
-    .select({ formaId: dexRegistro.formaId, shiny: dexRegistro.shiny, local: dexRegistro.local })
-    .from(dexRegistro);
-}
-
-const colunasRegistro = {
-  id: dexRegistro.id,
-  formaId: dexRegistro.formaId,
-  numero: dexForma.numero,
-  especie: dexForma.especie,
-  forma: dexForma.forma,
-  sprite: dexForma.sprite,
-  shiny: dexRegistro.shiny,
-  jogoOrigem: dexRegistro.jogoOrigem,
-  local: dexRegistro.local,
-  capturadoEm: dexRegistro.capturadoEm,
-  notas: dexRegistro.notas,
-};
-
-export interface FiltroRegistros {
-  /** `home`, um id de jogo, ou ausente para todos. */
-  local?: string;
-  /** Espécie, forma ou número da Pokédex. */
-  busca?: string;
-  pagina: number;
-  tamanhoPagina: number;
-}
-
-/** Registros mais recentes primeiro, paginados. */
-export async function listarRegistros(
-  db: Db,
-  filtro: FiltroRegistros,
-): Promise<{ itens: RegistroDexDTO[]; total: number }> {
-  const condicoes = [];
-  if (filtro.local) condicoes.push(eq(dexRegistro.local, filtro.local));
-  const busca = filtro.busca?.trim();
-  if (busca) {
-    const numero = /^#?\d+$/.test(busca) ? Number(busca.replace("#", "")) : null;
-    condicoes.push(
-      numero !== null
-        ? eq(dexForma.numero, numero)
-        : or(ilike(dexForma.especie, `%${busca}%`), ilike(dexForma.forma, `%${busca}%`))!,
-    );
-  }
-  const onde = condicoes.length > 0 ? and(...condicoes) : undefined;
-
-  const [itens, [{ total }]] = await Promise.all([
-    db
-      .select(colunasRegistro)
-      .from(dexRegistro)
-      .innerJoin(dexForma, eq(dexForma.id, dexRegistro.formaId))
-      .where(onde)
-      .orderBy(desc(dexRegistro.criadoEm), desc(dexRegistro.id))
-      .limit(filtro.tamanhoPagina)
-      .offset((filtro.pagina - 1) * filtro.tamanhoPagina),
-    db
-      .select({ total: sql<number>`count(*)::int` })
-      .from(dexRegistro)
-      .innerJoin(dexForma, eq(dexForma.id, dexRegistro.formaId))
-      .where(onde),
-  ]);
-  return { itens, total };
-}
-
-export async function criarRegistro(
-  db: Db,
-  dados: DadosRegistroDex,
-): Promise<{ ok: true; id: string } | { ok: false; recusas: Recusa[] }> {
-  const recusas = validarNovoRegistro(dados, await carregarContextoRegistro(db));
-  if (recusas.length > 0) return { ok: false, recusas };
-  const [linha] = await db.insert(dexRegistro).values(dados).returning({ id: dexRegistro.id });
-  return { ok: true, id: linha.id };
+    .select({
+      id: dexRegistro.id,
+      formaId: dexRegistro.formaId,
+      shiny: dexRegistro.shiny,
+      jogoOrigem: dexRegistro.jogoOrigem,
+      local: dexRegistro.local,
+      capturadoEm: dexRegistro.capturadoEm,
+      notas: dexRegistro.notas,
+    })
+    .from(dexRegistro)
+    .orderBy(asc(dexRegistro.criadoEm), asc(dexRegistro.id));
 }
 
 /**
- * Corrige os dados de um registro (forma, shiny, origem, data, notas). O
- * local não muda por aqui — mover é `moverRegistro`, que tem as regras de
- * ida e volta. A correção é validada como um registro novo no mesmo local.
+ * Cadastro por jogo: grava o lote inteiro numa transação, um registro por
+ * Pokémon. Qualquer recusa recusa o lote, e nada é gravado.
  */
-export async function corrigirRegistro(
+export async function criarRegistrosEmLote(
   db: Db,
-  id: string,
+  lote: LoteCadastroDex,
+): Promise<{ ok: true; criados: number } | { ok: false; recusas: Recusa[] }> {
+  const r = expandirLoteCadastro(lote, await carregarContextoRegistro(db));
+  if (!r.ok) return r;
+  if (r.registros.length === 0) return { ok: true, criados: 0 };
+  await db.transaction(async (tx) => {
+    for (let i = 0; i < r.registros.length; i += 500) {
+      await tx.insert(dexRegistro).values(r.registros.slice(i, i + 500));
+    }
+  });
+  return { ok: true, criados: r.registros.length };
+}
+
+/** Os registros pedidos, todos existentes, ou `null`. */
+async function lerRegistros(db: Db, ids: readonly string[]) {
+  if (ids.length === 0) return null;
+  const linhas = await db
+    .select({ id: dexRegistro.id, local: dexRegistro.local, jogoOrigem: dexRegistro.jogoOrigem })
+    .from(dexRegistro)
+    .where(inArray(dexRegistro.id, [...ids]));
+  return linhas.length === new Set(ids).size ? linhas : null;
+}
+
+/**
+ * Corrige um grupo do inventário (forma, shiny, origem, data, notas). O
+ * local não muda por aqui, e por isso não é reavaliado: um Pokémon num jogo
+ * marcado como parado continua corrigível — o jogo entra no contexto como
+ * ativo só para esta validação.
+ */
+export async function corrigirRegistros(
+  db: Db,
+  ids: readonly string[],
   dados: Omit<DadosRegistroDex, "local">,
 ): Promise<{ ok: true } | { ok: false; recusas: Recusa[]; status: number }> {
-  const [atual] = await db.select({ local: dexRegistro.local }).from(dexRegistro).where(eq(dexRegistro.id, id));
-  if (!atual) return { ok: false, recusas: [recusa("dexRegistroNaoEncontrado")], status: 404 };
-  // O local não muda numa correção, então ele não é reavaliado: um Pokémon
-  // num jogo marcado como parado continua corrigível. O jogo entra no
-  // contexto como se estivesse ativo só para esta validação.
+  const atuais = await lerRegistros(db, ids);
+  if (!atuais) return { ok: false, recusas: [recusa("dexRegistroNaoEncontrado")], status: 404 };
   const ctx = await carregarContextoRegistro(db);
-  const recusas = validarNovoRegistro(
-    { ...dados, local: atual.local },
-    { ...ctx, jogosAtivos: new Set([...ctx.jogosAtivos, atual.local]) },
-  );
-  if (recusas.length > 0) return { ok: false, recusas, status: 400 };
-  await db.update(dexRegistro).set({ ...dados, atualizadoEm: new Date() }).where(eq(dexRegistro.id, id));
+  const recusas = new Map<string, Recusa>();
+  for (const atual of atuais) {
+    const ctxDoRegistro = { ...ctx, jogosAtivos: new Set([...ctx.jogosAtivos, atual.local]) };
+    for (const r of validarNovoRegistro({ ...dados, local: atual.local }, ctxDoRegistro)) {
+      recusas.set(JSON.stringify(r), r);
+    }
+  }
+  if (recusas.size > 0) return { ok: false, recusas: [...recusas.values()], status: 400 };
+  await db
+    .update(dexRegistro)
+    .set({ ...dados, atualizadoEm: new Date() })
+    .where(inArray(dexRegistro.id, [...ids]));
   return { ok: true };
 }
 
 /**
- * Move um registro para o HOME ou para outro jogo. `dexConfirmarSemVolta`
- * volta como 409 até a tela reenviar com a confirmação.
+ * Move um ou mais registros para o HOME ou para outro jogo, numa transação.
+ * Sair de jogo só de envio volta 409 (`dexConfirmarSemVolta`), uma vez para
+ * o lote inteiro, até a tela reenviar com a confirmação.
  */
-export async function moverRegistro(
+export async function moverRegistros(
   db: Db,
-  id: string,
+  ids: readonly string[],
   novoLocal: string,
   confirmarSemVolta: boolean,
-): Promise<{ ok: true } | { ok: false; motivo: Recusa; status: number }> {
-  const [atual] = await db
-    .select({ local: dexRegistro.local, jogoOrigem: dexRegistro.jogoOrigem })
-    .from(dexRegistro)
-    .where(eq(dexRegistro.id, id));
-  if (!atual) return { ok: false, motivo: recusa("dexRegistroNaoEncontrado"), status: 404 };
-  const motivo = validarMovimento(
-    { jogoOrigem: atual.jogoOrigem, localAtual: atual.local, novoLocal, confirmarSemVolta },
+): Promise<{ ok: true; movidos: number } | { ok: false; motivo: Recusa; status: number }> {
+  const atuais = await lerRegistros(db, ids);
+  if (!atuais) return { ok: false, motivo: recusa("dexRegistroNaoEncontrado"), status: 404 };
+  const motivo = validarMovimentoEmLote(
+    atuais.map((a) => ({ jogoOrigem: a.jogoOrigem, localAtual: a.local, novoLocal, confirmarSemVolta })),
     await carregarContextoRegistro(db),
   );
   if (motivo) return { ok: false, motivo, status: ehPedidoDeConfirmacao(motivo) ? 409 : 400 };
-  await db.update(dexRegistro).set({ local: novoLocal, atualizadoEm: new Date() }).where(eq(dexRegistro.id, id));
-  return { ok: true };
+  await db
+    .update(dexRegistro)
+    .set({ local: novoLocal, atualizadoEm: new Date() })
+    .where(inArray(dexRegistro.id, [...ids]));
+  return { ok: true, movidos: atuais.length };
 }
 
 export async function removerRegistro(db: Db, id: string): Promise<boolean> {

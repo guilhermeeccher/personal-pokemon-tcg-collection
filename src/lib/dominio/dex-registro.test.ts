@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   ehPedidoDeConfirmacao,
+  expandirLoteCadastro,
   lerDadosRegistro,
+  lerLoteCadastro,
   validarMovimento,
+  validarMovimentoEmLote,
   validarNovoRegistro,
   type DadosRegistroDex,
 } from "./dex-registro";
@@ -149,5 +152,61 @@ describe("lerDadosRegistro", () => {
     expect(lerDadosRegistro({ formaId: "bulbasaur", shiny: "sim", jogoOrigem: "go", local: "go" })).toMatch(/shiny/);
     expect(lerDadosRegistro({ shiny: false })).toMatch(/formaId/);
     expect(lerDadosRegistro(null)).toMatch(/Corpo/);
+  });
+});
+
+describe("cadastro por jogo", () => {
+  it("expande quantidades em um registro por Pokémon, nascido e mantido no jogo", () => {
+    const lote = lerLoteCadastro({ jogoId: "firered", itens: [{ formaId: "bulbasaur", normal: 2, shiny: 1 }] });
+    if (typeof lote === "string") throw new Error(lote);
+    const r = expandirLoteCadastro(lote, ctx);
+    expect(r.ok && r.registros.map((x) => [x.formaId, x.shiny, x.local])).toEqual([
+      ["bulbasaur", false, "firered"],
+      ["bulbasaur", false, "firered"],
+      ["bulbasaur", true, "firered"],
+    ]);
+  });
+
+  it("jogo que o usuário não tem recusa o lote inteiro, com a recusa uma vez só", () => {
+    const lote = lerLoteCadastro({
+      jogoId: "violet",
+      itens: [
+        { formaId: "bulbasaur", normal: 1 },
+        { formaId: "pikachu", normal: 3 },
+      ],
+    });
+    if (typeof lote === "string") throw new Error(lote);
+    const r = expandirLoteCadastro(lote, ctx);
+    expect(r.ok).toBe(false);
+    expect(!r.ok && r.recusas.map((x) => x.chave)).toEqual(["dexLocalNaoPossuido"]);
+  });
+
+  it("recusa quantidade fora de 0 a 99", () => {
+    expect(lerLoteCadastro({ jogoId: "go", itens: [{ formaId: "pikachu", normal: 100 }] })).toMatch(/quantidade/);
+    expect(lerLoteCadastro({ jogoId: "go", itens: [{ formaId: "pikachu", normal: 1.5 }] })).toMatch(/quantidade/);
+  });
+});
+
+describe("validarMovimentoEmLote", () => {
+  it("pede confirmação uma vez para o lote que sai de jogo só de envio", () => {
+    const r = validarMovimentoEmLote(
+      [
+        { jogoOrigem: "firered", localAtual: "firered", novoLocal: "home", confirmarSemVolta: false },
+        { jogoOrigem: "firered", localAtual: "firered", novoLocal: "home", confirmarSemVolta: false },
+      ],
+      ctx,
+    );
+    expect(ehPedidoDeConfirmacao(r)).toBe(true);
+  });
+
+  it("recusa de verdade vence o pedido de confirmação", () => {
+    const r = validarMovimentoEmLote(
+      [
+        { jogoOrigem: "firered", localAtual: "firered", novoLocal: "home", confirmarSemVolta: false },
+        { jogoOrigem: "firered", localAtual: "home", novoLocal: "firered", confirmarSemVolta: false },
+      ],
+      ctx,
+    );
+    expect(r?.chave).toBe("dexNadaEntraEmSoEnvio");
   });
 });
