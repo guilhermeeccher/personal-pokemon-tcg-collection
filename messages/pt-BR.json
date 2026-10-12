@@ -12,7 +12,8 @@
     "grupos": {
       "cadastro": "Cadastro",
       "inventario": "Inventário",
-      "colecoes": "Coleções"
+      "colecoes": "Coleções",
+      "livingDex": "Living Dex"
     },
     "itens": {
       "porSet": "Por set",
@@ -21,7 +22,8 @@
       "inventario": "Inventário",
       "repetidas": "Repetidas",
       "colecoes": "Coleções",
-      "precos": "Preços"
+      "precos": "Preços",
+      "pokedex": "Pokédex"
     }
   },
   "seletorLocale": {
@@ -843,5 +845,39 @@
     "semCartasEspeciais": "Nenhuma carta especial (todas menos comum e incomum) no inventário para consultar.",
     "rodadaDePrecoNaoEncontrada": "Pesquisa de preços não encontrada.",
     "rodadaDePrecoEmAndamento": "Esta pesquisa ainda está em andamento. Espere ela terminar para excluir."
+  },
+  "dex": {
+    "categoria": {
+      "base": "Base",
+      "regional": "Regional",
+      "genero": "Gênero",
+      "cosmetica": "Cosmética",
+      "especial": "Especial"
+    },
+    "trilha": {
+      "normal": "Normal",
+      "shiny": "Shiny"
+    },
+    "erroSalvarSecao": "Não foi possível salvar a seção. Tente de novo.",
+    "pokedex": {
+      "titulo": "Pokédex",
+      "descricao": "Todas as vagas do Pokémon HOME: uma por espécie e por forma que o HOME guarda, nas trilhas normal e shiny.",
+      "totalNormal": "Vagas na trilha normal:",
+      "totalShiny": "Vagas na trilha shiny:",
+      "secoesQueContam": "Seções que contam no progresso",
+      "baseSempre": "A base conta sempre.",
+      "secoesAjuda": "A base conta sempre. Uma seção desligada continua na grade, marcada como fora da conta; ligar ou desligar não mexe em nenhum registro.",
+      "trilha": "Trilha",
+      "regiao": "Região",
+      "todas": "Todas",
+      "buscar": "Buscar",
+      "placeholderBuscar": "Nome, forma ou número",
+      "secao": "Seção",
+      "exibindo": "{exibidas} vaga(s) exibida(s), {contam} contam nesta trilha",
+      "semShiny": "Sem shiny",
+      "foraDaConta": "Fora da conta",
+      "catalogoVazio": "O catálogo da Living Dex está vazio. Rode pnpm seed:dex com o módulo ligado.",
+      "nadaEncontrado": "Nenhuma vaga com esses filtros."
+    }
   }
 }

@@ -3,8 +3,9 @@
  * trilha da barra superior (`TopBar`) — as duas precisam responder "onde
  * eu estou" a partir do mesmo mapa, e duplicá-lo faria as duas divergirem.
  *
- * Nenhuma rota nova: são exatamente os itens que a navegação já tinha, com
- * um glifo Lucide cada, como o design system pede.
+ * Cada item tem um glifo Lucide, como o design system pede. O grupo da
+ * Living Dex só aparece com o módulo ligado (`lib/modulos.ts`): quem decide
+ * é o layout, no servidor, e passa a escolha para a `Nav` (`gruposDaNav`).
  */
 
 import type { NomeIcone } from "./icone";
@@ -49,7 +50,21 @@ export const GRUPOS: readonly GrupoNav[] = [
   },
 ] as const;
 
-const TODOS_ITENS = GRUPOS.flatMap((g) => g.itens);
+/** Módulo opcional (`MODULO_LIVING_DEX=1`), depois de Coleções. */
+export const GRUPO_LIVING_DEX: GrupoNav = {
+  chaveTitulo: "grupos.livingDex",
+  itens: [{ href: "/dex/pokedex", chaveLabel: "itens.pokedex", icone: "book-open" }],
+};
+
+/** Os grupos que a barra lateral mostra, conforme os módulos ligados. */
+export function gruposDaNav(livingDex: boolean): readonly GrupoNav[] {
+  return livingDex ? [...GRUPOS, GRUPO_LIVING_DEX] : GRUPOS;
+}
+
+/* A busca do item ativo olha todos os grupos, inclusive os de módulo: com o
+   módulo desligado as rotas dele dão 404 e nunca chegam a acender nada. */
+const TODOS_GRUPOS: readonly GrupoNav[] = [...GRUPOS, GRUPO_LIVING_DEX];
+const TODOS_ITENS = TODOS_GRUPOS.flatMap((g) => g.itens);
 
 /**
  * Item ativo = o href de maior comprimento que é prefixo do caminho
@@ -70,7 +85,7 @@ export function encontrarAtivo(pathname: string): ItemNav | null {
 
 /** Grupo a que um item pertence — a primeira parte da trilha da TopBar. */
 export function grupoDoItem(item: ItemNav): GrupoNav | null {
-  return GRUPOS.find((g) => g.itens.includes(item)) ?? null;
+  return TODOS_GRUPOS.find((g) => g.itens.includes(item)) ?? null;
 }
 
 /** As onze cores de tipo, na fileira de pontos do rodapé da lombada. */

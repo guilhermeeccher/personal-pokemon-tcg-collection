@@ -4,6 +4,8 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import "./globals.css";
 
+import { moduloLivingDexAtivo } from "@/lib/modulos";
+
 import { Nav } from "./_componentes/nav";
 import { TopBar } from "./_componentes/topbar";
 
@@ -62,7 +64,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         {/* O provider entrega locale e catálogo aos componentes de cliente;
             em componente de servidor eles já vêm do `getRequestConfig`. */}
         <NextIntlClientProvider>
-          <Nav />
+          {/* A flag é lida aqui, no servidor, a cada requisição — a Nav é
+              componente de cliente e não enxerga o `.env`. */}
+          <Nav livingDex={moduloLivingDexAtivo()} />
           <div className="flex min-w-0 flex-1 flex-col md:h-full">
             <TopBar />
             <div className="min-h-0 flex-1 md:overflow-y-auto">{children}</div>

@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Icone } from "./icone";
-import { ENERGIAS, GRUPOS, encontrarAtivo, type ItemNav } from "./nav-estrutura";
+import { ENERGIAS, encontrarAtivo, gruposDaNav, type GrupoNav, type ItemNav } from "./nav-estrutura";
 import { SeletorLocale } from "./seletor-locale";
 
 /**
@@ -23,11 +23,19 @@ import { SeletorLocale } from "./seletor-locale";
  * funcionando, só que agora também em ameixa.
  */
 
-function ListaGrupos({ ativo, onNavegar }: { ativo: ItemNav | null; onNavegar?: () => void }) {
+function ListaGrupos({
+  grupos,
+  ativo,
+  onNavegar,
+}: {
+  grupos: readonly GrupoNav[];
+  ativo: ItemNav | null;
+  onNavegar?: () => void;
+}) {
   const t = useTranslations("nav");
   return (
     <div className="flex flex-col gap-5">
-      {GRUPOS.map((grupo) => (
+      {grupos.map((grupo) => (
         <div key={grupo.chaveTitulo} className="flex flex-col gap-0.5">
           <span className="eyebrow px-3 pb-1 text-invert-muted">{t(grupo.chaveTitulo)}</span>
           {grupo.itens.map((item) => {
@@ -87,10 +95,11 @@ function PontosDeEnergia() {
   );
 }
 
-export function Nav() {
+export function Nav({ livingDex }: { livingDex: boolean }) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const ativo = encontrarAtivo(pathname);
+  const grupos = gruposDaNav(livingDex);
   const [aberto, setAberto] = useState(false);
 
   return (
@@ -110,7 +119,7 @@ export function Nav() {
       </header>
       {aberto && (
         <nav className="flex flex-col gap-5 border-b border-shell-line bg-shell px-2 py-3 md:hidden">
-          <ListaGrupos ativo={ativo} onNavegar={() => setAberto(false)} />
+          <ListaGrupos grupos={grupos} ativo={ativo} onNavegar={() => setAberto(false)} />
           <SeletorLocale />
         </nav>
       )}
@@ -122,7 +131,7 @@ export function Nav() {
           <Marca />
         </div>
         <nav className="min-h-0 flex-1 overflow-y-auto">
-          <ListaGrupos ativo={ativo} />
+          <ListaGrupos grupos={grupos} ativo={ativo} />
         </nav>
         <SeletorLocale />
         <PontosDeEnergia />

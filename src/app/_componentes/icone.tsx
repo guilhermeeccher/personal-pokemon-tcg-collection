@@ -19,6 +19,7 @@
  */
 
 import {
+  BookOpen,
   ChartPie,
   ChevronRight,
   Circle,
@@ -38,6 +39,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 
 const ICONES = {
+  "book-open": BookOpen,
   "chart-pie": ChartPie,
   "chevron-right": ChevronRight,
   circle: Circle,

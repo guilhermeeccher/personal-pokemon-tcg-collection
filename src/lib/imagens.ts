@@ -36,5 +36,19 @@ export function urlImagemCarta(
 export function urlSpritePokemon(numeroVaga: string): string | null {
   const n = Number(numeroVaga);
   if (!Number.isInteger(n) || n < 1) return null;
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${n}.png`;
+  return `${BASE_SPRITES_POKEMON}/${n}.png`;
+}
+
+const BASE_SPRITES_POKEMON = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
+
+/**
+ * Sprite de uma vaga da Living Dex (`dex_forma.sprite`: `25`, `201-b`,
+ * `female/25`). Os mesmos sprites pequenos de cima, não o render do HOME:
+ * a grade mostra centenas de vagas por vez, e o render do HOME tem ~80 KB
+ * por imagem contra ~0,6 KB destes. A versão shiny mora em `shiny/`, com a
+ * mesma subpasta `female/`. Cobertura conferida contra a árvore do
+ * repositório de sprites em 2026-10-11: as 1.391 vagas têm as duas.
+ */
+export function urlSpriteDex(sprite: string, shiny: boolean): string {
+  return `${BASE_SPRITES_POKEMON}/${shiny ? "shiny/" : ""}${sprite}.png`;
 }

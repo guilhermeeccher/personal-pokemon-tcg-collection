@@ -12,7 +12,8 @@
     "grupos": {
       "cadastro": "Add cards",
       "inventario": "Inventory",
-      "colecoes": "Collections"
+      "colecoes": "Collections",
+      "livingDex": "Living Dex"
     },
     "itens": {
       "porSet": "By set",
@@ -21,7 +22,8 @@
       "inventario": "Inventory",
       "repetidas": "Duplicates",
       "colecoes": "Collections",
-      "precos": "Prices"
+      "precos": "Prices",
+      "pokedex": "Pokédex"
     }
   },
   "seletorLocale": {
@@ -843,5 +845,39 @@
     "semCartasEspeciais": "No special card (all but common and uncommon) in the inventory to look up.",
     "rodadaDePrecoNaoEncontrada": "Price lookup not found.",
     "rodadaDePrecoEmAndamento": "This lookup is still running. Wait for it to finish before deleting it."
+  },
+  "dex": {
+    "categoria": {
+      "base": "Base",
+      "regional": "Regional",
+      "genero": "Gender",
+      "cosmetica": "Cosmetic",
+      "especial": "Special"
+    },
+    "trilha": {
+      "normal": "Normal",
+      "shiny": "Shiny"
+    },
+    "erroSalvarSecao": "Could not save the section. Try again.",
+    "pokedex": {
+      "titulo": "Pokédex",
+      "descricao": "Every Pokémon HOME slot: one per species and per form HOME stores, in the normal and shiny tracks.",
+      "totalNormal": "Slots in the normal track:",
+      "totalShiny": "Slots in the shiny track:",
+      "secoesQueContam": "Sections that count toward progress",
+      "baseSempre": "Base always counts.",
+      "secoesAjuda": "Base always counts. A section that is off stays in the grid, marked as not counted; turning it on or off does not touch any record.",
+      "trilha": "Track",
+      "regiao": "Region",
+      "todas": "All",
+      "buscar": "Search",
+      "placeholderBuscar": "Name, form or number",
+      "secao": "Section",
+      "exibindo": "{exibidas} slot(s) shown, {contam} count in this track",
+      "semShiny": "No shiny",
+      "foraDaConta": "Not counted",
+      "catalogoVazio": "The Living Dex catalog is empty. Run pnpm seed:dex with the module on.",
+      "nadaEncontrado": "No slot matches these filters."
+    }
   }
 }

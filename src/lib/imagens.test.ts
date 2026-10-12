@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { urlImagemCarta, urlSpritePokemon } from "./imagens";
+import { urlImagemCarta, urlSpriteDex, urlSpritePokemon } from "./imagens";
 
 describe("urlImagemCarta", () => {
   it("acrescenta qualidade e formato às URLs do CDN da TCGdex", () => {
@@ -41,5 +41,12 @@ describe("urlSpritePokemon", () => {
   it("recusa número inválido em vez de montar URL quebrada", () => {
     expect(urlSpritePokemon("abc")).toBeNull();
     expect(urlSpritePokemon("0")).toBeNull();
+  });
+});
+
+describe("urlSpriteDex", () => {
+  it("monta a URL normal e a shiny, com a subpasta da fêmea dentro de shiny/", () => {
+    expect(urlSpriteDex("201-b", false)).toMatch(/\/sprites\/pokemon\/201-b\.png$/);
+    expect(urlSpriteDex("female/25", true)).toMatch(/\/sprites\/pokemon\/shiny\/female\/25\.png$/);
   });
 });

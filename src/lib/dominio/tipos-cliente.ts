@@ -399,3 +399,17 @@ export interface MelhoriaDaVagaDTO {
   /** Da melhor para a pior. Nunca vazia — vaga sem melhoria não entra na lista. */
   candidatas: CandidataMelhoriaDTO[];
 }
+
+/** Uma vaga da Living Dex, como a grade da Pokédex recebe (`dex_forma` ativa). */
+export interface FormaDexDTO {
+  id: string;
+  numero: number;
+  especie: string;
+  forma: string | null;
+  categoria: "base" | "regional" | "genero" | "cosmetica" | "especial";
+  geracao: number;
+  lendario: boolean;
+  mitico: boolean;
+  shinyObtenivel: boolean;
+  sprite: string;
+}
