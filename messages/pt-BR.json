@@ -1117,7 +1117,17 @@
       "nadaPego": "Nada pego neste jogo ainda",
       "pegasNoHome": "Pegas neste jogo: {noHome} de {pegas} já no HOME",
       "faltamAgora": "{faltam} pegáveis agora",
-      "trancadasAtras": "{vagas} atrás de {trofeu}"
+      "trancadasAtras": "{vagas} atrás de {trofeu}",
+      "chegaram": "Chegaram ao HOME",
+      "pegueAgora": "Pegue agora",
+      "pegueAgoraDica": "Faltam no HOME e seus jogos alcançam hoje, sem troca nem evento.",
+      "conquistas": "Conquistas",
+      "estante": "Estante",
+      "proximoTrofeu": "Próximo troféu do HOME",
+      "todosDoHome": "Todos os troféus do HOME conquistados.",
+      "ultimasConquistas": "Últimas conquistas",
+      "nenhumaConquista": "Nenhum troféu conquistado ainda.",
+      "regiaoLinha": "{normal} no HOME · shiny {shiny}"
     }
   }
 }

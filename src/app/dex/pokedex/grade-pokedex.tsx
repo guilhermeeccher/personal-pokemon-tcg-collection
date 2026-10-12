@@ -43,6 +43,7 @@ import { NOME_REGIAO, REGIOES, type Regiao } from "@/lib/dominio/escopo-pokedex"
 import type { FormaDexDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 import { urlSpriteDex } from "@/lib/imagens";
 
+import { useCartaoPokemon } from "../_componentes/cartao-pokemon";
 import { useRotuloForma } from "../_componentes/use-rotulo-forma";
 import { PainelOportunidades } from "./painel-oportunidades";
 
@@ -72,6 +73,7 @@ export function GradePokedex({
 }) {
   const t = useTranslations("dex");
   const rotulo = useRotuloForma(formas);
+  const { abrir, fechar, cartao } = useCartaoPokemon();
   const [secoes, setSecoes] = useState<SecoesContadas>(secoesIniciais);
   const [salvando, setSalvando] = useState<SecaoLigavel | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -290,8 +292,20 @@ export function GradePokedex({
               >
                 <Link
                   href={`/dex/cadastrar?busca=${f.numero}`}
-                  title={t("pokedex.registrarEsta")}
-                  className="flex h-full flex-col items-center gap-1 p-2 text-center"
+                  aria-label={`${rotulo.nome(f)} — ${t("pokedex.registrarEsta")}`}
+                  className="group flex h-full flex-col items-center gap-1 p-2 text-center"
+                  onMouseEnter={abrir({
+                    sprite: f.sprite,
+                    shiny: trilha === "shiny",
+                    nome: rotulo.nome(f),
+                    linhas: [
+                      t(`estado.${estado}`),
+                      ...(naCaixa
+                        ? [t("pokedex.posicaoNaCaixa", { caixa: String(naCaixa.caixa), posicao: String(naCaixa.posicao) })]
+                        : []),
+                    ],
+                  })}
+                  onMouseLeave={fechar}
                 >
                 {/* eslint-disable-next-line @next/next/no-img-element -- sprite externo pequeno (PokeAPI, pixel art ~0,6 KB), centenas por tela; mesma convenção da vaga vazia de Pokédex. */}
                 <img
@@ -300,7 +314,7 @@ export function GradePokedex({
                   width={72}
                   height={72}
                   loading="lazy"
-                  className={semShiny || estado === "falta" ? "opacity-40 grayscale" : ""}
+                  className={`[transition:transform_200ms,filter_200ms,opacity_200ms] group-hover:scale-110 ${semShiny || estado === "falta" ? "opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0" : ""}`}
                   style={{ imageRendering: "pixelated" }}
                 />
                 <span className="font-mono text-xs tabular-nums text-muted">
@@ -327,6 +341,7 @@ export function GradePokedex({
           })}
         </ul>
       )}
+      {cartao}
     </main>
   );
 }

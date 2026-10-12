@@ -52,3 +52,12 @@ const BASE_SPRITES_POKEMON = "https://raw.githubusercontent.com/PokeAPI/sprites/
 export function urlSpriteDex(sprite: string, shiny: boolean): string {
   return `${BASE_SPRITES_POKEMON}/${shiny ? "shiny/" : ""}${sprite}.png`;
 }
+
+/**
+ * Render do HOME da vaga (~80 KB, 512 px): só onde a imagem é grande — a
+ * vitrine, o cartão do jogo, o cartão que abre ao parar o mouse num sprite.
+ * Mesmo caminho do sprite pequeno (`female/25`, `201-b`), na pasta `other/home`.
+ */
+export function urlRenderHomeDex(sprite: string, shiny: boolean): string {
+  return `${BASE_SPRITES_POKEMON}/other/home/${shiny ? "shiny/" : ""}${sprite}.png`;
+}

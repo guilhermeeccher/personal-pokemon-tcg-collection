@@ -1117,7 +1117,17 @@
       "nadaPego": "Nothing caught in this game yet",
       "pegasNoHome": "Caught in this game: {noHome} of {pegas} already in HOME",
       "faltamAgora": "{faltam} catchable now",
-      "trancadasAtras": "{vagas} behind {trofeu}"
+      "trancadasAtras": "{vagas} behind {trofeu}",
+      "chegaram": "Just arrived in HOME",
+      "pegueAgora": "Catch now",
+      "pegueAgoraDica": "Missing from HOME and reachable in your games today, no trade or event.",
+      "conquistas": "Achievements",
+      "estante": "Trophy shelf",
+      "proximoTrofeu": "Next HOME trophy",
+      "todosDoHome": "Every HOME trophy earned.",
+      "ultimasConquistas": "Latest trophies",
+      "nenhumaConquista": "No trophy earned yet.",
+      "regiaoLinha": "{normal} in HOME · shiny {shiny}"
     }
   }
 }

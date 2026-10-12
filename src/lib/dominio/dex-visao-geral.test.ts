@@ -6,7 +6,16 @@ import { describe, expect, it } from "vitest";
 import { mapearEstadosDex } from "./dex-estado";
 import { resolverSecoes } from "./dex-secoes";
 import { lerSeedTrofeus } from "./dex-trofeus";
-import { progressoDoJogo, progressoPorRegiao } from "./dex-visao-geral";
+import { CAPA_DO_JOGO } from "./dex-capas";
+import { JOGOS_DEX } from "./dex-jogos";
+import {
+  estanteDeTrofeus,
+  pegueAgora,
+  progressoDoJogo,
+  progressoPorRegiao,
+  ultimasConquistas,
+  ultimosNoHome,
+} from "./dex-visao-geral";
 import { lerRegistrosCsv } from "./seed-catalogo";
 import { COLUNAS_DEX_FORMA, converterLinhaDexForma } from "./seed-dex";
 
@@ -53,5 +62,55 @@ describe("visão geral da Living Dex", () => {
     expect(regioes[0].progresso.normal.noHome).toBe(2);
     const contam = regioes.reduce((s, r) => s + r.progresso.normal.contam, 0);
     expect(contam).toBe(formas.filter((f) => f.categoria !== "cosmetica").length);
+  });
+
+  it("últimos no HOME: mais recente primeiro, sem repetir vaga e trilha", () => {
+    const r = ultimosNoHome(
+      [
+        { formaId: "bulbasaur", shiny: false, local: "home", atualizadoEm: "2026-10-12T10:00:00Z" },
+        { formaId: "pidgey", shiny: false, local: "home", atualizadoEm: "2026-10-12T12:00:00Z" },
+        { formaId: "bulbasaur", shiny: false, local: "home", atualizadoEm: "2026-10-12T11:00:00Z" },
+        { formaId: "bulbasaur", shiny: true, local: "home", atualizadoEm: "2026-10-12T09:00:00Z" },
+        { formaId: "charmander", shiny: false, local: "firered", atualizadoEm: "2026-10-12T13:00:00Z" },
+      ],
+      3,
+    );
+    expect(r).toEqual([
+      { formaId: "pidgey", shiny: false },
+      { formaId: "bulbasaur", shiny: false },
+      { formaId: "bulbasaur", shiny: true },
+    ]);
+  });
+
+  it("pegue agora: o que falta e o jogo alcança sem troca, evento nem checkpoint pendente", () => {
+    const r = pegueAgora(["firered"], formas, mapa, todas, trofeus, new Set(), 3);
+    expect(r.map((x) => x.formaId)).toEqual(["ivysaur", "venusaur", "venusaur-femea"]);
+    expect(r.every((x) => x.jogoId === "firered")).toBe(true);
+    // Lugia no FireRed é livre, mas trancado: só aparece com os checkpoints.
+    const todos = pegueAgora(["firered"], formas, mapa, todas, trofeus, new Set(), 2000).map((x) => x.formaId);
+    expect(todos).not.toContain("lugia");
+    expect(todos).not.toContain("bulbasaur");
+  });
+
+  it("estante e últimas conquistas", () => {
+    const x = (id: string, jogoId: string, nivel: "bronze" | "prata" | "ouro", em: string | null | undefined, ordem = 1) => ({
+      id,
+      jogoId,
+      nivel,
+      ordem,
+      obtido: em === undefined ? null : { em },
+    });
+    const lista = [
+      x("a1", "a", "ouro", "2026-10-10"),
+      x("a2", "a", "bronze", "2026-10-12"),
+      x("b1", "b", "prata", undefined),
+      x("h1", "home", "bronze", null),
+    ];
+    expect(estanteDeTrofeus(lista)).toEqual({ platina: 2, ouro: 1, prata: 0, bronze: 2 });
+    expect(ultimasConquistas(lista, 5).map((t) => t.id)).toEqual(["a2", "a1"]);
+  });
+
+  it("todo jogo do catálogo tem Pokémon de capa", () => {
+    for (const j of JOGOS_DEX) expect(CAPA_DO_JOGO[j.id], j.id).toBeGreaterThan(0);
   });
 });

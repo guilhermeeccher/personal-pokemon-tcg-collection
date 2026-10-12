@@ -211,3 +211,15 @@ input[type="radio"] {
   box-shadow: var(--shadow-focus);
   border-radius: var(--radius-control);
 }
+
+/* Living Dex: o cartão que abre ao parar o mouse num sprite (`cartao-pokemon.tsx`). */
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

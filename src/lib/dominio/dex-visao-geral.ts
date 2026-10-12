@@ -81,3 +81,87 @@ export function progressoPorRegiao(
     ),
   }));
 }
+
+/** As vagas que chegaram ao HOME por último (mais recente primeiro), sem repetir vaga e trilha. */
+export function ultimosNoHome(
+  registros: readonly { formaId: string; shiny: boolean; local: string; atualizadoEm: string }[],
+  quantos: number,
+): { formaId: string; shiny: boolean }[] {
+  const vistos = new Set<string>();
+  const r: { formaId: string; shiny: boolean }[] = [];
+  for (const x of [...registros].filter((x) => x.local === "home").sort((a, b) => b.atualizadoEm.localeCompare(a.atualizadoEm))) {
+    const chave = `${x.formaId}:${x.shiny}`;
+    if (vistos.has(chave)) continue;
+    vistos.add(chave);
+    r.push({ formaId: x.formaId, shiny: x.shiny });
+    if (r.length === quantos) break;
+  }
+  return r;
+}
+
+/**
+ * "Pegue agora": vagas da vista principal que faltam (normal), que algum jogo
+ * ativo do usuário alcança agora sem troca nem evento e sem checkpoint
+ * pendente, na ordem do catálogo.
+ */
+export function pegueAgora(
+  jogoIds: readonly string[],
+  formas: readonly (FormaParaVisaoGeral & { ordem: number })[],
+  mapa: MapaEstadosDex,
+  secoes: SecoesContadas,
+  trofeus: readonly TrofeuParaConta[],
+  obtidos: ReadonlySet<string>,
+  quantos: number,
+): { formaId: string; jogoId: string }[] {
+  const porForma = new Map<string, string>();
+  for (const jogoId of jogoIds) {
+    const catalogo = catalogoDoJogo(jogoId, formas);
+    if (!catalogo) continue;
+    const trancadas = especiesTrancadas(trofeus, jogoId, obtidos);
+    for (const [formaId, d] of catalogo) {
+      if (d.como === "livre" && !porForma.has(formaId)) porForma.set(formaId, jogoId);
+    }
+    for (const f of formas) if (trancadas.has(f.numero) && porForma.get(f.id) === jogoId) porForma.delete(f.id);
+  }
+  return [...formas]
+    .sort((a, b) => a.ordem - b.ordem)
+    .filter(
+      (f) =>
+        porForma.has(f.id) &&
+        vistaDaCategoria(f.categoria) === "principal" &&
+        contaNaTrilha(f, "normal", secoes) &&
+        estadoDaVaga(mapa, f.id, "normal") === "falta",
+    )
+    .slice(0, quantos)
+    .map((f) => ({ formaId: f.id, jogoId: porForma.get(f.id)! }));
+}
+
+/** A estante: troféus conquistados por nível e platinas, somando jogos e HOME. */
+export function estanteDeTrofeus(
+  trofeus: readonly { jogoId: string; nivel: "bronze" | "prata" | "ouro"; obtido: unknown }[],
+): { platina: number; ouro: number; prata: number; bronze: number } {
+  const r = { platina: 0, ouro: 0, prata: 0, bronze: 0 };
+  const porJogo = new Map<string, { total: number; obtidos: number }>();
+  for (const t of trofeus) {
+    const j = porJogo.get(t.jogoId) ?? { total: 0, obtidos: 0 };
+    j.total++;
+    if (t.obtido) {
+      j.obtidos++;
+      r[t.nivel]++;
+    }
+    porJogo.set(t.jogoId, j);
+  }
+  for (const j of porJogo.values()) if (j.total > 0 && j.obtidos === j.total) r.platina++;
+  return r;
+}
+
+/** Os troféus com data mais recentes (os do HOME não têm data e ficam fora). */
+export function ultimasConquistas<T extends { obtido: { em: string | null } | null; ordem: number }>(
+  trofeus: readonly T[],
+  quantas: number,
+): T[] {
+  return trofeus
+    .filter((t) => t.obtido?.em)
+    .sort((a, b) => b.obtido!.em!.localeCompare(a.obtido!.em!) || b.ordem - a.ordem)
+    .slice(0, quantas);
+}

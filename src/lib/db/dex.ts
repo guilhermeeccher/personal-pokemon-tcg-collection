@@ -172,6 +172,7 @@ export async function listarRegistrosDex(db: Db): Promise<RegistroDexDTO[]> {
       local: dexRegistro.local,
       capturadoEm: dexRegistro.capturadoEm,
       notas: dexRegistro.notas,
+      atualizadoEm: sql<string>`to_char(${dexRegistro.atualizadoEm} at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`,
     })
     .from(dexRegistro)
     .orderBy(asc(dexRegistro.criadoEm), asc(dexRegistro.id));

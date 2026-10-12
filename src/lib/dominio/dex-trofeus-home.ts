@@ -75,3 +75,46 @@ export function comTrofeusDoHome(
       : { ...t, obtido: conquistados.has(t.id) ? { em: null, origem: "calculado" as const, notas: null } : null },
   );
 }
+
+/** Quanto falta para a regra: `feito` de `alvo` (vagas no HOME ou da região/vista). */
+export function progressoDaRegra(
+  regra: RegraTrofeuHome,
+  formas: readonly FormaParaTrofeuHome[],
+  mapa: MapaEstadosDex,
+  secoes: SecoesContadas,
+): { feito: number; alvo: number } {
+  const naTrilha = formas.filter((f) => contaNaTrilha(f, regra.trilha, secoes));
+  const noHome = (f: FormaParaTrofeuHome) => estadoDaVaga(mapa, f.id, regra.trilha) === "no_home";
+  const vagas =
+    regra.tipo === "quantidade"
+      ? naTrilha
+      : regra.tipo === "regiao"
+        ? naTrilha.filter((f) => vistaDaCategoria(f.categoria) === "principal" && regiaoDoNumero(f.numero) === regra.regiao)
+        : naTrilha.filter((f) => vistaDaCategoria(f.categoria) === regra.vista);
+  const feito = vagas.filter(noHome).length;
+  return regra.tipo === "quantidade"
+    ? { feito: Math.min(feito, regra.quantidade), alvo: regra.quantidade }
+    : { feito, alvo: vagas.length };
+}
+
+/**
+ * O troféu do HOME ainda não conquistado que está mais perto de cair: a
+ * maior fração feita; no empate, o que pede menos, depois a ordem do arquivo.
+ */
+export function proximoTrofeuHome<T extends { id: string; regra: RegraTrofeuHome | null; obtido: unknown }>(
+  trofeus: readonly T[],
+  formas: readonly FormaParaTrofeuHome[],
+  mapa: MapaEstadosDex,
+  secoes: SecoesContadas,
+): { trofeu: T; feito: number; alvo: number } | null {
+  let melhor: { trofeu: T; feito: number; alvo: number } | null = null;
+  for (const t of trofeus) {
+    if (!t.regra || t.obtido) continue;
+    const p = progressoDaRegra(t.regra, formas, mapa, secoes);
+    if (p.alvo === 0) continue;
+    const fracao = p.feito / p.alvo;
+    const fracaoMelhor = melhor ? melhor.feito / melhor.alvo : -1;
+    if (!melhor || fracao > fracaoMelhor || (fracao === fracaoMelhor && p.alvo < melhor.alvo)) melhor = { trofeu: t, ...p };
+  }
+  return melhor;
+}

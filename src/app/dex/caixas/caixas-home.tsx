@@ -22,6 +22,7 @@ import { NOME_REGIAO, REGIOES } from "@/lib/dominio/escopo-pokedex";
 import type { FormaDexDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 import { urlSpriteDex } from "@/lib/imagens";
 
+import { useCartaoPokemon } from "../_componentes/cartao-pokemon";
 import { useRotuloForma } from "../_componentes/use-rotulo-forma";
 
 const classesOpcao = (ativa: boolean) =>
@@ -49,6 +50,7 @@ export function CaixasHome({
 }) {
   const t = useTranslations("dex");
   const rotulo = useRotuloForma(formas);
+  const { abrir, fechar, cartao } = useCartaoPokemon();
   const [trilha, setTrilha] = useState<TrilhaDex>("normal");
 
   const estados = useMemo(() => mapearEstadosDex(registros), [registros]);
@@ -125,8 +127,18 @@ export function CaixasHome({
                     <li key={f.id} className={`aspect-square rounded-md border ${MOLDURA[estado]}`}>
                       <Link
                         href={`/dex/cadastrar?busca=${f.numero}`}
-                        title={`${i + 1}. ${nome} — ${t(`estado.${estado}`)}`}
-                        className="flex h-full w-full items-center justify-center"
+                        aria-label={`${i + 1}. ${nome} — ${t(`estado.${estado}`)}`}
+                        className="group flex h-full w-full items-center justify-center"
+                        onMouseEnter={abrir({
+                          sprite: f.sprite,
+                          shiny: trilha === "shiny",
+                          nome,
+                          linhas: [
+                            t(`estado.${estado}`),
+                            t("pokedex.posicaoNaCaixa", { caixa: String(caixa.numero), posicao: String(i + 1) }),
+                          ],
+                        })}
+                        onMouseLeave={fechar}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element -- sprite externo pequeno (PokeAPI, ~0,6 KB), 30 por caixa; mesma convenção da Pokédex. */}
                         <img
@@ -135,7 +147,7 @@ export function CaixasHome({
                           width={56}
                           height={56}
                           loading="lazy"
-                          className={`h-full w-full object-contain ${estado === "falta" ? "opacity-40 grayscale" : ""}`}
+                          className={`h-full w-full object-contain [transition:transform_200ms,filter_200ms,opacity_200ms] group-hover:scale-125 ${estado === "falta" ? "opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0" : ""}`}
                           style={{ imageRendering: "pixelated" }}
                         />
                       </Link>
@@ -150,6 +162,7 @@ export function CaixasHome({
           ))}
         </div>
       )}
+      {cartao}
     </main>
   );
 }

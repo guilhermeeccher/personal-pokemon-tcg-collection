@@ -444,6 +444,8 @@ export interface RegistroDexDTO {
   local: string;
   capturadoEm: string | null;
   notas: string | null;
+  /** Última mudança (cadastro, envio ao HOME, correção), ISO: ordena "os últimos que chegaram". */
+  atualizadoEm: string;
 }
 
 /** Um troféu de um jogo (`dex_trofeu`), com a conquista do usuário, se houver. */

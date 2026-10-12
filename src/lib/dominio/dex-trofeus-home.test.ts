@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { mapearEstadosDex } from "./dex-estado";
 import { resolverSecoes } from "./dex-secoes";
-import { comTrofeusDoHome, regraCumprida, type FormaParaTrofeuHome } from "./dex-trofeus-home";
+import { comTrofeusDoHome, progressoDaRegra, proximoTrofeuHome, regraCumprida, type FormaParaTrofeuHome } from "./dex-trofeus-home";
 import type { TrofeuDexDTO } from "./tipos-cliente";
 
 const f = (id: string, numero: number, extra: Partial<FormaParaTrofeuHome> = {}): FormaParaTrofeuHome => ({
@@ -69,5 +69,19 @@ describe("regras dos troféus do HOME", () => {
     expect(com[0].obtido).toEqual({ em: null, origem: "calculado", notas: null });
     expect(com[1]).toBe(lista[1]);
     expect(comTrofeusDoHome(lista, formas, mapearEstadosDex([reg("bulbasaur", "firered")]), todas)[0].obtido).toBeNull();
+  });
+
+  it("progresso da regra e o próximo troféu a cair", () => {
+    expect(progressoDaRegra({ tipo: "quantidade", quantidade: 100, trilha: "normal" }, formas, mapa, todas)).toEqual({ feito: 3, alvo: 100 });
+    expect(progressoDaRegra({ tipo: "regiao", regiao: "kanto", trilha: "normal" }, formas, mapa, todas)).toEqual({ feito: 1, alvo: 2 });
+    const t = (id: string, regra: Parameters<typeof progressoDaRegra>[0], obtido: unknown = null) => ({ id, regra, obtido });
+    const lista = [
+      t("home-100", { tipo: "quantidade", quantidade: 100, trilha: "normal" }),
+      t("home-kanto", { tipo: "regiao", regiao: "kanto", trilha: "normal" }),
+      t("home-johto", { tipo: "regiao", regiao: "johto", trilha: "normal" }, { em: null }),
+      t("home-paldea", { tipo: "regiao", regiao: "paldea", trilha: "normal" }),
+    ];
+    // Kanto 1/2 vence 100 (3/100); Johto já conquistado; Paldea sem vaga não entra.
+    expect(proximoTrofeuHome(lista, formas, mapa, todas)).toMatchObject({ trofeu: { id: "home-kanto" }, feito: 1, alvo: 2 });
   });
 });
