@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { Icone } from "./icone";
-import { encontrarAtivo, grupoDoItem } from "./nav-estrutura";
+import { encontrarAtivo, tituloDaTrilha } from "./nav-estrutura";
 
 /**
  * TopBar — a faixa fixa de 56px do design system, que junto com a lombada
@@ -23,12 +23,12 @@ export function TopBar() {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const ativo = encontrarAtivo(pathname);
-  const grupo = ativo ? grupoDoItem(ativo) : null;
+  const chaveTrilha = ativo ? tituloDaTrilha(ativo) : null;
 
   /* Grupo e item podem ter o mesmo rótulo ("Coleções" / "Coleções"), e aí a
      trilha mostra só um. A comparação é sobre o texto JÁ traduzido: em outro
      idioma a coincidência pode não se repetir. */
-  const tituloGrupo = grupo ? t(grupo.chaveTitulo) : null;
+  const tituloGrupo = chaveTrilha ? t(chaveTrilha) : null;
   const rotuloAtivo = ativo ? t(ativo.chaveLabel) : null;
 
   return (

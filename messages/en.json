@@ -9,11 +9,16 @@
     "fecharMenu": "Close menu",
     "trilha": "Breadcrumb",
     "inicio": "Home",
+    "modulos": {
+      "tcg": "TCG",
+      "virtualGame": "Virtual Game"
+    },
     "grupos": {
       "cadastro": "Add cards",
       "inventario": "Inventory",
       "colecoes": "Collections",
-      "livingDex": "Living Dex"
+      "dex": "Dex",
+      "progresso": "Progress"
     },
     "itens": {
       "porSet": "By set",
