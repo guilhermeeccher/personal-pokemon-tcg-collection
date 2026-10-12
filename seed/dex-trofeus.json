@@ -341,6 +341,16 @@
       "en": { "titulo": "Tailwind", "descricao": "Drive Team Galactic out of the Valley Windworks near Floaroma." }
     },
     {
+      "id": "brilliant-diamond-kit-explorador",
+      "jogo": "brilliant-diamond",
+      "tipo": "checkpoint",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Cavando fundo", "descricao": "Visite o Underground Man em Eterna City e ganhe o Explorer Kit. Os Pokémon Hideaways do Grand Underground se abrem, com Pokémon de fora de Sinnoh desde o primeiro dia." },
+      "en": { "titulo": "Digging Deep", "descricao": "Visit the Underground Man in Eterna City for the Explorer Kit. The Grand Underground's Pokémon Hideaways open, with Pokémon from outside Sinnoh from day one." },
+      "libera": "81-82,108,111-112,123-125,175-176,207,212,220-221,229,238-239,280-282,333-334,355-356,359,361-362,462-464,466,468,472-473,475,477-478",
+      "fonte": "Bulbapedia: Grand Underground and the 18 hideaway pages (Base Encounters and Rare Spawns, which need no milestone); Serebii: PokéEarth, Grand Underground (Beginning and Rare Spawn encounters; 'Rare Spawns can appear at any time'). Both checked species by species on 2026-10-12, Brilliant Diamond only; an evolution counts with its pre-evolution. The later milestones (Strength, Defog, Icicle Badge, Waterfall) add only Sinnoh Pokédex species, which no checkpoint locks, so they are not checkpoints; the National Pokédex pool stays under brilliant-diamond-pokedex-nacional."
+    },
+    {
       "id": "brilliant-diamond-insignia-forest",
       "jogo": "brilliant-diamond",
       "tipo": "marco",
@@ -443,8 +453,8 @@
       "nivel": "prata",
       "pt-BR": { "titulo": "Ver para crer", "descricao": "Veja todas as espécies da Pokédex de Sinnoh (Manaphy não conta) e fale com o Professor Rowan em Sandgem. O Professor Oak vem atualizar a Pokédex." },
       "en": { "titulo": "Seeing Is Believing", "descricao": "See every species in the Sinnoh Pokédex (Manaphy excluded) and talk to Professor Rowan in Sandgem. Professor Oak comes to upgrade your Pokédex." },
-      "libera": "1-24,27-34,37-40,43-53,56-62,69-71,79-91,96-112,114-117,120-121,123-128,131-142,144-150,152-162,165-168,170-171,174-182,186-189,191-193,196-197,199,202,204-207,209-213,216-222,225,227-241,243-250,252-264,270-277,280-297,299-306,309-314,316-338,341-348,351-357,359-384,462-479,486,488,493",
-      "fonte": "Bulbapedia: National Pokédex (Brilliant Diamond and Shining Pearl), Grand Underground (pool grows with the National Pokédex), Old Chateau (Rotom after it), Fullmoon Island and Snowpoint Temple (need it). The list is every species in the BD catalog outside PokeAPI's original Sinnoh Pokédex, except Mew and Jirachi (save data bonus), Darkrai (event), Heatran and Giratina (Hall of Fame only)."
+      "libera": "1-24,27-34,37-40,43-53,56-62,69-71,79-80,83-91,96-107,109-110,114-117,120-121,126-128,131-142,144-150,152-162,165-168,170-171,174,177-182,186-189,191-193,196-197,199,202,204-206,209-211,213,216-219,222,225,227-228,230-237,240-241,243-250,252-264,270-277,283-297,299-306,309-314,316-332,335-338,341-348,351-354,357,360,363-384,465,467,469-471,474,476,479,486,488,493",
+      "fonte": "Bulbapedia: National Pokédex (Brilliant Diamond and Shining Pearl), Grand Underground (pool grows with the National Pokédex), Old Chateau (Rotom after it), Fullmoon Island and Snowpoint Temple (need it). The list is every species in the BD catalog outside PokeAPI's original Sinnoh Pokédex, except Mew and Jirachi (save data bonus), Darkrai (event), Heatran and Giratina (Hall of Fame only), and the 37 the Grand Underground has from the start (see brilliant-diamond-kit-explorador)."
     },
     {
       "id": "brilliant-diamond-campeao",

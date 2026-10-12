@@ -52,6 +52,19 @@ describe("seed/dex-trofeus.json", () => {
     expect(tranc.has(25)).toBe(false);
   });
 
+  /*
+   * Grand Underground (2026-10-12): os Base Encounters e os Rare Spawns dos
+   * esconderijos não pedem marco nenhum, só o Explorer Kit. Os estágios
+   * seguintes (Strength, Defog, Icicle, Waterfall) só trazem espécies da
+   * Pokédex de Sinnoh, que nenhum checkpoint tranca.
+   */
+  it("BD: o que o Grand Underground tem desde o começo pede só o Explorer Kit", () => {
+    const tranc = especiesTrancadas(trofeus, "brilliant-diamond", new Set());
+    for (const n of [280, 282, 175, 468, 359, 361, 478]) expect(tranc.get(n)).toEqual(["brilliant-diamond-kit-explorador"]);
+    expect(tranc.get(228)).toEqual(["brilliant-diamond-pokedex-nacional"]);
+    expect(trofeus.find((t) => t.id === "brilliant-diamond-kit-explorador")!.libera).toHaveLength(37);
+  });
+
   it("BD: Heatran e Giratina só pedem o Hall da Fama; Regigigas pede os três Regi", () => {
     const tranc = especiesTrancadas(trofeus, "brilliant-diamond", new Set());
     expect(tranc.get(485)).toEqual(["brilliant-diamond-campeao"]);
