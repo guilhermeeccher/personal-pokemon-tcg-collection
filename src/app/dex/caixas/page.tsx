@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
 import { db } from "@/lib/db/client";
-import { lerSecoesDex, listarFormasDex, listarRegistrosDex } from "@/lib/db/dex";
+import { lerCaixasReservadas, lerSecoesDex, listarFormasDex, listarRegistrosDex } from "@/lib/db/dex";
 import { moduloLivingDexAtivo } from "@/lib/modulos";
 
 import { CaixasHome } from "./caixas-home";
@@ -16,10 +16,11 @@ export default async function CaixasPage() {
   await connection();
   if (!moduloLivingDexAtivo()) notFound();
 
-  const [formas, secoes, registros] = await Promise.all([
+  const [formas, secoes, registros, caixasReservadas] = await Promise.all([
     listarFormasDex(db),
     lerSecoesDex(db),
     listarRegistrosDex(db),
+    lerCaixasReservadas(db),
   ]);
-  return <CaixasHome formas={formas} secoes={secoes} registros={registros} />;
+  return <CaixasHome formas={formas} secoes={secoes} registros={registros} caixasReservadas={caixasReservadas} />;
 }

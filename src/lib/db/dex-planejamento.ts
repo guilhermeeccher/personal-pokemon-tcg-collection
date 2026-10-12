@@ -19,7 +19,7 @@ import {
 import type { PlanoDexDTO, TarefaDexDTO, TrofeuDexDTO } from "@/lib/dominio/tipos-cliente";
 
 import type { db as dbPadrao } from "./client";
-import { carregarContextoRegistro, listarFormasDex } from "./dex";
+import { carregarContextoRegistro, comAGuardar, listarFormasDex } from "./dex";
 import { dexPlano, dexRegistro, dexSessaoRef, dexTarefa, dexTrofeu, dexTrofeuObtido } from "./schema";
 
 type Db = typeof dbPadrao;
@@ -279,7 +279,7 @@ export async function aplicarLoteSessao(
           break;
         case "registros":
           for (let i = 0; i < p.registros.length; i += 500) {
-            await tx.insert(dexRegistro).values(p.registros.slice(i, i + 500));
+            await tx.insert(dexRegistro).values(p.registros.slice(i, i + 500).map(comAGuardar));
           }
           await registrarRef(p.ref, "registros");
           break;

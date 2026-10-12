@@ -1,11 +1,11 @@
 /**
  * Consultas da Living Dex. Nenhuma toca tabela de cartas.
  */
-import { asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
 import type { CategoriaFormaDex, SecaoLigavel } from "@/lib/dominio/dex-classificacao";
 import { naoTransferiveis } from "@/lib/dominio/dex-disponibilidade";
-import { ehJogoDex, jogoDex, ordemJogo } from "@/lib/dominio/dex-jogos";
+import { ehJogoDex, jogoDex, LOCAL_HOME, ordemJogo } from "@/lib/dominio/dex-jogos";
 import {
   ehPedidoDeConfirmacao,
   expandirLoteCadastro,
@@ -15,12 +15,13 @@ import {
   type DadosRegistroDex,
   type LoteCadastroDex,
 } from "@/lib/dominio/dex-registro";
+import { aGuardarDepoisDoMovimento, aGuardarNaCriacao } from "@/lib/dominio/dex-recebidos";
 import { resolverSecoes, type SecoesContadas } from "@/lib/dominio/dex-secoes";
 import { recusa, type Recusa } from "@/lib/dominio/recusa";
 import type { FormaDexDTO, JogoPossuidoDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 
 import type { db as dbPadrao } from "./client";
-import { dexForma, dexJogoPossuido, dexRegistro, dexSecao } from "./schema";
+import { dexForma, dexJogoPossuido, dexPreferencias, dexRegistro, dexSecao } from "./schema";
 
 type Db = typeof dbPadrao;
 
@@ -60,6 +61,29 @@ export async function definirSecaoDex(db: Db, categoria: SecaoLigavel, conta: bo
     .onConflictDoUpdate({
       target: dexSecao.categoria,
       set: { conta, atualizadoEm: sql`now()` },
+    });
+}
+
+/** A linha única de `dex_preferencias`. */
+const ID_PREFERENCIAS = 1;
+
+/** Caixas do HOME antes da Kanto 1; 0 sem preferência gravada. */
+export async function lerCaixasReservadas(db: Db): Promise<number> {
+  const [linha] = await db
+    .select({ caixasReservadas: dexPreferencias.caixasReservadas })
+    .from(dexPreferencias)
+    .where(eq(dexPreferencias.id, ID_PREFERENCIAS));
+  return linha?.caixasReservadas ?? 0;
+}
+
+/** Já validado no domínio (`ehCaixasReservadas`). */
+export async function definirCaixasReservadas(db: Db, caixasReservadas: number): Promise<void> {
+  await db
+    .insert(dexPreferencias)
+    .values({ id: ID_PREFERENCIAS, caixasReservadas })
+    .onConflictDoUpdate({
+      target: dexPreferencias.id,
+      set: { caixasReservadas, atualizadoEm: sql`now()` },
     });
 }
 
@@ -172,10 +196,16 @@ export async function listarRegistrosDex(db: Db): Promise<RegistroDexDTO[]> {
       local: dexRegistro.local,
       capturadoEm: dexRegistro.capturadoEm,
       notas: dexRegistro.notas,
+      aGuardar: dexRegistro.aGuardar,
       atualizadoEm: sql<string>`to_char(${dexRegistro.atualizadoEm} at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`,
     })
     .from(dexRegistro)
     .orderBy(asc(dexRegistro.criadoEm), asc(dexRegistro.id));
+}
+
+/** O registro a inserir, já com o "a guardar" de quem nasce no HOME (D9). */
+export function comAGuardar(dados: DadosRegistroDex): DadosRegistroDex & { aGuardar: boolean } {
+  return { ...dados, aGuardar: aGuardarNaCriacao(dados.local) };
 }
 
 /**
@@ -191,7 +221,7 @@ export async function criarRegistrosEmLote(
   if (r.registros.length === 0) return { ok: true, criados: 0 };
   await db.transaction(async (tx) => {
     for (let i = 0; i < r.registros.length; i += 500) {
-      await tx.insert(dexRegistro).values(r.registros.slice(i, i + 500));
+      await tx.insert(dexRegistro).values(r.registros.slice(i, i + 500).map(comAGuardar));
     }
   });
   return { ok: true, criados: r.registros.length };
@@ -265,11 +295,32 @@ export async function moverRegistros(
     await carregarContextoRegistro(db),
   );
   if (motivo) return { ok: false, motivo, status: ehPedidoDeConfirmacao(motivo) ? 409 : 400 };
-  await db
-    .update(dexRegistro)
-    .set({ local: novoLocal, atualizadoEm: new Date() })
-    .where(inArray(dexRegistro.id, [...ids]));
+  // Só quem muda de lugar: o que já está no destino não "chega" de novo, e
+  // mantém o "a guardar" que tinha.
+  const mudam = atuais.filter((a) => aGuardarDepoisDoMovimento(a.local, novoLocal) !== null).map((a) => a.id);
+  if (mudam.length > 0) {
+    await db
+      .update(dexRegistro)
+      .set({ local: novoLocal, aGuardar: novoLocal === LOCAL_HOME, atualizadoEm: new Date() })
+      .where(inArray(dexRegistro.id, mudam));
+  }
   return { ok: true, movidos: atuais.length };
+}
+
+/**
+ * "Guardei": tira registros de Recebidos (D9). Só mexe no que está no HOME;
+ * id que não existe ou não está lá é ignorado — a tela pode estar velha, e
+ * guardar o que já saiu não é erro. Não toca `atualizado_em`: guardar não
+ * muda nada no Pokémon, e a Visão geral ordena "o que chegou" por ela.
+ */
+export async function guardarRegistros(db: Db, ids: readonly string[]): Promise<number> {
+  if (ids.length === 0) return 0;
+  const r = await db
+    .update(dexRegistro)
+    .set({ aGuardar: false })
+    .where(and(inArray(dexRegistro.id, [...ids]), eq(dexRegistro.local, LOCAL_HOME), eq(dexRegistro.aGuardar, true)))
+    .returning({ id: dexRegistro.id });
+  return r.length;
 }
 
 export async function removerRegistro(db: Db, id: string): Promise<boolean> {

@@ -31,6 +31,7 @@
       "visaoGeralDex": "Visão geral",
       "pokedex": "Pokédex",
       "caixas": "Caixas",
+      "recebidos": "Recebidos",
       "cadastrarDex": "Cadastrar",
       "meusJogos": "Meus jogos",
       "inventarioDex": "Inventário",
@@ -916,7 +917,22 @@
       "posicao": "Caixa {caixa} · posição {posicao}",
       "irPara": "Ir para",
       "vazio": "Nenhuma vaga nas caixas desta trilha.",
-      "contagem": "{caixas} caixas · {vagas} vagas"
+      "contagem": "{caixas} caixas · {vagas} vagas",
+      "reservadas": "Caixas antes da Kanto 1"
+    },
+    "recebidos": {
+      "titulo": "Recebidos",
+      "aGuardar": "{quantidade} a guardar",
+      "guardeiTudo": "Guardei tudo",
+      "guardei": "Guardei",
+      "nestaCaixa": "{quantidade} aqui",
+      "vazio": "Nada a guardar.",
+      "semLugar": "Sem lugar nas caixas",
+      "erro": "Não foi possível marcar. Tente de novo.",
+      "motivo": {
+        "extra": "Cópia extra",
+        "fora": "Fora das caixas"
+      }
     },
     "estado": {
       "falta": "Falta",

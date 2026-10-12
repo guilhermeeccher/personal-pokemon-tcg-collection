@@ -66,10 +66,13 @@ export function GradePokedex({
   formas,
   secoesIniciais,
   registros,
+  caixasReservadas,
 }: {
   formas: FormaDexDTO[];
   secoesIniciais: SecoesContadas;
   registros: RegistroDexDTO[];
+  /** Caixas do HOME antes da Kanto 1: desloca o "Caixa N" de cada vaga. */
+  caixasReservadas: number;
 }) {
   const t = useTranslations("dex");
   const rotulo = useRotuloForma(formas);
@@ -102,8 +105,8 @@ export function GradePokedex({
   const totaisVisiveis = useMemo(() => contarVagasDex(visiveis, secoes), [visiveis, secoes]);
   /* Caixa e posição no HOME, na trilha e com as seções de agora (`dex-caixas.ts`). */
   const posicoes = useMemo(
-    () => posicoesNasCaixas(montarCaixasDex(formas, trilha, secoes)),
-    [formas, trilha, secoes],
+    () => posicoesNasCaixas(montarCaixasDex(formas, trilha, secoes, caixasReservadas)),
+    [formas, trilha, secoes, caixasReservadas],
   );
 
   async function alternarSecao(secao: SecaoLigavel) {

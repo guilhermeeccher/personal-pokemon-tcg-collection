@@ -75,6 +75,7 @@ export const MODULO_VIRTUAL_GAME: ModuloNav = {
       itens: [
         { href: "/dex/pokedex", chaveLabel: "itens.pokedex", icone: "book-open" },
         { href: "/dex/caixas", chaveLabel: "itens.caixas", icone: "layout-grid" },
+        { href: "/dex/recebidos", chaveLabel: "itens.recebidos", icone: "inbox" },
         { href: "/dex/cadastrar", chaveLabel: "itens.cadastrarDex", icone: "circle-plus" },
         { href: "/dex/inventario", chaveLabel: "itens.inventarioDex", icone: "library" },
       ],

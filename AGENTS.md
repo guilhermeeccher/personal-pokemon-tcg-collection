@@ -542,6 +542,17 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
   cosmetic moves Pokémon in somebody's boxes. The main boxes keep the relative order of
   SuperEffective's "Fully Sorted by Regions" (the differences are listed in the module's comment),
   and a test pins the agreed positions.
+- **Reserved boxes shift only the box number** (`dex_preferencias.caixas_reservadas`, 0 to 20, set on
+  the Boxes screen). A user who keeps HOME's first box for incoming Pokémon sets 1, and Kanto 1
+  becomes box 2 on every screen. Names, positions and which slots share a box do not move.
+- **"Received" is the round that arrived in HOME and was not put away yet**
+  (`lib/dominio/dex-recebidos.ts`, screen `/dex/recebidos`), grouped by destination box.
+  `dex_registro.a_guardar` is **stored, not derived** — the system cannot know when the user tidied
+  HOME, and `atualizado_em` also moves on a correction. It turns on when a record arrives in HOME
+  (moved from a game, or created there), turns off when the user says it was put away or when it
+  leaves HOME, and a move to where it already is changes nothing. A slot takes one Pokémon: if it
+  already holds a stored one, or an earlier record of the round took it, the next is an **extra
+  copy**, shown apart instead of pointing at an occupied position.
 
 ### Games and records — `dex_jogo_possuido`, `dex_registro`
 

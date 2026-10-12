@@ -31,6 +31,7 @@
       "visaoGeralDex": "Overview",
       "pokedex": "Pokédex",
       "caixas": "Boxes",
+      "recebidos": "Received",
       "cadastrarDex": "Add Pokémon",
       "meusJogos": "My games",
       "inventarioDex": "Inventory",
@@ -916,7 +917,22 @@
       "posicao": "Box {caixa} · slot {posicao}",
       "irPara": "Go to",
       "vazio": "No slots in the boxes for this track.",
-      "contagem": "{caixas} boxes · {vagas} slots"
+      "contagem": "{caixas} boxes · {vagas} slots",
+      "reservadas": "Boxes before Kanto 1"
+    },
+    "recebidos": {
+      "titulo": "Received",
+      "aGuardar": "{quantidade} to put away",
+      "guardeiTudo": "All put away",
+      "guardei": "Put away",
+      "nestaCaixa": "{quantidade} here",
+      "vazio": "Nothing to put away.",
+      "semLugar": "No place in the boxes",
+      "erro": "Could not mark them. Try again.",
+      "motivo": {
+        "extra": "Extra copy",
+        "fora": "Not in the boxes"
+      }
     },
     "estado": {
       "falta": "Missing",

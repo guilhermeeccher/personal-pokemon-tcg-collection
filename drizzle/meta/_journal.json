@@ -197,6 +197,13 @@
       "when": 1791816423583,
       "tag": "0027_living_dex_trofeus_home",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1791832988528,
+      "tag": "0028_living_dex_recebidos",
+      "breakpoints": true
     }
   ]
 }

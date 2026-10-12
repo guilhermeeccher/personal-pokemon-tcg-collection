@@ -958,11 +958,30 @@ export const dexRegistro = pgTable(
     local: text("local").notNull(),
     capturadoEm: date("capturado_em"),
     notas: text("notas"),
+    /**
+     * Chegou ao HOME e o usuário ainda não o levou para a caixa dele (D9,
+     * `lib/dominio/dex-recebidos.ts`). Gravado, não derivado: o sistema não
+     * sabe quando o HOME foi arrumado. Liga ao chegar ao HOME, desliga quando
+     * o usuário diz que guardou ou quando o Pokémon sai do HOME.
+     */
+    aGuardar: boolean("a_guardar").notNull().default(false),
     criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
     atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("dex_registro_forma_idx").on(t.formaId), index("dex_registro_local_idx").on(t.local)],
 );
+
+/**
+ * Preferências da Living Dex que não são seção (D9). Uma linha só, `id = 1`;
+ * sem linha, valem os padrões. `caixas_reservadas`: caixas do HOME antes da
+ * Kanto 1 (a de Recebidos, por exemplo), que deslocam o número das caixas
+ * (`lib/dominio/dex-caixas.ts`). Validada no domínio (`ehCaixasReservadas`).
+ */
+export const dexPreferencias = pgTable("dex_preferencias", {
+  id: integer("id").primaryKey(),
+  caixasReservadas: integer("caixas_reservadas").notNull().default(0),
+  atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+});
 
 // --- Living Dex, D3: troféus, planos e sessões ---------------------------
 

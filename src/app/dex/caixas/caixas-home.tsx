@@ -5,16 +5,28 @@
  * por caixa (6 × 5), cada região começando numa caixa nova e as cosméticas
  * em caixas próprias no fim, uma sequência por trilha (`dex-caixas.ts`). Cada vaga mostra o estado na trilha e leva ao
  * cadastro, como na Pokédex. As seções se ligam na Pokédex; aqui só se lê.
+ *
+ * O único ajuste daqui é "Caixas antes da Kanto 1" (D9): quem usa a
+ * primeira caixa do HOME para Recebidos põe 1, e a numeração passa a bater
+ * com a do HOME — aqui, na Pokédex e em Recebidos.
  */
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
+import { classesEntrada } from "@/app/_componentes/campo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { Painel } from "@/app/_componentes/painel";
-import { COLUNAS_CAIXA, montarCaixasDex, VAGAS_POR_CAIXA } from "@/lib/dominio/dex-caixas";
+import {
+  COLUNAS_CAIXA,
+  ehCaixasReservadas,
+  MAX_CAIXAS_RESERVADAS,
+  montarCaixasDex,
+  VAGAS_POR_CAIXA,
+} from "@/lib/dominio/dex-caixas";
 import { estadoDaVaga, mapearEstadosDex, type EstadoVagaDex } from "@/lib/dominio/dex-estado";
 import type { TrilhaDex } from "@/lib/dominio/dex-grade";
 import type { SecoesContadas } from "@/lib/dominio/dex-secoes";
@@ -39,14 +51,57 @@ const MOLDURA: Record<EstadoVagaDex, string> = {
 
 const numero4 = (n: number) => String(n).padStart(4, "0");
 
+/** "Caixas antes da Kanto 1": grava a cada mudança válida e redesenha a página. */
+function CampoReservadas({ valor }: { valor: number }) {
+  const t = useTranslations("dex");
+  const router = useRouter();
+  const [texto, setTexto] = useState(String(valor));
+  const [salvando, setSalvando] = useState(false);
+
+  async function salvar(novo: string) {
+    setTexto(novo);
+    const n = Number(novo);
+    if (novo === "" || !ehCaixasReservadas(n) || n === valor) return;
+    setSalvando(true);
+    try {
+      const r = await fetch("/api/dex/preferencias", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ caixasReservadas: n }),
+      });
+      if (r.ok) router.refresh();
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <label className="flex items-center gap-2 text-xs text-muted">
+      {t("caixas.reservadas")}
+      <input
+        type="number"
+        inputMode="numeric"
+        min={0}
+        max={MAX_CAIXAS_RESERVADAS}
+        disabled={salvando}
+        className={`${classesEntrada} w-16 text-right tabular-nums`}
+        value={texto}
+        onChange={(e) => salvar(e.target.value)}
+      />
+    </label>
+  );
+}
+
 export function CaixasHome({
   formas,
   secoes,
   registros,
+  caixasReservadas,
 }: {
   formas: FormaDexDTO[];
   secoes: SecoesContadas;
   registros: RegistroDexDTO[];
+  caixasReservadas: number;
 }) {
   const t = useTranslations("dex");
   const rotulo = useRotuloForma(formas);
@@ -54,7 +109,10 @@ export function CaixasHome({
   const [trilha, setTrilha] = useState<TrilhaDex>("normal");
 
   const estados = useMemo(() => mapearEstadosDex(registros), [registros]);
-  const caixas = useMemo(() => montarCaixasDex(formas, trilha, secoes), [formas, trilha, secoes]);
+  const caixas = useMemo(
+    () => montarCaixasDex(formas, trilha, secoes, caixasReservadas),
+    [formas, trilha, secoes, caixasReservadas],
+  );
   const totalVagas = caixas.reduce((s, c) => s + c.vagas.length, 0);
   const primeiraCosmetica = caixas.find((c) => c.vista === "cosmeticas");
 
@@ -78,6 +136,7 @@ export function CaixasHome({
           <span className="text-xs text-muted sm:ml-auto">
             {t("caixas.contagem", { caixas: String(caixas.length), vagas: String(totalVagas) })}
           </span>
+          <CampoReservadas valor={caixasReservadas} />
         </div>
         <nav className="flex flex-wrap items-center gap-1.5" aria-label={t("caixas.irPara")}>
           {REGIOES.map((regiao) => {

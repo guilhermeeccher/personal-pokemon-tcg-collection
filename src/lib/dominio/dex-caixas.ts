@@ -36,6 +36,15 @@
  *
  * Caixa e posição são calculadas, não gravadas: dependem da trilha e das
  * seções ligadas.
+ *
+ * ## Caixas reservadas no início (D9, 2026-10-12)
+ *
+ * Quem usa a primeira caixa do HOME para outra coisa (a caixa de
+ * "Recebidos", onde cai o que chega dos jogos) via o número da tela uma
+ * atrás do real. `reservadas` desloca só o **número** das caixas: Kanto 1
+ * passa a ser a caixa `reservadas + 1`. Nome, índice, posição e quais vagas
+ * ficam em cada caixa não mudam — o arranjo é o mesmo, só começa depois.
+ * Vale para as duas trilhas.
  */
 import { contaNaTrilha, vistaDaCategoria, type FormaParaGrade, type TrilhaDex, type VistaDex } from "./dex-grade";
 import type { SecoesContadas } from "./dex-secoes";
@@ -43,6 +52,12 @@ import { REGIOES, regiaoDoNumero, type Regiao } from "./escopo-pokedex";
 
 export const VAGAS_POR_CAIXA = 30;
 export const COLUNAS_CAIXA = 6;
+/** Teto das caixas reservadas: folga para quem separa algumas, nunca 200 por engano de digitação. */
+export const MAX_CAIXAS_RESERVADAS = 20;
+
+export function ehCaixasReservadas(n: unknown): n is number {
+  return typeof n === "number" && Number.isInteger(n) && n >= 0 && n <= MAX_CAIXAS_RESERVADAS;
+}
 
 export type FormaParaCaixa = Pick<FormaParaGrade, "numero" | "categoria" | "shinyObtenivel"> & { id: string; ordem: number };
 
@@ -69,6 +84,8 @@ export function montarCaixasDex<T extends FormaParaCaixa>(
   formas: readonly T[],
   trilha: TrilhaDex,
   secoes: SecoesContadas,
+  /** Caixas do HOME antes da Kanto 1 (a de Recebidos, por exemplo). */
+  reservadas = 0,
 ): CaixaDex<T>[] {
   const porRegiao = new Map<Regiao, T[]>();
   const cosmeticas: T[] = [];
@@ -88,7 +105,7 @@ export function montarCaixasDex<T extends FormaParaCaixa>(
   const empilhar = (vagas: readonly T[], vista: VistaDex, regiao: Regiao | null) => {
     for (let i = 0; i < vagas.length; i += VAGAS_POR_CAIXA) {
       caixas.push({
-        numero: caixas.length + 1,
+        numero: reservadas + caixas.length + 1,
         vista,
         regiao,
         indice: i / VAGAS_POR_CAIXA + 1,
