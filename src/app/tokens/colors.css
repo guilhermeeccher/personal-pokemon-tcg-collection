@@ -101,6 +101,12 @@
 --rarity-holo:var(--grape-2);
 --rarity-secret:var(--caramel-3);
 
+/* --- troféus da Living Dex (bronze, prata, ouro e a platina derivada) --- */
+--trophy-bronze:var(--caramel-4);
+--trophy-silver:var(--slate-2);
+--trophy-gold:var(--sun-2);
+--trophy-platinum:var(--sky-3);
+
 /* --- variantes (normal / reverse / holo), o eixo mais usado do inventário --- */
 --variant-normal:var(--sky-4);--variant-normal-bg:var(--sky-1);
 --variant-reverse:var(--grape-2);--variant-reverse-bg:var(--grape-1);

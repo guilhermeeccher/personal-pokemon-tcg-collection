@@ -9,6 +9,7 @@
  * caminho é "parado", que mantém o histórico e impede registro novo lá.
  */
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -24,7 +25,14 @@ import { textoDaRecusa } from "@/app/_componentes/recusa";
 import { JOGOS_DEX } from "@/lib/dominio/dex-jogos";
 import type { JogoPossuidoDTO } from "@/lib/dominio/tipos-cliente";
 
-export function ListaJogos({ jogos }: { jogos: JogoPossuidoDTO[] }) {
+export function ListaJogos({
+  jogos,
+  trofeus,
+}: {
+  jogos: JogoPossuidoDTO[];
+  /** Andamento dos troféus por jogo; jogo sem troféus tem total 0. */
+  trofeus: Record<string, { obtidos: number; total: number; platina: boolean }>;
+}) {
   const t = useTranslations("dex");
   const tr = useTranslations("recusas");
   const router = useRouter();
@@ -85,6 +93,18 @@ export function ListaJogos({ jogos }: { jogos: JogoPossuidoDTO[] }) {
                   {t(`conexao.${j.conexaoHome}`)}
                 </Distintivo>
                 <Distintivo>{j.ativo ? t("jogos.ativo") : t("jogos.inativo")}</Distintivo>
+                {trofeus[j.jogoId]?.total > 0 && (
+                  <Link href={`/dex/trofeus?jogo=${j.jogoId}`}>
+                    <Distintivo tom={trofeus[j.jogoId].platina ? "sucesso" : "acento"}>
+                      {trofeus[j.jogoId].platina
+                        ? t("jogos.platina")
+                        : t("jogos.trofeus", {
+                            obtidos: String(trofeus[j.jogoId].obtidos),
+                            total: String(trofeus[j.jogoId].total),
+                          })}
+                    </Distintivo>
+                  </Link>
+                )}
               </div>
               <p className="text-sm text-muted">
                 {t("jogos.registrosAqui", { quantidade: String(j.registrosAqui) })}

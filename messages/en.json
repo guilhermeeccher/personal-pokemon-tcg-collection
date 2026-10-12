@@ -26,7 +26,9 @@
       "pokedex": "Pokédex",
       "cadastrarDex": "Add Pokémon",
       "meusJogos": "My games",
-      "inventarioDex": "Inventory"
+      "inventarioDex": "Inventory",
+      "trofeus": "Trophies",
+      "planos": "Plans"
     }
   },
   "seletorLocale": {
@@ -859,7 +861,10 @@
     "dexJogoNaoEncontrado": "Game not found.",
     "dexJogoComRegistros": "{jogo} has {quantidade} recorded Pokémon in it. Move them or mark the game as stopped.",
     "dexRegistroNaoEncontrado": "Record not found.",
-    "dexNaoTransferivel": "HOME does not accept this Pokémon from {jogo}."
+    "dexNaoTransferivel": "HOME does not accept this Pokémon from {jogo}.",
+    "dexTrofeuNaoEncontrado": "Trophy not found.",
+    "dexPlanoNaoEncontrado": "Plan not found.",
+    "dexTarefaNaoEncontrada": "Task not found."
   },
   "dex": {
     "categoria": {
@@ -923,7 +928,9 @@
       "salvar": "Save",
       "editar": "Edit",
       "cancelar": "Cancel",
-      "erro": "Could not save. Try again."
+      "erro": "Could not save. Try again.",
+      "trofeus": "{obtidos}/{total} trophies",
+      "platina": "Platinum"
     },
     "cadastrar": {
       "titulo": "Add Pokémon",
@@ -950,7 +957,8 @@
       },
       "foraDoJogo": "Not in this game",
       "naoVaiAoHome": "Cannot go to HOME",
-      "semCatalogo": "No catalog for this game: showing everything."
+      "semCatalogo": "No catalog for this game: showing everything.",
+      "trancada": "Locked: {checkpoint}"
     },
     "inventario": {
       "titulo": "Inventory",
@@ -1006,6 +1014,74 @@
     "genero": {
       "macho": "Male",
       "femea": "Female"
+    },
+    "trofeus": {
+      "titulo": "Trophies",
+      "jogo": "Game",
+      "nenhumJogo": "None of your games has trophies yet.",
+      "platina": "Platinum",
+      "platinaConquistada": "Platinum earned",
+      "nivel": {
+        "bronze": "Bronze",
+        "prata": "Silver",
+        "ouro": "Gold"
+      },
+      "soFalta": "Only what's left",
+      "libera": "Unlocks {quantidade} species",
+      "conquistadoEm": "Earned on {data}",
+      "depoisDe": "After: {trofeus}",
+      "data": "Date earned",
+      "confirmar": "Confirm",
+      "cancelar": "Cancel",
+      "desfazer": "Undo",
+      "confirmarDesfazer": "Unmark \"{trofeu}\"?",
+      "conquistei": "Earned it",
+      "cacar": "Hunt",
+      "tituloPlanoCacar": "Hunt: {trofeu}",
+      "erro": "Could not save. Try again."
+    },
+    "planos": {
+      "titulo": "Plans",
+      "erro": "Could not save. Try again.",
+      "status": {
+        "ativo": "Active",
+        "concluido": "Done",
+        "encerrado": "Closed"
+      },
+      "daSessao": "From a session",
+      "alvo": "Aiming at:",
+      "tipo": {
+        "captura": "Catch",
+        "evolucao": "Evolve",
+        "troca": "Trade",
+        "progresso": "Progress",
+        "transferencia": "Transfer",
+        "outro": "Other"
+      },
+      "feita": "Done",
+      "descartar": "Drop",
+      "reabrir": "Reopen",
+      "tarefa": "Task",
+      "tipoRotulo": "Type",
+      "jogo": "Game",
+      "semJogo": "No game",
+      "adicionar": "Add",
+      "cancelar": "Cancel",
+      "novaTarefa": "New task",
+      "concluir": "Finish plan",
+      "encerrar": "Close",
+      "reativar": "Reactivate",
+      "oferta": "\"{tarefa}\" done. Register the Pokémon?",
+      "irCadastrar": "Register",
+      "agoraNao": "Not now",
+      "nenhumAtivo": "No active plan.",
+      "tituloRotulo": "Title",
+      "objetivo": "Goal",
+      "inicio": "Start",
+      "fim": "End",
+      "criar": "Create plan",
+      "novoPlano": "New plan",
+      "historico": "History ({quantidade})"
     }
   }
 }

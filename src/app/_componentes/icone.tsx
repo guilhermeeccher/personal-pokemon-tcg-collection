@@ -31,11 +31,15 @@ import {
   Grid2x2,
   Layers,
   Library,
+  ListChecks,
+  Lock,
+  Medal,
   Menu,
   Search,
   Sparkles,
   Star,
   Tag,
+  Trophy,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -53,11 +57,15 @@ const ICONES = {
   "grid-2x2": Grid2x2,
   layers: Layers,
   library: Library,
+  "list-checks": ListChecks,
+  lock: Lock,
+  medal: Medal,
   menu: Menu,
   search: Search,
   sparkles: Sparkles,
   star: Star,
   tag: Tag,
+  trophy: Trophy,
   x: X,
 } satisfies Record<string, LucideIcon>;
 

@@ -11,13 +11,17 @@
  * Pokémon que chegou de fora. Seções desligadas na Pokédex somem daqui, e
  * as cosméticas ficam na vista delas, como na grade.
  *
+ * Espécie que o save ainda não alcança (um troféu-checkpoint pendente, como
+ * a Pokédex Nacional do FireRed) aparece com o nome do checkpoint. Só
+ * marca, não recusa: um Pokémon pode ter chegado por troca.
+ *
  * 1.391 linhas com dois campos cada: a linha é memorizada e só redesenha
  * quando a quantidade dela muda.
  */
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { memo, useCallback, useMemo, useState } from "react";
 
 import { Alerta } from "@/app/_componentes/alerta";
@@ -31,7 +35,8 @@ import { catalogoDoJogo, type DisponibilidadeForma } from "@/lib/dominio/dex-dis
 import { filtrarFormasDex, type VistaDex } from "@/lib/dominio/dex-grade";
 import { categoriaConta, type SecoesContadas } from "@/lib/dominio/dex-secoes";
 import { MAX_QUANTIDADE_POR_LINHA } from "@/lib/dominio/dex-registro";
-import type { FormaDexDTO, JogoPossuidoDTO } from "@/lib/dominio/tipos-cliente";
+import { especiesTrancadas, type IdiomaTrofeu } from "@/lib/dominio/dex-trofeus";
+import type { FormaDexDTO, JogoPossuidoDTO, TrofeuDexDTO } from "@/lib/dominio/tipos-cliente";
 
 import { SpriteDex } from "../_componentes/sprite-dex";
 import { useRotuloForma } from "../_componentes/use-rotulo-forma";
@@ -55,6 +60,7 @@ const LinhaForma = memo(function LinhaForma({
   rotulo,
   disponibilidade,
   comCatalogo,
+  trancadaPor,
   normal,
   shiny,
   tenhoNormal,
@@ -67,6 +73,8 @@ const LinhaForma = memo(function LinhaForma({
   /** `undefined` com catálogo = fora do jogo. */
   disponibilidade: DisponibilidadeForma | undefined;
   comCatalogo: boolean;
+  /** Títulos dos checkpoints que ainda trancam a espécie neste jogo. */
+  trancadaPor: string | null;
   normal: number;
   shiny: number;
   tenhoNormal: number;
@@ -103,6 +111,11 @@ const LinhaForma = memo(function LinhaForma({
             {t(`cadastrar.como.${disponibilidade.como}`)}
           </Distintivo>
         )}
+        {trancadaPor && (
+          <Distintivo className="ml-2" title={trancadaPor}>
+            {t("cadastrar.trancada", { checkpoint: trancadaPor })}
+          </Distintivo>
+        )}
         {disponibilidade && !disponibilidade.transferivel && (
           <Distintivo tom="perigo" className="ml-2">
             {t("cadastrar.naoVaiAoHome")}
@@ -125,20 +138,28 @@ export function CadastroPorJogo({
   jogos,
   tenho,
   secoes,
+  checkpoints,
   buscaInicial,
+  jogoInicial,
 }: {
   formas: FormaDexDTO[];
   jogos: JogoPossuidoDTO[];
   tenho: Quantidades;
   secoes: SecoesContadas;
+  /** Troféus-checkpoint ainda não conquistados. */
+  checkpoints: TrofeuDexDTO[];
   buscaInicial: string;
+  jogoInicial: string;
 }) {
   const t = useTranslations("dex");
   const tr = useTranslations("recusas");
   const router = useRouter();
   const rotulo = useRotuloForma(formas);
 
-  const [jogoId, setJogoId] = useState(jogos[0]?.jogoId ?? "");
+  const idioma = useLocale() as IdiomaTrofeu;
+  const [jogoId, setJogoId] = useState(
+    jogos.some((j) => j.jogoId === jogoInicial) ? jogoInicial : (jogos[0]?.jogoId ?? ""),
+  );
   const [filtro, setFiltro] = useState(buscaInicial);
   const [soQueNaoTenho, setSoQueNaoTenho] = useState(false);
   const [vista, setVista] = useState<VistaDex>("principal");
@@ -149,6 +170,14 @@ export function CadastroPorJogo({
   const [sucesso, setSucesso] = useState<string | null>(null);
 
   const catalogo = useMemo(() => catalogoDoJogo(jogoId, formas), [jogoId, formas]);
+  const trancadas = useMemo(() => {
+    const titulo = new Map(checkpoints.map((c) => [c.id, c.textos[idioma]?.titulo ?? c.id]));
+    const r = new Map<number, string>();
+    for (const [n, ids] of especiesTrancadas(checkpoints, jogoId, new Set())) {
+      r.set(n, ids.map((id) => titulo.get(id)).join(" + "));
+    }
+    return r;
+  }, [checkpoints, jogoId, idioma]);
 
   const visiveis = useMemo(
     () =>
@@ -314,6 +343,7 @@ export function CadastroPorJogo({
               rotulo={rotulo.forma(f)}
               disponibilidade={catalogo?.get(f.id)}
               comCatalogo={catalogo !== null}
+              trancadaPor={trancadas.get(f.numero) ?? null}
               normal={quantidades[f.id]?.normal ?? 0}
               shiny={quantidades[f.id]?.shiny ?? 0}
               tenhoNormal={tenho[f.id]?.normal ?? 0}

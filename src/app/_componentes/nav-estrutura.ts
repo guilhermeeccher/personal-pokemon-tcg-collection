@@ -58,6 +58,8 @@ export const GRUPO_LIVING_DEX: GrupoNav = {
     { href: "/dex/cadastrar", chaveLabel: "itens.cadastrarDex", icone: "circle-plus" },
     { href: "/dex/inventario", chaveLabel: "itens.inventarioDex", icone: "library" },
     { href: "/dex/jogos", chaveLabel: "itens.meusJogos", icone: "gamepad-2" },
+    { href: "/dex/trofeus", chaveLabel: "itens.trofeus", icone: "trophy" },
+    { href: "/dex/planos", chaveLabel: "itens.planos", icone: "list-checks" },
   ],
 };
 

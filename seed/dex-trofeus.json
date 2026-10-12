@@ -1,0 +1,837 @@
+{
+  "sobre": "Living Dex trophies, one list per game. Loaded on every boot by `pnpm seed:dex` (see src/lib/dominio/dex-trofeus.ts). A checkpoint lists the national numbers it unlocks in that game (libera) and where that came from (fonte); a marco unlocks nothing. Order in the file is the display order. Platinum is derived, never listed.",
+  "trofeus": [
+    {
+      "id": "firered-primeiro-parceiro",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Três pokébolas na mesa", "descricao": "Escolha seu primeiro parceiro no laboratório do Professor Oak, em Pallet Town." },
+      "en": { "titulo": "Three Balls on the Table", "descricao": "Pick your first partner at Professor Oak's lab in Pallet Town." }
+    },
+    {
+      "id": "firered-insignia-boulder",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Duro na queda", "descricao": "Vença Brock em Pewter City e ganhe a Boulder Badge." },
+      "en": { "titulo": "Rock Bottom", "descricao": "Beat Brock in Pewter City for the Boulder Badge." }
+    },
+    {
+      "id": "firered-fossil-mt-moon",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Um fóssil só", "descricao": "Atravesse o Mt. Moon e escolha entre o Dome Fossil e o Helix Fossil. O outro, só por troca." },
+      "en": { "titulo": "Only One Fossil", "descricao": "Cross Mt. Moon and choose the Dome Fossil or the Helix Fossil. The other one only comes by trade." }
+    },
+    {
+      "id": "firered-magikarp",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "O negócio do século", "descricao": "Compre o Magikarp do vendedor no Pokémon Center da Route 4, perto do Mt. Moon." },
+      "en": { "titulo": "Deal of the Century", "descricao": "Buy the Magikarp from the salesman at the Route 4 Pokémon Center, by Mt. Moon." }
+    },
+    {
+      "id": "firered-insignia-cascade",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Água mole em pedra dura", "descricao": "Vença Misty em Cerulean City e ganhe a Cascade Badge." },
+      "en": { "titulo": "Making Waves", "descricao": "Beat Misty in Cerulean City for the Cascade Badge." }
+    },
+    {
+      "id": "firered-ss-anne",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Enjoo a bordo", "descricao": "Ajude o capitão do S.S. Anne a melhorar do enjoo e ganhe o HM01 Cut." },
+      "en": { "titulo": "Seasick Captain", "descricao": "Help the S.S. Anne's seasick captain and receive HM01 Cut." }
+    },
+    {
+      "id": "firered-insignia-thunder",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Choque de realidade", "descricao": "Vença Lt. Surge em Vermilion City e ganhe a Thunder Badge." },
+      "en": { "titulo": "Reality Shock", "descricao": "Beat Lt. Surge in Vermilion City for the Thunder Badge." }
+    },
+    {
+      "id": "firered-bicicleta",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Bicicleta de graça", "descricao": "Ouça o presidente do Pokémon Fan Club em Vermilion e troque o Bike Voucher por uma bicicleta em Cerulean." },
+      "en": { "titulo": "Free Ride", "descricao": "Listen to the Pokémon Fan Club chairman in Vermilion and trade the Bike Voucher for a bike in Cerulean." }
+    },
+    {
+      "id": "firered-insignia-rainbow",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Cheiro de flor", "descricao": "Vença Erika em Celadon City e ganhe a Rainbow Badge." },
+      "en": { "titulo": "Stop and Smell the Flowers", "descricao": "Beat Erika in Celadon City for the Rainbow Badge." }
+    },
+    {
+      "id": "firered-esconderijo-rocket",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Cassino fechado", "descricao": "Desmonte o esconderijo da Equipe Rocket embaixo do Game Corner de Celadon e saia com o Silph Scope." },
+      "en": { "titulo": "The House Always Loses", "descricao": "Take down the Team Rocket hideout under the Celadon Game Corner and leave with the Silph Scope." }
+    },
+    {
+      "id": "firered-pokemon-tower",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Descanse em paz", "descricao": "Liberte o espírito da Marowak na Pokémon Tower e salve o Mr. Fuji. Ele dá a Poké Flute." },
+      "en": { "titulo": "Rest in Peace", "descricao": "Free the Marowak's spirit in the Pokémon Tower and rescue Mr. Fuji. He gives you the Poké Flute." }
+    },
+    {
+      "id": "firered-snorlax",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Acorda, dorminhoco", "descricao": "Toque a Poké Flute e enfrente os dois Snorlax que bloqueiam as Routes 12 e 16." },
+      "en": { "titulo": "Rise and Shine", "descricao": "Play the Poké Flute and face both Snorlax blocking Routes 12 and 16." }
+    },
+    {
+      "id": "firered-insignia-soul",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Veneno ninja", "descricao": "Vença Koga em Fuchsia City e ganhe a Soul Badge." },
+      "en": { "titulo": "Ninja Poison", "descricao": "Beat Koga in Fuchsia City for the Soul Badge." }
+    },
+    {
+      "id": "firered-dentadura",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Dentadura perdida", "descricao": "Ache os Gold Teeth no Safari Zone e devolva ao guarda. Ele dá o HM04 Strength." },
+      "en": { "titulo": "Lost Dentures", "descricao": "Find the Gold Teeth in the Safari Zone and return them to the Warden for HM04 Strength." }
+    },
+    {
+      "id": "firered-dojo",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Faixa preta", "descricao": "Vença o Karate Master do Fighting Dojo, em Saffron, e escolha Hitmonlee ou Hitmonchan. O outro, só por troca." },
+      "en": { "titulo": "Black Belt", "descricao": "Beat the Karate Master at the Saffron Fighting Dojo and choose Hitmonlee or Hitmonchan. The other one only comes by trade." }
+    },
+    {
+      "id": "firered-silph",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Silph liberada", "descricao": "Expulse a Equipe Rocket da Silph Co. e vença Giovanni. Um funcionário agradece com um Lapras." },
+      "en": { "titulo": "Silph Set Free", "descricao": "Drive Team Rocket out of Silph Co. and beat Giovanni. An employee thanks you with a Lapras." }
+    },
+    {
+      "id": "firered-insignia-marsh",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Mente sobre a matéria", "descricao": "Vença Sabrina em Saffron City e ganhe a Marsh Badge." },
+      "en": { "titulo": "Mind over Matter", "descricao": "Beat Sabrina in Saffron City for the Marsh Badge." }
+    },
+    {
+      "id": "firered-insignia-volcano",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Quiz pegando fogo", "descricao": "Responda o quiz do ginásio, vença Blaine em Cinnabar Island e ganhe a Volcano Badge." },
+      "en": { "titulo": "Hot Quiz", "descricao": "Answer the gym quiz, beat Blaine on Cinnabar Island and earn the Volcano Badge." }
+    },
+    {
+      "id": "firered-ilhas-sevii-1-3",
+      "jogo": "firered",
+      "tipo": "checkpoint",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Passagem para três", "descricao": "Depois de Blaine, aceite o convite de Bill e ganhe o Tri-Pass: One, Two e Three Island." },
+      "en": { "titulo": "Ticket for Three", "descricao": "After Blaine, take Bill up on his invitation and get the Tri-Pass to One, Two and Three Island." },
+      "requer": ["firered-insignia-volcano"],
+      "libera": "77-78,146,206,218-219",
+      "fonte": "Bulbapedia: Sevii Islands, Tri-Pass. PokeAPI encounters (FireRed): Ponyta and Rapidash only on Kindle Road and Mt. Ember, Moltres on Mt. Ember, Slugma and Magcargo in Mt. Ember, Dunsparce at Three Isle Port."
+    },
+    {
+      "id": "firered-lostelle",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Perdida na floresta", "descricao": "Encontre Lostelle no Berry Forest, em Three Island, e leve a menina de volta para casa." },
+      "en": { "titulo": "Lost in the Woods", "descricao": "Find Lostelle in the Berry Forest on Three Island and bring her home." },
+      "requer": ["firered-ilhas-sevii-1-3"]
+    },
+    {
+      "id": "firered-passaros",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Trio celeste", "descricao": "Capture Articuno nas Seafoam Islands, Zapdos na Power Plant e Moltres no Mt. Ember." },
+      "en": { "titulo": "Sky Trio", "descricao": "Catch Articuno in the Seafoam Islands, Zapdos at the Power Plant and Moltres on Mt. Ember." }
+    },
+    {
+      "id": "firered-insignia-earth",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "O chefe era o líder", "descricao": "Vença Giovanni no ginásio de Viridian City e ganhe a Earth Badge." },
+      "en": { "titulo": "The Boss Was the Leader", "descricao": "Beat Giovanni at the Viridian City Gym for the Earth Badge." }
+    },
+    {
+      "id": "firered-campeao",
+      "jogo": "firered",
+      "tipo": "checkpoint",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Mais forte que o rival", "descricao": "Vença a Elite dos Quatro e o campeão e entre no Hall da Fama. Na versão de Switch, o AuroraTicket e o MysticTicket chegam sozinhos." },
+      "en": { "titulo": "Smell Ya Later", "descricao": "Beat the Elite Four and the Champion and enter the Hall of Fame. On Switch, the AuroraTicket and MysticTicket arrive on their own." },
+      "requer": ["firered-insignia-earth"],
+      "libera": "150,202,249-250,386",
+      "fonte": "Bulbapedia: Pokémon FireRed and LeafGreen Versions (Differences in the Nintendo Switch release: tickets after the Hall of Fame), Cerulean Cave (Mewtwo and Wobbuffet open after the Hall of Fame)."
+    },
+    {
+      "id": "firered-pokedex-nacional",
+      "jogo": "firered",
+      "tipo": "checkpoint",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "O mundo é maior", "descricao": "Com 60 espécies de Kanto capturadas, já tendo ido a One Island e entrado no Hall da Fama, fale com o Professor Oak em Pallet." },
+      "en": { "titulo": "The World Is Bigger", "descricao": "With 60 Kanto species caught, having visited One Island and entered the Hall of Fame, talk to Professor Oak in Pallet." },
+      "requer": ["firered-campeao", "firered-ilhas-sevii-1-3"],
+      "libera": "161-162,165-169,172-178,182-184,186-189,193-195,198-202,206,208,211-212,214-215,218-221,223-227,230-233,236-240,242-250,298,360,386",
+      "fonte": "Bulbapedia: National Pokédex (FireRed and LeafGreen): before it, no Generation II or III species can be obtained and cross-generation evolutions fail. The list is every species above 151 in the FireRed catalog."
+    },
+    {
+      "id": "firered-ilhas-sevii-4-7",
+      "jogo": "firered",
+      "tipo": "checkpoint",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Arco-íris no horizonte", "descricao": "Busque o Ruby no fundo do Ruby Path, no Mt. Ember, e leve ao Celio. Ele dá o Rainbow Pass: Four a Seven Island." },
+      "en": { "titulo": "Somewhere over the Rainbow", "descricao": "Fetch the Ruby from the depths of the Ruby Path on Mt. Ember and bring it to Celio. He gives you the Rainbow Pass to Four through Seven Island." },
+      "requer": ["firered-pokedex-nacional"],
+      "libera": "161-162,165-168,175-178,187-189,193-195,198,201,211,214,220-221,225,227,231-232,246-250,386",
+      "fonte": "Bulbapedia: Rainbow Pass (given by Celio after obtaining the Ruby; needed for Navel Rock and Birth Island). PokeAPI encounters (FireRed): species found only on Four to Seven Island, closed by evolution and breeding; Togepi is the Water Labyrinth egg."
+    },
+    {
+      "id": "firered-lorelei",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Gelo e amizade", "descricao": "Ajude Lorelei a expulsar a Equipe Rocket da Icefall Cave, em Four Island." },
+      "en": { "titulo": "Cold Hands, Warm Heart", "descricao": "Help Lorelei drive Team Rocket out of Icefall Cave on Four Island." },
+      "requer": ["firered-ilhas-sevii-4-7"]
+    },
+    {
+      "id": "firered-rede-rubi-safira",
+      "jogo": "firered",
+      "tipo": "checkpoint",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Missão Safira", "descricao": "Recupere a Sapphire da Equipe Rocket no Rocket Warehouse, em Five Island, e entregue ao Celio. O cão lendário do seu inicial começa a correr por Kanto." },
+      "en": { "titulo": "Operation Sapphire", "descricao": "Take the Sapphire back from Team Rocket at the Rocket Warehouse on Five Island and deliver it to Celio. Your starter's legendary beast starts roaming Kanto." },
+      "requer": ["firered-ilhas-sevii-4-7"],
+      "libera": "243-245",
+      "fonte": "Bulbapedia: Roaming Pokémon (FireRed and LeafGreen): one beast per save, chosen by the starter (Squirtle: Raikou, Bulbasaur: Entei, Charmander: Suicune), roaming after the Sapphire is delivered. The other two only come by trade."
+    },
+    {
+      "id": "firered-tanoby",
+      "jogo": "firered",
+      "tipo": "checkpoint",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Alfabeto antigo", "descricao": "Resolva o quebra-cabeça de pedras do Tanoby Key, no Sevault Canyon. Os Unown acordam nas Tanoby Chambers." },
+      "en": { "titulo": "Ancient Alphabet", "descricao": "Solve the boulder puzzle of the Tanoby Key in Sevault Canyon. The Unown wake up in the Tanoby Chambers." },
+      "requer": ["firered-ilhas-sevii-4-7"],
+      "libera": "201",
+      "fonte": "Bulbapedia: Tanoby Key, Tanoby Ruins (the chambers only have Unown after the puzzle)."
+    },
+    {
+      "id": "firered-golpe-supremo",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Golpe supremo", "descricao": "Em Cape Brink, Two Island, ensine Blast Burn, Frenzy Plant ou Hydro Cannon ao seu inicial totalmente evoluído e com amizade no máximo." },
+      "en": { "titulo": "Ultimate Move", "descricao": "At Cape Brink on Two Island, teach Blast Burn, Frenzy Plant or Hydro Cannon to your fully evolved starter at maximum friendship." },
+      "requer": ["firered-ilhas-sevii-1-3"]
+    },
+    {
+      "id": "firered-cao-lendario",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Pega pelo rabo", "descricao": "Capture o cão lendário que corre por Kanto: Raikou, Entei ou Suicune, conforme o seu inicial." },
+      "en": { "titulo": "Catch Me If You Can", "descricao": "Catch the legendary beast roaming Kanto: Raikou, Entei or Suicune, depending on your starter." },
+      "requer": ["firered-rede-rubi-safira"]
+    },
+    {
+      "id": "firered-mewtwo",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Clone perfeito", "descricao": "Capture Mewtwo no fundo da Cerulean Cave." },
+      "en": { "titulo": "Perfect Copy", "descricao": "Catch Mewtwo deep in Cerulean Cave." },
+      "requer": ["firered-campeao"]
+    },
+    {
+      "id": "firered-navel-rock",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Asas de prata e arco-íris", "descricao": "Use o MysticTicket e capture Lugia e Ho-Oh na Navel Rock." },
+      "en": { "titulo": "Silver and Rainbow Wings", "descricao": "Use the MysticTicket and catch Lugia and Ho-Oh at Navel Rock." },
+      "requer": ["firered-campeao", "firered-ilhas-sevii-4-7"]
+    },
+    {
+      "id": "firered-birth-island",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Vírus do espaço", "descricao": "Use o AuroraTicket, resolva o triângulo da Birth Island e capture Deoxys." },
+      "en": { "titulo": "Space Virus", "descricao": "Use the AuroraTicket, solve the Birth Island triangle and catch Deoxys." },
+      "requer": ["firered-campeao", "firered-ilhas-sevii-4-7"]
+    },
+    {
+      "id": "firered-revanche-liga",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "De novo, só que mais difícil", "descricao": "Vença a Elite dos Quatro e o campeão com os times reforçados do pós-jogo." },
+      "en": { "titulo": "Again, but Harder", "descricao": "Beat the Elite Four and the Champion with their stronger post-game teams." },
+      "requer": ["firered-campeao"]
+    },
+    {
+      "id": "firered-trainer-tower",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Escalada", "descricao": "Chegue ao topo da Trainer Tower, em Seven Island, nas quatro modalidades: Single, Double, Knockout e Mixed." },
+      "en": { "titulo": "Top of the Tower", "descricao": "Reach the top of the Trainer Tower on Seven Island in all four modes: Single, Double, Knockout and Mixed." },
+      "requer": ["firered-ilhas-sevii-4-7"]
+    },
+    {
+      "id": "firered-diploma-kanto",
+      "jogo": "firered",
+      "tipo": "marco",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Diploma de Kanto", "descricao": "Complete a Pokédex de Kanto (os 150, sem Mew) e receba o diploma do Game Designer em Celadon. Exige troca com o LeafGreen." },
+      "en": { "titulo": "Kanto Diploma", "descricao": "Complete the Kanto Pokédex (all 150, Mew excluded) and get the diploma from the Game Designer in Celadon. Requires trading with LeafGreen." }
+    },
+    {
+      "id": "brilliant-diamond-primeiro-parceiro",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Maleta esquecida", "descricao": "Fuja dos Starly no Lake Verity com um Pokémon da maleta do Professor Rowan." },
+      "en": { "titulo": "Forgotten Briefcase", "descricao": "Fend off the Starly at Lake Verity with a Pokémon from Professor Rowan's briefcase." }
+    },
+    {
+      "id": "brilliant-diamond-insignia-coal",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Carvão e capacete", "descricao": "Vença Roark em Oreburgh City e ganhe a Coal Badge." },
+      "en": { "titulo": "Hard Hat Required", "descricao": "Beat Roark in Oreburgh City for the Coal Badge." }
+    },
+    {
+      "id": "brilliant-diamond-valley-windworks",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Vento a favor", "descricao": "Expulse a Equipe Galáctica do Valley Windworks, perto de Floaroma." },
+      "en": { "titulo": "Tailwind", "descricao": "Drive Team Galactic out of the Valley Windworks near Floaroma." }
+    },
+    {
+      "id": "brilliant-diamond-insignia-forest",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Jardim secreto", "descricao": "Vença Gardenia em Eterna City e ganhe a Forest Badge." },
+      "en": { "titulo": "Secret Garden", "descricao": "Beat Gardenia in Eterna City for the Forest Badge." }
+    },
+    {
+      "id": "brilliant-diamond-bicicleta",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Pedalando", "descricao": "Expulse a Equipe Galáctica do prédio de Eterna e ganhe a bicicleta na loja de Eterna City." },
+      "en": { "titulo": "On Two Wheels", "descricao": "Clear Team Galactic out of their Eterna building and get the bike from the Eterna City cycle shop." }
+    },
+    {
+      "id": "brilliant-diamond-insignia-cobble",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Punho de aço", "descricao": "Vença Maylene em Veilstone City e ganhe a Cobble Badge." },
+      "en": { "titulo": "Iron Fist", "descricao": "Beat Maylene in Veilstone City for the Cobble Badge." }
+    },
+    {
+      "id": "brilliant-diamond-insignia-fen",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Onda gigante", "descricao": "Vença Crasher Wake em Pastoria City e ganhe a Fen Badge." },
+      "en": { "titulo": "Big Wave", "descricao": "Beat Crasher Wake in Pastoria City for the Fen Badge." }
+    },
+    {
+      "id": "brilliant-diamond-great-marsh",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Lama até o joelho", "descricao": "Capture um Pokémon no Great Marsh de Pastoria." },
+      "en": { "titulo": "Knee-Deep", "descricao": "Catch a Pokémon in the Pastoria Great Marsh." }
+    },
+    {
+      "id": "brilliant-diamond-insignia-relic",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Boo!", "descricao": "Vença Fantina em Hearthome City e ganhe a Relic Badge." },
+      "en": { "titulo": "Boo!", "descricao": "Beat Fantina in Hearthome City for the Relic Badge." }
+    },
+    {
+      "id": "brilliant-diamond-insignia-mine",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Tal pai, tal filho", "descricao": "Vença Byron, pai do Roark, em Canalave City e ganhe a Mine Badge." },
+      "en": { "titulo": "Like Father, Like Son", "descricao": "Beat Byron, Roark's father, in Canalave City for the Mine Badge." }
+    },
+    {
+      "id": "brilliant-diamond-insignia-icicle",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Sangue frio", "descricao": "Vença Candice em Snowpoint City e ganhe a Icicle Badge." },
+      "en": { "titulo": "Cool Head", "descricao": "Beat Candice in Snowpoint City for the Icicle Badge." }
+    },
+    {
+      "id": "brilliant-diamond-qg-galactico",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Invasão ao QG", "descricao": "Invada o QG da Equipe Galáctica em Veilstone e liberte os três guardiões dos lagos." },
+      "en": { "titulo": "Headquarters Raid", "descricao": "Storm Team Galactic's headquarters in Veilstone and free the three lake guardians." }
+    },
+    {
+      "id": "brilliant-diamond-dialga",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Senhor do tempo", "descricao": "Pare Cyrus na Spear Pillar e capture Dialga." },
+      "en": { "titulo": "Master of Time", "descricao": "Stop Cyrus at the Spear Pillar and catch Dialga." }
+    },
+    {
+      "id": "brilliant-diamond-insignia-beacon",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Luz no farol", "descricao": "Vença Volkner em Sunyshore City e ganhe a Beacon Badge." },
+      "en": { "titulo": "Lighthouse Keeper", "descricao": "Beat Volkner in Sunyshore City for the Beacon Badge." }
+    },
+    {
+      "id": "brilliant-diamond-trio-lagos",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Saber, emoção e vontade", "descricao": "Capture Uxie, Mesprit e Azelf. A Mesprit foge e corre pelas rotas de Sinnoh." },
+      "en": { "titulo": "Knowledge, Emotion, Willpower", "descricao": "Catch Uxie, Mesprit and Azelf. Mesprit flees and roams the routes of Sinnoh." }
+    },
+    {
+      "id": "brilliant-diamond-pokedex-nacional",
+      "jogo": "brilliant-diamond",
+      "tipo": "checkpoint",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Ver para crer", "descricao": "Veja todas as espécies da Pokédex de Sinnoh (Manaphy não conta) e fale com o Professor Rowan em Sandgem. O Professor Oak vem atualizar a Pokédex." },
+      "en": { "titulo": "Seeing Is Believing", "descricao": "See every species in the Sinnoh Pokédex (Manaphy excluded) and talk to Professor Rowan in Sandgem. Professor Oak comes to upgrade your Pokédex." },
+      "libera": "1-24,27-34,37-40,43-53,56-62,69-71,79-91,96-112,114-117,120-121,123-128,131-142,144-150,152-162,165-168,170-171,174-182,186-189,191-193,196-197,199,202,204-207,209-213,216-222,225,227-241,243-250,252-264,270-277,280-297,299-306,309-314,316-338,341-348,351-357,359-384,462-479,486,488,493",
+      "fonte": "Bulbapedia: National Pokédex (Brilliant Diamond and Shining Pearl), Grand Underground (pool grows with the National Pokédex), Old Chateau (Rotom after it), Fullmoon Island and Snowpoint Temple (need it). The list is every species in the BD catalog outside PokeAPI's original Sinnoh Pokédex, except Mew and Jirachi (save data bonus), Darkrai (event), Heatran and Giratina (Hall of Fame only)."
+    },
+    {
+      "id": "brilliant-diamond-campeao",
+      "jogo": "brilliant-diamond",
+      "tipo": "checkpoint",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "A campeã caiu", "descricao": "Vença a Elite dos Quatro e Cynthia e entre no Hall da Fama. A Battle Zone se abre." },
+      "en": { "titulo": "The Champion Falls", "descricao": "Beat the Elite Four and Cynthia and enter the Hall of Fame. The Battle Zone opens." },
+      "requer": ["brilliant-diamond-insignia-beacon"],
+      "libera": "485,487-488,493",
+      "fonte": "Bulbapedia: Stark Mountain (Heatran, in the Battle Zone), Turnback Cave (Giratina after the Hall of Fame), Fullmoon Island (Cresselia: Hall of Fame and National Pokédex), Pokémon Brilliant Diamond and Shining Pearl (Arceus: Hall of Fame, National Pokédex and Legends: Arceus save data)."
+    },
+    {
+      "id": "brilliant-diamond-ramanas-park",
+      "jogo": "brilliant-diamond",
+      "tipo": "checkpoint",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Parque das lendas", "descricao": "Com a Pokédex Nacional e o Hall da Fama, entre no Ramanas Park e use a Discovery Slate." },
+      "en": { "titulo": "Park of Legends", "descricao": "With the National Pokédex and the Hall of Fame, enter Ramanas Park and use the Discovery Slate." },
+      "requer": ["brilliant-diamond-pokedex-nacional", "brilliant-diamond-campeao"],
+      "libera": "377-379",
+      "fonte": "Bulbapedia: Ramanas Park (opens with the National Pokédex and the Hall of Fame; the Discovery Slate calls Regirock, Regice and Registeel)."
+    },
+    {
+      "id": "brilliant-diamond-gigantes",
+      "jogo": "brilliant-diamond",
+      "tipo": "checkpoint",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Pedra, gelo e aço", "descricao": "Capture Regirock, Regice e Registeel no Ramanas Park. A loja passa a vender a Johto Slate e a Soul Slate." },
+      "en": { "titulo": "Rock, Ice and Steel", "descricao": "Catch Regirock, Regice and Registeel in Ramanas Park. The shop starts selling the Johto Slate and the Soul Slate." },
+      "requer": ["brilliant-diamond-ramanas-park"],
+      "libera": "243-245,380-381,486",
+      "fonte": "Bulbapedia: Ramanas Park (Johto Slate in BD and Soul Slate after the legendary giants: Raikou, Entei, Suicune, Latias, Latios), Snowpoint Temple (Regigigas needs the three Regi in the party)."
+    },
+    {
+      "id": "brilliant-diamond-caes",
+      "jogo": "brilliant-diamond",
+      "tipo": "checkpoint",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Matilha lendária", "descricao": "Capture Raikou, Entei e Suicune no Ramanas Park. Abrem-se as slates de Ho-Oh, Kyogre, Groudon, Rayquaza e Mewtwo." },
+      "en": { "titulo": "Legendary Pack", "descricao": "Catch Raikou, Entei and Suicune in Ramanas Park. The slates for Ho-Oh, Kyogre, Groudon, Rayquaza and Mewtwo open up." },
+      "requer": ["brilliant-diamond-gigantes"],
+      "libera": "150,250,382-384",
+      "fonte": "Bulbapedia: Ramanas Park (Rainbow, Oceanic, Tectonic, Stratospheric and Genome Slates after the legendary beasts in BD)."
+    },
+    {
+      "id": "brilliant-diamond-regigigas",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "O colosso acorda", "descricao": "Leve Regirock, Regice e Registeel à Snowpoint Temple e capture Regigigas." },
+      "en": { "titulo": "The Colossus Wakes", "descricao": "Bring Regirock, Regice and Registeel to Snowpoint Temple and catch Regigigas." },
+      "requer": ["brilliant-diamond-gigantes"]
+    },
+    {
+      "id": "brilliant-diamond-heatran",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Lava e aço", "descricao": "Acompanhe Buck pela Stark Mountain e capture Heatran." },
+      "en": { "titulo": "Lava and Steel", "descricao": "Go through Stark Mountain with Buck and catch Heatran." },
+      "requer": ["brilliant-diamond-campeao"]
+    },
+    {
+      "id": "brilliant-diamond-giratina",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Do outro lado", "descricao": "Atravesse a Turnback Cave e capture Giratina." },
+      "en": { "titulo": "The Other Side", "descricao": "Make your way through Turnback Cave and catch Giratina." },
+      "requer": ["brilliant-diamond-campeao"]
+    },
+    {
+      "id": "brilliant-diamond-cresselia",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Pena da lua", "descricao": "Busque a Lunar Feather na Fullmoon Island e capture Cresselia, que foge e corre pelas rotas de Sinnoh." },
+      "en": { "titulo": "Moon Feather", "descricao": "Fetch the Lunar Feather on Fullmoon Island and catch Cresselia, which flees and roams Sinnoh." },
+      "requer": ["brilliant-diamond-pokedex-nacional", "brilliant-diamond-campeao"]
+    },
+    {
+      "id": "brilliant-diamond-rotom",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Fantasma na TV", "descricao": "À noite, capture o Rotom que vive na TV do Old Chateau." },
+      "en": { "titulo": "Ghost in the TV", "descricao": "At night, catch the Rotom living in the Old Chateau's TV." },
+      "requer": ["brilliant-diamond-pokedex-nacional"]
+    },
+    {
+      "id": "brilliant-diamond-base-secreta",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Toca própria", "descricao": "Monte a sua base secreta no Grand Underground." },
+      "en": { "titulo": "A Den of Your Own", "descricao": "Set up your Secret Base in the Grand Underground." }
+    },
+    {
+      "id": "brilliant-diamond-fossil",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Arqueólogo", "descricao": "Escave um fóssil nas paredes do Grand Underground e reviva o Pokémon no museu de Oreburgh." },
+      "en": { "titulo": "Archaeologist", "descricao": "Dig a fossil out of the Grand Underground walls and revive it at the Oreburgh museum." }
+    },
+    {
+      "id": "brilliant-diamond-super-contest",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Estrela do palco", "descricao": "Vença um Super Contest no nível Master, em Hearthome." },
+      "en": { "titulo": "Star of the Show", "descricao": "Win a Master Rank Super Contest in Hearthome." }
+    },
+    {
+      "id": "brilliant-diamond-revanche-liga",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Segunda volta", "descricao": "Vença a Elite dos Quatro e Cynthia de novo, com os times da revanche." },
+      "en": { "titulo": "Second Lap", "descricao": "Beat the Elite Four and Cynthia again, with their rematch teams." },
+      "requer": ["brilliant-diamond-campeao"]
+    },
+    {
+      "id": "brilliant-diamond-battle-tower",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "O dono da torre", "descricao": "Vença Palmer, o Tower Tycoon, na Battle Tower." },
+      "en": { "titulo": "Lord of the Tower", "descricao": "Beat Palmer, the Tower Tycoon, at the Battle Tower." },
+      "requer": ["brilliant-diamond-campeao"]
+    },
+    {
+      "id": "brilliant-diamond-sinnoh-completa",
+      "jogo": "brilliant-diamond",
+      "tipo": "marco",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Sinnoh de ponta a ponta", "descricao": "Capture todas as espécies da Pokédex de Sinnoh. Exige troca com o Shining Pearl." },
+      "en": { "titulo": "Sinnoh, End to End", "descricao": "Catch every species in the Sinnoh Pokédex. Requires trading with Shining Pearl." }
+    },
+    {
+      "id": "go-nivel-5",
+      "jogo": "go",
+      "tipo": "checkpoint",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Escolha sua cor", "descricao": "Chegue ao nível 5 e entre numa equipe. Ginásios e reides liberados." },
+      "en": { "titulo": "Pick a Color", "descricao": "Reach level 5 and join a team. Gyms and raids open up." },
+      "libera": "144-146,150,243-245,249-250,377-384,480-488,638-646,716-718,785-792,800,888-892,894-895,905",
+      "fonte": "Bulbapedia: Trainer level (level 5 unlocks gyms and raids). The list is every non-Mythical Legendary released in GO, which come mainly from raids."
+    },
+    {
+      "id": "go-nivel-8",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Problema à vista", "descricao": "Chegue ao nível 8 e comece a pesquisa especial da Equipe GO Rocket." },
+      "en": { "titulo": "Trouble Ahead", "descricao": "Reach level 8 and start Team GO Rocket's Special Research." }
+    },
+    {
+      "id": "go-nivel-10",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Troca-troca", "descricao": "Chegue ao nível 10 e faça a primeira troca com um amigo. É o caminho dos exclusivos regionais." },
+      "en": { "titulo": "Swap Meet", "descricao": "Reach level 10 and make your first trade with a friend. That is how regional exclusives arrive." }
+    },
+    {
+      "id": "go-conectar-home",
+      "jogo": "go",
+      "tipo": "checkpoint",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Caixa misteriosa", "descricao": "Mande um Pokémon do GO ao HOME e ganhe a Mystery Box. Aberta, ela atrai Meltan por uma hora." },
+      "en": { "titulo": "Mystery Box", "descricao": "Send a Pokémon from GO to HOME and get the Mystery Box. Opened, it draws Meltan for an hour." },
+      "libera": "808-809",
+      "fonte": "Bulbapedia: Mystery Box (unlocked by transferring to HOME through GO Transporter; Melmetal evolves from Meltan with candy)."
+    },
+    {
+      "id": "go-mew",
+      "jogo": "go",
+      "tipo": "checkpoint",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Descoberta mítica", "descricao": "Complete a pesquisa especial A Mythical Discovery e capture Mew." },
+      "en": { "titulo": "A Mythical Discovery", "descricao": "Complete the A Mythical Discovery Special Research and catch Mew." },
+      "libera": "151",
+      "fonte": "Bulbapedia: Special Research (A Mythical Discovery, global and free, no end date)."
+    },
+    {
+      "id": "go-celebi",
+      "jogo": "go",
+      "tipo": "checkpoint",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Viajante do tempo", "descricao": "Complete a pesquisa especial A Ripple in Time e capture Celebi." },
+      "en": { "titulo": "A Ripple in Time", "descricao": "Complete the A Ripple in Time Special Research and catch Celebi." },
+      "libera": "251",
+      "fonte": "Bulbapedia: Special Research (A Ripple in Time, global and free, no end date)."
+    },
+    {
+      "id": "go-jirachi",
+      "jogo": "go",
+      "tipo": "checkpoint",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Sono de mil anos", "descricao": "Complete a pesquisa especial A Thousand-Year Slumber e capture Jirachi." },
+      "en": { "titulo": "A Thousand-Year Slumber", "descricao": "Complete the A Thousand-Year Slumber Special Research and catch Jirachi." },
+      "libera": "385",
+      "fonte": "Bulbapedia: Special Research (A Thousand-Year Slumber, global and free, no end date)."
+    },
+    {
+      "id": "go-victini",
+      "jogo": "go",
+      "tipo": "checkpoint",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Energia misteriosa", "descricao": "Complete a pesquisa especial Investigate a Mysterious Energy e capture Victini." },
+      "en": { "titulo": "Mysterious Energy", "descricao": "Complete the Investigate a Mysterious Energy Special Research and catch Victini." },
+      "libera": "494",
+      "fonte": "Bulbapedia: Special Research (Investigate a Mysterious Energy, global and free, no end date)."
+    },
+    {
+      "id": "go-keldeo",
+      "jogo": "go",
+      "tipo": "checkpoint",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Cascos de herói", "descricao": "Complete a pesquisa especial Hooves of a Hero e capture Keldeo." },
+      "en": { "titulo": "Hooves of a Hero", "descricao": "Complete the Hooves of a Hero Special Research and catch Keldeo." },
+      "libera": "647",
+      "fonte": "Bulbapedia: Special Research (Hooves of a Hero, global and free, no end date)."
+    },
+    {
+      "id": "go-meloetta",
+      "jogo": "go",
+      "tipo": "checkpoint",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Encontre sua voz", "descricao": "Complete a pesquisa especial Finding Your Voice e capture Meloetta." },
+      "en": { "titulo": "Finding Your Voice", "descricao": "Complete the Finding Your Voice Special Research and catch Meloetta." },
+      "libera": "648",
+      "fonte": "Bulbapedia: Special Research (Finding Your Voice, global and free, no end date)."
+    },
+    {
+      "id": "go-shaymin",
+      "jogo": "go",
+      "tipo": "checkpoint",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Grama e gratidão", "descricao": "Complete a pesquisa especial Grass and Gratitude e capture Shaymin." },
+      "en": { "titulo": "Grass and Gratitude", "descricao": "Complete the Grass and Gratitude Special Research and catch Shaymin." },
+      "libera": "492",
+      "fonte": "Bulbapedia: Special Research (Grass and Gratitude, global and free, no end date)."
+    },
+    {
+      "id": "go-diancie",
+      "jogo": "go",
+      "tipo": "checkpoint",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Brilho de joia", "descricao": "Complete a pesquisa especial Glitz and Glam e capture Diancie." },
+      "en": { "titulo": "Glitz and Glam", "descricao": "Complete the Glitz and Glam Special Research and catch Diancie." },
+      "libera": "719",
+      "fonte": "Bulbapedia: Special Research (Glitz and Glam, global and free, no end date)."
+    },
+    {
+      "id": "go-marshadow",
+      "jogo": "go",
+      "tipo": "checkpoint",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Sombra que golpeia", "descricao": "Complete a pesquisa especial A Striking Shadow e capture Marshadow." },
+      "en": { "titulo": "A Striking Shadow", "descricao": "Complete the A Striking Shadow Special Research and catch Marshadow." },
+      "libera": "802",
+      "fonte": "Bulbapedia: Special Research (A Striking Shadow, global and free, no end date)."
+    },
+    {
+      "id": "go-zygarde",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "De A a Zygarde", "descricao": "Complete a pesquisa From A to Zygarde, juntando Zygarde Cells pelas rotas. O Zygarde não sai do GO." },
+      "en": { "titulo": "From A to Zygarde", "descricao": "Complete From A to Zygarde, collecting Zygarde Cells along Routes. Zygarde never leaves GO." }
+    },
+    {
+      "id": "go-primeiro-lendario",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Lenda no bolso", "descricao": "Capture um lendário numa reide." },
+      "en": { "titulo": "Legend in Your Pocket", "descricao": "Catch a Legendary in a raid." },
+      "requer": ["go-nivel-5"]
+    },
+    {
+      "id": "go-primeiro-shiny",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Brilhou", "descricao": "Capture seu primeiro shiny." },
+      "en": { "titulo": "Something Shiny", "descricao": "Catch your first shiny." }
+    },
+    {
+      "id": "go-troca-sorte",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Dia de sorte", "descricao": "Faça uma troca da sorte (Lucky Trade)." },
+      "en": { "titulo": "Lucky Day", "descricao": "Get a Lucky Trade." },
+      "requer": ["go-nivel-10"]
+    },
+    {
+      "id": "go-purificar",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "De volta à luz", "descricao": "Purifique um Pokémon sombrio." },
+      "en": { "titulo": "Back to the Light", "descricao": "Purify a Shadow Pokémon." },
+      "requer": ["go-nivel-8"]
+    },
+    {
+      "id": "go-giovanni",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Xeque no chefe", "descricao": "Encontre Giovanni com o Super Rocket Radar e vença." },
+      "en": { "titulo": "Checkmate, Boss", "descricao": "Track down Giovanni with the Super Rocket Radar and win." },
+      "requer": ["go-nivel-8"]
+    },
+    {
+      "id": "go-melhor-amigo",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Unha e carne", "descricao": "Chegue a Best Buddy com um parceiro." },
+      "en": { "titulo": "Best Buddies", "descricao": "Reach Best Buddy with a buddy Pokémon." }
+    },
+    {
+      "id": "go-liga-ace",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Ás da liga", "descricao": "Chegue ao posto Ace na GO Battle League." },
+      "en": { "titulo": "League Ace", "descricao": "Reach the Ace rank in the GO Battle League." },
+      "requer": ["go-nivel-10"]
+    },
+    {
+      "id": "go-liga-lenda",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Lenda da liga", "descricao": "Chegue ao posto Legend na GO Battle League." },
+      "en": { "titulo": "League Legend", "descricao": "Reach the Legend rank in the GO Battle League." },
+      "requer": ["go-liga-ace"]
+    },
+    {
+      "id": "go-nivel-20",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Pegando o jeito", "descricao": "Chegue ao nível 20." },
+      "en": { "titulo": "Getting the Hang of It", "descricao": "Reach level 20." }
+    },
+    {
+      "id": "go-nivel-30",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "bronze",
+      "pt-BR": { "titulo": "Treinador de verdade", "descricao": "Chegue ao nível 30." },
+      "en": { "titulo": "The Real Deal", "descricao": "Reach level 30." },
+      "requer": ["go-nivel-20"]
+    },
+    {
+      "id": "go-nivel-40",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "prata",
+      "pt-BR": { "titulo": "Quarentão", "descricao": "Chegue ao nível 40, o antigo teto do jogo." },
+      "en": { "titulo": "The Old Ceiling", "descricao": "Reach level 40, the game's old level cap." },
+      "requer": ["go-nivel-30"]
+    },
+    {
+      "id": "go-nivel-50",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Meio século", "descricao": "Chegue ao nível 50, passando pelos desafios de nível." },
+      "en": { "titulo": "Half a Century", "descricao": "Reach level 50, clearing the level-up challenges on the way." },
+      "requer": ["go-nivel-40"]
+    },
+    {
+      "id": "go-nivel-80",
+      "jogo": "go",
+      "tipo": "marco",
+      "nivel": "ouro",
+      "pt-BR": { "titulo": "Até o teto", "descricao": "Chegue ao nível 80, o teto atual." },
+      "en": { "titulo": "Through the Roof", "descricao": "Reach level 80, the current level cap." },
+      "requer": ["go-nivel-50"]
+    }
+  ]
+}

@@ -564,7 +564,8 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
   shows only the game's catalog (with "show all" for a Pokémon from elsewhere); a game without a
   catalog shows every slot. Lists are written as national-number ranges so a correction reads well
   in a diff; a species in two lists fails a test. **Pokémon GO's list is the one that ages fastest**
-  — GO releases something almost every month.
+  — GO releases something almost every month. The catalog says what the game *has*; **when** a save
+  reaches it (after the National Pokédex, after the Hall of Fame) is the trophies' job, below.
 - **What HOME does not accept from a game never leaves it** — not to HOME and not to another game,
   since every path between games goes through HOME (`dexNaoTransferivel`). Such a record stays in
   the inventory and never shows up in "Take to HOME".
@@ -572,6 +573,45 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
   HOME, in one track, that a Pokémon the user already has in a game would fill. A slot counts once,
   however many copies exist; with copies in two games, the suggestion comes from the two-way game,
   since that one can come back.
+
+### Trophies — `dex_trofeu`, from `seed/dex-trofeus.json`
+
+- **Each game has a fixed trophy list, PlayStation style**: bronze, silver and gold, in story order,
+  and a **platinum that is derived** when every other trophy of the game is earned — it is never a
+  row (`lib/dominio/dex-trofeus.ts`).
+- **Two kinds.** A `checkpoint` unlocks access to Pokémon in that save (FireRed's National Pokédex,
+  the Sevii Islands, BDSP's Ramanas Park) and lists the national numbers it unlocks (`libera`). A
+  `marco` is a milestone worth doing (a gym leader, a legendary, the Trainer Tower) and unlocks
+  nothing. A species listed by several checkpoints is reachable only when **all** of them are earned.
+  Locked species show on the add screen with the checkpoint's name; they are marked, never refused —
+  a Pokémon may have come by trade.
+- **The list is data, not code.** A new trophy is one more entry in the JSON; it is loaded on every
+  boot by `pnpm seed:dex`, upserted, and a trophy that left the file is **deactivated, never
+  deleted** — an earned trophy or a task may point at it. Every text exists in `pt-BR` and `en`.
+- **What a checkpoint unlocks is checked data, never filled from memory**, like the availability
+  catalog: every checkpoint carries its source (`fonte`), and a test fails if it unlocks a species
+  that is not in that game's catalog. `requer` only points backwards in the file, so it can't loop.
+- **Earning a trophy is one row in `dex_trofeu_obtido`**, by screen (`manual`) or by session
+  (`sessao`); undoing deletes the row.
+
+### Plans, tasks and planning sessions
+
+- **Plans and tasks** (`dex_plano`, `dex_tarefa`) are what the user does in the games next. A plan
+  may aim at trophies; a task may target slots (`forma_ids`) and a trophy. **Finishing a catch,
+  evolve or trade task offers the add screen, already on the task's game; it never records the
+  Pokémon itself** (`/dex/cadastrar?jogo=…&busca=…`).
+- **Planning sessions run outside the app**, with an assistant, through two commands:
+  - `pnpm dex:estado` prints the state that opens a session (markdown, or `--json`): progress, each
+    owned game with its trophies, what it reaches now and what is locked behind which checkpoint,
+    Pokémon not in HOME yet, active plans and tasks closed since the last session. Read-only.
+  - `pnpm dex:aplicar` writes a session batch read from stdin (`lib/dominio/dex-sessao.ts`):
+    earned trophies, plans with tasks, task and plan status, and Pokémon the user said they caught.
+    **Always run `--simular` first.** Every batch and every item that creates something has a `ref`;
+    a ref already applied is skipped (`dex_sessao_ref`), so re-running a batch changes nothing, and a
+    later batch can point at an earlier plan by its ref. One invalid item refuses the whole batch.
+    Records go in only as born in a game, only with forms in that game's catalog, under the same
+    rules as the add screen. **Moving to HOME is not in the batch**: leaving a send-only game needs
+    the user's confirmation on screen, and that confirmation is never automatic.
 
 ---
 

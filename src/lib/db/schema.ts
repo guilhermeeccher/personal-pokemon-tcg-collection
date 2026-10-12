@@ -956,3 +956,123 @@ export const dexRegistro = pgTable(
   },
   (t) => [index("dex_registro_forma_idx").on(t.formaId), index("dex_registro_local_idx").on(t.local)],
 );
+
+// --- Living Dex, D3: troféus, planos e sessões ---------------------------
+
+export const tipoTrofeuDexEnum = pgEnum("tipo_trofeu_dex", ["checkpoint", "marco"]);
+export const nivelTrofeuDexEnum = pgEnum("nivel_trofeu_dex", ["bronze", "prata", "ouro"]);
+/** Quem escreveu: o Claude numa sessão (`pnpm dex:aplicar`) ou o usuário na tela. */
+export const origemDexEnum = pgEnum("origem_dex", ["sessao", "manual"]);
+export const statusPlanoDexEnum = pgEnum("status_plano_dex", ["ativo", "concluido", "encerrado"]);
+export const tipoTarefaDexEnum = pgEnum("tipo_tarefa_dex", [
+  "captura",
+  "evolucao",
+  "troca",
+  "progresso",
+  "transferencia",
+  "outro",
+]);
+export const statusTarefaDexEnum = pgEnum("status_tarefa_dex", ["aberta", "feita", "descartada"]);
+
+/**
+ * Um troféu de um jogo (`lib/dominio/dex-trofeus.ts`). Só o seed escreve, a
+ * partir de `seed/dex-trofeus.json`, como `dex_forma`: o arquivo é a fonte,
+ * e quem sai dele é inativado, nunca apagado — uma conquista ou tarefa do
+ * usuário pode apontar para ele.
+ */
+export const dexTrofeu = pgTable(
+  "dex_trofeu",
+  {
+    /** `firered-campeao`. */
+    id: text("id").primaryKey(),
+    jogoId: text("jogo_id").notNull(),
+    tipo: tipoTrofeuDexEnum("tipo").notNull(),
+    nivel: nivelTrofeuDexEnum("nivel").notNull(),
+    ordem: integer("ordem").notNull(),
+    /** `{ "pt-BR": { titulo, descricao }, "en": { ... } }`. */
+    textos: jsonb("textos").$type<Record<"pt-BR" | "en", { titulo: string; descricao: string }>>().notNull(),
+    requer: text("requer").array().notNull().default([]),
+    /** Números nacionais que o checkpoint destrava naquele jogo. */
+    libera: integer("libera").array().notNull().default([]),
+    fonte: text("fonte"),
+    ativo: boolean("ativo").notNull().default(true),
+    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+    atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("dex_trofeu_jogo_idx").on(t.jogoId)],
+);
+
+/**
+ * Um troféu que o usuário conquistou. Um por troféu: desmarcar apaga a
+ * linha. A platina não tem linha — é derivada.
+ */
+export const dexTrofeuObtido = pgTable("dex_trofeu_obtido", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  trofeuId: text("trofeu_id")
+    .notNull()
+    .unique("dex_trofeu_obtido_trofeu_unico")
+    .references(() => dexTrofeu.id, { onDelete: "restrict" }),
+  obtidoEm: date("obtido_em").notNull(),
+  origem: origemDexEnum("origem").notNull(),
+  notas: text("notas"),
+  criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Um plano: tipicamente a semana, montada numa sessão (spec §6). Pode
+ * mirar troféus (`trofeu_ids`). Mais de um ativo ao mesmo tempo é permitido.
+ */
+export const dexPlano = pgTable("dex_plano", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  titulo: text("titulo").notNull(),
+  objetivo: text("objetivo"),
+  inicio: date("inicio").notNull(),
+  fim: date("fim"),
+  status: statusPlanoDexEnum("status").notNull().default("ativo"),
+  origem: origemDexEnum("origem").notNull(),
+  trofeuIds: text("trofeu_ids").array().notNull().default([]),
+  criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+  atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Uma tarefa de um plano. `forma_ids` são as vagas que ela mira; concluir
+ * uma tarefa de captura ou evolução **oferece** o registro na tela, nunca
+ * registra sozinho (regra 8 da spec).
+ */
+export const dexTarefa = pgTable(
+  "dex_tarefa",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    planoId: uuid("plano_id")
+      .notNull()
+      .references(() => dexPlano.id, { onDelete: "cascade" }),
+    ordem: integer("ordem").notNull(),
+    titulo: text("titulo").notNull(),
+    descricao: text("descricao"),
+    tipo: tipoTarefaDexEnum("tipo").notNull(),
+    jogoId: text("jogo_id"),
+    formaIds: text("forma_ids").array().notNull().default([]),
+    trofeuId: text("trofeu_id").references(() => dexTrofeu.id, { onDelete: "restrict" }),
+    status: statusTarefaDexEnum("status").notNull().default("aberta"),
+    concluidaEm: timestamp("concluida_em", { withTimezone: true }),
+    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+    atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("dex_tarefa_plano_idx").on(t.planoId)],
+);
+
+/**
+ * Cada `ref` que um lote de sessão (`pnpm dex:aplicar`) já gravou, e o que
+ * ela virou. É o que torna o lote idempotente (reaplicar não duplica), o
+ * que deixa um lote posterior apontar para o plano de um anterior pela
+ * `ref`, e o que marca quando foi a última sessão.
+ */
+export const dexSessaoRef = pgTable("dex_sessao_ref", {
+  ref: text("ref").primaryKey(),
+  /** `lote`, `trofeu`, `plano`, `tarefa` ou `registros`. */
+  tipo: text("tipo").notNull(),
+  /** Id do plano ou da tarefa criada; nulo nos outros tipos. */
+  entidadeId: uuid("entidade_id"),
+  aplicadoEm: timestamp("aplicado_em", { withTimezone: true }).notNull().defaultNow(),
+});

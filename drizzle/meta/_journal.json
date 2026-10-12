@@ -176,6 +176,13 @@
       "when": 1791767155103,
       "tag": "0024_living_dex_jogos_e_registros",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791808512086,
+      "tag": "0025_living_dex_trofeus_planos",
+      "breakpoints": true
     }
   ]
 }

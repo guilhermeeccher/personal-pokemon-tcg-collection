@@ -442,3 +442,42 @@ export interface RegistroDexDTO {
   capturadoEm: string | null;
   notas: string | null;
 }
+
+/** Um troféu de um jogo (`dex_trofeu`), com a conquista do usuário, se houver. */
+export interface TrofeuDexDTO {
+  id: string;
+  jogoId: string;
+  tipo: "checkpoint" | "marco";
+  nivel: "bronze" | "prata" | "ouro";
+  ordem: number;
+  textos: Record<"pt-BR" | "en", { titulo: string; descricao: string }>;
+  requer: string[];
+  /** Números nacionais que o checkpoint destrava. */
+  libera: number[];
+  obtido: { em: string; origem: "sessao" | "manual"; notas: string | null } | null;
+}
+
+export interface TarefaDexDTO {
+  id: string;
+  ordem: number;
+  titulo: string;
+  descricao: string | null;
+  tipo: "captura" | "evolucao" | "troca" | "progresso" | "transferencia" | "outro";
+  jogoId: string | null;
+  formaIds: string[];
+  trofeuId: string | null;
+  status: "aberta" | "feita" | "descartada";
+  concluidaEm: string | null;
+}
+
+export interface PlanoDexDTO {
+  id: string;
+  titulo: string;
+  objetivo: string | null;
+  inicio: string;
+  fim: string | null;
+  status: "ativo" | "concluido" | "encerrado";
+  origem: "sessao" | "manual";
+  trofeuIds: string[];
+  tarefas: TarefaDexDTO[];
+}

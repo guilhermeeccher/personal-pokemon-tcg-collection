@@ -26,7 +26,9 @@
       "pokedex": "Pokédex",
       "cadastrarDex": "Cadastrar",
       "meusJogos": "Meus jogos",
-      "inventarioDex": "Inventário"
+      "inventarioDex": "Inventário",
+      "trofeus": "Troféus",
+      "planos": "Planos"
     }
   },
   "seletorLocale": {
@@ -859,7 +861,10 @@
     "dexJogoNaoEncontrado": "Jogo não encontrado.",
     "dexJogoComRegistros": "{jogo} tem {quantidade} Pokémon registrado(s) nele. Mova-os ou marque o jogo como parado.",
     "dexRegistroNaoEncontrado": "Registro não encontrado.",
-    "dexNaoTransferivel": "O HOME não recebe este Pokémon de {jogo}."
+    "dexNaoTransferivel": "O HOME não recebe este Pokémon de {jogo}.",
+    "dexTrofeuNaoEncontrado": "Troféu não encontrado.",
+    "dexPlanoNaoEncontrado": "Plano não encontrado.",
+    "dexTarefaNaoEncontrada": "Tarefa não encontrada."
   },
   "dex": {
     "categoria": {
@@ -923,7 +928,9 @@
       "salvar": "Salvar",
       "editar": "Editar",
       "cancelar": "Cancelar",
-      "erro": "Não foi possível salvar. Tente de novo."
+      "erro": "Não foi possível salvar. Tente de novo.",
+      "trofeus": "{obtidos}/{total} troféus",
+      "platina": "Platina"
     },
     "cadastrar": {
       "titulo": "Cadastrar",
@@ -950,7 +957,8 @@
       },
       "foraDoJogo": "Fora do jogo",
       "naoVaiAoHome": "Não vai ao HOME",
-      "semCatalogo": "Sem catálogo deste jogo: mostrando todas."
+      "semCatalogo": "Sem catálogo deste jogo: mostrando todas.",
+      "trancada": "Trancada: {checkpoint}"
     },
     "inventario": {
       "titulo": "Inventário",
@@ -1006,6 +1014,74 @@
     "genero": {
       "macho": "Macho",
       "femea": "Fêmea"
+    },
+    "trofeus": {
+      "titulo": "Troféus",
+      "jogo": "Jogo",
+      "nenhumJogo": "Nenhum dos seus jogos tem troféus ainda.",
+      "platina": "Platina",
+      "platinaConquistada": "Platina conquistada",
+      "nivel": {
+        "bronze": "Bronze",
+        "prata": "Prata",
+        "ouro": "Ouro"
+      },
+      "soFalta": "Só o que falta",
+      "libera": "Libera {quantidade} espécie(s)",
+      "conquistadoEm": "Conquistado em {data}",
+      "depoisDe": "Depois de: {trofeus}",
+      "data": "Data da conquista",
+      "confirmar": "Confirmar",
+      "cancelar": "Cancelar",
+      "desfazer": "Desfazer",
+      "confirmarDesfazer": "Desmarcar \"{trofeu}\"?",
+      "conquistei": "Conquistei",
+      "cacar": "Caçar",
+      "tituloPlanoCacar": "Caçar: {trofeu}",
+      "erro": "Não foi possível salvar. Tente de novo."
+    },
+    "planos": {
+      "titulo": "Planos",
+      "erro": "Não foi possível salvar. Tente de novo.",
+      "status": {
+        "ativo": "Ativo",
+        "concluido": "Concluído",
+        "encerrado": "Encerrado"
+      },
+      "daSessao": "Da sessão",
+      "alvo": "Alvo:",
+      "tipo": {
+        "captura": "Captura",
+        "evolucao": "Evolução",
+        "troca": "Troca",
+        "progresso": "Progresso",
+        "transferencia": "Transferência",
+        "outro": "Outro"
+      },
+      "feita": "Feita",
+      "descartar": "Descartar",
+      "reabrir": "Reabrir",
+      "tarefa": "Tarefa",
+      "tipoRotulo": "Tipo",
+      "jogo": "Jogo",
+      "semJogo": "Sem jogo",
+      "adicionar": "Adicionar",
+      "cancelar": "Cancelar",
+      "novaTarefa": "Nova tarefa",
+      "concluir": "Concluir plano",
+      "encerrar": "Encerrar",
+      "reativar": "Reativar",
+      "oferta": "\"{tarefa}\" feita. Registrar o Pokémon?",
+      "irCadastrar": "Cadastrar",
+      "agoraNao": "Agora não",
+      "nenhumAtivo": "Nenhum plano ativo.",
+      "tituloRotulo": "Título",
+      "objetivo": "Objetivo",
+      "inicio": "Início",
+      "fim": "Fim",
+      "criar": "Criar plano",
+      "novoPlano": "Novo plano",
+      "historico": "Histórico ({quantidade})"
     }
   }
 }
