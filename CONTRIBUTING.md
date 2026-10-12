@@ -60,6 +60,10 @@ The glossary below is the key. Read it once and the code reads fine.
 | `trilha` | track | Living Dex: `normal` or `shiny`. The same forms are slots in both; a Pokémon fills one track only. |
 | `secao` | section | Living Dex: the slot's category — `base`, `regional`, `genero` (gender), `cosmetica` (cosmetic), `especial` (special). Every section but `base` can be left out of the count. |
 | `shiny_obtenivel` | shiny obtainable | Living Dex: `false` for a form never released as shiny. It stays in the grid and leaves the shiny total. |
+| `registro` | record | Living Dex: one Pokémon the user has — a slot, shiny or not, where it came from and where it is. Table `dex_registro`. |
+| `jogo possuído` | owned game | Living Dex: a game of the fixed catalog the user marked as owned. Table `dex_jogo_possuido`. |
+| `local` | location | Living Dex: where a record is now — `home`, or a game id. |
+| `ida e volta` / `só envio` | two-way / send-only | Living Dex: how a game connects to HOME (`ida_e_volta`, `so_envio`). A send-only game never gets a Pokémon back. |
 
 Route paths are in Portuguese too:
 
@@ -69,7 +73,7 @@ Route paths are in Portuguese too:
 | `/colecoes/[id]/opcoes-compra` | the buy options and the buy list for one collection |
 | `/inventario` | the inventory; `/inventario/repetidas` is duplicates, `/inventario/visao-geral` is the overview |
 | `/cadastro` | card entry; `/cadastro/set` is the grid for a whole set, `/cadastro/busca` is one card by search |
-| `/dex` | the optional Living Dex module (`MODULO_LIVING_DEX=1`); `/dex/pokedex` is the slot grid. 404 when the module is off |
+| `/dex` | the optional Living Dex module (`MODULO_LIVING_DEX=1`): `/dex/pokedex` is the slot grid, `/dex/cadastrar` adds a Pokémon, `/dex/jogos` lists the owned games. 404 when the module is off |
 
 ## Environment
 

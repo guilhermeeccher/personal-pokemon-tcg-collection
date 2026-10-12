@@ -517,6 +517,29 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
   HOME's renders: a grid shows hundreds of slots and a HOME render is ~80 KB against ~0.6 KB. No
   sprite file enters the repository.
 
+### Games and records — `dex_jogo_possuido`, `dex_registro`
+
+- **The game list is fixed in code** (`lib/dominio/dex-jogos.ts`), one row per version, and the user
+  only marks which ones they own. Each game carries how it connects to HOME: `ida_e_volta` (goes and
+  comes back) or `so_envio` (only sends: GO, FireRed, LeafGreen). **That value is checked against the
+  official HOME transfer page, never filled from memory**, and the date of the check is in the
+  comment. A HOME update changes it; it lives in that one place.
+- **A record is one Pokémon the user has**: a slot (`forma_id`), shiny or not, the game it came from
+  and where it is now (`local`: `home` or a game id). Both are catalog ids, not owned-game ids: a
+  Pokémon may come from a game the user does not own (a trade).
+- **The slot state is derived from the records on every read, never stored**
+  (`lib/dominio/dex-estado.ts`): missing, in a game, or in HOME. A shiny record fills the shiny track
+  only.
+- **The records describe only what HOME allows** (`lib/dominio/dex-registro.ts`): nothing enters a
+  `so_envio` game — a record can be there only if it was born there; Let's Go only takes Let's Go
+  Pokémon; the location is HOME or an owned, active game. **Leaving a `so_envio` game needs the
+  user's confirmation**: the move route answers 409 with `dexConfirmarSemVolta` until the screen
+  resends with `confirmarSemVolta: true`. Never make that confirmation automatic.
+- **Moving and correcting are separate operations.** `POST /api/dex/registros/:id/mover` changes the
+  location under the rules above; `PATCH /api/dex/registros/:id` fixes the other fields and leaves the
+  location alone. A game marked as stopped keeps its records and takes no new ones; it can only be
+  removed when no record sits in it.
+
 ---
 
 ## Stopping points — stop and hand the decision back
