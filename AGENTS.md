@@ -475,6 +475,50 @@ uncertainties into statements** without a paste that answers them.
 
 ---
 
+## Optional module: Living Dex
+
+A tracker for a Pokémon HOME living dex, living in the same app: every species and every form HOME
+stores, in a **normal** and a **shiny** track. It is optional and off by default.
+
+- **Turned on by `MODULO_LIVING_DEX=1`, and only by `1`** (`lib/modulos.ts`). Off, its menu group
+  does not render, `/dex/...` pages and `/api/dex/...` routes answer 404, and `pnpm seed:dex` exits
+  without touching the database. The flag is read at request time — a page of the module calls
+  `connection()` before checking it, so the build never freezes the value.
+- **Its migrations are not conditional.** The `dex_*` tables exist in every install, empty when the
+  module is off. A migration that depended on an environment variable would leave installs with
+  different schemas, and the next migration would break on half of them.
+- **It shares the app and the database, never the data.** No `dex_*` table references a card table
+  and no card table references a `dex_*` one. The eight rules above are about cards; the module does
+  not bend any of them.
+
+### The slot catalog — `dex_forma`, from `seed/dex-forma.csv`
+
+- **A slot is a species in one form that HOME keeps in a box of its own.** Battle-only forms, Megas,
+  Gigantamax and Totems are not slots. The data comes from PokeAPI; what it cannot say — whether HOME
+  stores a form — is decided in `lib/dominio/dex-classificacao.ts`.
+- **Every non-default form goes through an explicit rule, and a form no rule knows is never
+  guessed.** `pnpm gerar:seed-dex` fails and lists it, and nothing is written. When PokeAPI publishes
+  a new form, someone adds a rule, with the reason in a comment. The current list was closed against
+  two curated HOME living-dex lists and matches them form by form; the disagreements between those
+  sources are decided one by one in the comments of the rules. Do not "simplify" the rules into
+  something derived from PokeAPI flags — that is exactly what does not work.
+- **Two tracks, and one Pokémon fills one slot.** The same forms are slots in the normal and in the
+  shiny track; a shiny fills the shiny track only. A form never released as shiny
+  (`shiny_obtenivel = false`) stays in the grid and leaves only the shiny track's total. **In doubt,
+  it stays obtainable** — a wrong `true` shows a slot to hunt, a wrong `false` hides one.
+- **Sections.** `base` always counts; `regional`, `genero`, `cosmetica` and `especial` are toggled by
+  the user (`dex_secao`, `lib/dominio/dex-secoes.ts`), all on by default. Toggling never touches a
+  record.
+- **The seed runs on every boot, not only on an empty table** — unlike the card seed. The file is the
+  only source of this catalog and it is small, so a corrected classification reaches every install on
+  the next boot. A slot that left the file is **deactivated, never deleted**: a user record may point
+  at it.
+- **Sprites come from the PokeAPI sprites CDN at display time** (`urlSpriteDex`), the small ones, not
+  HOME's renders: a grid shows hundreds of slots and a HOME render is ~80 KB against ~0.6 KB. No
+  sprite file enters the repository.
+
+---
+
 ## Stopping points — stop and hand the decision back
 
 In these cases, **stop and open an issue instead of improvising**. None of them is a bug to fix;

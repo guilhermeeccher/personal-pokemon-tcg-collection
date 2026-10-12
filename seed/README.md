@@ -9,6 +9,7 @@ their data repository.
 |---|---|---|
 | `carta-catalogo.csv.gz` | `carta_catalogo` | The entire catalog, in the three languages (`pt`, `en`, `jp`) |
 | `set-mypcards.csv` | `set_mypcards` | Mapping of set → mypcards internal set id |
+| `dex-forma.csv` | `dex_forma` | Living Dex slot catalog (optional module) — one row per species and form HOME stores |
 
 **The `.gz` is versioned on purpose.** It is ~1 MB compressed against ~12 MB of text; it is static
 data that changes a few times a year, not code. Git LFS would solve a problem this size does not
@@ -92,3 +93,29 @@ Every detail of the command above exists for a reason, and changing it breaks th
 The column order in the file is free — the reader matches by name — but the set has to be exactly
 that one: a column too many, too few or renamed aborts the load instead of quietly writing crooked
 data. The full format, and the reason for every rule, is in `lib/dominio/seed-catalogo.ts`.
+
+## `dex-forma.csv` — the Living Dex slot catalog
+
+Used only by the optional Living Dex module (`MODULO_LIVING_DEX=1`). It follows a different contract
+from the card catalog, on purpose, and both differences are explained in `scripts/seed-dex.ts`:
+
+- **Loaded on every boot** (`pnpm seed:dex`), not only into an empty table. It is ~1,400 rows and the
+  file is the only source of the catalog, so a correction reaches every install on the next boot.
+- **A row that left the file is deactivated** (`ativa = false`), never deleted.
+
+It is **not compressed**: ~70 KB, and a readable diff of a classification change is worth more than
+the bytes.
+
+### How to regenerate it
+
+It is not exported from a database. It is generated from PokeAPI's CSVs by the classification in
+`lib/dominio/dex-classificacao.ts`:
+
+```bash
+git clone --depth 1 https://github.com/PokeAPI/pokeapi.git /some/path/pokeapi
+pnpm gerar:seed-dex --pokeapi /some/path/pokeapi/data/v2/csv
+```
+
+If PokeAPI has a form no rule knows, or an included form with no name, the command fails, lists them
+and writes nothing. Add the rule (with the reason) and run it again. Then read `git diff
+seed/dex-forma.csv` line by line before committing, and run `pnpm seed:dex`.

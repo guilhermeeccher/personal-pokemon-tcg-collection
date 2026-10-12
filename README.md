@@ -349,6 +349,16 @@ hand whoever installs it a risk that person did not choose.
 
 ---
 
+## Optional: Living Dex
+
+A second, separate tool in the same app: a tracker for a **Pokémon HOME living dex** — every species
+and every form HOME stores (regional, gender, cosmetic and special forms, each a section you can leave
+out of the count), in a normal and a shiny track. It shares nothing with the cards but the app.
+
+It is **off by default**. To turn it on, set `MODULO_LIVING_DEX=1` in `.env` and run
+`docker compose up -d`; the slot catalog loads on that boot and a "Living Dex" group appears in the
+menu. Rules and internals: the Living Dex section of [`AGENTS.md`](./AGENTS.md).
+
 ## What this project is **not**
 
 - **It has no authentication.** None. There is no login, no user password and no session, and that is

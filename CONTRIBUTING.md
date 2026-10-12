@@ -56,6 +56,10 @@ The glossary below is the key. Read it once and the code reads fine.
 | `secretas` | secret cards | Cards numbered above the official count of a set. A collection flag decides whether they get slots. |
 | `alocacao` | allocation | Attaching a copy to a slot. A copy is allocated to at most one slot, ever. |
 | `dominio` | domain | `src/lib/dominio/`: the pure, tested business-rule modules. |
+| `dex_forma` | dex slot | Living Dex (optional module): one species in one form HOME stores in a box of its own. Table `dex_forma`, from `seed/dex-forma.csv`. |
+| `trilha` | track | Living Dex: `normal` or `shiny`. The same forms are slots in both; a Pokémon fills one track only. |
+| `secao` | section | Living Dex: the slot's category — `base`, `regional`, `genero` (gender), `cosmetica` (cosmetic), `especial` (special). Every section but `base` can be left out of the count. |
+| `shiny_obtenivel` | shiny obtainable | Living Dex: `false` for a form never released as shiny. It stays in the grid and leaves the shiny total. |
 
 Route paths are in Portuguese too:
 
@@ -65,6 +69,7 @@ Route paths are in Portuguese too:
 | `/colecoes/[id]/opcoes-compra` | the buy options and the buy list for one collection |
 | `/inventario` | the inventory; `/inventario/repetidas` is duplicates, `/inventario/visao-geral` is the overview |
 | `/cadastro` | card entry; `/cadastro/set` is the grid for a whole set, `/cadastro/busca` is one card by search |
+| `/dex` | the optional Living Dex module (`MODULO_LIVING_DEX=1`); `/dex/pokedex` is the slot grid. 404 when the module is off |
 
 ## Environment
 
