@@ -135,6 +135,19 @@ describe("planejarLote", () => {
     expect(r).toMatchObject({ ok: false, erros: [expect.stringMatching(/not in firered's catalog: turtwig/)] });
   });
 
+  it("registro nascido no HOME (presente) entra já no HOME, com qualquer forma ativa", () => {
+    const r = planejarLote(
+      { ref: "s6", registros: [{ ref: "s6/r", jogoId: "home", itens: [{ formaId: "pikachu", shiny: 1 }] }] },
+      ctx(),
+      HOJE,
+    );
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.passos).toMatchObject([
+      { tipo: "registros", jogoId: "home", registros: [{ formaId: "pikachu", shiny: true, jogoOrigem: "home", local: "home" }] },
+    ]);
+  });
+
   it("ref repetida no mesmo lote é erro", () => {
     const r = planejarLote(
       {

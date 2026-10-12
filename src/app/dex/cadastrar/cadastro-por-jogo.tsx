@@ -11,6 +11,11 @@
  * Pokémon que chegou de fora. Seções desligadas na Pokédex somem daqui, e
  * as cosméticas ficam na vista delas, como na grade.
  *
+ * O HOME entra na lista como mais um "jogo", sempre, depois dos do usuário:
+ * é o cadastro do que nasceu ou chegou pelo próprio HOME (presente, GTS,
+ * Caixa Surpresa), gravado com origem e local `home`. Não tem catálogo —
+ * o HOME dá qualquer coisa —, então mostra todas as vagas.
+ *
  * Espécie que o save ainda não alcança (um troféu-checkpoint pendente, como
  * a Pokédex Nacional do FireRed) aparece com o nome do checkpoint. Só
  * marca, não recusa: um Pokémon pode ter chegado por troca.
@@ -33,6 +38,7 @@ import { textosDasRecusas } from "@/app/_componentes/recusa";
 import { classesCelulaCabecalho, classesLinha, classesLinhaCabecalho, Tabela } from "@/app/_componentes/tabela";
 import { catalogoDoJogo, type DisponibilidadeForma } from "@/lib/dominio/dex-disponibilidade";
 import { filtrarFormasDex, type VistaDex } from "@/lib/dominio/dex-grade";
+import { ORIGEM_HOME } from "@/lib/dominio/dex-jogos";
 import { categoriaConta, type SecoesContadas } from "@/lib/dominio/dex-secoes";
 import { MAX_QUANTIDADE_POR_LINHA } from "@/lib/dominio/dex-registro";
 import { especiesTrancadas, type IdiomaTrofeu } from "@/lib/dominio/dex-trofeus";
@@ -157,8 +163,12 @@ export function CadastroPorJogo({
   const rotulo = useRotuloForma(formas);
 
   const idioma = useLocale() as IdiomaTrofeu;
+  const opcoes = useMemo(
+    () => [...jogos.map((j) => ({ id: j.jogoId, nome: j.nome })), { id: ORIGEM_HOME, nome: t("cadastrar.home") }],
+    [jogos, t],
+  );
   const [jogoId, setJogoId] = useState(
-    jogos.some((j) => j.jogoId === jogoInicial) ? jogoInicial : (jogos[0]?.jogoId ?? ""),
+    opcoes.some((o) => o.id === jogoInicial) ? jogoInicial : opcoes[0].id,
   );
   const [filtro, setFiltro] = useState(buscaInicial);
   const [soQueNaoTenho, setSoQueNaoTenho] = useState(false);
@@ -207,7 +217,7 @@ export function CadastroPorJogo({
   }, []);
 
   async function cadastrar() {
-    if (total === 0 || !jogoId) return;
+    if (total === 0) return;
     setEnviando(true);
     setErros([]);
     setSucesso(null);
@@ -224,7 +234,7 @@ export function CadastroPorJogo({
         setErros(textosDasRecusas(tr, await r.json().catch(() => null), t("cadastrar.erro")));
         return;
       }
-      const nomeJogo = jogos.find((j) => j.jogoId === jogoId)?.nome ?? jogoId;
+      const nomeJogo = opcoes.find((o) => o.id === jogoId)?.nome ?? jogoId;
       setSucesso(t("cadastrar.cadastrados", { quantidade: String(total), jogo: nomeJogo }));
       setQuantidades({});
       router.refresh();
@@ -235,20 +245,6 @@ export function CadastroPorJogo({
     }
   }
 
-  if (jogos.length === 0) {
-    return (
-      <main className="mx-auto flex max-w-5xl flex-col gap-4 p-4 sm:p-8">
-        <CabecalhoPagina titulo={t("cadastrar.titulo")} />
-        <p className="text-sm text-muted">{t("cadastrar.semJogos")}</p>
-        <div>
-          <Link href="/dex/jogos" className={classesBotao("primario")}>
-            {t("cadastrar.irParaJogos")}
-          </Link>
-        </div>
-      </main>
-    );
-  }
-
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 sm:p-8 md:h-full">
       <CabecalhoPagina titulo={t("cadastrar.titulo")} />
@@ -256,17 +252,22 @@ export function CadastroPorJogo({
       {/* Jogo, filtro e botão ficam parados; só a tabela rola (`rolagemPropria`). */}
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("cadastrar.jogo")}>
-          {jogos.map((j) => (
+          {opcoes.map((o) => (
             <button
-              key={j.jogoId}
+              key={o.id}
               type="button"
-              aria-pressed={jogoId === j.jogoId}
-              onClick={() => setJogoId(j.jogoId)}
-              className={classesOpcao(jogoId === j.jogoId)}
+              aria-pressed={jogoId === o.id}
+              onClick={() => setJogoId(o.id)}
+              className={classesOpcao(jogoId === o.id)}
             >
-              {j.nome}
+              {o.nome}
             </button>
           ))}
+          {jogos.length === 0 && (
+            <Link href="/dex/jogos" className={classesBotao("secundario", "sm", "ml-2")}>
+              {t("cadastrar.irParaJogos")}
+            </Link>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("vista.rotulo")}>
           {(["principal", "cosmeticas"] as const).map((v) => (
@@ -299,7 +300,9 @@ export function CadastroPorJogo({
               {t("cadastrar.mostrarTodas")}
             </label>
           ) : (
-            <span className="text-xs text-muted">{t("cadastrar.semCatalogo")}</span>
+            <span className="text-xs text-muted">
+              {t(jogoId === ORIGEM_HOME ? "cadastrar.direto" : "cadastrar.semCatalogo")}
+            </span>
           )}
           <div className="ml-auto flex gap-2">
             {total > 0 && (

@@ -59,6 +59,22 @@ export const JOGOS_DEX: readonly JogoDex[] = [
 /** O HOME como local de um registro. Não é um jogo do catálogo. */
 export const LOCAL_HOME = "home";
 
+/**
+ * O HOME como **origem** de um registro: o Pokémon que nasceu ou chegou
+ * pelo próprio HOME, sem passar por um jogo do usuário — presente (Magearna
+ * de cor original, iniciais de prêmio de Pokédex), GTS ou Caixa Surpresa.
+ * Não se distingue o presente da troca: o que interessa à dex é que ele
+ * entrou já no HOME; quem quiser o detalhe põe nas notas.
+ *
+ * Mesmo id do local, de propósito: origem `home` com local `home` é o
+ * Pokémon que nunca saiu de lá. Não é jogo do catálogo — não se possui, não
+ * tem catálogo de disponibilidade nem troféus marcáveis — e por isso não
+ * entra em `JOGOS_DEX`. Saindo do HOME, segue as regras de qualquer origem
+ * de fora: vai a um jogo de ida e volta, nunca a um `so_envio` nem ao
+ * Let's Go.
+ */
+export const ORIGEM_HOME = LOCAL_HOME;
+
 const JOGO_POR_ID = new Map(JOGOS_DEX.map((j) => [j.id, j]));
 
 export function jogoDex(id: string): JogoDex | undefined {
@@ -67,6 +83,11 @@ export function jogoDex(id: string): JogoDex | undefined {
 
 export function ehJogoDex(id: unknown): id is string {
   return typeof id === "string" && JOGO_POR_ID.has(id);
+}
+
+/** Origem válida de um registro: um jogo do catálogo ou o próprio HOME. */
+export function ehOrigemDex(id: unknown): id is string {
+  return id === ORIGEM_HOME || ehJogoDex(id);
 }
 
 /** Ordem de exibição de um jogo (lançamento); desconhecido vai para o fim. */

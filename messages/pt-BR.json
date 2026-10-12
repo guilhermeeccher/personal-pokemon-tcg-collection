@@ -965,7 +965,7 @@
       "cadastrar": "Cadastrar ({quantidade})",
       "limpar": "Limpar",
       "cadastrados": "{quantidade} cadastrado(s) em {jogo}.",
-      "semJogos": "Cadastre seus jogos primeiro.",
+      "home": "Pokémon HOME",
       "irParaJogos": "Meus jogos",
       "nada": "Nada com esse filtro.",
       "erro": "Não foi possível cadastrar. Tente de novo.",
@@ -977,6 +977,7 @@
       "foraDoJogo": "Fora do jogo",
       "naoVaiAoHome": "Não vai ao HOME",
       "semCatalogo": "Sem catálogo deste jogo: mostrando todas.",
+      "direto": "Entram direto no HOME.",
       "trancada": "Trancada: {checkpoint}"
     },
     "inventario": {

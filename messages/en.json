@@ -965,7 +965,7 @@
       "cadastrar": "Add ({quantidade})",
       "limpar": "Clear",
       "cadastrados": "{quantidade} added to {jogo}.",
-      "semJogos": "Add your games first.",
+      "home": "Pokémon HOME",
       "irParaJogos": "My games",
       "nada": "Nothing matches this filter.",
       "erro": "Could not add them. Try again.",
@@ -977,6 +977,7 @@
       "foraDoJogo": "Not in this game",
       "naoVaiAoHome": "Cannot go to HOME",
       "semCatalogo": "No catalog for this game: showing everything.",
+      "direto": "They go straight into HOME.",
       "trancada": "Locked: {checkpoint}"
     },
     "inventario": {

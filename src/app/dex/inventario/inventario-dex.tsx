@@ -24,7 +24,7 @@ import { textoDaRecusa, textosDasRecusas } from "@/app/_componentes/recusa";
 import { classesCelulaCabecalho, classesLinha, classesLinhaCabecalho, Tabela } from "@/app/_componentes/tabela";
 import { filtrarFormasDex } from "@/lib/dominio/dex-grade";
 import { agruparInventario, compararPorNome, type GrupoInventario } from "@/lib/dominio/dex-inventario";
-import { JOGOS_DEX, jogoDex, LOCAL_HOME } from "@/lib/dominio/dex-jogos";
+import { JOGOS_DEX, jogoDex, LOCAL_HOME, ORIGEM_HOME } from "@/lib/dominio/dex-jogos";
 import type { FormaDexDTO, JogoPossuidoDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 
 import { SpriteDex } from "../_componentes/sprite-dex";
@@ -282,6 +282,7 @@ function CorrecaoGrupo({
           value={dados.jogoOrigem}
           onChange={(e) => setDados((d) => ({ ...d, jogoOrigem: e.target.value }))}
         >
+          <option value={ORIGEM_HOME}>{t("home")}</option>
           <optgroup label={t("inventario.seusJogos")}>
             {JOGOS_DEX.filter((j) => meus.has(j.id)).map((j) => (
               <option key={j.id} value={j.id}>

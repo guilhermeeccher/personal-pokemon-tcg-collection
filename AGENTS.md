@@ -553,6 +553,12 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
 - **A record is one Pokémon the user has**: a slot (`forma_id`), shiny or not, the game it came from
   and where it is now (`local`: `home` or a game id). Both are catalog ids, not owned-game ids: a
   Pokémon may come from a game the user does not own (a trade).
+- **HOME itself is a valid origin** (`ORIGEM_HOME`, the same `home` id as the location): a Pokémon
+  that was born in or arrived through HOME without passing through a game of the user's — a gift
+  claimed in HOME, a GTS trade, the Wonder Box. A gift and a trade are not told apart; what matters
+  to the dex is that it entered HOME directly, and the notes take the detail. HOME is not in
+  `JOGOS_DEX`: it is not owned, has no availability catalog and no markable trophies. Once it leaves
+  HOME it follows the rules of any outside origin, so it never enters a `so_envio` game or Let's Go.
 - **The slot state is derived from the records on every read, never stored**
   (`lib/dominio/dex-estado.ts`): missing, in a game, or in HOME. A shiny record fills the shiny track
   only.
@@ -563,7 +569,8 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
   resends with `confirmarSemVolta: true`. Never make that confirmation automatic.
 - **Records come in by game, in batches** (`POST /api/dex/registros`, `{ jogoId, itens }`), like the
   card set grid: every Pokémon becomes one record, born in that game and still in it. One refusal
-  refuses the whole batch, and nothing is written.
+  refuses the whole batch, and nothing is written. The add screen always offers HOME after the
+  owned games (`jogoId: "home"`): every slot, each Pokémon born in HOME and kept there.
 - **One row per Pokémon in the database, grouped only on screen.** The inventory groups records that
   are identical except for the id (`agruparInventario`); its actions move or delete **one** Pokémon of
   the group, and a correction applies to the whole group. Do not add a quantity column to
@@ -635,7 +642,8 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
     a ref already applied is skipped (`dex_sessao_ref`), so re-running a batch changes nothing, and a
     later batch can point at an earlier plan by its ref. One invalid item refuses the whole batch.
     Records go in only as born in a game, only with forms in that game's catalog, under the same
-    rules as the add screen. **Moving to HOME is not in the batch**: leaving a send-only game needs
+    rules as the add screen — or as born in HOME (`jogoId: "home"`), which has no catalog, so any
+    active form goes. **Moving to HOME is not in the batch**: leaving a send-only game needs
     the user's confirmation on screen, and that confirmation is never automatic.
 
 ---

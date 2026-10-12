@@ -20,11 +20,16 @@
  *    não guarda; a regra aqui cobre o caso comum e erra para o lado
  *    permissivo no resto.
  *  - **O local é o HOME ou um jogo que o usuário tem, ativo.**
+ *  - **A origem é um jogo do catálogo ou o próprio HOME** (`ORIGEM_HOME`:
+ *    presente, GTS, Caixa Surpresa). O cadastro com o HOME como "jogo"
+ *    grava origem e local `home`; daí em diante ele é um Pokémon de fora
+ *    como outro qualquer, e as regras acima já o barram dos jogos `so_envio`
+ *    e do Let's Go.
  *  - **O que o HOME não recebe de um jogo não sai dele** (Spinda do GO e do
  *    BDSP, Zygarde do GO… — `dex-disponibilidade.ts`). Nem para outro jogo,
  *    porque todo caminho entre jogos passa pelo HOME.
  */
-import { jogoDex, LOCAL_HOME } from "./dex-jogos";
+import { ehOrigemDex, jogoDex, LOCAL_HOME } from "./dex-jogos";
 import { recusa, type Recusa } from "./recusa";
 
 export interface DadosRegistroDex {
@@ -88,7 +93,7 @@ function recusaDoDestino(
 export function validarNovoRegistro(dados: DadosRegistroDex, ctx: ContextoRegistroDex): Recusa[] {
   const recusas: Recusa[] = [];
   if (!ctx.formasAtivas.has(dados.formaId)) recusas.push(recusa("dexFormaDesconhecida", { forma: dados.formaId }));
-  if (!jogoDex(dados.jogoOrigem)) {
+  if (!ehOrigemDex(dados.jogoOrigem)) {
     recusas.push(recusa("dexJogoDesconhecido", { jogo: dados.jogoOrigem }));
   } else {
     const destino = recusaDoDestino(dados.local, dados.jogoOrigem, ctx, true);
@@ -203,7 +208,8 @@ export function lerLoteCadastro(corpo: unknown): LoteCadastroDex | string {
 
 /**
  * Expande o lote em um registro por Pokémon, todos nascidos no jogo e
- * ainda nele. As recusas vêm juntas; com qualquer uma, nada é gravado.
+ * ainda nele — ou, com `jogoId` igual a `ORIGEM_HOME`, nascidos no HOME e
+ * já guardados lá. As recusas vêm juntas; com qualquer uma, nada é gravado.
  */
 export function expandirLoteCadastro(
   lote: LoteCadastroDex,

@@ -20,7 +20,10 @@
  *    cadastro por jogo (`expandirLoteCadastro`), e só com forma que existe
  *    no catálogo daquele jogo. A tela deixa "Mostrar todas"; o lote não,
  *    porque ali uma forma fora do jogo é erro de digitação, não um Pokémon
- *    que veio de troca. Mover para o HOME não entra
+ *    que veio de troca. **Ou nasce no próprio HOME** (`jogoId: "home"`):
+ *    presente resgatado, GTS, Caixa Surpresa. O HOME não tem catálogo — dá
+ *    qualquer coisa —, então ali toda forma ativa vale, e o Pokémon já
+ *    entra no HOME, sem confirmação a pedir. Mover para o HOME não entra
  *    no lote: sair de um jogo que só envia pede a confirmação do usuário na
  *    tela, e essa confirmação nunca é automática.
  */

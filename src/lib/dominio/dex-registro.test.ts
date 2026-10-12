@@ -69,6 +69,20 @@ describe("validarNovoRegistro", () => {
     ).toEqual(["dexLetsGoSoDoProprio"]);
   });
 
+  it("aceita o HOME como origem: presente ou troca dentro do HOME, guardado nele", () => {
+    expect(validarNovoRegistro({ ...base, jogoOrigem: "home", local: "home" }, ctx)).toEqual([]);
+  });
+
+  it("Pokémon do HOME pode estar num jogo de ida e volta, nunca num só de envio nem no Let's Go", () => {
+    expect(validarNovoRegistro({ ...base, jogoOrigem: "home", local: "brilliant-diamond" }, ctx)).toEqual([]);
+    expect(chaves(validarNovoRegistro({ ...base, jogoOrigem: "home", local: "firered" }, ctx))).toEqual([
+      "dexNadaEntraEmSoEnvio",
+    ]);
+    expect(chaves(validarNovoRegistro({ ...base, jogoOrigem: "home", local: "lets-go-pikachu" }, ctx))).toEqual([
+      "dexLetsGoSoDoProprio",
+    ]);
+  });
+
   it("recusa data que não existe", () => {
     expect(chaves(validarNovoRegistro({ ...base, capturadoEm: "2026-02-30" }, ctx))).toEqual(["dexDataInvalida"]);
   });
@@ -135,6 +149,12 @@ describe("validarMovimento", () => {
     expect(r?.chave).toBe("dexLocalNaoPossuido");
   });
 
+  it("Pokémon que nasceu no HOME desce para jogo de ida e volta sem confirmação, e não entra no GO", () => {
+    const m = { formaId: "bulbasaur", jogoOrigem: "home", localAtual: "home", confirmarSemVolta: false };
+    expect(validarMovimento({ ...m, novoLocal: "brilliant-diamond" }, ctx)).toBeNull();
+    expect(validarMovimento({ ...m, novoLocal: "go" }, ctx)?.chave).toBe("dexNadaEntraEmSoEnvio");
+  });
+
   it("mover para onde já está não é movimento", () => {
     expect(
       validarMovimento({ formaId: "bulbasaur", jogoOrigem: "firered", localAtual: "firered", novoLocal: "firered", confirmarSemVolta: false }, ctx),
@@ -165,6 +185,16 @@ describe("cadastro por jogo", () => {
       ["bulbasaur", false, "firered"],
       ["bulbasaur", false, "firered"],
       ["bulbasaur", true, "firered"],
+    ]);
+  });
+
+  it("com o HOME como jogo, cada Pokémon nasce no HOME e já fica nele", () => {
+    const lote = lerLoteCadastro({ jogoId: "home", itens: [{ formaId: "pikachu", normal: 1, shiny: 1 }] });
+    if (typeof lote === "string") throw new Error(lote);
+    const r = expandirLoteCadastro(lote, ctx);
+    expect(r.ok && r.registros.map((x) => [x.formaId, x.shiny, x.jogoOrigem, x.local])).toEqual([
+      ["pikachu", false, "home", "home"],
+      ["pikachu", true, "home", "home"],
     ]);
   });
 
