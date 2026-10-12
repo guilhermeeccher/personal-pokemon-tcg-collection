@@ -14,6 +14,7 @@ import {
 const ctx = {
   formasAtivas: new Set(["bulbasaur", "raichu-alola", "pikachu"]),
   jogosAtivos: new Set(["go", "firered", "brilliant-diamond", "lets-go-pikachu"]),
+  naoTransferiveis: new Set(["go:spinda"]),
 };
 
 const base: DadosRegistroDex = {
@@ -82,7 +83,7 @@ describe("validarNovoRegistro", () => {
 describe("validarMovimento", () => {
   it("sair do FireRed para o HOME pede confirmação", () => {
     const r = validarMovimento(
-      { jogoOrigem: "firered", localAtual: "firered", novoLocal: "home", confirmarSemVolta: false },
+      { formaId: "bulbasaur", jogoOrigem: "firered", localAtual: "firered", novoLocal: "home", confirmarSemVolta: false },
       ctx,
     );
     expect(ehPedidoDeConfirmacao(r)).toBe(true);
@@ -91,21 +92,21 @@ describe("validarMovimento", () => {
 
   it("com a confirmação, o FireRed manda para o HOME", () => {
     expect(
-      validarMovimento({ jogoOrigem: "firered", localAtual: "firered", novoLocal: "home", confirmarSemVolta: true }, ctx),
+      validarMovimento({ formaId: "bulbasaur", jogoOrigem: "firered", localAtual: "firered", novoLocal: "home", confirmarSemVolta: true }, ctx),
     ).toBeNull();
   });
 
   it("do GO para o HOME também pede confirmação", () => {
     expect(
       ehPedidoDeConfirmacao(
-        validarMovimento({ jogoOrigem: "go", localAtual: "go", novoLocal: "home", confirmarSemVolta: false }, ctx),
+        validarMovimento({ formaId: "bulbasaur", jogoOrigem: "go", localAtual: "go", novoLocal: "home", confirmarSemVolta: false }, ctx),
       ),
     ).toBe(true);
   });
 
   it("do HOME de volta ao FireRed é recusado, mesmo sendo a origem", () => {
     const r = validarMovimento(
-      { jogoOrigem: "firered", localAtual: "home", novoLocal: "firered", confirmarSemVolta: true },
+      { formaId: "bulbasaur", jogoOrigem: "firered", localAtual: "home", novoLocal: "firered", confirmarSemVolta: true },
       ctx,
     );
     expect(r?.chave).toBe("dexNadaEntraEmSoEnvio");
@@ -114,13 +115,13 @@ describe("validarMovimento", () => {
   it("jogo de ida e volta move sem confirmação, nos dois sentidos", () => {
     expect(
       validarMovimento(
-        { jogoOrigem: "brilliant-diamond", localAtual: "brilliant-diamond", novoLocal: "home", confirmarSemVolta: false },
+        { formaId: "bulbasaur", jogoOrigem: "brilliant-diamond", localAtual: "brilliant-diamond", novoLocal: "home", confirmarSemVolta: false },
         ctx,
       ),
     ).toBeNull();
     expect(
       validarMovimento(
-        { jogoOrigem: "go", localAtual: "home", novoLocal: "brilliant-diamond", confirmarSemVolta: false },
+        { formaId: "bulbasaur", jogoOrigem: "go", localAtual: "home", novoLocal: "brilliant-diamond", confirmarSemVolta: false },
         ctx,
       ),
     ).toBeNull();
@@ -128,7 +129,7 @@ describe("validarMovimento", () => {
 
   it("destino inválido recusa antes de pedir confirmação", () => {
     const r = validarMovimento(
-      { jogoOrigem: "firered", localAtual: "firered", novoLocal: "violet", confirmarSemVolta: false },
+      { formaId: "bulbasaur", jogoOrigem: "firered", localAtual: "firered", novoLocal: "violet", confirmarSemVolta: false },
       ctx,
     );
     expect(r?.chave).toBe("dexLocalNaoPossuido");
@@ -136,7 +137,7 @@ describe("validarMovimento", () => {
 
   it("mover para onde já está não é movimento", () => {
     expect(
-      validarMovimento({ jogoOrigem: "firered", localAtual: "firered", novoLocal: "firered", confirmarSemVolta: false }, ctx),
+      validarMovimento({ formaId: "bulbasaur", jogoOrigem: "firered", localAtual: "firered", novoLocal: "firered", confirmarSemVolta: false }, ctx),
     ).toBeNull();
   });
 });
@@ -187,12 +188,24 @@ describe("cadastro por jogo", () => {
   });
 });
 
+describe("validarMovimento — o que o HOME não recebe", () => {
+  it("Spinda do GO não sai do GO, nem para o HOME nem para outro jogo, mesmo confirmando", () => {
+    for (const novoLocal of ["home", "brilliant-diamond"]) {
+      const r = validarMovimento(
+        { formaId: "spinda", jogoOrigem: "go", localAtual: "go", novoLocal, confirmarSemVolta: true },
+        ctx,
+      );
+      expect(r?.chave).toBe("dexNaoTransferivel");
+    }
+  });
+});
+
 describe("validarMovimentoEmLote", () => {
   it("pede confirmação uma vez para o lote que sai de jogo só de envio", () => {
     const r = validarMovimentoEmLote(
       [
-        { jogoOrigem: "firered", localAtual: "firered", novoLocal: "home", confirmarSemVolta: false },
-        { jogoOrigem: "firered", localAtual: "firered", novoLocal: "home", confirmarSemVolta: false },
+        { formaId: "bulbasaur", jogoOrigem: "firered", localAtual: "firered", novoLocal: "home", confirmarSemVolta: false },
+        { formaId: "bulbasaur", jogoOrigem: "firered", localAtual: "firered", novoLocal: "home", confirmarSemVolta: false },
       ],
       ctx,
     );
@@ -202,8 +215,8 @@ describe("validarMovimentoEmLote", () => {
   it("recusa de verdade vence o pedido de confirmação", () => {
     const r = validarMovimentoEmLote(
       [
-        { jogoOrigem: "firered", localAtual: "firered", novoLocal: "home", confirmarSemVolta: false },
-        { jogoOrigem: "firered", localAtual: "home", novoLocal: "firered", confirmarSemVolta: false },
+        { formaId: "bulbasaur", jogoOrigem: "firered", localAtual: "firered", novoLocal: "home", confirmarSemVolta: false },
+        { formaId: "bulbasaur", jogoOrigem: "firered", localAtual: "home", novoLocal: "firered", confirmarSemVolta: false },
       ],
       ctx,
     );

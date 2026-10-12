@@ -85,8 +85,14 @@ export interface OportunidadesDoJogo {
  * Com cópias em mais de um jogo, a sugestão sai do jogo de ida e volta: o
  * Pokémon dali pode voltar, o de um jogo só de envio não. O usuário ainda
  * escolhe; isto é só a sugestão.
+ *
+ * Registro que o HOME não recebe do jogo onde está (`naoTransferiveis`,
+ * `jogo:forma`) não é oportunidade: aparece no inventário, nunca aqui.
  */
-export function oportunidadesHome(registros: readonly RegistroParaInventario[]): OportunidadesDoJogo[] {
+export function oportunidadesHome(
+  registros: readonly RegistroParaInventario[],
+  naoTransferiveis: ReadonlySet<string> = new Set(),
+): OportunidadesDoJogo[] {
   const noHome = new Set<string>();
   for (const r of registros) {
     if (r.local === LOCAL_HOME) noHome.add(`${r.formaId}:${r.shiny}`);
@@ -94,7 +100,7 @@ export function oportunidadesHome(registros: readonly RegistroParaInventario[]):
 
   const escolhido = new Map<string, RegistroParaInventario>();
   for (const r of registros) {
-    if (r.local === LOCAL_HOME) continue;
+    if (r.local === LOCAL_HOME || naoTransferiveis.has(`${r.local}:${r.formaId}`)) continue;
     const chave = `${r.formaId}:${r.shiny}`;
     if (noHome.has(chave)) continue;
     const atual = escolhido.get(chave);

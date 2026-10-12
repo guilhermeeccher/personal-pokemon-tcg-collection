@@ -4,12 +4,22 @@
  * Duas trilhas (spec §5.2): a normal e a shiny. As vagas das duas são as
  * mesmas formas; a diferença na conta é que forma sem shiny obtenível sai do
  * total da trilha shiny — mas nunca da grade (regra 6).
+ *
+ * Duas vistas (2026-10-11): a principal e a das cosméticas. As formas
+ * cosméticas (63 Alcremie, 20 Vivillon, 28 Unown…) inundavam a grade e o
+ * cadastro; passaram a ter lugar e progresso próprios, como a trilha shiny.
+ * Vista e trilha são independentes: há cosmética normal e cosmética shiny.
  */
 import type { CategoriaFormaDex } from "./dex-classificacao";
 import { categoriaConta, type SecoesContadas } from "./dex-secoes";
 import { regiaoDoNumero, type Regiao } from "./escopo-pokedex";
 
 export type TrilhaDex = "normal" | "shiny";
+export type VistaDex = "principal" | "cosmeticas";
+
+export function vistaDaCategoria(categoria: CategoriaFormaDex): VistaDex {
+  return categoria === "cosmetica" ? "cosmeticas" : "principal";
+}
 
 export interface FormaParaGrade {
   numero: number;
@@ -20,6 +30,8 @@ export interface FormaParaGrade {
 }
 
 export interface FiltroGradeDex {
+  /** Ausente = as duas vistas. */
+  vista?: VistaDex;
   regiao: Regiao | "todas";
   categoria: CategoriaFormaDex | "todas";
   /** Nome da espécie, da forma, ou número da Pokédex. */
@@ -44,6 +56,7 @@ export function filtrarFormasDex<T extends FormaParaGrade>(formas: readonly T[],
   const busca = normalizar(filtro.busca);
   const numeroBuscado = /^#?\d+$/.test(busca) ? Number(busca.replace("#", "")) : null;
   return formas.filter((f) => {
+    if (filtro.vista && vistaDaCategoria(f.categoria) !== filtro.vista) return false;
     if (filtro.regiao !== "todas" && regiaoDoNumero(f.numero) !== filtro.regiao) return false;
     if (filtro.categoria !== "todas" && f.categoria !== filtro.categoria) return false;
     if (!busca) return true;

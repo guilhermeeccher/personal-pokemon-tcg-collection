@@ -1,8 +1,11 @@
 /**
  * Living Dex — quais seções entram no progresso (spec §3.4, regra 4).
  *
- * `base` conta sempre; as outras quatro o usuário liga e desliga. Seção que
- * nunca foi tocada não tem linha em `dex_secao` e usa o padrão abaixo.
+ * `base` conta sempre; `regional`, `genero` e `especial` o usuário liga e
+ * desliga. `cosmetica` também conta sempre, mas na vista dela: as formas
+ * cosméticas têm progresso próprio, separado do principal (decisão de
+ * 2026-10-11). Seção que nunca foi tocada não tem linha em `dex_secao` e usa
+ * o padrão abaixo; uma linha antiga de `cosmetica` é ignorada.
  *
  * **Padrão: todas ligadas.** A living dex combinada em 2026-10-11 é a
  * detalhada, com todas as formas que o HOME guarda; desligar é a exceção.
@@ -34,5 +37,6 @@ export function resolverSecoes(
 }
 
 export function categoriaConta(categoria: CategoriaFormaDex, secoes: SecoesContadas): boolean {
-  return categoria === "base" || secoes[categoria];
+  if (categoria === "base" || categoria === "cosmetica") return true;
+  return secoes[categoria];
 }

@@ -69,6 +69,10 @@ describe("oportunidadesHome", () => {
     expect(ops[0].itens[0].registroId).toBe(bd.id);
   });
 
+  it("o que o HOME não recebe daquele jogo não é oportunidade", () => {
+    expect(oportunidadesHome([reg("spinda", "go")], new Set(["go:spinda"]))).toEqual([]);
+  });
+
   it("agrupa por jogo na ordem de lançamento", () => {
     const ops = oportunidadesHome([reg("piplup", "brilliant-diamond"), reg("pidgey", "go"), reg("rattata", "firered")]);
     expect(ops.map((o) => o.jogoId)).toEqual(["firered", "go", "brilliant-diamond"]);

@@ -4,18 +4,24 @@ import { categoriaConta, resolverSecoes } from "./dex-secoes";
 
 describe("seções da Living Dex", () => {
   it("sem nenhuma linha gravada, todas as seções contam", () => {
-    expect(resolverSecoes([])).toEqual({ regional: true, genero: true, cosmetica: true, especial: true });
+    expect(resolverSecoes([])).toEqual({ regional: true, genero: true, especial: true });
   });
 
   it("linha gravada vence o padrão", () => {
-    const secoes = resolverSecoes([{ categoria: "cosmetica", conta: false }]);
-    expect(secoes.cosmetica).toBe(false);
+    const secoes = resolverSecoes([{ categoria: "especial", conta: false }]);
+    expect(secoes.especial).toBe(false);
     expect(secoes.regional).toBe(true);
   });
 
   it("base conta sempre, mesmo que alguém grave uma linha para ela", () => {
     const secoes = resolverSecoes([{ categoria: "base", conta: false }]);
     expect(categoriaConta("base", secoes)).toBe(true);
+  });
+
+  it("cosmética não é ligável: uma linha antiga dela é ignorada, e ela conta na vista dela", () => {
+    const secoes = resolverSecoes([{ categoria: "cosmetica", conta: false }]);
+    expect(secoes).not.toHaveProperty("cosmetica");
+    expect(categoriaConta("cosmetica", secoes)).toBe(true);
   });
 
   it("seção desligada não conta", () => {

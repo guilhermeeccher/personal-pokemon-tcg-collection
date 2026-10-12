@@ -20,6 +20,9 @@
  *    não guarda; a regra aqui cobre o caso comum e erra para o lado
  *    permissivo no resto.
  *  - **O local é o HOME ou um jogo que o usuário tem, ativo.**
+ *  - **O que o HOME não recebe de um jogo não sai dele** (Spinda do GO e do
+ *    BDSP, Zygarde do GO… — `dex-disponibilidade.ts`). Nem para outro jogo,
+ *    porque todo caminho entre jogos passa pelo HOME.
  */
 import { jogoDex, LOCAL_HOME } from "./dex-jogos";
 import { recusa, type Recusa } from "./recusa";
@@ -39,6 +42,8 @@ export interface ContextoRegistroDex {
   formasAtivas: ReadonlySet<string>;
   /** Jogos do catálogo que o usuário tem, ativos. */
   jogosAtivos: ReadonlySet<string>;
+  /** `jogo:forma` que o HOME não recebe daquele jogo (`naoTransferiveis()`). */
+  naoTransferiveis: ReadonlySet<string>;
 }
 
 const DATA_ISO = /^\d{4}-\d{2}-\d{2}$/;
@@ -96,6 +101,7 @@ export function validarNovoRegistro(dados: DadosRegistroDex, ctx: ContextoRegist
 }
 
 export interface MovimentoDex {
+  formaId: string;
   jogoOrigem: string;
   localAtual: string;
   novoLocal: string;
@@ -109,6 +115,10 @@ export interface MovimentoDex {
  */
 export function validarMovimento(m: MovimentoDex, ctx: ContextoRegistroDex): Recusa | null {
   if (m.novoLocal === m.localAtual) return null;
+
+  if (ctx.naoTransferiveis.has(`${m.localAtual}:${m.formaId}`)) {
+    return recusa("dexNaoTransferivel", { jogo: nomeDoJogo(m.localAtual) });
+  }
 
   const atual = jogoDex(m.localAtual);
   if (atual?.conexaoHome === "so_envio") {

@@ -43,8 +43,13 @@ export const CATEGORIAS_FORMA_DEX = [
 
 export type CategoriaFormaDex = (typeof CATEGORIAS_FORMA_DEX)[number];
 
-/** As seções que o usuário liga e desliga. `base` conta sempre (spec §3.4). */
-export const SECOES_LIGAVEIS = ["regional", "genero", "cosmetica", "especial"] as const;
+/**
+ * As seções que o usuário liga e desliga. `base` conta sempre (spec §3.4).
+ * `cosmetica` não é ligável desde 2026-10-11: as formas cosméticas (Alcremie,
+ * Vivillon, Unown…) têm vista própria, com progresso próprio
+ * (`dex-grade.ts`, `VistaDex`).
+ */
+export const SECOES_LIGAVEIS = ["regional", "genero", "especial"] as const;
 export type SecaoLigavel = (typeof SECOES_LIGAVEIS)[number];
 
 /** Uma linha de `pokemon_forms.csv`, já tipada. */

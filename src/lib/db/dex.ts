@@ -4,6 +4,7 @@
 import { asc, eq, inArray, sql } from "drizzle-orm";
 
 import type { CategoriaFormaDex, SecaoLigavel } from "@/lib/dominio/dex-classificacao";
+import { naoTransferiveis } from "@/lib/dominio/dex-disponibilidade";
 import { ehJogoDex, jogoDex, ordemJogo } from "@/lib/dominio/dex-jogos";
 import {
   ehPedidoDeConfirmacao,
@@ -151,6 +152,7 @@ export async function carregarContextoRegistro(db: Db): Promise<ContextoRegistro
   return {
     formasAtivas: new Set(formas.map((f) => f.id)),
     jogosAtivos: new Set(jogos.map((j) => j.jogoId)),
+    naoTransferiveis: naoTransferiveis(),
   };
 }
 
@@ -197,7 +199,12 @@ export async function criarRegistrosEmLote(
 async function lerRegistros(db: Db, ids: readonly string[]) {
   if (ids.length === 0) return null;
   const linhas = await db
-    .select({ id: dexRegistro.id, local: dexRegistro.local, jogoOrigem: dexRegistro.jogoOrigem })
+    .select({
+      id: dexRegistro.id,
+      formaId: dexRegistro.formaId,
+      local: dexRegistro.local,
+      jogoOrigem: dexRegistro.jogoOrigem,
+    })
     .from(dexRegistro)
     .where(inArray(dexRegistro.id, [...ids]));
   return linhas.length === new Set(ids).size ? linhas : null;
@@ -246,7 +253,13 @@ export async function moverRegistros(
   const atuais = await lerRegistros(db, ids);
   if (!atuais) return { ok: false, motivo: recusa("dexRegistroNaoEncontrado"), status: 404 };
   const motivo = validarMovimentoEmLote(
-    atuais.map((a) => ({ jogoOrigem: a.jogoOrigem, localAtual: a.local, novoLocal, confirmarSemVolta })),
+    atuais.map((a) => ({
+      formaId: a.formaId,
+      jogoOrigem: a.jogoOrigem,
+      localAtual: a.local,
+      novoLocal,
+      confirmarSemVolta,
+    })),
     await carregarContextoRegistro(db),
   );
   if (motivo) return { ok: false, motivo, status: ehPedidoDeConfirmacao(motivo) ? 409 : 400 };
