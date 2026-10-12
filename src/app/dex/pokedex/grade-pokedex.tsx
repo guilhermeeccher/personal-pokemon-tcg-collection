@@ -42,6 +42,7 @@ import { NOME_REGIAO, REGIOES, type Regiao } from "@/lib/dominio/escopo-pokedex"
 import type { FormaDexDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 import { urlSpriteDex } from "@/lib/imagens";
 
+import { useRotuloForma } from "../_componentes/use-rotulo-forma";
 import { PainelOportunidades } from "./painel-oportunidades";
 
 const classesOpcao = (ativa: boolean) =>
@@ -69,6 +70,7 @@ export function GradePokedex({
   registros: RegistroDexDTO[];
 }) {
   const t = useTranslations("dex");
+  const rotulo = useRotuloForma(formas);
   const [secoes, setSecoes] = useState<SecoesContadas>(secoesIniciais);
   const [salvando, setSalvando] = useState<SecaoLigavel | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -287,7 +289,7 @@ export function GradePokedex({
                 {/* eslint-disable-next-line @next/next/no-img-element -- sprite externo pequeno (PokeAPI, pixel art ~0,6 KB), centenas por tela; mesma convenção da vaga vazia de Pokédex. */}
                 <img
                   src={urlSpriteDex(f.sprite, trilha === "shiny")}
-                  alt={f.forma ? `${f.especie} (${f.forma})` : f.especie}
+                  alt={rotulo.nome(f)}
                   width={72}
                   height={72}
                   loading="lazy"
@@ -298,7 +300,7 @@ export function GradePokedex({
                   #{String(f.numero).padStart(4, "0")}
                 </span>
                 <span className="text-sm font-semibold text-strong">{f.especie}</span>
-                {f.forma && <span className="text-xs text-muted">{f.forma}</span>}
+                {rotulo.forma(f) && <span className="text-xs text-muted">{rotulo.forma(f)}</span>}
                 <div className="flex flex-wrap justify-center gap-1">
                   {estado !== "falta" && (
                     <Distintivo tom={estado === "no_home" ? "sucesso" : "aviso"}>{t(`estado.${estado}`)}</Distintivo>

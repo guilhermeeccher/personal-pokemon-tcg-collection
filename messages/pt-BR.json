@@ -1002,6 +1002,10 @@
       "principal": "Principal",
       "cosmeticas": "Cosméticas",
       "rotulo": "Vista"
+    },
+    "genero": {
+      "macho": "Macho",
+      "femea": "Fêmea"
     }
   }
 }

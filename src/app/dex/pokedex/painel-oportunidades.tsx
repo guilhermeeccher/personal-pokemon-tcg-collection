@@ -22,7 +22,8 @@ import { oportunidadesHome } from "@/lib/dominio/dex-inventario";
 import { jogoDex, LOCAL_HOME } from "@/lib/dominio/dex-jogos";
 import type { FormaDexDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 
-import { nomeDaForma, SpriteDex } from "../_componentes/sprite-dex";
+import { SpriteDex } from "../_componentes/sprite-dex";
+import { useRotuloForma } from "../_componentes/use-rotulo-forma";
 import { useTransferencia } from "../_componentes/use-transferencia";
 
 export function PainelOportunidades({
@@ -34,6 +35,7 @@ export function PainelOportunidades({
 }) {
   const t = useTranslations("dex");
   const router = useRouter();
+  const rotulo = useRotuloForma(formas);
   const { mover, ocupado, erro, modal } = useTransferencia(() => router.refresh());
   const [abertos, setAbertos] = useState<Record<string, boolean>>({});
 
@@ -85,7 +87,7 @@ export function PainelOportunidades({
                       className="flex flex-col items-center gap-1 rounded-card border border-hairline p-2 text-center"
                     >
                       <SpriteDex sprite={forma.sprite} shiny={item.trilha === "shiny"} tamanho={56} />
-                      <span className="text-xs font-semibold text-strong">{nomeDaForma(forma)}</span>
+                      <span className="text-xs font-semibold text-strong">{rotulo.nome(forma)}</span>
                       {item.trilha === "shiny" && <Distintivo tom="acento">{t("trilha.shiny")}</Distintivo>}
                       <Botao tamanho="xs" disabled={ocupado} onClick={() => mover([item.registroId], LOCAL_HOME)}>
                         {t("oportunidades.enviar")}

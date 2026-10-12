@@ -27,7 +27,3 @@ export function SpriteDex({
     />
   );
 }
-
-export function nomeDaForma(f: { especie: string; forma: string | null }): string {
-  return f.forma ? `${f.especie} (${f.forma})` : f.especie;
-}

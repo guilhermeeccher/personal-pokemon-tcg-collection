@@ -1002,6 +1002,10 @@
       "principal": "Main",
       "cosmeticas": "Cosmetic",
       "rotulo": "View"
+    },
+    "genero": {
+      "macho": "Male",
+      "femea": "Female"
     }
   }
 }

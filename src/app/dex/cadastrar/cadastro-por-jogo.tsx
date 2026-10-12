@@ -34,6 +34,7 @@ import { MAX_QUANTIDADE_POR_LINHA } from "@/lib/dominio/dex-registro";
 import type { FormaDexDTO, JogoPossuidoDTO } from "@/lib/dominio/tipos-cliente";
 
 import { SpriteDex } from "../_componentes/sprite-dex";
+import { useRotuloForma } from "../_componentes/use-rotulo-forma";
 
 type Quantidades = Record<string, { normal: number; shiny: number }>;
 type Trilha = "normal" | "shiny";
@@ -51,6 +52,7 @@ function lerQuantidade(texto: string): number {
 
 const LinhaForma = memo(function LinhaForma({
   forma,
+  rotulo,
   disponibilidade,
   comCatalogo,
   normal,
@@ -60,6 +62,8 @@ const LinhaForma = memo(function LinhaForma({
   aoMudar,
 }: {
   forma: FormaDexDTO;
+  /** Nome da forma na tela (macho/fêmea traduzidos), ou nulo. */
+  rotulo: string | null;
   /** `undefined` com catálogo = fora do jogo. */
   disponibilidade: DisponibilidadeForma | undefined;
   comCatalogo: boolean;
@@ -77,7 +81,7 @@ const LinhaForma = memo(function LinhaForma({
       inputMode="numeric"
       min={0}
       max={MAX_QUANTIDADE_POR_LINHA}
-      aria-label={`${forma.especie} ${forma.forma ?? ""} ${trilha}`}
+      aria-label={`${forma.especie} ${rotulo ?? ""} ${trilha}`}
       className={`${classesEntrada} w-16 text-right tabular-nums`}
       value={valor || ""}
       onChange={(e) => aoMudar(forma.id, trilha, lerQuantidade(e.target.value))}
@@ -90,7 +94,7 @@ const LinhaForma = memo(function LinhaForma({
       </td>
       <td className="p-2">
         <span className="font-semibold text-strong">{forma.especie}</span>
-        {forma.forma && <span className="ml-1 text-xs text-muted">{forma.forma}</span>}
+        {rotulo && <span className="ml-1 text-xs text-muted">{rotulo}</span>}
         {comCatalogo && !disponibilidade && (
           <Distintivo className="ml-2">{t("cadastrar.foraDoJogo")}</Distintivo>
         )}
@@ -132,6 +136,7 @@ export function CadastroPorJogo({
   const t = useTranslations("dex");
   const tr = useTranslations("recusas");
   const router = useRouter();
+  const rotulo = useRotuloForma(formas);
 
   const [jogoId, setJogoId] = useState(jogos[0]?.jogoId ?? "");
   const [filtro, setFiltro] = useState(buscaInicial);
@@ -306,6 +311,7 @@ export function CadastroPorJogo({
             <LinhaForma
               key={f.id}
               forma={f}
+              rotulo={rotulo.forma(f)}
               disponibilidade={catalogo?.get(f.id)}
               comCatalogo={catalogo !== null}
               normal={quantidades[f.id]?.normal ?? 0}

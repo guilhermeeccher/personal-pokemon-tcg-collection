@@ -27,7 +27,8 @@ import { agruparInventario, compararPorNome, type GrupoInventario } from "@/lib/
 import { JOGOS_DEX, jogoDex, LOCAL_HOME } from "@/lib/dominio/dex-jogos";
 import type { FormaDexDTO, JogoPossuidoDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 
-import { nomeDaForma, SpriteDex } from "../_componentes/sprite-dex";
+import { SpriteDex } from "../_componentes/sprite-dex";
+import { useRotuloForma } from "../_componentes/use-rotulo-forma";
 import { useTransferencia } from "../_componentes/use-transferencia";
 
 export function InventarioDex({
@@ -42,6 +43,7 @@ export function InventarioDex({
   const t = useTranslations("dex");
   const tr = useTranslations("recusas");
   const router = useRouter();
+  const rotulo = useRotuloForma(formas);
   const recarregar = () => router.refresh();
   const { mover, ocupado, erro: erroMover, modal } = useTransferencia(recarregar);
 
@@ -77,7 +79,7 @@ export function InventarioDex({
   const totalPokemon = linhas.reduce((soma, l) => soma + l.grupo.ids.length, 0);
 
   async function apagarUm(grupo: GrupoInventario, forma: FormaDexDTO) {
-    if (!window.confirm(t("inventario.confirmarApagar", { nome: nomeDaForma(forma) }))) return;
+    if (!window.confirm(t("inventario.confirmarApagar", { nome: rotulo.nome(forma) }))) return;
     setErro(null);
     const r = await fetch(`/api/dex/registros/${grupo.ids[grupo.ids.length - 1]}`, { method: "DELETE" });
     if (!r.ok) setErro(textoDaRecusa(tr, await r.json().catch(() => null), t("inventario.erro")));
@@ -141,7 +143,7 @@ export function InventarioDex({
                 <td className="p-2">
                   <span className="mr-1 font-mono text-xs tabular-nums text-muted">#{String(forma.numero).padStart(4, "0")}</span>
                   <span className="font-semibold text-strong">{forma.especie}</span>
-                  {forma.forma && <span className="ml-1 text-xs text-muted">{forma.forma}</span>}
+                  {rotulo.forma(forma) && <span className="ml-1 text-xs text-muted">{rotulo.forma(forma)}</span>}
                   {g.shiny && (
                     <Distintivo tom="acento" className="ml-2">
                       {t("trilha.shiny")}
@@ -204,7 +206,7 @@ export function InventarioDex({
       {corrigindo && (
         <CorrecaoGrupo
           grupo={corrigindo}
-          forma={formaPorId.get(corrigindo.formaId)!}
+          nome={rotulo.nome(formaPorId.get(corrigindo.formaId)!)}
           jogos={jogos}
           aoFechar={(salvou) => {
             setCorrigindo(null);
@@ -219,12 +221,12 @@ export function InventarioDex({
 /** Corrige shiny, origem, data e notas do grupo inteiro. Forma errada: apagar e cadastrar de novo. */
 function CorrecaoGrupo({
   grupo,
-  forma,
+  nome,
   jogos,
   aoFechar,
 }: {
   grupo: GrupoInventario;
-  forma: FormaDexDTO;
+  nome: string;
   jogos: JogoPossuidoDTO[];
   aoFechar: (salvou: boolean) => void;
 }) {
@@ -265,7 +267,7 @@ function CorrecaoGrupo({
       <h3 className="text-base font-bold text-strong">
         {t("inventario.corrigirTitulo", { quantidade: String(grupo.ids.length) })}
       </h3>
-      <p className="font-semibold">{nomeDaForma(forma)}</p>
+      <p className="font-semibold">{nome}</p>
       <label className="flex items-center gap-2 text-sm font-medium">
         <input
           type="checkbox"

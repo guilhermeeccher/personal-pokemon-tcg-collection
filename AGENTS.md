@@ -511,7 +511,12 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
   also disappears from the add screen. Toggling never touches a record. **Cosmetic forms are not a
   toggle but a view of their own** (`VistaDex`): 63 Alcremie, 20 Vivillon and 28 Unown used to flood
   the grid, so they live beside the main view, with their own progress, the way the shiny track
-  lives beside the normal one. View and track are independent.
+  lives beside the normal one. View and track are independent. A form that only changes the
+  look is `cosmetica` even when it comes from an event (Pikachu's caps, Original Color Magearna,
+  Dada Zarude): `especial` is for forms that change type, ability, moves or stats.
+- **Gender pairs are labelled on screen.** A species with a gender difference has two slots, and the
+  screens say which is which (`rotuloDaForma`: male and female in the interface language). PokeAPI
+  names the male "Male" for some species and leaves it blank for others; do not rely on its name.
 - **The seed runs on every boot, not only on an empty table** — unlike the card seed. The file is the
   only source of this catalog and it is small, so a corrected classification reaches every install on
   the next boot. A slot that left the file is **deactivated, never deleted**: a user record may point
