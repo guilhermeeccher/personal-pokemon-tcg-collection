@@ -40,20 +40,30 @@ describe("visão geral da Living Dex", () => {
   ];
   const mapa = mapearEstadosDex(registros);
 
-  it("a dex do jogo conta o que nasceu nele, e quantos desses estão no HOME", () => {
-    const p = progressoDoJogo("firered", formas, registros, mapa, todas, trofeus, new Set())!;
-    expect(p.pegas).toBe(2); // o shiny e o Pidgey do GO não contam
-    expect(p.noHome).toBe(1);
+  it("a dex do jogo conta o que está na Pokédex, venha de onde vier, e quantos estão no HOME", () => {
+    const p = progressoDoJogo("firered", formas, mapa, todas, trofeus, new Set())!;
+    expect(p.pegas).toBe(3); // o Pidgey do GO conta; o shiny não
+    expect(p.noHome).toBe(2);
     expect(p.faltamAgora).toBeLessThan(p.total - p.pegas); // parte do resto está trancada
     expect(p.trancadas[0].trofeuId).toBe("firered-pokedex-nacional");
     const tudo = new Set(trofeus.filter((t) => t.jogoId === "firered").map((t) => t.id));
-    const semTranca = progressoDoJogo("firered", formas, registros, mapa, todas, trofeus, tudo)!;
+    const semTranca = progressoDoJogo("firered", formas, mapa, todas, trofeus, tudo)!;
     expect(semTranca.trancadas).toEqual([]);
     expect(semTranca.faltamAgora).toBe(semTranca.total - semTranca.pegas);
   });
 
+  it("conta o que está em outro jogo sem ter subido ao HOME, mas não outra forma da espécie", () => {
+    const outros = mapearEstadosDex([
+      { formaId: "pikachu", shiny: false, local: "brilliant-diamond" },
+      { formaId: "vulpix-alola", shiny: false, local: "home" },
+    ]);
+    const p = progressoDoJogo("firered", formas, outros, todas, trofeus, new Set())!;
+    expect(p.pegas).toBe(1); // o Pikachu do BD; o Vulpix de Alola não preenche o Vulpix do FireRed
+    expect(p.noHome).toBe(0);
+  });
+
   it("jogo sem catálogo não tem dex", () => {
-    expect(progressoDoJogo("legends-za", formas, registros, mapa, todas, trofeus, new Set())).toBeNull();
+    expect(progressoDoJogo("legends-za", formas, mapa, todas, trofeus, new Set())).toBeNull();
   });
 
   it("o progresso por região soma o da vista principal", () => {

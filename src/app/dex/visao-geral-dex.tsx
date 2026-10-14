@@ -160,7 +160,7 @@ export function VisaoGeralDex({
   const cartaoHome = progressoTrofeus(trofeus, JOGO_HOME, obtidos);
   const cartoesJogos = jogos.map((j) => ({
     jogo: j,
-    dex: progressoDoJogo(j.jogoId, formas, registros, mapa, secoes, trofeus, obtidos),
+    dex: progressoDoJogo(j.jogoId, formas, mapa, secoes, trofeus, obtidos),
     trofeus: progressoTrofeus(trofeus, j.jogoId, obtidos),
   }));
 

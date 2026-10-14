@@ -3,10 +3,12 @@
  *
  * Cada jogo é uma "coleção", como as de carta (pedido de 2026-10-12): a dex
  * daquele jogo são as vagas do catálogo dele (`catalogoDoJogo`) que contam
- * na trilha normal da vista principal. "Pegas" são as que têm algum Pokémon
- * nascido naquele jogo, esteja ele no jogo ou já no HOME; delas, quantas
- * estão no HOME. O que falta se divide em pegável agora e trancado atrás de
- * um checkpoint ainda não conquistado (`especiesTrancadas`).
+ * na trilha normal da vista principal. "Pegas" são as que estão na Pokédex,
+ * venha o Pokémon de onde vier (pedido de 2026-10-13): o HOME centraliza, e
+ * o Bulbasaur que veio do GO é um que também se pega no FireRed. Um que está
+ * em outro jogo e ainda não subiu também conta. Delas, quantas estão no HOME.
+ * O que falta se divide em pegável agora e trancado atrás de um checkpoint
+ * ainda não conquistado (`especiesTrancadas`).
  */
 import { catalogoDoJogo, type FormaParaDisponibilidade } from "./dex-disponibilidade";
 import { estadoDaVaga, progressoDex, type MapaEstadosDex, type ProgressoTrilha } from "./dex-estado";
@@ -20,7 +22,7 @@ export type FormaParaVisaoGeral = FormaParaGrade & FormaParaDisponibilidade & { 
 export interface ProgressoJogoDex {
   /** Vagas da dex do jogo. */
   total: number;
-  /** Com algum Pokémon nascido no jogo. */
+  /** Na Pokédex (no HOME ou em qualquer jogo), qualquer que seja a origem. */
   pegas: number;
   /** Das pegas, as que estão no HOME. */
   noHome: number;
@@ -34,7 +36,6 @@ export interface ProgressoJogoDex {
 export function progressoDoJogo(
   jogoId: string,
   formas: readonly FormaParaVisaoGeral[],
-  registros: readonly { formaId: string; shiny: boolean; jogoOrigem: string }[],
   mapa: MapaEstadosDex,
   secoes: SecoesContadas,
   trofeus: readonly TrofeuParaConta[],
@@ -42,7 +43,6 @@ export function progressoDoJogo(
 ): ProgressoJogoDex | null {
   const catalogo = catalogoDoJogo(jogoId, formas);
   if (!catalogo) return null;
-  const nascidas = new Set(registros.filter((r) => !r.shiny && r.jogoOrigem === jogoId).map((r) => r.formaId));
   const trancadasPorNumero = especiesTrancadas(trofeus, jogoId, obtidos);
 
   const r: ProgressoJogoDex = { total: 0, pegas: 0, noHome: 0, faltamAgora: 0, trancadas: [] };
@@ -50,9 +50,10 @@ export function progressoDoJogo(
   for (const f of formas) {
     if (!catalogo.has(f.id) || vistaDaCategoria(f.categoria) !== "principal" || !contaNaTrilha(f, "normal", secoes)) continue;
     r.total++;
-    if (nascidas.has(f.id)) {
+    const estado = estadoDaVaga(mapa, f.id, "normal");
+    if (estado !== "falta") {
       r.pegas++;
-      if (estadoDaVaga(mapa, f.id, "normal") === "no_home") r.noHome++;
+      if (estado === "no_home") r.noHome++;
       continue;
     }
     const checkpoints = trancadasPorNumero.get(f.numero);
