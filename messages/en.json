@@ -918,7 +918,19 @@
       "irPara": "Go to",
       "vazio": "No slots in the boxes for this track.",
       "contagem": "{caixas} boxes · {vagas} slots",
-      "reservadas": "Boxes before Kanto 1"
+      "reservadas": "Boxes before National 1",
+      "folga": "Box numbers skip on purpose: the boxes between groups stay empty in HOME, so each group can grow without moving the others.",
+      "grupo": {
+        "nacional": "National",
+        "genero": "Gender",
+        "regional": "Regional",
+        "especial": "Special",
+        "cosmetica": "Cosmetic"
+      },
+      "buraco": {
+        "sem_shiny": "No shiny",
+        "secao_desligada": "Section off"
+      }
     },
     "recebidos": {
       "titulo": "Received",

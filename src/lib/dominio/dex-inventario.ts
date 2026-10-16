@@ -17,12 +17,12 @@ export interface FormaParaNome {
   id: string;
   especie: string;
   forma: string | null;
-  /** Ordem das caixas do HOME: na mesma espécie, base antes das formas. */
+  /** Ordem do catálogo: na mesma espécie, base antes das formas. */
   ordem: number;
 }
 
 /**
- * Ordem alfabética de espécie; dentro da espécie, a ordem das caixas do HOME
+ * Ordem alfabética de espécie; dentro da espécie, a ordem do catálogo
  * (base, fêmea, formas). `localeCompare` sem acento: "Flabébé" fica com os F.
  */
 export function compararPorNome(a: FormaParaNome, b: FormaParaNome): number {

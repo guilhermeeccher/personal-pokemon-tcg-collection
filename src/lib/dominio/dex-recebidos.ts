@@ -27,9 +27,10 @@
  * ou outro desta rodada chegou antes (ordem de cadastro), o seguinte é cópia
  * **extra**: não tem lugar nas caixas, e a tela o põe à parte em vez de
  * apontar uma posição que já tem dono. O mesmo para o que está **fora** das
- * caixas: seção desligada, ou shiny de forma sem shiny.
+ * caixas: seção desligada, ou shiny de forma sem shiny — esse tem lugar no
+ * mapa, mas como buraco (`dex-caixas.ts`), onde nada se guarda.
  */
-import { montarCaixasDex, type CaixaDex, type FormaParaCaixa } from "./dex-caixas";
+import { montarCaixasDex, posicoesNasCaixas, type CaixaDex, type FormaParaCaixa } from "./dex-caixas";
 import type { TrilhaDex } from "./dex-grade";
 import { LOCAL_HOME } from "./dex-jogos";
 import type { SecoesContadas } from "./dex-secoes";
@@ -98,15 +99,16 @@ export function montarRecebidos<T extends FormaParaCaixa, R extends RegistroPara
     if (daTrilha.length === 0) continue;
 
     const guardadas = new Set(noHome.filter((r) => r.shiny === shiny && !r.aGuardar).map((r) => r.formaId));
-    const lugar = new Map<string, { caixa: CaixaDex<T>; posicao: number }>();
-    for (const caixa of montarCaixasDex(formas, trilha, secoes, reservadas)) {
-      caixa.vagas.forEach((f, i) => lugar.set(f.id, { caixa, posicao: i + 1 }));
-    }
+    const caixasDaTrilha = montarCaixasDex(formas, trilha, secoes, reservadas);
+    const caixaPorNumero = new Map(caixasDaTrilha.map((c) => [c.numero, c]));
+    /* Só vaga de verdade: buraco (shiny de forma sem shiny) não é lugar. */
+    const posicoes = posicoesNasCaixas(caixasDaTrilha);
 
     const porCaixa = new Map<number, CaixaRecebidos<T, R>>();
     const tomadas = new Set<string>();
     for (const registro of daTrilha) {
-      const l = lugar.get(registro.formaId);
+      const p = posicoes.get(registro.formaId);
+      const l = p && { caixa: caixaPorNumero.get(p.caixa)!, posicao: p.posicao };
       if (!l) {
         semLugar.push({ registro, motivo: "fora" });
         continue;
@@ -122,7 +124,7 @@ export function montarRecebidos<T extends FormaParaCaixa, R extends RegistroPara
           trilha,
           caixa: l.caixa,
           itens: [],
-          jaGuardadas: new Set(l.caixa.vagas.filter((f) => guardadas.has(f.id)).map((f) => f.id)),
+          jaGuardadas: new Set(l.caixa.lugares.filter((x) => guardadas.has(x.forma.id)).map((x) => x.forma.id)),
         };
         porCaixa.set(l.caixa.numero, grupo);
       }

@@ -918,7 +918,19 @@
       "irPara": "Ir para",
       "vazio": "Nenhuma vaga nas caixas desta trilha.",
       "contagem": "{caixas} caixas · {vagas} vagas",
-      "reservadas": "Caixas antes da Kanto 1"
+      "reservadas": "Caixas antes da Nacional 1",
+      "folga": "Os números pulam de propósito: as caixas entre os grupos ficam vazias no HOME, para cada grupo crescer sem mexer nos outros.",
+      "grupo": {
+        "nacional": "Nacional",
+        "genero": "Gênero",
+        "regional": "Regionais",
+        "especial": "Especiais",
+        "cosmetica": "Cosméticas"
+      },
+      "buraco": {
+        "sem_shiny": "Sem shiny",
+        "secao_desligada": "Seção desligada"
+      }
     },
     "recebidos": {
       "titulo": "Recebidos",

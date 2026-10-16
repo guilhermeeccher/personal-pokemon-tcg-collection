@@ -415,8 +415,10 @@ export interface FormaDexDTO {
   mitico: boolean;
   shinyObtenivel: boolean;
   sprite: string;
-  /** Ordem das caixas do HOME. */
+  /** Ordem do catálogo: número nacional; na espécie, a base, a fêmea e as formas. */
   ordem: number;
+  /** Ordinal de lançamento da forma (`dex_forma.lancamento`): ordena os grupos das caixas do HOME. */
+  lancamento: number;
 }
 
 /** Um jogo que o usuário tem (`dex_jogo_possuido`), com o catálogo resolvido. */

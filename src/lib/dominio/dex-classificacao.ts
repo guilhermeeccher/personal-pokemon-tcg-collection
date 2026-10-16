@@ -67,6 +67,12 @@ export interface FormaPokeapi {
   ordem: number;
   /** Nome da forma em inglês (`pokemon_form_names`, idioma 9). */
   nomeForma: string | null;
+  /**
+   * Ordinal de lançamento: o `order` de `version_groups.csv` do grupo de
+   * versões em que a forma foi introduzida (`introduced_in_version_group_id`).
+   * Quem resolve o id para o `order` é o script; aqui chega o número.
+   */
+  lancamento: number;
 }
 
 /** Uma linha de `pokemon.csv`. */
@@ -103,6 +109,14 @@ export interface FormaDex {
   /** Caminho do sprite no repositório PokeAPI/sprites, sem extensão. */
   sprite: string;
   ordem: number;
+  /**
+   * Ordinal de lançamento da forma (`FormaPokeapi.lancamento`). Ordena os
+   * grupos das caixas do HOME que crescem por lançamento (`dex-caixas.ts`).
+   * A fêmea gerada aqui não é forma da PokeAPI e herda o da forma de que é
+   * fêmea: não afirma quando a diferença de gênero apareceu (na geração 4,
+   * para as espécies antigas), só a põe junto da forma dela.
+   */
+  lancamento: number;
 }
 
 export interface EntradaClassificacao {
@@ -117,6 +131,62 @@ export interface ResultadoClassificacao {
   semClassificacao: string[];
   /** Formas incluídas sem nome e sem nome sobrescrito. Idem. */
   semNome: string[];
+  /** Formas regionais (e fêmeas de forma regional) sem região conhecida (`regiaoDaForma`). Idem. */
+  semRegiao: string[];
+}
+
+/**
+ * As regiões das formas regionais, na ordem de lançamento: Sun/Moon,
+ * Sword/Shield, Legends: Arceus, Scarlet/Violet. É a ordem dos blocos
+ * regionais nas caixas do HOME (`dex-caixas.ts`): região nova entra no fim.
+ *
+ * Não é o `Regiao` da Pokédex Nacional (`escopo-pokedex.ts`): Hisui não tem
+ * faixa de números, e a região de uma forma não sai do número da espécie —
+ * o Raichu de Alola é o número 26, de Kanto.
+ */
+export const REGIOES_FORMA = ["alola", "galar", "hisui", "paldea"] as const;
+export type RegiaoForma = (typeof REGIOES_FORMA)[number];
+
+/* Nome de região é nome próprio — não traduz, como `NOME_REGIAO`. */
+export const NOME_REGIAO_FORMA: Readonly<Record<RegiaoForma, string>> = {
+  alola: "Alola",
+  galar: "Galar",
+  hisui: "Hisui",
+  paldea: "Paldea",
+};
+
+/**
+ * Marca de região no identificador da forma → região. Mapa explícito: só
+ * estas quatro palavras contam, como um trecho inteiro entre hífens
+ * (`raichu-alola`, `mr-mime-galar`, `darmanitan-galar-standard`,
+ * `tauros-paldea-combat-breed`, `sneasel-hisui-femea`).
+ */
+const MARCA_REGIAO: Readonly<Record<string, RegiaoForma>> = {
+  alola: "alola",
+  galar: "galar",
+  hisui: "hisui",
+  paldea: "paldea",
+};
+
+/**
+ * Região de uma forma pelo identificador, ou `null` se ele não traz
+ * exatamente uma marca conhecida. **Nunca é chutada**: uma forma regional
+ * de uma região nova (ou com duas marcas) sai `null`, `classificarFormasDex`
+ * a lista em `semRegiao` e o gerador do seed falha — alguém acrescenta a
+ * região aqui e em `REGIOES_FORMA`, decidindo onde o bloco dela entra.
+ *
+ * Por que derivada e não coluna de `dex_forma`: o id já está gravado e é a
+ * mesma chave; uma coluna seria uma segunda cópia da informação, que podia
+ * discordar dele. A garantia de "nunca chutada" fica no gerador (que
+ * recusa) e num teste sobre o seed versionado, e `dex-caixas.ts` recusa em
+ * tempo de execução o que escapar.
+ *
+ * Só faz sentido para `regional` e `genero`: o boné de Alola do Pikachu tem
+ * a marca e é cosmético.
+ */
+export function regiaoDaForma(id: string): RegiaoForma | null {
+  const marcas = new Set(id.split("-").flatMap((trecho) => (Object.hasOwn(MARCA_REGIAO, trecho) ? [MARCA_REGIAO[trecho]] : [])));
+  return marcas.size === 1 ? [...marcas][0] : null;
 }
 
 type Destino = CategoriaFormaDex | "fora";
@@ -167,8 +237,9 @@ const REGRAS: readonly Regra[] = [
    * são formas internas, mas o SuperEffective deixa todas fora de todos os
    * arranjos de caixa do HOME, e nenhuma fonte achada diz que o HOME as
    * separa. Como as posições das caixas (`dex-caixas.ts`) são o que o
-   * usuário segue para arrumar o HOME, ficam fora e as caixas batem com a
-   * referência nas nove regiões. Até então eram `especial`.
+   * usuário segue para arrumar o HOME, ficam fora (com o arranjo por região
+   * de então, as caixas batiam assim com a referência nas nove regiões).
+   * Até então eram `especial`.
    */
   { padrao: /^greninja-battle-bond$|^rockruff-own-tempo$|^zygarde-(10|50)-power-construct$/, destino: "fora" },
 
@@ -324,9 +395,11 @@ function spriteDaForma(forma: FormaPokeapi): string {
 /**
  * Classifica as formas da PokeAPI em vagas do HOME.
  *
- * A ordem das vagas segue a das caixas do HOME ordenadas por forma: número
- * nacional; dentro da espécie, a base, a fêmea da base, e depois cada forma
- * na ordem da PokeAPI, com a fêmea de forma logo depois dela.
+ * A ordem das vagas (`ordem`) é a do catálogo: número nacional; dentro da
+ * espécie, a base, a fêmea da base, e depois cada forma na ordem da PokeAPI,
+ * com a fêmea de forma logo depois dela. É a ordem da Pokédex e do
+ * inventário; as caixas do HOME têm a delas, por grupo (`dex-caixas.ts`),
+ * e usam esta só para desempatar.
  */
 export function classificarFormasDex(entrada: EntradaClassificacao): ResultadoClassificacao {
   const pokemonPorId = new Map(entrada.pokemons.map((p) => [p.id, p]));
@@ -334,6 +407,9 @@ export function classificarFormasDex(entrada: EntradaClassificacao): ResultadoCl
 
   const semClassificacao: string[] = [];
   const semNome: string[] = [];
+  const semRegiao: string[] = [];
+  /** Lançamento da forma base de cada espécie: a fêmea gerada herda (`FormaDex.lancamento`). */
+  const lancamentoDaBase = new Map<number, number>();
 
   /** Vagas por espécie, com uma chave de ordenação local. */
   const porEspecie = new Map<number, { chave: number; vaga: Omit<FormaDex, "ordem"> }[]>();
@@ -371,8 +447,10 @@ export function classificarFormasDex(entrada: EntradaClassificacao): ResultadoCl
     const nome = NOME_SOBRESCRITO[forma.identificador] ?? forma.nomeForma;
     if (!ehBase && !nome) semNome.push(forma.identificador);
     if (categoria === "genero") especiesComFemeaExplicita.add(especie.id);
+    if (ehBase) lancamentoDaBase.set(especie.id, forma.lancamento);
 
     const id = ehBase ? especie.identificador : forma.identificador;
+    if (categoria === "regional" && regiaoDaForma(id) === null) semRegiao.push(id);
     adicionar(especie.id, ehBase ? 0 : forma.ordem * 10, {
       id,
       numero: especie.id,
@@ -384,10 +462,18 @@ export function classificarFormasDex(entrada: EntradaClassificacao): ResultadoCl
       mitico: especie.mitico,
       shinyObtenivel: shinyObtenivel(especie.id, id),
       sprite: spriteDaForma(forma),
+      lancamento: forma.lancamento,
     });
 
     for (const femea of FEMEAS_DE_FORMA) {
       if (femea.formaBase !== forma.identificador) continue;
+      /*
+       * A fêmea de uma forma regional vai para o bloco da região, junto da
+       * forma (`dex-caixas.ts`), e quem diz a região é o id dela. Id que não
+       * a traz, ou traz outra, é erro desta lista — não se chuta.
+       */
+      const regiao = regiaoDaForma(femea.id);
+      if (categoria === "regional" && (regiao === null || regiao !== regiaoDaForma(femea.formaBase))) semRegiao.push(femea.id);
       adicionar(especie.id, forma.ordem * 10 + 1, {
         id: femea.id,
         numero: especie.id,
@@ -399,6 +485,7 @@ export function classificarFormasDex(entrada: EntradaClassificacao): ResultadoCl
         mitico: especie.mitico,
         shinyObtenivel: shinyObtenivel(especie.id, femea.id),
         sprite: femea.sprite,
+        lancamento: forma.lancamento,
       });
     }
   }
@@ -409,6 +496,8 @@ export function classificarFormasDex(entrada: EntradaClassificacao): ResultadoCl
     const base = entrada.pokemons.find((p) => p.especieId === especie.id && p.padrao);
     if (!base) throw new Error(`Espécie ${especie.identificador} sem Pokémon padrão.`);
     const id = `${especie.identificador}-femea`;
+    const lancamento = lancamentoDaBase.get(especie.id);
+    if (lancamento === undefined) throw new Error(`Espécie ${especie.identificador} sem forma base.`);
     adicionar(especie.id, 1, {
       id,
       numero: especie.id,
@@ -420,6 +509,7 @@ export function classificarFormasDex(entrada: EntradaClassificacao): ResultadoCl
       mitico: especie.mitico,
       shinyObtenivel: shinyObtenivel(especie.id, id),
       sprite: `female/${base.id}`,
+      lancamento,
     });
   }
 
@@ -436,5 +526,5 @@ export function classificarFormasDex(entrada: EntradaClassificacao): ResultadoCl
     ids.add(vaga.id);
   }
 
-  return { vagas, semClassificacao, semNome };
+  return { vagas, semClassificacao, semNome, semRegiao };
 }

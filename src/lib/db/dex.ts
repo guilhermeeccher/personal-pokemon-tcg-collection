@@ -25,7 +25,7 @@ import { dexForma, dexJogoPossuido, dexPreferencias, dexRegistro, dexSecao } fro
 
 type Db = typeof dbPadrao;
 
-/** Vagas ativas, na ordem das caixas do HOME. */
+/** Vagas ativas, na ordem do catálogo (`ordem`); as caixas do HOME se calculam em `dex-caixas.ts`. */
 export async function listarFormasDex(db: Db): Promise<FormaDexDTO[]> {
   return db
     .select({
@@ -41,6 +41,7 @@ export async function listarFormasDex(db: Db): Promise<FormaDexDTO[]> {
       shinyObtenivel: dexForma.shinyObtenivel,
       sprite: dexForma.sprite,
       ordem: dexForma.ordem,
+      lancamento: dexForma.lancamento,
     })
     .from(dexForma)
     .where(eq(dexForma.ativa, true))
@@ -67,7 +68,7 @@ export async function definirSecaoDex(db: Db, categoria: SecaoLigavel, conta: bo
 /** A linha única de `dex_preferencias`. */
 const ID_PREFERENCIAS = 1;
 
-/** Caixas do HOME antes da Kanto 1; 0 sem preferência gravada. */
+/** Caixas do HOME antes da Nacional 1; 0 sem preferência gravada. */
 export async function lerCaixasReservadas(db: Db): Promise<number> {
   const [linha] = await db
     .select({ caixasReservadas: dexPreferencias.caixasReservadas })

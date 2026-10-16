@@ -24,10 +24,10 @@ import { Painel } from "@/app/_componentes/painel";
 import { COLUNAS_CAIXA, VAGAS_POR_CAIXA } from "@/lib/dominio/dex-caixas";
 import { montarRecebidos } from "@/lib/dominio/dex-recebidos";
 import type { SecoesContadas } from "@/lib/dominio/dex-secoes";
-import { NOME_REGIAO } from "@/lib/dominio/escopo-pokedex";
 import type { FormaDexDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 import { urlSpriteDex } from "@/lib/imagens";
 
+import { useNomeCaixa } from "../_componentes/use-nome-caixa";
 import { useRotuloForma } from "../_componentes/use-rotulo-forma";
 
 function Sprite({ forma, shiny, nome, className = "" }: { forma: FormaDexDTO; shiny: boolean; nome: string; className?: string }) {
@@ -59,6 +59,7 @@ export function RecebidosHome({
   const t = useTranslations("dex");
   const router = useRouter();
   const rotulo = useRotuloForma(formas);
+  const nomeCaixa = useNomeCaixa();
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState(false);
 
@@ -114,12 +115,7 @@ export function RecebidosHome({
                 <header className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 px-1">
                   <h2 className="text-sm font-semibold text-strong">
                     {t("caixas.caixaN", { numero: String(caixa.numero) })}
-                    <span className="ml-2 font-normal text-muted">
-                      {t("caixas.nomeCaixa", {
-                        grupo: caixa.regiao ? NOME_REGIAO[caixa.regiao] : t("vista.cosmeticas"),
-                        indice: String(caixa.indice),
-                      })}
-                    </span>
+                    <span className="ml-2 font-normal text-muted">{nomeCaixa.nome(caixa)}</span>
                   </h2>
                   {shiny && <Distintivo tom="acento">{t("trilha.shiny")}</Distintivo>}
                   <span className="text-xs text-muted">{t("recebidos.nestaCaixa", { quantidade: String(itens.length) })}</span>
@@ -133,9 +129,20 @@ export function RecebidosHome({
                   </Botao>
                 </header>
                 <ol className="grid gap-1" style={{ gridTemplateColumns: `repeat(${COLUNAS_CAIXA}, minmax(0, 1fr))` }}>
-                  {caixa.vagas.map((f, i) => {
+                  {caixa.lugares.map(({ forma: f, buraco }, i) => {
                     const item = naPosicao.get(i + 1);
                     const nome = rotulo.nome(f);
+                    if (buraco) {
+                      /* Buraco (forma sem shiny, na trilha shiny): o lugar existe no HOME, mas fica vazio. */
+                      return (
+                        <li
+                          key={f.id}
+                          title={`${nome} — ${t(`caixas.buraco.${buraco}`)}`}
+                          aria-hidden
+                          className="aspect-square rounded-md border border-dashed border-line bg-surface-hover"
+                        />
+                      );
+                    }
                     if (item) {
                       return (
                         <li
@@ -154,7 +161,7 @@ export function RecebidosHome({
                       </li>
                     );
                   })}
-                  {Array.from({ length: VAGAS_POR_CAIXA - caixa.vagas.length }, (_, i) => (
+                  {Array.from({ length: VAGAS_POR_CAIXA - caixa.lugares.length }, (_, i) => (
                     <li key={`vazia-${i}`} aria-hidden className="aspect-square rounded-md border border-dashed border-hairline" />
                   ))}
                 </ol>

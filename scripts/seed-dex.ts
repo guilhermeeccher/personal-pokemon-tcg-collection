@@ -42,7 +42,7 @@ import { moduloLivingDexAtivo } from "../src/lib/modulos";
 const ARQUIVO = path.resolve(process.cwd(), "seed", "dex-forma.csv");
 const ARQUIVO_TROFEUS = path.resolve(process.cwd(), "seed", "dex-trofeus.json");
 
-/** 500 × 13 colunas = 6.500 parâmetros, longe do teto de 65.535. */
+/** 500 × 14 colunas = 7.000 parâmetros, longe do teto de 65.535. */
 const TAMANHO_LOTE = 500;
 
 async function main() {
@@ -79,6 +79,7 @@ async function main() {
             shinyObtenivel: sql`excluded.shiny_obtenivel`,
             sprite: sql`excluded.sprite`,
             ordem: sql`excluded.ordem`,
+            lancamento: sql`excluded.lancamento`,
             ativa: sql`true`,
             atualizadoEm: sql`excluded.atualizado_em`,
           },

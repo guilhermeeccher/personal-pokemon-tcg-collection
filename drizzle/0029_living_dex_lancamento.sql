@@ -1,0 +1,1 @@
+ALTER TABLE "dex_forma" ADD COLUMN "lancamento" integer DEFAULT 0 NOT NULL;

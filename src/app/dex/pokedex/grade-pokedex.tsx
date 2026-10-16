@@ -71,7 +71,7 @@ export function GradePokedex({
   formas: FormaDexDTO[];
   secoesIniciais: SecoesContadas;
   registros: RegistroDexDTO[];
-  /** Caixas do HOME antes da Kanto 1: desloca o "Caixa N" de cada vaga. */
+  /** Caixas do HOME antes da Nacional 1: desloca o "Caixa N" de cada vaga. */
   caixasReservadas: number;
 }) {
   const t = useTranslations("dex");

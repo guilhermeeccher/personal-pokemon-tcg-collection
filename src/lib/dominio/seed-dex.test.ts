@@ -17,6 +17,7 @@ const vagas: VagaSeedDex[] = [
     shinyObtenivel: true,
     sprite: "1",
     ordem: 1,
+    lancamento: 1,
   },
   {
     id: "tauros-paldea-combat-breed",
@@ -31,6 +32,7 @@ const vagas: VagaSeedDex[] = [
     shinyObtenivel: false,
     sprite: "10250",
     ordem: 2,
+    lancamento: 27,
   },
 ];
 
@@ -43,7 +45,7 @@ describe("seed/dex-forma.csv — ida e volta", () => {
 
   it("forma nula sai como campo vazio sem aspas, e volta nula", () => {
     const texto = serializarSeedDex(vagas.slice(0, 1));
-    expect(texto.split("\n")[1]).toBe("bulbasaur,1,Bulbasaur,,,base,1,f,f,t,1,1");
+    expect(texto.split("\n")[1]).toBe("bulbasaur,1,Bulbasaur,,,base,1,f,f,t,1,1,1");
   });
 
   it("categoria desconhecida aborta a leitura", () => {

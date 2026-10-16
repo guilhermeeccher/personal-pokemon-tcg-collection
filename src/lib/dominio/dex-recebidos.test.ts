@@ -42,15 +42,15 @@ describe("a guardar", () => {
 describe("montarRecebidos", () => {
   it("agrupa por caixa de destino, na ordem das caixas e das posições", () => {
     const r = montarRecebidos(formas, [reg("chikorita"), reg("pikachu"), reg("ivysaur"), reg("bulbasaur")], todas, 0);
-    expect(resumo(r)).toEqual(["normal 1: 1=bulbasaur 2=ivysaur", "normal 2: 1=pikachu", "normal 8: 1=chikorita"]);
+    expect(resumo(r)).toEqual(["normal 1: 1=bulbasaur 2=ivysaur 25=pikachu", "normal 6: 2=chikorita"]);
     expect(r.semLugar).toEqual([]);
     expect(r.ids).toHaveLength(4);
   });
 
-  it("caixas reservadas deslocam só o número: com a de Recebidos, Kanto 1 é a caixa 2", () => {
-    const r = montarRecebidos(formas, [reg("bulbasaur"), reg("pikachu")], todas, 1);
-    expect(resumo(r)).toEqual(["normal 2: 1=bulbasaur", "normal 3: 1=pikachu"]);
-    expect(r.caixas[0].caixa).toMatchObject({ regiao: "kanto", indice: 1 });
+  it("caixas reservadas deslocam só o número: com a de Recebidos, Nacional 1 é a caixa 2", () => {
+    const r = montarRecebidos(formas, [reg("bulbasaur"), reg("mew")], todas, 1);
+    expect(resumo(r)).toEqual(["normal 2: 1=bulbasaur", "normal 7: 1=mew"]);
+    expect(r.caixas[0].caixa).toMatchObject({ grupo: "nacional", indice: 1 });
   });
 
   it("o que já está guardado e o que está num jogo não entram", () => {
@@ -70,7 +70,7 @@ describe("montarRecebidos", () => {
     const primeiro = reg("pikachu");
     const segundo = reg("pikachu");
     const r = montarRecebidos(formas, [guardado, repetido, primeiro, segundo], todas, 0);
-    expect(resumo(r)).toEqual(["normal 2: 1=pikachu"]);
+    expect(resumo(r)).toEqual(["normal 1: 25=pikachu"]);
     expect(r.caixas[0].itens[0].registro.id).toBe(primeiro.id);
     expect(r.semLugar.map((s) => [s.registro.id, s.motivo])).toEqual([
       [repetido.id, "extra"],
@@ -81,10 +81,10 @@ describe("montarRecebidos", () => {
 
   it("normal e shiny são vagas diferentes, cada uma na sequência da sua trilha", () => {
     const r = montarRecebidos(formas, [reg("pikachu", { shiny: true }), reg("pikachu")], todas, 0);
-    expect(resumo(r)).toEqual(["normal 2: 1=pikachu", "shiny 2: 1=pikachu"]);
+    expect(resumo(r)).toEqual(["normal 1: 25=pikachu", "shiny 1: 25=pikachu"]);
   });
 
-  it("fora das caixas: seção desligada e shiny de forma sem shiny", () => {
+  it("fora das caixas: seção desligada, e shiny de forma sem shiny (buraco no mapa, não lugar)", () => {
     const semGenero = resolverSecoes([{ categoria: "genero", conta: false }]);
     const r = montarRecebidos(
       formas,
@@ -97,8 +97,8 @@ describe("montarRecebidos", () => {
       ["magearna-original", "fora"],
     ]);
     // A Magearna normal tem lugar: nas caixas das cosméticas.
-    expect(r.caixas.map((c) => [c.trilha, c.caixa.vista, c.itens[0].registro.formaId])).toEqual([
-      ["normal", "cosmeticas", "magearna-original"],
+    expect(r.caixas.map((c) => [c.trilha, c.caixa.grupo, c.itens[0].registro.formaId])).toEqual([
+      ["normal", "cosmetica", "magearna-original"],
     ]);
   });
 });

@@ -116,6 +116,8 @@ git clone --depth 1 https://github.com/PokeAPI/pokeapi.git /some/path/pokeapi
 pnpm gerar:seed-dex --pokeapi /some/path/pokeapi/data/v2/csv
 ```
 
-If PokeAPI has a form no rule knows, or an included form with no name, the command fails, lists them
-and writes nothing. Add the rule (with the reason) and run it again. Then read `git diff
-seed/dex-forma.csv` line by line before committing, and run `pnpm seed:dex`.
+If PokeAPI has a form no rule knows, an included form with no name, or a regional form with no known
+region, the command fails, lists them and writes nothing. Add the rule (with the reason) and run it
+again. Then read `git diff seed/dex-forma.csv` line by line before committing, and run `pnpm
+seed:dex`. Watch the last column, `lancamento` (the release ordinal from PokeAPI's
+`version_groups.order`): it orders the HOME boxes, so a changed value moves Pokémon in users' boxes.

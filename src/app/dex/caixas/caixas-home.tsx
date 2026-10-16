@@ -2,11 +2,16 @@
 
 /**
  * Caixas do HOME — a Living Dex arrumada como as caixas do HOME: 30 vagas
- * por caixa (6 × 5), cada região começando numa caixa nova e as cosméticas
- * em caixas próprias no fim, uma sequência por trilha (`dex-caixas.ts`). Cada vaga mostra o estado na trilha e leva ao
+ * por caixa (6 × 5), em grupos que começam em caixas fixas e só crescem no
+ * fim (`dex-caixas.ts`). Cada vaga mostra o estado na trilha e leva ao
  * cadastro, como na Pokédex. As seções se ligam na Pokédex; aqui só se lê.
  *
- * O único ajuste daqui é "Caixas antes da Kanto 1" (D9): quem usa a
+ * A numeração tem lacunas de propósito: as caixas de folga entre os grupos
+ * não aparecem, e grupo de seção desligada some sem renumerar os outros. As
+ * duas trilhas têm o mesmo mapa; na shiny, a forma sem shiny é um buraco
+ * marcado, sem link para o cadastro — não há shiny para guardar ali.
+ *
+ * O único ajuste daqui é "Caixas antes da Nacional 1" (D9): quem usa a
  * primeira caixa do HOME para Recebidos põe 1, e a numeração passa a bater
  * com a do HOME — aqui, na Pokédex e em Recebidos.
  */
@@ -23,18 +28,21 @@ import { Painel } from "@/app/_componentes/painel";
 import {
   COLUNAS_CAIXA,
   ehCaixasReservadas,
+  GRUPOS_CAIXA,
   MAX_CAIXAS_RESERVADAS,
   montarCaixasDex,
+  vagasNaCaixa,
   VAGAS_POR_CAIXA,
+  type GrupoCaixa,
 } from "@/lib/dominio/dex-caixas";
 import { estadoDaVaga, mapearEstadosDex, type EstadoVagaDex } from "@/lib/dominio/dex-estado";
 import type { TrilhaDex } from "@/lib/dominio/dex-grade";
 import type { SecoesContadas } from "@/lib/dominio/dex-secoes";
-import { NOME_REGIAO, REGIOES } from "@/lib/dominio/escopo-pokedex";
 import type { FormaDexDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 import { urlSpriteDex } from "@/lib/imagens";
 
 import { useCartaoPokemon } from "../_componentes/cartao-pokemon";
+import { useNomeCaixa } from "../_componentes/use-nome-caixa";
 import { useRotuloForma } from "../_componentes/use-rotulo-forma";
 
 const classesOpcao = (ativa: boolean) =>
@@ -51,7 +59,10 @@ const MOLDURA: Record<EstadoVagaDex, string> = {
 
 const numero4 = (n: number) => String(n).padStart(4, "0");
 
-/** "Caixas antes da Kanto 1": grava a cada mudança válida e redesenha a página. */
+/* A faixa "#0001–#0030" só diz algo nos grupos ordenados pelo número; os outros vão por lançamento. */
+const GRUPO_POR_NUMERO: ReadonlySet<GrupoCaixa> = new Set(["nacional", "genero"]);
+
+/** "Caixas antes da Nacional 1": grava a cada mudança válida e redesenha a página. */
 function CampoReservadas({ valor }: { valor: number }) {
   const t = useTranslations("dex");
   const router = useRouter();
@@ -105,6 +116,7 @@ export function CaixasHome({
 }) {
   const t = useTranslations("dex");
   const rotulo = useRotuloForma(formas);
+  const nomeCaixa = useNomeCaixa();
   const { abrir, fechar, cartao } = useCartaoPokemon();
   const [trilha, setTrilha] = useState<TrilhaDex>("normal");
 
@@ -113,8 +125,7 @@ export function CaixasHome({
     () => montarCaixasDex(formas, trilha, secoes, caixasReservadas),
     [formas, trilha, secoes, caixasReservadas],
   );
-  const totalVagas = caixas.reduce((s, c) => s + c.vagas.length, 0);
-  const primeiraCosmetica = caixas.find((c) => c.vista === "cosmeticas");
+  const totalVagas = caixas.reduce((s, c) => s + vagasNaCaixa(c), 0);
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 p-4 sm:p-8">
@@ -139,20 +150,16 @@ export function CaixasHome({
           <CampoReservadas valor={caixasReservadas} />
         </div>
         <nav className="flex flex-wrap items-center gap-1.5" aria-label={t("caixas.irPara")}>
-          {REGIOES.map((regiao) => {
-            const primeira = caixas.find((c) => c.regiao === regiao);
+          {GRUPOS_CAIXA.map((grupo) => {
+            const primeira = caixas.find((c) => c.grupo === grupo);
             return primeira ? (
-              <a key={regiao} href={`#caixa-${primeira.numero}`} className={classesOpcao(false)}>
-                {NOME_REGIAO[regiao]}
+              <a key={grupo} href={`#caixa-${primeira.numero}`} className={classesOpcao(false)}>
+                {t(`caixas.grupo.${grupo}`)}
               </a>
             ) : null;
           })}
-          {primeiraCosmetica && (
-            <a href={`#caixa-${primeiraCosmetica.numero}`} className={classesOpcao(false)}>
-              {t("vista.cosmeticas")}
-            </a>
-          )}
         </nav>
+        <p className="text-xs text-muted">{t("caixas.folga")}</p>
       </div>
 
       {caixas.length === 0 ? (
@@ -164,24 +171,57 @@ export function CaixasHome({
               <header className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 px-1">
                 <h2 className="text-sm font-semibold text-strong">
                   {t("caixas.caixaN", { numero: String(caixa.numero) })}
-                  <span className="ml-2 font-normal text-muted">
-                    {t("caixas.nomeCaixa", {
-                      grupo: caixa.regiao ? NOME_REGIAO[caixa.regiao] : t("vista.cosmeticas"),
-                      indice: String(caixa.indice),
+                  <span className="ml-2 font-normal text-muted">{nomeCaixa.nome(caixa)}</span>
+                </h2>
+                {GRUPO_POR_NUMERO.has(caixa.grupo) && (
+                  <span className="font-mono text-xs tabular-nums text-muted">
+                    {t("caixas.faixa", {
+                      inicio: numero4(caixa.lugares[0].forma.numero),
+                      fim: numero4(caixa.lugares[caixa.lugares.length - 1].forma.numero),
                     })}
                   </span>
-                </h2>
-                <span className="font-mono text-xs tabular-nums text-muted">
-                  {t("caixas.faixa", {
-                    inicio: numero4(caixa.vagas[0].numero),
-                    fim: numero4(caixa.vagas[caixa.vagas.length - 1].numero),
-                  })}
-                </span>
+                )}
               </header>
               <ol className="grid gap-1" style={{ gridTemplateColumns: `repeat(${COLUNAS_CAIXA}, minmax(0, 1fr))` }}>
-                {caixa.vagas.map((f, i) => {
-                  const estado = estadoDaVaga(estados, f.id, trilha);
+                {caixa.lugares.map(({ forma: f, buraco }, i) => {
                   const nome = rotulo.nome(f);
+                  if (buraco) {
+                    /*
+                     * Buraco: a posição é da forma, mas nada entra nela nesta
+                     * trilha. Tracejado, sprite normal bem apagado e o motivo
+                     * escrito; sem link, para não convidar a cadastrar ali.
+                     */
+                    const motivo = t(`caixas.buraco.${buraco}`);
+                    return (
+                      <li
+                        key={f.id}
+                        aria-label={`${i + 1}. ${nome} — ${motivo}`}
+                        className="relative flex aspect-square items-center justify-center rounded-md border border-dashed border-line"
+                        onMouseEnter={abrir({
+                          sprite: f.sprite,
+                          shiny: false,
+                          nome,
+                          linhas: [motivo, t("pokedex.posicaoNaCaixa", { caixa: String(caixa.numero), posicao: String(i + 1) })],
+                        })}
+                        onMouseLeave={fechar}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element -- sprite externo pequeno (PokeAPI, ~0,6 KB); mesma convenção da Pokédex. */}
+                        <img
+                          src={urlSpriteDex(f.sprite, false)}
+                          alt=""
+                          width={56}
+                          height={56}
+                          loading="lazy"
+                          className="h-full w-full object-contain opacity-15 grayscale"
+                          style={{ imageRendering: "pixelated" }}
+                        />
+                        <span className="absolute inset-x-0 bottom-0.5 text-center text-[9px] leading-tight font-semibold text-muted">
+                          {motivo}
+                        </span>
+                      </li>
+                    );
+                  }
+                  const estado = estadoDaVaga(estados, f.id, trilha);
                   return (
                     <li key={f.id} className={`aspect-square rounded-md border ${MOLDURA[estado]}`}>
                       <Link
@@ -213,7 +253,7 @@ export function CaixasHome({
                     </li>
                   );
                 })}
-                {Array.from({ length: VAGAS_POR_CAIXA - caixa.vagas.length }, (_, i) => (
+                {Array.from({ length: VAGAS_POR_CAIXA - caixa.lugares.length }, (_, i) => (
                   <li key={`vazia-${i}`} aria-hidden className="aspect-square rounded-md border border-dashed border-hairline" />
                 ))}
               </ol>

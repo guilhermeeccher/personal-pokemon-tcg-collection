@@ -8,9 +8,10 @@
  *
  * A classificação vive em `lib/dominio/dex-classificacao.ts` e o nome da
  * forma em português em `lib/dominio/dex-nomes-forma.ts`. Se a PokeAPI
- * trouxer uma forma que nenhuma regra conhece, uma forma sem nome, ou um nome
- * de forma que a tabela de nomes em português não conhece, este script
- * **falha e lista quais são** — e nada é escrito. A decisão é de quem mantém
+ * trouxer uma forma que nenhuma regra conhece, uma forma sem nome, uma forma
+ * regional de região desconhecida, ou um nome de forma que a tabela de nomes
+ * em português não conhece, este script **falha e lista quais são** — e nada
+ * é escrito. A decisão é de quem mantém
  * o projeto, numa regra nova, nunca do script.
  *
  * Depois de regerar: conferir o `git diff seed/dex-forma.csv` (o arquivo não
@@ -81,11 +82,28 @@ function main() {
       .map((r) => [num(r.pokemon_species_id), r.name]),
   );
 
+  /*
+   * Ordinal de lançamento: o id do grupo de versões não serve para ordenar
+   * (Colosseum é 12 e veio antes de FireRed, 7; Red/Green japonês é 28), o
+   * `order` dele, sim.
+   */
+  const ordemGrupoVersao = new Map(
+    lerCsvPokeapi(pasta, "version_groups", ["id", "order"]).map((r) => [num(r.id), num(r.order)]),
+  );
+  const lancamento = (r: Registro) => {
+    const ordem = ordemGrupoVersao.get(num(r.introduced_in_version_group_id));
+    if (ordem === undefined || !Number.isInteger(ordem)) {
+      throw new Error(`Form ${r.identifier} points at version group ${r.introduced_in_version_group_id}, which has no order.`);
+    }
+    return ordem;
+  };
+
   const formas: FormaPokeapi[] = lerCsvPokeapi(pasta, "pokemon_forms", [
     "id",
     "identifier",
     "form_identifier",
     "pokemon_id",
+    "introduced_in_version_group_id",
     "is_default",
     "is_battle_only",
     "is_mega",
@@ -100,6 +118,7 @@ function main() {
     mega: bool(r.is_mega),
     ordem: num(r.order),
     nomeForma: nomesForma.get(num(r.id)) || null,
+    lancamento: lancamento(r),
   }));
 
   const pokemons: PokemonPokeapi[] = lerCsvPokeapi(pasta, "pokemon", ["id", "species_id", "is_default"]).map(
@@ -128,9 +147,13 @@ function main() {
     };
   });
 
-  const { vagas: classificadas, semClassificacao, semNome } = classificarFormasDex({ formas, pokemons, especies });
+  const { vagas: classificadas, semClassificacao, semNome, semRegiao } = classificarFormasDex({
+    formas,
+    pokemons,
+    especies,
+  });
 
-  if (semClassificacao.length > 0 || semNome.length > 0) {
+  if (semClassificacao.length > 0 || semNome.length > 0 || semRegiao.length > 0) {
     if (semClassificacao.length > 0) {
       console.error(`Forms with no classification rule (${semClassificacao.length}):`);
       for (const id of semClassificacao) console.error(`  ${id}`);
@@ -138,6 +161,11 @@ function main() {
     if (semNome.length > 0) {
       console.error(`Included forms with no name (${semNome.length}):`);
       for (const id of semNome) console.error(`  ${id}`);
+    }
+    if (semRegiao.length > 0) {
+      console.error(`Regional forms with no known region (${semRegiao.length}):`);
+      for (const id of semRegiao) console.error(`  ${id}`);
+      console.error("A new region goes in REGIOES_FORMA and regiaoDaForma, deciding where its box block goes.");
     }
     console.error("\nNothing was written. Add a rule in src/lib/dominio/dex-classificacao.ts.");
     process.exitCode = 1;

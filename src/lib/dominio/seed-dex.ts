@@ -16,7 +16,11 @@ import type { dexForma } from "@/lib/db/schema";
 import { CATEGORIAS_FORMA_DEX, type CategoriaFormaDex, type FormaDex } from "./dex-classificacao";
 import type { RegistroCsv } from "./seed-catalogo";
 
-export type LinhaSeedDexForma = typeof dexForma.$inferInsert;
+/*
+ * `lancamento` tem padrão no banco só para a coluna nascer numa tabela já
+ * povoada (`schema.ts`); o seed sempre a grava, então aqui ela é obrigatória.
+ */
+export type LinhaSeedDexForma = typeof dexForma.$inferInsert & { lancamento: number };
 
 /** Uma vaga do seed: a classificação mais o nome da forma em português (`dex-nomes-forma.ts`). */
 export type VagaSeedDex = FormaDex & { formaPt: string | null };
@@ -34,6 +38,7 @@ export const COLUNAS_DEX_FORMA = [
   "shiny_obtenivel",
   "sprite",
   "ordem",
+  "lancamento",
 ] as const;
 
 function exigir(registro: RegistroCsv, coluna: string): string {
@@ -82,6 +87,7 @@ export function converterLinhaDexForma(registro: RegistroCsv): LinhaSeedDexForma
     shinyObtenivel: booleano(registro, "shiny_obtenivel"),
     sprite: exigir(registro, "sprite"),
     ordem: inteiro(registro, "ordem"),
+    lancamento: inteiro(registro, "lancamento"),
   };
 }
 
@@ -111,6 +117,7 @@ export function serializarSeedDex(vagas: readonly VagaSeedDex[]): string {
         v.shinyObtenivel,
         v.sprite,
         v.ordem,
+        v.lancamento,
       ]
         .map(campoCsv)
         .join(","),

@@ -8,7 +8,7 @@ import { lerCorpoJson, respostaCorpoInvalido, respostaSeModuloDesligado } from "
 
 /**
  * PATCH /api/dex/preferencias — `{ caixasReservadas }`: quantas caixas do
- * HOME vêm antes da Kanto 1 (D9). Desloca só o número das caixas; não toca
+ * HOME vêm antes da Nacional 1 (D9). Desloca só o número das caixas; não toca
  * registro nenhum.
  */
 export async function PATCH(req: Request) {

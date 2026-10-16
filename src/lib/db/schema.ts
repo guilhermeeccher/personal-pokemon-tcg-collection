@@ -889,8 +889,19 @@ export const dexForma = pgTable(
     shinyObtenivel: boolean("shiny_obtenivel").notNull().default(true),
     /** Caminho no repositório PokeAPI/sprites, sem extensão (`201-b`, `female/25`). */
     sprite: text("sprite").notNull(),
-    /** Posição na ordem das caixas do HOME ordenadas por forma. */
+    /** Ordem do catálogo: número nacional; na espécie, a base, a fêmea e as formas. */
     ordem: integer("ordem").notNull(),
+    /**
+     * Ordinal de lançamento da forma: o `order` do grupo de versões da PokeAPI
+     * em que ela foi introduzida (Red/Green japonês = 1, Sun/Moon = 19).
+     * Ordena os grupos das caixas do HOME que crescem por lançamento
+     * (`dex-caixas.ts`), para forma nova entrar no fim do grupo.
+     *
+     * O padrão 0 existe só para a coluna nascer numa tabela já povoada sem
+     * migration destrutiva; o seed (`pnpm seed:dex`, em todo boot, logo depois
+     * das migrations) grava o valor real, e o CSV exige a coluna.
+     */
+    lancamento: integer("lancamento").notNull().default(0),
     ativa: boolean("ativa").notNull().default(true),
     criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
     atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
@@ -974,7 +985,7 @@ export const dexRegistro = pgTable(
 /**
  * Preferências da Living Dex que não são seção (D9). Uma linha só, `id = 1`;
  * sem linha, valem os padrões. `caixas_reservadas`: caixas do HOME antes da
- * Kanto 1 (a de Recebidos, por exemplo), que deslocam o número das caixas
+ * Nacional 1 (a de Recebidos, por exemplo), que deslocam o número das caixas
  * (`lib/dominio/dex-caixas.ts`). Validada no domínio (`ehCaixasReservadas`).
  */
 export const dexPreferencias = pgTable("dex_preferencias", {

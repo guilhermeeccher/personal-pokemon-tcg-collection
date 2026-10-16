@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   classificarFormasDex,
   destinoDaForma,
+  regiaoDaForma,
   shinyObtenivel,
   type EspeciePokeapi,
   type FormaPokeapi,
@@ -44,6 +45,7 @@ function forma(
     mega: false,
     ordem: id,
     nomeForma: identificador.includes("-") ? `Forma ${identificador}` : null,
+    lancamento: 1,
     ...extra,
   };
 }
@@ -200,6 +202,54 @@ describe("classificarFormasDex", () => {
       ["sneasel-hisui", "10235"],
       ["sneasel-hisui-femea", "female/10235"],
     ]);
+  });
+
+  it("a fêmea gerada herda o lançamento da forma de que é fêmea", () => {
+    const r = classificarFormasDex({
+      especies: [especie(215, "sneasel", { diferencaGenero: true })],
+      pokemons: [pokemon(215, 215), pokemon(10235, 215, false)],
+      formas: [forma("sneasel", 215, { lancamento: 5 }), forma("sneasel-hisui", 10235, { lancamento: 26 })],
+    });
+    expect(r.vagas.map((v) => [v.id, v.lancamento])).toEqual([
+      ["sneasel", 5],
+      ["sneasel-femea", 5],
+      ["sneasel-hisui", 26],
+      ["sneasel-hisui-femea", 26],
+    ]);
+    expect(r.semRegiao).toEqual([]);
+  });
+
+  it("forma regional sem região conhecida vai para semRegiao — nunca é chutada", () => {
+    /*
+     * Uma região nova (`-kitakami`) nem chega aqui: nenhuma regra a conhece e
+     * ela cai em semClassificacao. O que a regra regional aceita mas não diz
+     * de qual região é — duas marcas — cai em semRegiao.
+     */
+    const r = classificarFormasDex({
+      especies: [especie(26, "raichu")],
+      pokemons: [pokemon(26, 26), pokemon(10100, 26, false), pokemon(19998, 26, false), pokemon(19997, 26, false)],
+      formas: [
+        forma("raichu", 26),
+        forma("raichu-alola", 10100),
+        forma("raichu-alola-galar", 19998),
+        forma("raichu-kitakami", 19997),
+      ],
+    });
+    expect(r.semRegiao).toEqual(["raichu-alola-galar"]);
+    expect(r.semClassificacao).toEqual(["raichu-kitakami"]);
+  });
+
+  it.each([
+    ["raichu-alola", "alola"],
+    ["mr-mime-galar", "galar"],
+    ["darmanitan-galar-standard", "galar"],
+    ["sneasel-hisui-femea", "hisui"],
+    ["tauros-paldea-combat-breed", "paldea"],
+    ["raichu-kitakami", null],
+    ["raichu-alola-galar", null],
+    ["galarian-raichu", null],
+  ])("regiaoDaForma(%s) = %s", (id, regiao) => {
+    expect(regiaoDaForma(id)).toBe(regiao);
   });
 
   it("a base do Minior é o núcleo vermelho, no nome e no sprite", () => {

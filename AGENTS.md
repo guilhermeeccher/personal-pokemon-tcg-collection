@@ -534,17 +534,26 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
   HOME's renders: a grid shows hundreds of slots and a HOME render is ~80 KB against ~0.6 KB. No
   sprite file enters the repository.
 - **HOME boxes are computed, never stored** (`lib/dominio/dex-caixas.ts`, screen `/dex/caixas`).
-  30 slots per box in catalog order: the main boxes with **every region starting a new box**, then
-  **the cosmetic forms in boxes of their own**, back to back, after the last region (a species' base
-  form stays in the main boxes). One sequence per track, only what counts in that track
-  (`contaNaTrilha`). Users arrange their real HOME boxes by these positions, so treat the order as a
-  contract: a change to `ordem`, to the region ranges, to which slots count or to which forms are
-  cosmetic moves Pokémon in somebody's boxes. The main boxes keep the relative order of
-  SuperEffective's "Fully Sorted by Regions" (the differences are listed in the module's comment),
-  and a test pins the agreed positions.
+  HOME cannot insert a Pokémon mid-box, so the layout has one rule: **a new slot never moves an
+  existing one.** 30 slots per box, in groups that start at fixed boxes (`ANCORA_GRUPO`) with spare
+  boxes before the next, each growing only at its end: **National** (the bases, by national number,
+  no region break: box N holds 30N−29..30N), **Gender** (by national number), **Regional** (one
+  block per region of the *form*, each starting a new box, blocks in release order; a regional
+  form's female goes in its block), **Special** and **Cosmetic** (by release: `dex_forma.lancamento`,
+  PokeAPI's version-group `order`, then number, then `ordem`). A regional form's region comes from
+  its id (`regiaoDaForma`), never guessed: an unknown one makes `gerar:seed-dex` fail. **Both tracks
+  share one map**: in the shiny track a form never released as shiny keeps its position as a marked
+  hole, with no position to store into. **A section that is off hides its group's boxes without
+  renumbering any other group** — box numbers on screen have gaps, on purpose. This replaced the
+  per-region layout (forms beside their species, cosmetics run at the end, shiny-locked forms
+  collapsed, toggles reshuffling a region), where one new form could renumber every later box. A
+  test fails when a group's worst case (all sections on) reaches the next anchor: moving an anchor,
+  a group's order or what goes in each group moves Pokémon in somebody's boxes, so it is a
+  deliberate, announced decision, never a side effect. Another test pins the agreed positions.
 - **Reserved boxes shift only the box number** (`dex_preferencias.caixas_reservadas`, 0 to 20, set on
-  the Boxes screen). A user who keeps HOME's first box for incoming Pokémon sets 1, and Kanto 1
-  becomes box 2 on every screen. Names, positions and which slots share a box do not move.
+  the Boxes screen). A user who keeps HOME's first box for incoming Pokémon sets 1, and National 1
+  becomes box 2 on every screen, every anchor moving with it. Names, positions and which slots
+  share a box do not move.
 - **"Received" is the round that arrived in HOME and was not put away yet**
   (`lib/dominio/dex-recebidos.ts`, screen `/dex/recebidos`), grouped by destination box.
   `dex_registro.a_guardar` is **stored, not derived** — the system cannot know when the user tidied
