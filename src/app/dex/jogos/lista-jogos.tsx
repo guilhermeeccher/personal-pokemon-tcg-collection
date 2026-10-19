@@ -94,7 +94,7 @@ export function ListaJogos({
                 </Distintivo>
                 <Distintivo>{j.ativo ? t("jogos.ativo") : t("jogos.inativo")}</Distintivo>
                 {trofeus[j.jogoId]?.total > 0 && (
-                  <Link href={`/dex/trofeus?jogo=${j.jogoId}`}>
+                  <Link href={`/dex/trofeus?jogo=${j.jogoId}`} className="max-md:inline-flex max-md:min-h-11 max-md:items-center">
                     <Distintivo tom={trofeus[j.jogoId].platina ? "sucesso" : "acento"}>
                       {trofeus[j.jogoId].platina
                         ? t("jogos.platina")
@@ -147,6 +147,7 @@ export function ListaJogos({
                 <div className="flex flex-wrap gap-2">
                   <Botao
                     tamanho="xs"
+                    className="max-md:h-11 max-md:min-w-11"
                     disabled={ocupado}
                     onClick={() => {
                       setRascunho({ desde: j.desde ?? "", notas: j.notas ?? "" });
@@ -157,6 +158,7 @@ export function ListaJogos({
                   </Botao>
                   <Botao
                     tamanho="xs"
+                    className="max-md:h-11 max-md:min-w-11"
                     disabled={ocupado}
                     onClick={() => enviar(`/api/dex/jogos/${j.id}`, "PATCH", { ativo: !j.ativo })}
                   >
@@ -164,6 +166,7 @@ export function ListaJogos({
                   </Botao>
                   <Botao
                     tamanho="xs"
+                    className="max-md:h-11 max-md:min-w-11"
                     variante="perigo"
                     disabled={ocupado}
                     onClick={() => {

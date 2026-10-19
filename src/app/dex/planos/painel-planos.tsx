@@ -112,12 +112,12 @@ export function PainelPlanos({
         </div>
         {p.objetivo && <p className="text-sm text-muted">{p.objetivo}</p>}
         {p.trofeuIds.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs max-md:gap-2">
             <span className="text-muted">{t("planos.alvo")}</span>
             {p.trofeuIds.map((id) => {
               const x = trofeuPorId.get(id);
               return (
-                <Link key={id} href={`/dex/trofeus?jogo=${x?.jogoId ?? ""}`}>
+                <Link key={id} href={`/dex/trofeus?jogo=${x?.jogoId ?? ""}`} className="max-md:inline-flex max-md:min-h-11 max-md:items-center">
                   <Distintivo tom="aviso">{x?.textos[idioma].titulo ?? id}</Distintivo>
                 </Link>
               );
@@ -154,18 +154,18 @@ export function PainelPlanos({
                   )}
                 </div>
                 {p.status === "ativo" && (
-                  <div className="flex gap-1.5">
+                  <div className="flex gap-1.5 max-md:gap-2">
                     {x.status === "aberta" ? (
                       <>
-                        <Botao tamanho="xs" variante="primario" disabled={ocupado} onClick={() => statusTarefa(x, "feita")}>
+                        <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" variante="primario" disabled={ocupado} onClick={() => statusTarefa(x, "feita")}>
                           {t("planos.feita")}
                         </Botao>
-                        <Botao tamanho="xs" disabled={ocupado} onClick={() => statusTarefa(x, "descartada")}>
+                        <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" disabled={ocupado} onClick={() => statusTarefa(x, "descartada")}>
                           {t("planos.descartar")}
                         </Botao>
                       </>
                     ) : (
-                      <Botao tamanho="xs" disabled={ocupado} onClick={() => statusTarefa(x, "aberta")}>
+                      <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" disabled={ocupado} onClick={() => statusTarefa(x, "aberta")}>
                         {t("planos.reabrir")}
                       </Botao>
                     )}
@@ -241,17 +241,17 @@ export function PainelPlanos({
               >
                 {t("planos.novaTarefa")}
               </Botao>
-              <Botao tamanho="xs" disabled={ocupado} onClick={() => statusPlano(p, "concluido")}>
+              <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" disabled={ocupado} onClick={() => statusPlano(p, "concluido")}>
                 {t("planos.concluir")}
               </Botao>
-              <Botao tamanho="xs" disabled={ocupado} onClick={() => statusPlano(p, "encerrado")}>
+              <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" disabled={ocupado} onClick={() => statusPlano(p, "encerrado")}>
                 {t("planos.encerrar")}
               </Botao>
             </div>
           ))}
         {p.status !== "ativo" && (
           <div>
-            <Botao tamanho="xs" disabled={ocupado} onClick={() => statusPlano(p, "ativo")}>
+            <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" disabled={ocupado} onClick={() => statusPlano(p, "ativo")}>
               {t("planos.reativar")}
             </Botao>
           </div>
@@ -268,10 +268,10 @@ export function PainelPlanos({
         <Alerta tom="sucesso">
           <div className="flex flex-wrap items-center gap-3">
             <span>{t("planos.oferta", { tarefa: oferta.titulo })}</span>
-            <Link href={linkCadastro(oferta)} className={classesBotao("primario", "xs")}>
+            <Link href={linkCadastro(oferta)} className={classesBotao("primario", "xs", "max-md:h-11 max-md:min-w-11")}>
               {t("planos.irCadastrar")}
             </Link>
-            <Botao tamanho="xs" onClick={() => setOferta(null)}>
+            <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" onClick={() => setOferta(null)}>
               {t("planos.agoraNao")}
             </Botao>
           </div>
@@ -351,7 +351,7 @@ export function PainelPlanos({
 
       {fechados.length > 0 && (
         <details className="flex flex-col gap-3">
-          <summary className="cursor-pointer text-sm font-semibold text-muted">
+          <summary className="cursor-pointer text-sm font-semibold text-muted max-md:py-3">
             {t("planos.historico", { quantidade: String(fechados.length) })}
           </summary>
           <ul className="mt-3 flex flex-col gap-3">

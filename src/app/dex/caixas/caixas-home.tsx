@@ -24,6 +24,10 @@ import { useMemo, useState } from "react";
 import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
 import { classesEntrada } from "@/app/_componentes/campo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
+import { Distintivo } from "@/app/_componentes/distintivo";
+import { classesBotao } from "@/app/_componentes/botao";
+import { Modal } from "@/app/_componentes/modal";
+import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 import { Painel } from "@/app/_componentes/painel";
 import {
   COLUNAS_CAIXA,
@@ -45,8 +49,10 @@ import { useCartaoPokemon } from "../_componentes/cartao-pokemon";
 import { useNomeCaixa } from "../_componentes/use-nome-caixa";
 import { useRotuloForma } from "../_componentes/use-rotulo-forma";
 
+/* No celular a pílula chega a 44 de altura e largura (`max-md:`); o intervalo de 8px
+   entre elas vem do `gap` dos grupos. De 768px para cima nada muda. */
 const classesOpcao = (ativa: boolean) =>
-  `rounded-pill border px-3 py-1 text-xs font-semibold [transition:var(--transition-control)] ${
+  `rounded-pill border px-3 py-1 text-xs font-semibold [transition:var(--transition-control)] max-md:inline-flex max-md:min-h-11 max-md:min-w-11 max-md:items-center max-md:justify-center max-md:px-4 ${
     ativa ? "border-accent bg-accent text-accent-fg" : "border-line text-muted hover:bg-surface-hover"
   }`;
 
@@ -56,6 +62,8 @@ const MOLDURA: Record<EstadoVagaDex, string> = {
   no_jogo: "border-warning/70",
   no_home: "border-success/70 bg-success-soft",
 };
+
+const ESTADOS_LEGENDA: readonly EstadoVagaDex[] = ["falta", "no_jogo", "no_home"];
 
 const numero4 = (n: number) => String(n).padStart(4, "0");
 
@@ -117,8 +125,22 @@ export function CaixasHome({
   const t = useTranslations("dex");
   const rotulo = useRotuloForma(formas);
   const nomeCaixa = useNomeCaixa();
+  const ehMobile = useEhMobile();
   const { abrir, fechar, cartao } = useCartaoPokemon();
+  const tm = useTranslations("componentes.mobile");
   const [trilha, setTrilha] = useState<TrilhaDex>("normal");
+  // Celular: tocar numa vaga abre o detalhe dela (o que o cartão flutuante
+  // mostra no desktop: nome com forma, estado e caixa · posição) com o botão
+  // de registrar, em vez de navegar direto. A vaga é pequena demais para o
+  // nome, e o número da Pokédex sozinho não distingue formas da mesma espécie.
+  const [detalhe, setDetalhe] = useState<{
+    nome: string;
+    numero: number;
+    sprite: string;
+    estado: EstadoVagaDex;
+    caixa: number;
+    posicao: number;
+  } | null>(null);
 
   const estados = useMemo(() => mapearEstadosDex(registros), [registros]);
   const caixas = useMemo(
@@ -149,7 +171,7 @@ export function CaixasHome({
           </span>
           <CampoReservadas valor={caixasReservadas} />
         </div>
-        <nav className="flex flex-wrap items-center gap-1.5" aria-label={t("caixas.irPara")}>
+        <nav className="flex flex-wrap items-center gap-1.5 max-md:gap-2" aria-label={t("caixas.irPara")}>
           {GRUPOS_CAIXA.map((grupo) => {
             const primeira = caixas.find((c) => c.grupo === grupo);
             return primeira ? (
@@ -160,6 +182,19 @@ export function CaixasHome({
           })}
         </nav>
         <p className="text-xs text-muted">{t("caixas.folga")}</p>
+        {/* O cartão flutuante (só com mouse) diz o estado de cada vaga; no celular a vaga só
+            tem a cor da moldura e o sprite apagado, então a legenda escreve o que cada uma é.
+            As molduras são as mesmas de `MOLDURA`. */}
+        {ehMobile && (
+          <ul className="flex flex-wrap items-center gap-2" aria-label={t("pokedex.filtroEstado")}>
+            {ESTADOS_LEGENDA.map((e) => (
+              <li key={e} className="flex items-center gap-1.5">
+                <span aria-hidden className={`size-4 rounded-md border ${MOLDURA[e]}`} />
+                <Distintivo>{t(`estado.${e}`)}</Distintivo>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {caixas.length === 0 ? (
@@ -182,7 +217,7 @@ export function CaixasHome({
                   </span>
                 )}
               </header>
-              <ol className="grid gap-1" style={{ gridTemplateColumns: `repeat(${COLUNAS_CAIXA}, minmax(0, 1fr))` }}>
+              <ol className="grid gap-1 max-md:gap-2" style={{ gridTemplateColumns: `repeat(${COLUNAS_CAIXA}, minmax(0, 1fr))` }}>
                 {caixa.lugares.map(({ forma: f, buraco }, i) => {
                   const nome = rotulo.nome(f);
                   if (buraco) {
@@ -227,7 +262,12 @@ export function CaixasHome({
                       <Link
                         href={`/dex/cadastrar?busca=${f.numero}`}
                         aria-label={`${i + 1}. ${nome} — ${t(`estado.${estado}`)}`}
-                        className="group flex h-full w-full items-center justify-center"
+                        className="group flex h-full w-full items-center justify-center max-md:relative"
+                        onClick={(e) => {
+                          if (!ehMobile) return;
+                          e.preventDefault();
+                          setDetalhe({ nome, numero: f.numero, sprite: f.sprite, estado, caixa: caixa.numero, posicao: i + 1 });
+                        }}
                         onMouseEnter={abrir({
                           sprite: f.sprite,
                           shiny: trilha === "shiny",
@@ -249,6 +289,13 @@ export function CaixasHome({
                           className={`h-full w-full object-contain [transition:transform_200ms,filter_200ms,opacity_200ms] group-hover:scale-125 ${estado === "falta" ? "opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0" : ""}`}
                           style={{ imageRendering: "pixelated" }}
                         />
+                        {/* Nome e posição do cartão flutuante: a posição é o lugar na grade; o número da
+                            Pokédex identifica a espécie sem depender do mouse. */}
+                        {ehMobile && (
+                          <span className="pointer-events-none absolute inset-x-0.5 bottom-0 rounded-sm bg-surface/80 text-center font-mono text-[9px] leading-tight font-semibold tabular-nums text-muted">
+                            {numero4(f.numero)}
+                          </span>
+                        )}
                       </Link>
                     </li>
                   );
@@ -262,6 +309,42 @@ export function CaixasHome({
         </div>
       )}
       {cartao}
+      {detalhe && (
+        <Modal
+          rotulo={detalhe.nome}
+          onFechar={() => setDetalhe(null)}
+          rodape={
+            <div className="flex justify-end gap-2 pt-2">
+              <button type="button" onClick={() => setDetalhe(null)} className={classesBotao("secundario")}>
+                {tm("fechar")}
+              </button>
+              <Link href={`/dex/cadastrar?busca=${detalhe.numero}`} className={classesBotao("primario")}>
+                {t("pokedex.registrarEsta")}
+              </Link>
+            </div>
+          }
+        >
+          <div className="flex items-center gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element -- sprite externo pequeno (PokeAPI), o mesmo da vaga, ampliado. */}
+            <img
+              src={urlSpriteDex(detalhe.sprite, trilha === "shiny")}
+              alt=""
+              width={96}
+              height={96}
+              className="h-24 w-24 shrink-0 object-contain"
+              style={{ imageRendering: "pixelated" }}
+            />
+            <div className="flex min-w-0 flex-col gap-1">
+              <h2 className="font-display text-base font-bold text-strong">{detalhe.nome}</h2>
+              <span className="font-mono text-xs tabular-nums text-muted">#{numero4(detalhe.numero)}</span>
+              <span className="text-sm text-foreground">{t(`estado.${detalhe.estado}`)}</span>
+              <span className="text-sm text-muted">
+                {t("pokedex.posicaoNaCaixa", { caixa: String(detalhe.caixa), posicao: String(detalhe.posicao) })}
+              </span>
+            </div>
+          </div>
+        </Modal>
+      )}
     </main>
   );
 }

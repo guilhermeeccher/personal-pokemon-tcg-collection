@@ -19,8 +19,10 @@ import { useMemo, useState } from "react";
 
 import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
 import { BarraProgresso } from "@/app/_componentes/ds/barra-progresso";
+import { Dica } from "@/app/_componentes/dica";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
+import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 import { Painel } from "@/app/_componentes/painel";
 import { montarCaixasDex, posicoesNasCaixas } from "@/lib/dominio/dex-caixas";
 import { SECOES_LIGAVEIS, CATEGORIAS_FORMA_DEX, type SecaoLigavel } from "@/lib/dominio/dex-classificacao";
@@ -47,8 +49,10 @@ import { useCartaoPokemon } from "../_componentes/cartao-pokemon";
 import { useRotuloForma } from "../_componentes/use-rotulo-forma";
 import { PainelOportunidades } from "./painel-oportunidades";
 
+/* No celular a pílula chega a 44 de altura e largura (`max-md:`); o intervalo de 8px
+   entre elas vem do `gap` dos grupos. De 768px para cima nada muda. */
 const classesOpcao = (ativa: boolean) =>
-  `rounded-pill border px-3 py-1 text-xs font-semibold [transition:var(--transition-control)] ${
+  `rounded-pill border px-3 py-1 text-xs font-semibold [transition:var(--transition-control)] max-md:inline-flex max-md:min-h-11 max-md:min-w-11 max-md:items-center max-md:justify-center max-md:px-4 ${
     ativa ? "border-accent bg-accent text-accent-fg" : "border-line text-muted hover:bg-surface-hover"
   }`;
 
@@ -76,6 +80,7 @@ export function GradePokedex({
 }) {
   const t = useTranslations("dex");
   const rotulo = useRotuloForma(formas);
+  const ehMobile = useEhMobile();
   const { abrir, fechar, cartao } = useCartaoPokemon();
   const [secoes, setSecoes] = useState<SecoesContadas>(secoesIniciais);
   const [salvando, setSalvando] = useState<SecaoLigavel | null>(null);
@@ -179,9 +184,11 @@ export function GradePokedex({
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-sm font-medium">{t("pokedex.secoesQueContam")}</legend>
             <div className="flex flex-wrap items-center gap-2">
-              <span className={classesOpcao(true)} title={t("pokedex.baseSempre")}>
-                {t("categoria.base")}
-              </span>
+              <Dica texto={t("pokedex.baseSempre")}>
+                <span className={classesOpcao(true)} title={t("pokedex.baseSempre")}>
+                  {t("categoria.base")}
+                </span>
+              </Dica>
               {SECOES_LIGAVEIS.map((secao) => (
                 <button
                   key={secao}
@@ -214,7 +221,7 @@ export function GradePokedex({
             </button>
           ))}
         </div>
-        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("pokedex.regiao")}>
+        <div className="flex flex-wrap items-center gap-1.5 max-md:gap-2" role="group" aria-label={t("pokedex.regiao")}>
           {(["todas", ...REGIOES] as const).map((opcao) => (
             <button
               key={opcao}
@@ -234,7 +241,7 @@ export function GradePokedex({
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder={t("pokedex.placeholderBuscar")}
-              className="w-full max-w-xs rounded border border-line bg-transparent p-2"
+              className="w-full max-w-xs rounded border border-line bg-transparent p-2 max-md:min-h-11 max-md:text-base"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
@@ -242,7 +249,7 @@ export function GradePokedex({
             <select
               value={filtroEstado}
               onChange={(e) => setFiltroEstado(e.target.value as typeof filtroEstado)}
-              className="w-full max-w-xs rounded border border-line bg-transparent p-2"
+              className="w-full max-w-xs rounded border border-line bg-transparent p-2 max-md:min-h-11 max-md:text-base"
             >
               <option value="todos">{t("pokedex.todas")}</option>
               {ESTADOS.map((e) => (
@@ -257,7 +264,7 @@ export function GradePokedex({
             <select
               value={categoria}
               onChange={(e) => setCategoria(e.target.value as typeof categoria)}
-              className="w-full max-w-xs rounded border border-line bg-transparent p-2"
+              className="w-full max-w-xs rounded border border-line bg-transparent p-2 max-md:min-h-11 max-md:text-base"
             >
               <option value="todas">{t("pokedex.todas")}</option>
               {categoriasDaVista.map((c) => (
@@ -334,6 +341,9 @@ export function GradePokedex({
                   {estado !== "falta" && (
                     <Distintivo tom={estado === "no_home" ? "sucesso" : "aviso"}>{t(`estado.${estado}`)}</Distintivo>
                   )}
+                  {/* O cartão flutuante (só com mouse) diz o estado, inclusive "Falta"; no celular a
+                      vaga em falta só tinha o sprite apagado, então o estado vai escrito no item. */}
+                  {ehMobile && estado === "falta" && <Distintivo>{t(`estado.${estado}`)}</Distintivo>}
                   {f.categoria !== "base" && <Distintivo>{t(`categoria.${f.categoria}`)}</Distintivo>}
                   {semShiny && <Distintivo tom="aviso">{t("pokedex.semShiny")}</Distintivo>}
                   {foraDaConta && <Distintivo>{t("pokedex.foraDaConta")}</Distintivo>}

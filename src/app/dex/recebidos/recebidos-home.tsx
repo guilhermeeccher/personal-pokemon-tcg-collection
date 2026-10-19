@@ -121,7 +121,7 @@ export function RecebidosHome({
                   <span className="text-xs text-muted">{t("recebidos.nestaCaixa", { quantidade: String(itens.length) })}</span>
                   <Botao
                     tamanho="xs"
-                    className="ml-auto"
+                    className="ml-auto max-md:h-11 max-md:min-w-11"
                     disabled={ocupado}
                     onClick={() => guardar(itens.map((i) => i.registro.id))}
                   >
@@ -186,7 +186,7 @@ export function RecebidosHome({
                 <h2 className="text-sm font-semibold text-strong">{t("recebidos.semLugar")}</h2>
                 <Botao
                   tamanho="xs"
-                  className="ml-auto"
+                  className="ml-auto max-md:h-11 max-md:min-w-11"
                   disabled={ocupado}
                   onClick={() => guardar(recebidos.semLugar.map((s) => s.registro.id))}
                 >

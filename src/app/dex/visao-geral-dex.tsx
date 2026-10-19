@@ -291,7 +291,7 @@ export function VisaoGeralDex({
               <ul className="flex flex-col gap-2">
                 {recentes.map((x) => (
                   <li key={x.id}>
-                    <Link href={`/dex/trofeus?jogo=${x.jogoId}`} className="flex items-center gap-2 text-sm hover:underline">
+                    <Link href={`/dex/trofeus?jogo=${x.jogoId}`} className="flex items-center gap-2 text-sm hover:underline max-md:min-h-11">
                       <span style={{ color: COR_NIVEL[x.nivel] }}>
                         <Icone nome="medal" tamanho={16} />
                       </span>
@@ -404,7 +404,7 @@ export function VisaoGeralDex({
                 </li>
               ))}
               <li>
-                <Link href="/dex/pokedex" className="text-sm font-semibold text-accent hover:underline">
+                <Link href="/dex/pokedex" className="text-sm font-semibold text-accent hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center">
                   {t("visaoGeral.levarAoHome")}
                 </Link>
               </li>

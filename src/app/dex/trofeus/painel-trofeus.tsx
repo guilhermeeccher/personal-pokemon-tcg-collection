@@ -33,8 +33,10 @@ const COR_NIVEL: Record<NivelTrofeu | "platina", string> = {
   platina: "var(--trophy-platinum)",
 };
 
+/* No celular a pílula chega a 44 de altura e largura (`max-md:`); o intervalo de 8px
+   entre elas vem do `gap` do grupo. De 768px para cima nada muda. */
 const classesOpcao = (ativa: boolean) =>
-  `rounded-pill border px-3 py-1 text-xs font-semibold [transition:var(--transition-control)] ${
+  `rounded-pill border px-3 py-1 text-xs font-semibold [transition:var(--transition-control)] max-md:inline-flex max-md:min-h-11 max-md:min-w-11 max-md:items-center max-md:justify-center max-md:px-4 ${
     ativa ? "border-accent bg-accent text-accent-fg" : "border-line text-muted hover:bg-surface-hover"
   }`;
 
@@ -123,7 +125,7 @@ export function PainelTrofeus({
     <main className="mx-auto flex max-w-4xl flex-col gap-6 p-4 sm:p-8">
       <CabecalhoPagina titulo={t("trofeus.titulo")} />
 
-      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("trofeus.jogo")}>
+      <div className="flex flex-wrap items-center gap-1.5 max-md:gap-2" role="group" aria-label={t("trofeus.jogo")}>
         {jogos.map((j) => (
           <button
             key={j.jogoId}
@@ -164,7 +166,7 @@ export function PainelTrofeus({
               </span>
             </span>
           ))}
-          <label className="ml-auto flex items-center gap-2">
+          <label className="ml-auto flex items-center gap-2 max-md:min-h-11">
             <input type="checkbox" checked={soFalta} onChange={(e) => setSoFalta(e.target.checked)} />
             {t("trofeus.soFalta")}
           </label>
@@ -207,7 +209,7 @@ export function PainelTrofeus({
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs text-muted">{t("trofeus.contaSozinho")}</span>
                     {!x.obtido && (
-                      <Botao tamanho="xs" disabled={ocupado} onClick={() => cacar(x)}>
+                      <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" disabled={ocupado} onClick={() => cacar(x)}>
                         {t("trofeus.cacar")}
                       </Botao>
                     )}
@@ -221,17 +223,17 @@ export function PainelTrofeus({
                       value={marcando.data}
                       onChange={(e) => setMarcando({ id: x.id, data: e.target.value })}
                     />
-                    <Botao tamanho="xs" variante="primario" disabled={ocupado || !marcando.data} onClick={confirmarConquista}>
+                    <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" variante="primario" disabled={ocupado || !marcando.data} onClick={confirmarConquista}>
                       {t("trofeus.confirmar")}
                     </Botao>
-                    <Botao tamanho="xs" onClick={() => setMarcando(null)}>
+                    <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" onClick={() => setMarcando(null)}>
                       {t("trofeus.cancelar")}
                     </Botao>
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {x.obtido ? (
-                      <Botao tamanho="xs" disabled={ocupado} onClick={() => desfazer(x)}>
+                      <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" disabled={ocupado} onClick={() => desfazer(x)}>
                         {t("trofeus.desfazer")}
                       </Botao>
                     ) : (
@@ -244,7 +246,7 @@ export function PainelTrofeus({
                         >
                           {t("trofeus.conquistei")}
                         </Botao>
-                        <Botao tamanho="xs" disabled={ocupado} onClick={() => cacar(x)}>
+                        <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" disabled={ocupado} onClick={() => cacar(x)}>
                           {t("trofeus.cacar")}
                         </Botao>
                       </>

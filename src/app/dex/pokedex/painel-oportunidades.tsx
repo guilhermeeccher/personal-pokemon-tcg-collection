@@ -62,12 +62,13 @@ export function PainelOportunidades({
               <span className="font-semibold text-strong">{jogo?.nome ?? g.jogoId}</span>
               <span className="font-mono text-sm tabular-nums text-muted">{g.itens.length}</span>
               {jogo?.conexaoHome === "so_envio" && <Distintivo tom="aviso">{t("oportunidades.semVolta")}</Distintivo>}
-              <div className="ml-auto flex gap-1">
-                <Botao tamanho="xs" onClick={() => setAbertos((a) => ({ ...a, [g.jogoId]: !aberto }))}>
+              <div className="ml-auto flex gap-1 max-md:gap-2">
+                <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" onClick={() => setAbertos((a) => ({ ...a, [g.jogoId]: !aberto }))}>
                   {aberto ? t("oportunidades.ocultar") : t("oportunidades.ver")}
                 </Botao>
                 <Botao
                   tamanho="xs"
+                  className="max-md:h-11 max-md:min-w-11"
                   variante="primario"
                   disabled={ocupado}
                   onClick={() => mover(g.itens.map((i) => i.registroId), LOCAL_HOME)}
@@ -89,7 +90,7 @@ export function PainelOportunidades({
                       <SpriteDex sprite={forma.sprite} shiny={item.trilha === "shiny"} tamanho={56} />
                       <span className="text-xs font-semibold text-strong">{rotulo.nome(forma)}</span>
                       {item.trilha === "shiny" && <Distintivo tom="acento">{t("trilha.shiny")}</Distintivo>}
-                      <Botao tamanho="xs" disabled={ocupado} onClick={() => mover([item.registroId], LOCAL_HOME)}>
+                      <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" disabled={ocupado} onClick={() => mover([item.registroId], LOCAL_HOME)}>
                         {t("oportunidades.enviar")}
                       </Botao>
                     </li>
