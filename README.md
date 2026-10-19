@@ -33,7 +33,7 @@ Nothing here is meant for selling, professional grading or reproducing a card.
 
 ## What it is, and who it is for
 
-It is a **local, single-user system with no login**, built for people who have Pokémon cards at home,
+It is a **local, single-user system with no accounts**, built for people who have Pokémon cards at home,
 kept in a binder or a box, and want to know what they have and what they are missing.
 
 It fits well if you:
@@ -185,7 +185,7 @@ for the TCGdex data clone — you can ignore it, and why it exists is
 
 (If you changed `PORTA_HOST` in the previous step, use the port you picked.)
 
-There is no login screen, because there is no login. The first place to go is **Quick entry by set**.
+With the default settings there is no login screen. The first place to go is **Quick entry by set**.
 
 ### Stopping and coming back
 
@@ -361,15 +361,60 @@ It is **off by default**. To turn it on, set `MODULO_LIVING_DEX=1` in `.env` and
 `docker compose up -d`; the slot catalog loads on that boot and a "Living Dex" group appears in the
 menu. Rules and internals: the Living Dex section of [`AGENTS.md`](./AGENTS.md).
 
+## Optional: reaching it from outside your network
+
+If you want to open your collection from your phone away from home, the supported setup is a
+Cloudflare Tunnel from this machine to a domain of yours, with the app's password access turned on.
+The login rate limit counts attempts per visitor using the `CF-Connecting-IP` header that the tunnel
+sets. Behind any other tunnel or proxy, every visitor would share one counter, and someone guessing
+wrong would lock you out too, unless that proxy drops the header the client sent and sets it to the
+real client address. The tunnel makes an outgoing connection, so no port is opened on the
+router. Keep the app listening on this machine only:
+
+```bash
+# 1. Generate the password hash (you type the password twice; nothing is echoed).
+#    Use a long random password from your password manager. Needs Node.js 22+ and
+#    `pnpm install` in this folder; it reads no database and no .env.
+pnpm -s senha:gerar >> .env
+
+# 2. Add the rest to .env:
+ACESSO_COM_SENHA=1
+SEGREDO_SESSAO='<32 or more random bytes, base64url>'   # e.g. openssl rand -base64 48 | tr '+/' '-_' | tr -d '='
+ORIGENS_PERMITIDAS='https://<your domain>,http://127.0.0.1:3010'
+PORTA_HOST=127.0.0.1:3010
+
+# 3. Recreate the container, then point the tunnel at http://127.0.0.1:3010.
+docker compose up -d
+```
+
+With `PORTA_HOST=127.0.0.1:3010` the app stops answering on the local network as well: from then on
+you reach it through your domain, at home too. If anything in the password settings is missing or
+malformed, the app answers every request with an "incomplete configuration" page instead of opening.
+
+What the password access gives you:
+
+- one password and a session that lasts 180 days on each device, then asks again;
+- "Sign out" in the menu ends the session on that device only. To sign out every device, change
+  `SEGREDO_SESSAO` and recreate the container; changing the password does the same;
+- search engines and AI crawlers are asked to stay away (`noindex`, a `robots.txt` that disallows
+  everything). The password is what actually protects the data;
+- it can be installed on the phone's home screen as an app, with its own icon. To use your own
+  icon, put `icone-180.png`, `icone-192.png`, `icone-512.png` and `icone-maskable-512.png` in a folder
+  and set `PWA_ICONES_HOST_PATH` to it and `PWA_ICONES_DIR=/dados/pwa-icones` in `.env`.
+
+Turn the module off by removing `ACESSO_COM_SENHA=1` from `.env` and running `docker compose up -d`
+again. An app already installed on a phone keeps its icon until you delete it there.
+
 ## What this project is **not**
 
-- **It has no authentication.** None. There is no login, no user password and no session, and that is
-  a project decision, not an open item.
+- **It has no accounts.** On the local network there is no login at all. For reaching it from outside,
+  there is one optional shared password (next section), and that is the whole of it: no users, no
+  profiles, no per-person data.
 - **It is single-user.** There is no multi-user, no profile and no separation of data by person.
   Whoever opens the page sees and edits everything.
-- **It was not made for the internet.** It is for your local network. Publishing this port on the
-  internet hands your database to anyone who finds the address. If you need remote access, use a VPN
-  — do not open the port on the router.
+- **It was made for your local network.** Opening port 3010 on the router hands your collection to
+  anyone who finds the address. To reach it from outside, use a VPN, or a tunnel with the password
+  access described in "Optional: reaching it from outside your network"; never a port forward.
 - **It is not a service, and it has no support.** It is a personal project, open because it may be
   useful to more people. There is no SLA, no guarantee of a reply and no commitment to compatibility
   between versions. The MIT license says this in legal terms; this paragraph says it in plain words.

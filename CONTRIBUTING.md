@@ -149,4 +149,5 @@ The history before this convention is in Portuguese and is not being rewritten.
   sync silently. `AGENTS.md` explains it.
 - A PR that translates the code's comments or domain identifiers into English. See the glossary
   above.
-- A PR that implements authentication, multi-user or public exposure. It is not a gap; it is scope.
+- A PR that adds accounts, multi-user or a new way of exposing the app publicly. The optional
+  single-password access (`AGENTS.md`, "Optional password access") is the whole of it, on purpose.

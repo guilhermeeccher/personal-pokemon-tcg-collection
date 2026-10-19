@@ -13,7 +13,7 @@ labels: enhancement
 **Have you checked `AGENTS.md`?**
 
 <!-- The "Stopping points" section lists what has been decided and is not
-     reopened inside a PR: authentication, multi-user, public exposure, request
+     reopened inside a PR: accounts, multi-user, public exposure, request
      rate against LigaPokemon and TCGdex, offers by store. If your idea falls
      into one of those, this issue is the right place — say why it is worth
      reopening. -->

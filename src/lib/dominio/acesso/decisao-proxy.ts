@@ -216,9 +216,11 @@ export function destinoLogin({ caminho, busca }: Pick<RequisicaoProxy, "caminho"
   return volta === "/" ? "/login" : `/login?volta=${encodeURIComponent(volta)}`;
 }
 
-/** As rotas públicas que ainda assim não entram em cache: o login (a
- *  resposta muda com a sessão) e as APIs. Ícones, manifesto e `robots.txt`
- *  podem ser guardados pelo navegador. */
+/** As rotas públicas em que o proxy impõe o cache privado: o login (a
+ *  resposta muda com a sessão) e as APIs. Nos ícones, no manifesto e no
+ *  `robots.txt` o proxy não mexe no cache; quem decide é o handler de cada
+ *  um, e o manifesto e os ícones respondem `no-store` (desligar o módulo
+ *  tem de valer na hora). */
 function publicaPrivada(caminho: string): boolean {
   return caminho === "/login" || caminho.startsWith("/api/");
 }

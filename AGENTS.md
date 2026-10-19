@@ -1,7 +1,8 @@
 # AGENTS.md — Pokémon Collection
 
 A cataloging system for a physical Pokémon card collection. Local, internal network, a single user,
-no authentication.
+no accounts. Whoever publishes it outside the local network turns on the optional single-password
+access (`ACESSO_COM_SENHA`, off by default).
 
 **This file is the repository's engineering contract**, and it is written mainly for the AI of
 whoever is going to contribute: read it end to end before writing a line. It is not presentation
@@ -122,7 +123,7 @@ the repository, and backing them up is the responsibility of whoever installs th
 | Runtime | Docker Compose |
 | App port | **3010** on the host by default, changeable through `PORTA_HOST` in `.env` (3000 stays free for other services) |
 | Database port | **not published on the host** — only on Compose's internal network |
-| Auth | none. Local network, single user. Do not implement login. |
+| Auth | optional single-password access (`ACESSO_COM_SENHA`), off by default. No accounts, no multi-user. |
 
 If a decision in this table needs to change, **stop and open an issue** — do not swap it out on your
 own inside a PR about something else.
@@ -668,6 +669,106 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
 
 ---
 
+## Optional password access (`ACESSO_COM_SENHA=1`)
+
+For whoever publishes the app outside the local network (a tunnel to their own domain). One fixed
+password, no users, no accounts. It is **off by default**, and off, the app is exactly what it was
+before the module existed: same pages, same `<head>`, same headers, and the module's routes answer
+the same 404 as any path that does not exist.
+
+### Configuration
+
+- `ACESSO_COM_SENHA=1` turns it on, and only `1` does (`lib/dominio/acesso/configuracao.ts`).
+- `SENHA_ACESSO_HASH` is the line `pnpm senha:gerar` prints: `scrypt:<N>:<r>:<p>:<salt>:<hash>`,
+  base64url, with `:` as the separator so Compose interpolates nothing. Only N=32768, r=8, p=1 are
+  accepted; a hash with other parameters is refused, so an edited `.env` cannot lower the cost.
+  The plain password is never stored.
+- `SEGREDO_SESSAO` signs the session cookie: base64url, 32 bytes or more.
+- `ORIGENS_PERMITIDAS` is the comma-separated list of full origins (scheme, host, port) accepted on
+  any request that changes data.
+- `compose.yaml` passes the four to the container with an empty default. Without that passthrough
+  the `.env` would never reach the app and the module would stay off in silence while a tunnel
+  published the app open.
+- **Fail closed.** With the module on and any of the other three missing or malformed, every
+  request except `/_next/static/**` gets a 503 page, and the reasons go to the server log once,
+  without values.
+
+### Three layers, on purpose
+
+The proxy alone has had bypasses in past Next versions, so each entry point is guarded twice.
+
+1. **`src/proxy.ts`** intercepts every request except `/_next/static/**`. Public is a closed list of
+   method + path pairs (`ehRotaPublica`): `GET`/`HEAD` of `/login`, `/api/saude`,
+   `/manifest.webmanifest`, the PWA icons, `/robots.txt` and `/favicon.ico`, and `POST /api/sessao`.
+   Only the exact spelling is public; `/LOGIN` or `/login/` stays protected. Without a session, a page
+   gets a 307 to `/login?volta=...` and everything else gets a 401 in JSON. Next 16.3 strips the RSC
+   headers before the proxy sees them, so `Sec-Fetch-Mode` other than `navigate` is what marks a
+   router fetch. A request carrying an internal Next header from outside (`x-middleware-*`,
+   `x-nextjs-*`) counts as having no session. The decision lives in a pure, tested module
+   (`lib/dominio/acesso/decisao-proxy.ts`); the proxy only translates it.
+2. **Every `page.tsx`** except `/login` calls `await exigirSessao()` as its first statement. A page
+   that is a client component cannot, so it lives in `pagina-cliente.tsx` and its `page.tsx` is a
+   server wrapper that calls the guard and renders it. A server action calls
+   `await exigirSessaoNaAcao()`, which checks the session **and** the origin; `exigirSessao` alone
+   only authenticates. Server actions live only in files with `"use server"` at the top.
+3. **Every route handler** is `export const X = comAcesso(async function X(...) {...})`. The module's
+   own routes use `rotaDoModulo`, which still requires a session for any pair that is not public.
+
+**`cobertura-estatica.test.ts` enforces all three** by reading the AST of `src/app`: a handler
+without the wrapper, a page without the guard as its first statement, a guard that is not the import
+from `@/lib/acesso`, a `"use server"` inside a function, or a layout that reaches `@/lib/db` through
+its imports fails the test. A new route or page that is left open breaks it. The test also keeps the
+list of route files that export a `GET`: a new one has to be checked by hand for writes before it
+goes on the list.
+
+### The rest of the contract
+
+- **Session.** Cookie `__Host-sessao` (`HttpOnly; Secure; SameSite=Lax; Path=/`), HMAC-SHA256 over
+  version, issue time, expiry and a fingerprint of the password hash. 180 days, absolute, never
+  renewed. Changing the password or `SEGREDO_SESSAO` ends every session; changing the secret is the
+  "sign out everywhere". "Sair" ends only this device's cookie, and the client navigates only after
+  the server confirms. No table, no migration.
+- **Origin.** Every method other than `GET`/`HEAD`/`OPTIONS`, login and logout included, needs an
+  `Origin` in the list; `null` or a foreign one is a 403, and without `Origin` the `Referer`'s origin
+  decides.
+- **Two `GET` handlers write**: the price and buy-list screens close a scan round with no heartbeat
+  past its window. With the module on, that cleanup runs only when `leituraPodeGravar` confirms the
+  origin, so a cross-site navigation cannot trigger it; off, it runs as it always did.
+- **Login rate limit**, in memory: 5 errors in 15 minutes block that client for 15 minutes, the
+  attempt reserved before scrypt runs, at most 2 scrypt checks at once for the whole server, the
+  same fixed delay on every error. There is **no global lock** on purpose: it would let anyone lock
+  the owner out. Against many addresses, the protection is the password strength (16+ random
+  characters against scrypt) plus the rate rule at the tunnel's edge. `CF-Connecting-IP` is trusted
+  as the client address only because the app listens on loopback when published; keep it that way.
+  Behind another tunnel or proxy, that proxy has to drop the header the client sent and set it to
+  the real address, or every visitor shares one counter (`"local"`) and a wrong guess locks the
+  owner out too.
+- **`volta`** accepts only a relative path of the site itself (`sanitizarVolta`). Anything a browser
+  could read as another host becomes `/`.
+- **Headers.** With the module on, every response that goes through the proxy carries
+  `X-Robots-Tag: noindex, nofollow, noarchive`, `X-Frame-Options: DENY`,
+  `Content-Security-Policy: frame-ancestors 'none'`, `Referrer-Policy: same-origin` and
+  `X-Content-Type-Options: nosniff`, and authenticated, login and API responses carry
+  `Cache-Control: private, no-store`. Two known exceptions: `/_next/static/**` (public build files,
+  immutable cache) and `/_next/image`, which keeps the optimizer's own cache and CSP headers. The
+  proxy lets `/_next/image` through only for a single absolute `https:` URL, so the optimizer only
+  ever fetches public TCGdex images and its cache never holds a private one. Local images are plain
+  `<img>`; do not move them to `next/image`.
+- **The 404 while off** comes from the proxy marking the module's paths with `x-acesso-desligado`
+  and a `beforeFiles` rewrite in `next.config.ts` sending them to a private folder. A
+  `NextResponse.rewrite` in the proxy would leave `x-middleware-rewrite` on the response. The list
+  of paths lives in `lib/dominio/acesso/caminhos-modulo.ts`, the single source for both.
+- **Metadata routes are route handlers** (`robots.txt`, `manifest.webmanifest`, `pwa/[arquivo]`)
+  with `force-dynamic`. `app/robots.ts` and `app/manifest.ts` are generated at build time, and the
+  image is built without the `.env`, so they would freeze the module off.
+- **PWA, only with the module on**: the manifest, the icons served by `/pwa/[arquivo]` (the
+  installation's own from `PWA_ICONES_DIR`, the repository's generic ones otherwise, read with `fs`
+  at runtime so they never become a public `/_next/static` file), the Apple metadata,
+  `viewport-fit=cover`, `data-pwa` on `<html>` and the safe-area rules under `[data-pwa]`. Off, none
+  of it appears. No service worker.
+
+---
+
 ## Stopping points — stop and hand the decision back
 
 In these cases, **stop and open an issue instead of improvising**. None of them is a bug to fix;
@@ -676,7 +777,9 @@ lost.
 
 - **Any change to the eight business rules or to the stack table.**
 - **Anything that exposes the system outside the local network** — auth, open CORS, public deploy,
-  publishing the database port on the host.
+  publishing the database port on the host. Decision of 2026-10-19: publishing through a tunnel with
+  the optional password access is supported (section "Optional password access"). Opening CORS,
+  publishing the database port and creating accounts are still forbidden.
 - **Any PR that raises the request rate against LigaPokemon or against TCGdex**, changes the default
   to something more aggressive, or loosens the allowed-route check.
 - **A destructive migration over real collection data** (a drop or alter that loses a filled
@@ -704,9 +807,13 @@ lost.
 
 ## The app is HTTP on the local network — what that forbids in the browser
 
-The app is opened at `http://<machine-ip>:3010`, not at `localhost`. At that address the browser is
-**not** in a *secure context*, and every API marked "secure context only" simply does not exist:
-`navigator.clipboard` is `undefined`, and calling it blows up before doing anything.
+The default install is opened at `http://<machine-ip>:3010`, not at `localhost`. At that address the
+browser is **not** in a *secure context*, and every API marked "secure context only" simply does not
+exist: `navigator.clipboard` is `undefined`, and calling it blows up before doing anything.
+
+An install published through a tunnel with the password access is reached over HTTPS, where those
+APIs exist. The code still has to work on the default install, so the rules below apply to every
+change: plain HTTP on the local network is the case to design for.
 
 That is how the "Copy" button on the lists was born broken: it worked on `localhost` on the machine
 where it was developed and did not work on the screen of whoever opened it by IP. The fallback to
@@ -791,4 +898,4 @@ A change is only done when:
 ## Out of scope — do not build
 
 Deck building and format legality; sales, trading and trade control; card scanning by photo;
-multi-user and login; native app.
+multi-user and accounts; native app.
