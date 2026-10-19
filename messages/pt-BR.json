@@ -190,7 +190,9 @@
     "colunaIdioma": "Idioma",
     "colunaCondicao": "Condição",
     "jaTem": "já tem {total}",
-    "nenhumaCarta": "Nenhuma carta com esse número neste set."
+    "nenhumaCarta": "Nenhuma carta com esse número neste set.",
+    "rotuloQuantidade": "Quantidade de {nome}",
+    "rotuloCampoCarta": "{campo} de {nome}"
   },
   "comum": {
     "rotuloAlocacao": "{total, plural, =0 {Nenhuma cópia livre sua cabe nesta vaga.} =1 {1 cópia livre sua cabe nesta vaga.} other {# cópias livres suas cabem nesta vaga.}}",
@@ -598,7 +600,8 @@
     "editarCartas": "Editar cartas",
     "concluirEdicaoCartas": "Concluir",
     "tirarDaColecaoAlvo": "Tirar {alvo} da coleção",
-    "avisoSemNumeracaoOficialDoSet": "{sets} não tem numeração oficial separada no upstream; nesta coleção entra com as {total} cartas conhecidas, sem distinção de secretas."
+    "avisoSemNumeracaoOficialDoSet": "{sets} não tem numeração oficial separada no upstream; nesta coleção entra com as {total} cartas conhecidas, sem distinção de secretas.",
+    "semCopiaLivre": "Sem cópia livre"
   },
   "opcoesCompra": {
     "voltar": "← Voltar para a coleção",

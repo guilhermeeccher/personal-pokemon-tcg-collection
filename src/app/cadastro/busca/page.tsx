@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   CONDICOES,
@@ -22,9 +22,12 @@ import { Painel } from "@/app/_componentes/painel";
 import type { CartaEncontradaDTO } from "@/lib/dominio/tipos-cliente";
 import { NomeCarta } from "@/app/_componentes/nome-carta";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 
 interface FormularioCopia {
-  quantidade: number;
+  /** Texto do campo, como digitado: pode ficar vazio enquanto se edita (decisão
+   *  de 2026-10-18). Só vira número, e só precisa ser >= 1, ao gravar. */
+  quantidade: string;
   variante: VarianteCopia;
   idioma: Idioma;
   condicao: Condicao;
@@ -32,7 +35,7 @@ interface FormularioCopia {
 }
 
 const FORM_INICIAL: FormularioCopia = {
-  quantidade: 1,
+  quantidade: "1",
   variante: "normal",
   idioma: "pt",
   condicao: "NM",
@@ -60,6 +63,23 @@ export default function CadastroPorBuscaPage() {
   const [form, setForm] = useState<FormularioCopia>(FORM_INICIAL);
   const [salvando, setSalvando] = useState(false);
   const [mensagem, setMensagem] = useState<string | null>(null);
+
+  // Celular: a lista de resultados é comprida e o formulário da cópia nasce
+  // embaixo dela, fora da tela de quem tocou "Cadastrar cópia" — e o aviso de
+  // "gravada" nasce em cima, fora da tela de quem tocou "Gravar cópia". Depois
+  // de cada um desses toques, a página vai até o que apareceu. Uma vez por
+  // toque: girar o aparelho não rola de novo. No desktop, nada rola.
+  const ehMobile = useEhMobile();
+  const refFormulario = useRef<HTMLFormElement | null>(null);
+  const refAviso = useRef<HTMLParagraphElement | null>(null);
+  const rolarAte = useRef<"formulario" | "aviso" | null>(null);
+  useEffect(() => {
+    const tipo = rolarAte.current;
+    const alvo = tipo === "formulario" ? refFormulario.current : tipo === "aviso" ? refAviso.current : null;
+    if (!alvo) return;
+    rolarAte.current = null;
+    if (ehMobile) alvo.scrollIntoView({ block: tipo === "formulario" ? "start" : "center" });
+  }, [cartaSelecionada, form, mensagem, erro, ehMobile]);
 
   async function buscar(e: React.FormEvent) {
     e.preventDefault();
@@ -128,11 +148,17 @@ export default function CadastroPorBuscaPage() {
       variante: disponiveis.includes(FORM_INICIAL.variante) ? FORM_INICIAL.variante : disponiveis[0],
     });
     setMensagem(null);
+    rolarAte.current = "formulario";
   }
 
   async function salvar(e: React.FormEvent) {
     e.preventDefault();
     if (!cartaSelecionada) return;
+    // Quem barra o vazio e o zero é o próprio campo (`required`, `min={1}`):
+    // o navegador não deixa o formulário ser enviado e diz o que falta. Esta
+    // checagem só garante que nada abaixo de 1 chega à API por outro caminho.
+    const quantidade = Number(form.quantidade);
+    if (!Number.isInteger(quantidade) || quantidade < 1) return;
     setSalvando(true);
     setErro(null);
     try {
@@ -144,7 +170,7 @@ export default function CadastroPorBuscaPage() {
           idiomaCatalogo: cartaSelecionada.idiomaCatalogo,
           idioma: form.idioma,
           variante: form.variante,
-          quantidade: form.quantidade,
+          quantidade,
           condicao: form.condicao,
           localizacao: form.localizacao || undefined,
         }),
@@ -167,6 +193,7 @@ export default function CadastroPorBuscaPage() {
       setErro(t("erroRede"));
     } finally {
       setSalvando(false);
+      rolarAte.current = "aviso";
     }
   }
 
@@ -174,8 +201,9 @@ export default function CadastroPorBuscaPage() {
     <main className="mx-auto flex max-w-4xl flex-col gap-6 p-4 sm:p-8">
       <CabecalhoPagina titulo={t("titulo")} descricao={t("descricao")} />
 
+      {/* Celular: nome na linha toda; set ocupa o que o número deixa. */}
       <form onSubmit={buscar} className="flex flex-wrap items-end gap-3">
-        <Campo rotulo={t("campoNome")}>
+        <Campo rotulo={t("campoNome")} className="max-md:w-full">
           <input
             value={nome}
             onChange={(e) => setNome(e.target.value)}
@@ -183,7 +211,7 @@ export default function CadastroPorBuscaPage() {
             className={classesEntrada}
           />
         </Campo>
-        <Campo rotulo={t("campoSet")}>
+        <Campo rotulo={t("campoSet")} className="max-md:min-w-0 max-md:flex-1">
           <input
             value={setId}
             onChange={(e) => setSetId(e.target.value)}
@@ -205,12 +233,12 @@ export default function CadastroPorBuscaPage() {
       </form>
 
       <form onSubmit={buscarRapidoPorSigla} className="flex flex-wrap items-end gap-3">
-        <Campo rotulo={t("campoSigla")}>
+        <Campo rotulo={t("campoSigla")} className="max-md:w-full">
           <input
             value={siglaNumero}
             onChange={(e) => setSiglaNumero(e.target.value)}
             placeholder={t("placeholderSigla")}
-            className={`w-56 ${classesEntrada}`}
+            className={`w-56 ${classesEntrada} max-md:w-full`}
           />
         </Campo>
         <Botao type="submit" variante="secundario" disabled={buscandoRapido}>
@@ -218,8 +246,16 @@ export default function CadastroPorBuscaPage() {
         </Botao>
       </form>
 
-      {erro && <p className="text-sm text-danger">{erro}</p>}
-      {mensagem && <p className="text-sm text-success-fg">{mensagem}</p>}
+      {erro && (
+        <p ref={refAviso} className="text-sm text-danger">
+          {erro}
+        </p>
+      )}
+      {mensagem && (
+        <p ref={refAviso} className="text-sm text-success-fg">
+          {mensagem}
+        </p>
+      )}
 
       {/* Busca sem resultado ficava MUDA (achado do redesign, no backlog
           desde 2026-08-25). Agora diz que não achou e oferece a saída:
@@ -287,18 +323,24 @@ export default function CadastroPorBuscaPage() {
       )}
 
       {cartaSelecionada && (
-        <Painel as="form" onSubmit={salvar} className="flex flex-col gap-3">
+        <Painel as="form" ref={refFormulario} onSubmit={salvar} className="flex flex-col gap-3 max-md:scroll-mt-4">
           <h2 className="font-medium text-foreground">
             {cartaSelecionada.nome} — {cartaSelecionada.setNome} #{cartaSelecionada.localId}
           </h2>
-          <div className="flex flex-wrap gap-4">
+          {/* Celular: duas colunas (quantidade e variante, idioma e condição) e
+              a localização, que é texto livre, na linha toda. */}
+          <div className="flex flex-wrap gap-4 max-md:grid max-md:grid-cols-2 max-md:gap-3">
             <Campo rotulo={t("campoQuantidade")}>
+              {/* Apagar o número deixa o campo vazio (antes voltava a 1 na
+                  hora e não dava para digitar outro número por cima); o mínimo
+                  de 1 é cobrado ao gravar, pelo `required` + `min`. */}
               <input
                 type="number"
                 min={1}
+                required
                 value={form.quantidade}
-                onChange={(e) => setForm({ ...form, quantidade: Number(e.target.value) || 1 })}
-                className={`w-20 ${classesEntrada}`}
+                onChange={(e) => setForm({ ...form, quantidade: e.target.value })}
+                className={`w-20 ${classesEntrada} max-md:w-full`}
               />
             </Campo>
             <Campo rotulo={t("campoVariante")}>
@@ -340,7 +382,7 @@ export default function CadastroPorBuscaPage() {
                 ))}
               </select>
             </Campo>
-            <Campo rotulo={t("campoLocalizacao")}>
+            <Campo rotulo={t("campoLocalizacao")} className="max-md:col-span-2">
               <input
                 value={form.localizacao}
                 onChange={(e) => setForm({ ...form, localizacao: e.target.value })}

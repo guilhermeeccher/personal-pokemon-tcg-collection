@@ -190,7 +190,9 @@
     "colunaIdioma": "Language",
     "colunaCondicao": "Condition",
     "jaTem": "you have {total}",
-    "nenhumaCarta": "No card with that number in this set."
+    "nenhumaCarta": "No card with that number in this set.",
+    "rotuloQuantidade": "Quantity of {nome}",
+    "rotuloCampoCarta": "{campo} of {nome}"
   },
   "comum": {
     "rotuloAlocacao": "{total, plural, =0 {No free copy of yours fits this slot.} =1 {1 free copy of yours fits this slot.} other {# free copies of yours fit this slot.}}",
@@ -598,7 +600,8 @@
     "editarCartas": "Edit cards",
     "concluirEdicaoCartas": "Done",
     "tirarDaColecaoAlvo": "Remove {alvo} from the collection",
-    "avisoSemNumeracaoOficialDoSet": "{sets} has no separate official numbering upstream; in this collection it comes in with its {total} known cards, with no secrets distinction."
+    "avisoSemNumeracaoOficialDoSet": "{sets} has no separate official numbering upstream; in this collection it comes in with its {total} known cards, with no secrets distinction.",
+    "semCopiaLivre": "No free copy"
   },
   "opcoesCompra": {
     "voltar": "← Back to the collection",

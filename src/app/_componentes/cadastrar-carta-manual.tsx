@@ -15,7 +15,7 @@
  */
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
 import { Botao } from "./botao";
@@ -83,6 +83,7 @@ function ModalCartaManual({
   const [qtdSet, setQtdSet] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erros, setErros] = useState<string[]>([]);
+  const tituloId = useId();
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -116,19 +117,38 @@ function ModalCartaManual({
   }
 
   return (
-    <Modal as="form" onSubmit={enviar}>
-      <h2 className="font-medium text-foreground">{t("titulo")}</h2>
+    <Modal
+      as="form"
+      onSubmit={enviar}
+      rotuloId={tituloId}
+      onFechar={onFechar}
+      rodape={
+        <div className="flex justify-end gap-2 pt-2">
+          <Botao type="button" variante="secundario" onClick={onFechar}>
+            {t("cancelar")}
+          </Botao>
+          <Botao type="submit" variante="primario" disabled={enviando}>
+            {enviando ? t("cadastrando") : t("cadastrar")}
+          </Botao>
+        </div>
+      }
+    >
+      <h2 id={tituloId} className="font-medium text-foreground">
+        {t("titulo")}
+      </h2>
       <p className="text-muted">
         {t.rich("explicacao", { forte: (partes) => <strong>{partes}</strong> })}
       </p>
 
-      <div className="flex flex-wrap gap-3">
+      {/* Celular: uma coluna, cada campo na largura do sheet. Do `md` para cima,
+          a linha de campos curtos de sempre. */}
+      <div className="flex flex-wrap gap-3 max-md:flex-col">
         <Campo rotulo={t("campoSigla")}>
           <input
             value={setId}
             onChange={(e) => setSetId(e.target.value)}
             placeholder="SMH"
-            className={`w-32 ${classesEntrada}`}
+            className={`w-32 ${classesEntrada} max-md:w-full`}
           />
         </Campo>
         <Campo rotulo={t("campoNumero")}>
@@ -136,7 +156,7 @@ function ModalCartaManual({
             value={localId}
             onChange={(e) => setLocalId(e.target.value)}
             placeholder="011"
-            className={`w-28 ${classesEntrada}`}
+            className={`w-28 ${classesEntrada} max-md:w-full`}
           />
         </Campo>
         <Campo rotulo={t("campoTotalSet")}>
@@ -144,7 +164,7 @@ function ModalCartaManual({
             value={qtdSet}
             onChange={(e) => setQtdSet(e.target.value)}
             placeholder="131"
-            className={`w-28 ${classesEntrada}`}
+            className={`w-28 ${classesEntrada} max-md:w-full`}
           />
         </Campo>
       </div>
@@ -167,7 +187,7 @@ function ModalCartaManual({
         />
       </Campo>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 max-md:flex-col">
         <Campo rotulo={t("campoIdiomaCatalogo")}>
           <select
             value={idioma}
@@ -186,7 +206,7 @@ function ModalCartaManual({
             value={dexId}
             onChange={(e) => setDexId(e.target.value)}
             placeholder="4"
-            className={`w-28 ${classesEntrada}`}
+            className={`w-28 ${classesEntrada} max-md:w-full`}
           />
         </Campo>
       </div>
@@ -199,15 +219,6 @@ function ModalCartaManual({
           ))}
         </ul>
       )}
-
-      <div className="flex justify-end gap-2 pt-2">
-        <Botao type="button" variante="secundario" onClick={onFechar}>
-          {t("cancelar")}
-        </Botao>
-        <Botao type="submit" variante="primario" disabled={enviando}>
-          {enviando ? t("cadastrando") : t("cadastrar")}
-        </Botao>
-      </div>
     </Modal>
   );
 }

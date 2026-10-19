@@ -28,7 +28,7 @@
  */
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import type { Idioma } from "@/lib/dominio/enums";
 import { Botao } from "./botao";
@@ -126,6 +126,7 @@ function ModalAdicionarImagem({
   const [erro, setErro] = useState<string | null>(null);
   const [removendo, setRemovendo] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
+  const tituloId = useId();
 
   async function remover() {
     setErro(null);
@@ -226,16 +227,55 @@ function ModalAdicionarImagem({
   }
 
   return (
-    <Modal as="form" onSubmit={enviar}>
-      <h2 className="font-medium text-foreground">
+    <Modal
+      as="form"
+      onSubmit={enviar}
+      rotuloId={tituloId}
+      onFechar={onFechar}
+      rodape={
+        // Celular: com "Remover" são três botões, que não cabem numa linha de
+        // 393px; quebram em vez de vazar o sheet.
+        <div className="flex items-center justify-end gap-2 pt-2 max-md:flex-wrap">
+          {jaTemImagemPropria && (
+            // À esquerda e separado dos outros dois: remover é a ação
+            // destrutiva do diálogo, não deve ficar encostada no botão que
+            // o dedo procura por padrão.
+            <Botao
+              type="button"
+              variante="secundario"
+              onClick={remover}
+              disabled={removendo || enviando}
+              className="mr-auto"
+            >
+              {removendo ? t("removendo") : t("remover")}
+            </Botao>
+          )}
+          <Botao type="button" variante="secundario" onClick={onFechar}>
+            {t("cancelar")}
+          </Botao>
+          <Botao type="submit" variante="primario" disabled={enviando}>
+            {enviando
+              ? modo === "mypcards"
+                ? t("mapeando")
+                : t("enviando")
+              : modo === "mypcards"
+                ? t("mapearSet")
+                : t("salvarImagem")}
+          </Botao>
+        </div>
+      }
+    >
+      <h2 id={tituloId} className="font-medium text-foreground">
         {jaTemImagemPropria ? t("tituloTrocar") : t("tituloAdicionar")} — {cartaNome}
       </h2>
       <p className="text-muted">
         {jaTemImagemPropria ? t("explicacaoTrocar") : t("explicacaoAdicionar")}
       </p>
 
-      <div className="flex gap-4 text-sm">
-        <label className="flex items-center gap-2">
+      {/* Celular: as opções uma embaixo da outra, cada `label` com 44px de
+          altura — é ele a área de toque do rádio. */}
+      <div className="flex gap-4 text-sm max-md:flex-col max-md:gap-2">
+        <label className="flex items-center gap-2 max-md:min-h-11">
           <input
             type="radio"
             name="modo"
@@ -244,7 +284,7 @@ function ModalAdicionarImagem({
           />
           {t("modoArquivo")}
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2 max-md:min-h-11">
           <input
             type="radio"
             name="modo"
@@ -254,7 +294,7 @@ function ModalAdicionarImagem({
           {t("modoLink")}
         </label>
         {setId && (
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2 max-md:min-h-11">
             <input
               type="radio"
               name="modo"
@@ -302,35 +342,6 @@ function ModalAdicionarImagem({
 
       {erro && <p className="text-danger">{erro}</p>}
       {aviso && <p className="text-muted">{aviso}</p>}
-
-      <div className="flex items-center justify-end gap-2 pt-2">
-        {jaTemImagemPropria && (
-          // À esquerda e separado dos outros dois: remover é a ação
-          // destrutiva do diálogo, não deve ficar encostada no botão que
-          // o dedo procura por padrão.
-          <Botao
-            type="button"
-            variante="secundario"
-            onClick={remover}
-            disabled={removendo || enviando}
-            className="mr-auto"
-          >
-            {removendo ? t("removendo") : t("remover")}
-          </Botao>
-        )}
-        <Botao type="button" variante="secundario" onClick={onFechar}>
-          {t("cancelar")}
-        </Botao>
-        <Botao type="submit" variante="primario" disabled={enviando}>
-          {enviando
-            ? modo === "mypcards"
-              ? t("mapeando")
-              : t("enviando")
-            : modo === "mypcards"
-              ? t("mapearSet")
-              : t("salvarImagem")}
-        </Botao>
-      </div>
     </Modal>
   );
 }
