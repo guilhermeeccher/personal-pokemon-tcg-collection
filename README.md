@@ -402,8 +402,16 @@ What the password access gives you:
   icon, put `icone-180.png`, `icone-192.png`, `icone-512.png` and `icone-maskable-512.png` in a folder
   and set `PWA_ICONES_HOST_PATH` to it and `PWA_ICONES_DIR=/dados/pwa-icones` in `.env`.
 
-Turn the module off by removing `ACESSO_COM_SENHA=1` from `.env` and running `docker compose up -d`
-again. An app already installed on a phone keeps its icon until you delete it there.
+**Turning it off, in this order.** Off, the app has no login at all, so it must not be reachable from
+the internet anymore when the module goes off:
+
+1. take the app off the tunnel first (remove the public hostname, or stop the tunnel) and check that
+   your domain no longer shows the app;
+2. then remove `ACESSO_COM_SENHA=1` from `.env` and run `docker compose up -d` again;
+3. only after that, if you want it back on the local network, remove `PORTA_HOST=127.0.0.1:3010`
+   and run `docker compose up -d` once more.
+
+An app already installed on a phone keeps its icon until you delete it there.
 
 ## What this project is **not**
 

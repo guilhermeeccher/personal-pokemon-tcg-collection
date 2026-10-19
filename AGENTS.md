@@ -761,6 +761,9 @@ goes on the list.
 - **Metadata routes are route handlers** (`robots.txt`, `manifest.webmanifest`, `pwa/[arquivo]`)
   with `force-dynamic`. `app/robots.ts` and `app/manifest.ts` are generated at build time, and the
   image is built without the `.env`, so they would freeze the module off.
+- **Turning it off on a published install** takes the public route away first and the module second:
+  off, the app has no login, and a tunnel still pointing at it would publish the collection open. The
+  README gives the order; keep it if you touch that section.
 - **PWA, only with the module on**: the manifest, the icons served by `/pwa/[arquivo]` (the
   installation's own from `PWA_ICONES_DIR`, the repository's generic ones otherwise, read with `fs`
   at runtime so they never become a public `/_next/static` file), the Apple metadata,

@@ -6,8 +6,10 @@ import {
   lerCorpoComTeto,
   processarEntrada,
   respostaDaEntrada,
+  senhaCabeNoLogin,
 } from "./entrar";
 import { criarLimiteTentativas } from "./limite-tentativas";
+import { analisarHashSenha, gerarHashSenha, tamanhoSenha, verificarSenha } from "./senha";
 
 const codificador = new TextEncoder();
 
@@ -180,5 +182,68 @@ describe("respostaDaEntrada", () => {
       corpo: { erro: "muitas_tentativas" },
       atrasar: false,
     });
+  });
+});
+
+describe("senhaCabeNoLogin — da geração ao login, no limite do corpo", () => {
+  const bytesDoCorpo = (senha: string) => codificador.encode(JSON.stringify({ senha })).byteLength;
+  const EMOJI = "\u{1F600}"; // 4 bytes em UTF-8, 1 ponto de código
+
+  /** O caminho inteiro: hash real, corpo montado como a tela monta, login
+   *  com o scrypt real. Dois scrypts por chamada. */
+  async function entraDeVerdade(senha: string) {
+    const hash = analisarHashSenha(await gerarHashSenha(senha));
+    if (!hash) throw new Error("hash inválido");
+    const corpo = JSON.stringify({ senha });
+    return processarEntrada({
+      corpo: stream(corpo).corpo,
+      contentLength: String(codificador.encode(corpo).byteLength),
+      ip: "203.0.113.9",
+      limite: criarLimiteTentativas(),
+      verificar: (s) => verificarSenha(s, hash),
+    });
+  }
+
+  it("a que cabe exatamente no teto é gerada e entra", async () => {
+    // `{"senha":""}` são 12 bytes; 253 emojis, 1.012.
+    const senha = EMOJI.repeat(253);
+    expect(bytesDoCorpo(senha)).toBe(TETO_CORPO_BYTES);
+    expect(senhaCabeNoLogin(senha)).toBe(true);
+    expect(await entraDeVerdade(senha)).toBe("ok");
+  });
+
+  it("um emoji a mais não cabe, mesmo dentro dos 256 caracteres; 256 emojis também não", () => {
+    expect(tamanhoSenha(EMOJI.repeat(254))).toBeLessThanOrEqual(256);
+    expect(senhaCabeNoLogin(EMOJI.repeat(254))).toBe(false);
+    expect(senhaCabeNoLogin(EMOJI.repeat(256))).toBe(false);
+  });
+
+  it("aspas e barras contam escapadas, como o JSON as manda", async () => {
+    // 250 emojis + 6 caracteres que o JSON escapa (2 bytes cada): 1.012.
+    const noLimite = EMOJI.repeat(250) + '\\"\\"\\"';
+    expect(tamanhoSenha(noLimite)).toBe(256);
+    expect(bytesDoCorpo(noLimite)).toBe(TETO_CORPO_BYTES);
+    expect(senhaCabeNoLogin(noLimite)).toBe(true);
+    expect(await entraDeVerdade(noLimite)).toBe("ok");
+
+    // Em bytes crus caberia (1.009 + 12); escapada, passa (1.014 + 12).
+    const passa = EMOJI.repeat(251) + "\\".repeat(5);
+    expect(codificador.encode(passa).byteLength + 12).toBeLessThanOrEqual(TETO_CORPO_BYTES);
+    expect(senhaCabeNoLogin(passa)).toBe(false);
+  });
+
+  it("a forma NFD também tem que caber, mesmo quando a NFC cabe", () => {
+    // Sílaba hangul: 3 bytes em NFC, duas letras de 3 bytes em NFD.
+    const nfc = "\uAC00".repeat(200); // 가
+    expect(bytesDoCorpo(nfc)).toBeLessThanOrEqual(TETO_CORPO_BYTES);
+    expect(bytesDoCorpo(nfc.normalize("NFD"))).toBeGreaterThan(TETO_CORPO_BYTES);
+    expect(senhaCabeNoLogin(nfc)).toBe(false);
+    expect(senhaCabeNoLogin(nfc.normalize("NFD"))).toBe(false);
+    // E uma que cabe nas duas formas passa.
+    expect(senhaCabeNoLogin("\uAC00".repeat(100))).toBe(true);
+  });
+
+  it("senha comum de gerenciador cabe com folga", () => {
+    expect(senhaCabeNoLogin("k8#Qv!2mZp@9Lr$4Tx&7Wn")).toBe(true);
   });
 });

@@ -10,9 +10,32 @@
 import type { LimiteTentativas, ResultadoTentativa } from "./limite-tentativas";
 import { TAMANHO_MAXIMO_SENHA, tamanhoSenha } from "./senha";
 
-/** `{"senha":"..."}` com uma senha de 256 caracteres cabe com folga; nada
- *  maior que isso é um login. */
+/**
+ * Teto do corpo de `POST /api/sessao`, em bytes. Um login é só
+ * `{"senha":"..."}`, e nada maior que isso precisa ser lido.
+ *
+ * **Não** cabe qualquer senha aceita pela contagem de caracteres: 256
+ * pontos de código podem passar de 1 KB em UTF-8 (um emoji são 4 bytes),
+ * o JSON escapa aspas e barras (2 bytes cada), e a mesma senha digitada em
+ * NFD (acento separado da letra) ocupa mais que em NFC. Quem garante que a
+ * senha gerada consegue entrar é `senhaCabeNoLogin`, conferida pelo
+ * `senha:gerar` antes de gerar o hash.
+ */
 export const TETO_CORPO_BYTES = 1024;
+
+/**
+ * A senha cabe no corpo do login? Confere `JSON.stringify({ senha })` —
+ * o mesmo corpo que a tela de login monta —, em bytes UTF-8, nas três
+ * formas em que ela pode chegar: como foi digitada, em NFC e em NFD. O
+ * teclado de cada aparelho pode mandar uma ou outra, e o servidor só
+ * normaliza **depois** de ler o corpo; a maior delas é a que tem de caber.
+ */
+export function senhaCabeNoLogin(senha: string): boolean {
+  const codificador = new TextEncoder();
+  return [senha, senha.normalize("NFC"), senha.normalize("NFD")].every(
+    (forma) => codificador.encode(JSON.stringify({ senha: forma })).byteLength <= TETO_CORPO_BYTES,
+  );
+}
 
 /** Atraso de toda resposta de erro (menos o 429 de concorrência). Fixo e
  *  assíncrono: não ocupa CPU, e não deixa o tempo de resposta separar

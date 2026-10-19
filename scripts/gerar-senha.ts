@@ -4,8 +4,12 @@
  *
  * Pede a senha duas vezes. Recusa se as duas forem diferentes, ou se tiverem
  * menos de 16 ou mais de 256 caracteres (contados depois da NFC, em pontos
- * de código, como na verificação). No terminal, recusa também setas, Esc e
- * afins: elas entrariam na senha sem a pessoa ver.
+ * de código, como na verificação). Recusa também a senha que não cabe no
+ * corpo do login (1 KB, `senhaCabeNoLogin`): 256 caracteres podem passar
+ * disso em bytes — emojis, acentos em NFD, aspas e barras que o JSON
+ * escapa —, e uma senha assim seria gerada e nunca entraria. No terminal,
+ * recusa ainda setas, Esc e afins: elas entrariam na senha sem a pessoa
+ * ver.
  *
  * **stdout recebe só a linha do `.env`**, com aspas simples e uma quebra de
  * linha — nada de aviso, nada de eco — para dar para redirecionar direto:
@@ -21,6 +25,7 @@
  * Não lê banco nem `.env` (por isso não importa `dotenv/config`): o hash
  * depende só da senha e de um sal aleatório.
  */
+import { senhaCabeNoLogin } from "../src/lib/dominio/acesso/entrar";
 import {
   gerarHashSenha,
   normalizarSenha,
@@ -111,6 +116,15 @@ async function main() {
     console.error(
       `senha:gerar — a senha precisa ter de ${TAMANHO_MINIMO_SENHA} a ${TAMANHO_MAXIMO_SENHA} caracteres ` +
         `(tem ${tamanho}). Nada foi gerado.`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+
+  if (!senhaCabeNoLogin(senha)) {
+    console.error(
+      "senha:gerar — a senha é longa demais em bytes para o login (acentos e emojis ocupam mais); " +
+        "use uma mais curta. Nada foi gerado.",
     );
     process.exitCode = 1;
     return;
