@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
+import { exigirSessao } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { listarFormasDex, listarJogosPossuidos, listarRegistrosDex } from "@/lib/db/dex";
 import { moduloLivingDexAtivo } from "@/lib/modulos";
@@ -9,6 +10,7 @@ import { InventarioDex } from "./inventario-dex";
 
 /** /dex/inventario — os Pokémon cadastrados, agrupados. 404 com o módulo desligado. */
 export default async function InventarioDexPage() {
+  await exigirSessao();
   await connection();
   if (!moduloLivingDexAtivo()) notFound();
 

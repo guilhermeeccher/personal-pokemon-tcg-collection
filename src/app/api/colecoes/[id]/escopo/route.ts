@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { alterarEscopoDaColecaoPokedex } from "@/lib/db/consultas";
 import { validarParametroPokedex } from "@/lib/dominio/parametro-colecao";
@@ -27,7 +28,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
  * Kanto envia `{ escopo: "regioes", regioes: ["kanto"] }`; para nacional
  * envia `{ escopo: "nacional" }`.
  */
-export async function PATCH(
+export const PATCH = comAcesso(async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -60,4 +61,4 @@ export async function PATCH(
     return NextResponse.json(corpoDaRecusa(resultado.motivo), { status });
   }
   return NextResponse.json({ ok: true, adicionadas: resultado.adicionadas, removidas: resultado.removidas });
-}
+});

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { listarVagasPreenchidasParaExportacao, obterColecaoPorId } from "@/lib/db/consultas";
 import {
@@ -15,7 +16,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
  * cópia ocupa). Vaga vazia fica de fora de propósito — "o que falta" já
  * tem tela própria; misturar quebraria a conferência de linhas.
  */
-export async function GET(
+export const GET = comAcesso(async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -40,4 +41,4 @@ export async function GET(
       "Content-Disposition": `attachment; filename="${nomeArquivo}"`,
     },
   });
-}
+});

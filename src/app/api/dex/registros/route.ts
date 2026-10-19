@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { corrigirRegistros, criarRegistrosEmLote } from "@/lib/db/dex";
 import { lerDadosRegistro, lerLoteCadastro } from "@/lib/dominio/dex-registro";
@@ -13,7 +14,7 @@ import { lerCorpoJson, respostaCorpoInvalido, respostaSeModuloDesligado } from "
  * normal, shiny }] }`. Um registro por Pokémon, todos nascidos no jogo e
  * ainda nele. Recusas vêm todas juntas, e com qualquer uma nada é gravado.
  */
-export async function POST(req: Request) {
+export const POST = comAcesso(async function POST(req: Request) {
   const desligado = respostaSeModuloDesligado();
   if (desligado) return desligado;
 
@@ -23,14 +24,14 @@ export async function POST(req: Request) {
   const r = await criarRegistrosEmLote(db, lote);
   if (!r.ok) return NextResponse.json(corpoDasRecusas(r.recusas), { status: 400 });
   return NextResponse.json({ ok: true, criados: r.criados }, { status: 201 });
-}
+});
 
 /**
  * PATCH /api/dex/registros — corrige um grupo do inventário: `{ ids,
  * formaId, shiny, jogoOrigem, capturadoEm, notas }`. O local não muda por
  * aqui: mover é `POST /api/dex/registros/mover`, com as regras de ida e volta.
  */
-export async function PATCH(req: Request) {
+export const PATCH = comAcesso(async function PATCH(req: Request) {
   const desligado = respostaSeModuloDesligado();
   if (desligado) return desligado;
 
@@ -48,4 +49,4 @@ export async function PATCH(req: Request) {
   const r = await corrigirRegistros(db, ids as string[], { formaId, shiny, jogoOrigem, capturadoEm, notas });
   if (!r.ok) return NextResponse.json(corpoDasRecusas(r.recusas), { status: r.status });
   return NextResponse.json({ ok: true });
-}
+});

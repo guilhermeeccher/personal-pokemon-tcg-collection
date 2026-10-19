@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { obterColecaoPorId } from "@/lib/db/consultas";
 import { desmarcarEscolhas, listarEscolhas } from "@/lib/db/escolhas";
@@ -39,7 +40,7 @@ async function colecaoOu404(id: string) {
 const naoEncontrada = () =>
   NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = comAcesso(async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!(await colecaoOu404(id))) return naoEncontrada();
 
@@ -57,9 +58,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       venceEm: new Date(i.registradoEm.getTime() + validadeMs).toISOString(),
     })),
   });
-}
+});
 
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const POST = comAcesso(async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!(await colecaoOu404(id))) return naoEncontrada();
 
@@ -115,9 +116,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }));
 
   return NextResponse.json({ ...resultado, naoEntendidas });
-}
+});
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = comAcesso(async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!(await colecaoOu404(id))) return naoEncontrada();
 
@@ -126,4 +127,4 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     return NextResponse.json({ erro: "Esperado ?item=<id>." }, { status: 400 });
   }
   return NextResponse.json({ removidas: await removerSemEstoque(db, item) });
-}
+});

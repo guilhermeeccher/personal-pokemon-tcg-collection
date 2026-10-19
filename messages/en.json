@@ -37,7 +37,9 @@
       "inventarioDex": "Inventory",
       "trofeus": "Trophies",
       "planos": "Plans"
-    }
+    },
+    "sair": "Sign out",
+    "sairErro": "Could not sign out. Try again."
   },
   "seletorLocale": {
     "rotulo": "Language",
@@ -1179,6 +1181,18 @@
       "ultimasConquistas": "Latest trophies",
       "nenhumaConquista": "No trophy earned yet.",
       "regiaoLinha": "{normal} in HOME · shiny {shiny}"
+    }
+  },
+  "login": {
+    "titulo": "Sign in",
+    "descricao": "Enter the password to open the collection.",
+    "campoSenha": "Password",
+    "entrar": "Sign in",
+    "entrando": "Signing in…",
+    "erros": {
+      "senhaInvalida": "Incorrect password.",
+      "muitasTentativas": "Too many attempts. Wait a few minutes and try again.",
+      "generico": "Could not sign in. Try again."
     }
   }
 }

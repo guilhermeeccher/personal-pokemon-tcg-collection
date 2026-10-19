@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import {
   criarColecaoComVagas,
@@ -19,10 +20,10 @@ import {
  * GET /api/colecoes — lista as coleções com progresso (vagas totais e
  * preenchidas, spec §3.3: "87/151", "142/165").
  */
-export async function GET() {
+export const GET = comAcesso(async function GET() {
   const colecoes = await listarColecoes(db);
   return NextResponse.json({ itens: colecoes });
-}
+});
 
 /**
  * POST /api/colecoes — cria uma coleção e materializa as vagas na mesma
@@ -35,7 +36,7 @@ export async function GET() {
  * `set_qtd_oficial`/`set_qtd_total` conforme `incluirSecretas` (regra 4),
  * qualificado pelo set (`chave-vaga-set.ts`).
  */
-export async function POST(req: Request) {
+export const POST = comAcesso(async function POST(req: Request) {
   let corpo: unknown;
   try {
     corpo = await req.json();
@@ -119,4 +120,4 @@ export async function POST(req: Request) {
     console.error("[POST /api/colecoes] falha ao criar:", err);
     return NextResponse.json(corpoRecusa("falhaAoGravarColecao"), { status: 400 });
   }
-}
+});

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { buscarCartas, contarCopiasPorCartaId } from "@/lib/db/consultas";
 
@@ -16,7 +17,7 @@ import { buscarCartas, contarCopiasPorCartaId } from "@/lib/db/consultas";
  * Cada carta encontrada vem com `qtdPossuida` (item 3 — aviso de carta
  * repetida): uma única consulta em lote para todos os resultados.
  */
-export async function GET(req: Request) {
+export const GET = comAcesso(async function GET(req: Request) {
   const url = new URL(req.url);
   const nome = url.searchParams.get("nome")?.trim() || undefined;
   const setId = url.searchParams.get("set")?.trim() || undefined;
@@ -32,4 +33,4 @@ export async function GET(req: Request) {
   return NextResponse.json({
     cartas: cartas.map((c) => ({ ...c, qtdPossuida: contagens[c.cartaId] ?? 0 })),
   });
-}
+});

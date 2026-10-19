@@ -252,11 +252,46 @@ export function comAcesso<R extends Request, C>(handler: Handler<R, C>): (req: R
 }
 
 /**
+ * Um `GET` pode fazer a limpeza que hoje grava no banco? Existe para os dois
+ * `GET` que encerram rodadas mortas (`inventario/precos` e
+ * `colecoes/[id]/opcoes-compra`) — o `HEAD` derivado deles passa pelo
+ * mesmo caminho.
+ *
+ * O desenho do acesso diz que nenhum `GET` altera dados, porque a origem só
+ * é conferida nos métodos que alteram: o `SameSite=Lax` deixa o cookie ir
+ * numa navegação `GET` vinda de outro site, e um link ali faria o app
+ * gravar em nome do dono. Essa limpeza é idempotente e escolhida pelo
+ * estado, o que limita o estrago — mas ainda é uma gravação disparada de
+ * fora. Então, com o módulo ligado, ela só roda com a mesma régua dos
+ * métodos que alteram dados: `Origin`, ou o `Referer` na falta dele, na
+ * lista. O `fetch` da própria tela manda o `Referer` (a política do app é
+ * `same-origin`); uma navegação vinda de outro site não manda origem da
+ * lista. Sem poder gravar, o `GET` responde com o estado do banco como
+ * está, e o `POST` continua limpando como sempre.
+ *
+ * Desligado: `true`, o comportamento de antes, intacto. Configuração
+ * incompleta: `false` (o `comAcesso` já respondeu 503 antes de chegar
+ * aqui; é só a falha fechada de sempre).
+ */
+export function leituraPodeGravar(req: Request): boolean {
+  const config = configuracaoAcessoAtual();
+  if (config.estado === "desligado") return true;
+  if (config.estado !== "ligada") return false;
+  return origemPermitida(
+    { metodo: "POST", origin: req.headers.get("origin"), referer: req.headers.get("referer") },
+    config.origens,
+  );
+}
+
+/**
  * Envolve as rotas do próprio módulo (sessão, saúde, robots, manifesto,
  * ícones — a lista é `CAMINHOS_ROTAS_DO_MODULO`).
  *
- * - Desligado: 404 sem corpo, o mesmo que um `notFound()` daria num route
- *   handler — a rota se comporta como inexistente.
+ * - Desligado: 404 sem corpo. É a reserva, não o 404 que o usuário vê: o
+ *   404 idêntico ao de hoje (o HTML do Next, com os mesmos cabeçalhos, em
+ *   qualquer método) vem do proxy, que reescreve os caminhos do módulo
+ *   para um endereço inexistente (`ehCaminhoDoModulo`, em
+ *   `decisao-proxy.ts`). Este só responde se o proxy for pulado.
  * - Ligado: configuração incompleta → 503; método que altera dados com
  *   origem fora → 403.
  * - E a dispensa de sessão é **por método e caminho**, não por arquivo: só

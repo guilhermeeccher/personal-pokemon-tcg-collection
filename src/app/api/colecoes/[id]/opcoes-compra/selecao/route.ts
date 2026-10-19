@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { obterColecaoPorId } from "@/lib/db/consultas";
 import {
@@ -31,7 +32,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
  * compras existe sem varredura nenhuma, e o usuário precisa poder tirar carta
  * dela sem rodar uma busca antes.
  */
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = comAcesso(async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!ehUuid(id)) {
     return NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
@@ -105,4 +106,4 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }));
 
   return NextResponse.json({ alteradas: await marcarEscolhas(db, id, novas) });
-}
+});

@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { destinoAposSair } from "@/lib/dominio/acesso/sair";
+
 import { Icone } from "./icone";
 import { ENERGIAS, encontrarAtivo, modulosDaNav, type ItemNav, type ModuloNav } from "./nav-estrutura";
 import { SeletorLocale } from "./seletor-locale";
@@ -113,12 +115,83 @@ function PontosDeEnergia() {
   );
 }
 
-export function Nav({ livingDex }: { livingDex: boolean }) {
+/**
+ * "Sair" — só com o módulo de acesso por senha ligado. Pede o `DELETE` e
+ * **espera o servidor confirmar** antes de navegar: `200` (cookie apagado) e
+ * `401` (a sessão já não valia) vão ao login por navegação completa; qualquer
+ * outro status, ou falha de rede, fica na tela com um aviso e o botão livre
+ * para nova tentativa (`destinoAposSair`). Navegar assim mesmo mostraria um
+ * login que o proxy devolveria para dentro, com a sessão ainda viva. É
+ * `<button>` e não link porque muda estado. Mesmo tratamento das pílulas da
+ * lombada, com 44px de altura no celular.
+ */
+function Sair() {
+  const t = useTranslations("nav");
+  const [saindo, setSaindo] = useState(false);
+  const [falhou, setFalhou] = useState(false);
+
+  async function sair() {
+    if (saindo) return;
+    setSaindo(true);
+    setFalhou(false);
+    let status: number | null = null;
+    try {
+      status = (await fetch("/api/sessao", { method: "DELETE" })).status;
+    } catch {
+      /* Sem resposta: tratado como falha, abaixo. */
+    }
+    if (destinoAposSair(status) === "login") {
+      window.location.replace("/login");
+      return;
+    }
+    setFalhou(true);
+    setSaindo(false);
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        type="button"
+        onClick={sair}
+        disabled={saindo}
+        className="flex items-center rounded-pill px-3 py-1.5 text-left text-[13px] text-invert-muted [transition:var(--transition-control)] hover:bg-shell-hover hover:text-invert max-md:min-h-11"
+      >
+        {t("sair")}
+      </button>
+      {falhou && (
+        <p role="alert" className="px-3 text-xs text-invert-muted">
+          {t("sairErro")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function Nav({ livingDex, acessoComSenha = false }: { livingDex: boolean; acessoComSenha?: boolean }) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const ativo = encontrarAtivo(pathname);
   const modulos = modulosDaNav(livingDex);
   const [aberto, setAberto] = useState(false);
+
+  /* No login não há sessão: sem módulos (cada link cairia de volta aqui),
+     sem "Sair" e sem o seletor de idioma, cuja server action é protegida e
+     falharia. Sobra a marca; o idioma vem do cookie ou do navegador. */
+  if (acessoComSenha && pathname === "/login") {
+    return (
+      <>
+        <header className="flex items-center border-b border-shell-line bg-shell px-4 py-3 md:hidden">
+          <Marca />
+        </header>
+        <aside className="hidden w-62 shrink-0 flex-col justify-between gap-6 border-r border-shell-line bg-shell px-3 py-5 md:flex">
+          <div className="px-3">
+            <Marca />
+          </div>
+          <PontosDeEnergia />
+        </aside>
+      </>
+    );
+  }
 
   return (
     <>
@@ -141,6 +214,7 @@ export function Nav({ livingDex }: { livingDex: boolean }) {
         <nav className="flex flex-col gap-5 border-b border-shell-line bg-shell px-2 py-3 md:hidden">
           <ListaModulos modulos={modulos} ativo={ativo} onNavegar={() => setAberto(false)} />
           <SeletorLocale />
+          {acessoComSenha && <Sair />}
         </nav>
       )}
 
@@ -154,6 +228,7 @@ export function Nav({ livingDex }: { livingDex: boolean }) {
           <ListaModulos modulos={modulos} ativo={ativo} />
         </nav>
         <SeletorLocale />
+        {acessoComSenha && <Sair />}
         <PontosDeEnergia />
       </aside>
     </>

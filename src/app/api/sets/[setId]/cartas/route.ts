@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { contarCopiasPorCartaId, obterGradeDoSet } from "@/lib/db/consultas";
 
@@ -13,7 +14,7 @@ import { contarCopiasPorCartaId, obterGradeDoSet } from "@/lib/db/consultas";
  * uma única consulta em lote (`contarCopiasPorCartaId`) para o set
  * inteiro, nunca uma por carta.
  */
-export async function GET(
+export const GET = comAcesso(async function GET(
   _req: Request,
   { params }: { params: Promise<{ setId: string }> },
 ) {
@@ -27,4 +28,4 @@ export async function GET(
     ...grade,
     cartas: grade.cartas.map((c) => ({ ...c, qtdPossuida: contagens[c.cartaId] ?? 0 })),
   });
-}
+});

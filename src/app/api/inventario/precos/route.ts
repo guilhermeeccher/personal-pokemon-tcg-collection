@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso, leituraPodeGravar } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import {
   consultasDePrecoDesde,
@@ -47,7 +48,7 @@ import {
 const janelaDaRodada = (intervaloSegundos: number) =>
   janelaSemBatimentoSegundos(intervaloSegundos, REQUISICOES_NO_PIOR_CASO_POR_CARTA);
 
-export async function POST(req: Request) {
+export const POST = comAcesso(async function POST(req: Request) {
   let corpo: Record<string, unknown> = {};
   try {
     const bruto: unknown = await req.json();
@@ -120,11 +121,16 @@ export async function POST(req: Request) {
     },
     { status: 202 },
   );
-}
+});
 
-export async function GET() {
+export const GET = comAcesso(async function GET(req: Request) {
   const ritmo = ritmoLigaPadrao().atual();
-  await encerrarRodadasDePrecoMortas(db, janelaDaRodada(ritmo.intervaloSegundos));
+  // Com o acesso por senha ligado, a limpeza só roda quando a leitura vem
+  // da própria tela (ver `leituraPodeGravar`); senão a resposta mostra a
+  // rodada como está no banco.
+  if (leituraPodeGravar(req)) {
+    await encerrarRodadasDePrecoMortas(db, janelaDaRodada(ritmo.intervaloSegundos));
+  }
 
   const [precos, rodada, selecionadas, serie, rodadas] = await Promise.all([
     listarPrecos(db),
@@ -205,4 +211,4 @@ export async function GET() {
     })),
     itens,
   });
-}
+});

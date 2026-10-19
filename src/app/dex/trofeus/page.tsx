@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
+import { exigirSessao } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { lerSecoesDex, listarFormasDex, listarJogosPossuidos, listarRegistrosDex } from "@/lib/db/dex";
 import { listarTrofeus } from "@/lib/db/dex-planejamento";
@@ -16,6 +17,7 @@ import { PainelTrofeus } from "./painel-trofeus";
  * jogo que o usuário tem. `?jogo=` abre num jogo.
  */
 export default async function TrofeusPage({ searchParams }: PageProps<"/dex/trofeus">) {
+  await exigirSessao();
   await connection();
   if (!moduloLivingDexAtivo()) notFound();
   const [jogos, lista, formas, registros, secoes, params] = await Promise.all([

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { mudarStatusPlano } from "@/lib/db/dex-planejamento";
 import { STATUS_PLANO, type StatusPlanoDex } from "@/lib/dominio/dex-sessao";
@@ -9,7 +10,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
 import { lerCorpoJson, respostaCorpoInvalido, respostaSeModuloDesligado } from "../../guarda";
 
 /** PATCH /api/dex/planos/:id — `{ status }`. */
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = comAcesso(async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const desligado = respostaSeModuloDesligado();
   if (desligado) return desligado;
   const { id } = await params;
@@ -21,4 +22,4 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json(corpoRecusa("dexPlanoNaoEncontrado"), { status: 404 });
   }
   return NextResponse.json({ ok: true });
-}
+});

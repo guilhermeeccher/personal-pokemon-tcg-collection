@@ -37,7 +37,9 @@
       "inventarioDex": "Inventário",
       "trofeus": "Troféus",
       "planos": "Planos"
-    }
+    },
+    "sair": "Sair",
+    "sairErro": "Não foi possível sair. Tente de novo."
   },
   "seletorLocale": {
     "rotulo": "Idioma",
@@ -1179,6 +1181,18 @@
       "ultimasConquistas": "Últimas conquistas",
       "nenhumaConquista": "Nenhum troféu conquistado ainda.",
       "regiaoLinha": "{normal} no HOME · shiny {shiny}"
+    }
+  },
+  "login": {
+    "titulo": "Entrar",
+    "descricao": "Digite a senha para acessar a coleção.",
+    "campoSenha": "Senha",
+    "entrar": "Entrar",
+    "entrando": "Entrando…",
+    "erros": {
+      "senhaInvalida": "Senha incorreta.",
+      "muitasTentativas": "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
+      "generico": "Não foi possível entrar. Tente de novo."
     }
   }
 }

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
+import { exigirSessao } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { lerCaixasReservadas, lerSecoesDex, listarFormasDex, listarRegistrosDex } from "@/lib/db/dex";
 import { moduloLivingDexAtivo } from "@/lib/modulos";
@@ -13,6 +14,7 @@ import { RecebidosHome } from "./recebidos-home";
  * `connection()` antes da flag pelo mesmo motivo da Pokédex.
  */
 export default async function RecebidosPage() {
+  await exigirSessao();
   await connection();
   if (!moduloLivingDexAtivo()) notFound();
 

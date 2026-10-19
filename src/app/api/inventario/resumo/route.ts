@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import {
   listarColecoesNaVitrine,
@@ -31,7 +32,7 @@ const LIMITE_JOIAS = 8;
 const LIMITE_QUASE_LA = 3;
 const FALTANTES_POR_DIVISAO = 6;
 
-export async function GET() {
+export const GET = comAcesso(async function GET() {
   const [totais, porExpansao, porRaridade, porIdioma, porCondicao, porVariante, colecoes, joias] =
     await Promise.all([
       obterTotaisInventario(db),
@@ -52,4 +53,4 @@ export async function GET() {
     joias,
     quaseLa,
   });
-}
+});

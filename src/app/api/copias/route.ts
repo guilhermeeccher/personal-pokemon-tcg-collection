@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import {
   inserirCopia,
@@ -20,7 +21,7 @@ import { validarVariantesContraCatalogo } from "@/lib/dominio/variantes-catalogo
  * inventário (não faz sentido oferecer filtro por um set em que não há
  * nenhuma carta cadastrada).
  */
-export async function GET(req: Request) {
+export const GET = comAcesso(async function GET(req: Request) {
   const url = new URL(req.url);
   const resultado = validarFiltrosInventario({
     set: url.searchParams.get("set"),
@@ -54,10 +55,10 @@ export async function GET(req: Request) {
     tamanhoPagina: resultado.filtros.tamanhoPagina,
     opcoes: { sets: setsDisponiveis, raridades: raridadesDisponiveis },
   });
-}
+});
 
 /** POST /api/copias — cria uma cópia avulsa (cadastro por busca). */
-export async function POST(req: Request) {
+export const POST = comAcesso(async function POST(req: Request) {
   let corpo: unknown;
   try {
     corpo = await req.json();
@@ -107,4 +108,4 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-}
+});

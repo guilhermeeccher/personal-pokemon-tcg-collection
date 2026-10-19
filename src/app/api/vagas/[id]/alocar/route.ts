@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { alocarCopiaNaVaga, desalocarVaga } from "@/lib/db/consultas";
 import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
@@ -18,7 +19,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
  * tem formato de UUID (achado do coordenador, 2026-08-25: sintaxe
  * inválida nunca vira 500 do Postgres).
  */
-export async function POST(
+export const POST = comAcesso(async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -54,7 +55,7 @@ export async function POST(
     dividida: resultado.dividida,
     foraDePadrao: resultado.foraDePadrao,
   });
-}
+});
 
 /**
  * DELETE /api/vagas/:id/alocar — desaloca a vaga. A cópia volta ao
@@ -69,7 +70,7 @@ export async function POST(
  * vaga é apagada, sem tocar na cópia. O chamador não precisa saber o
  * tipo: a rota é a mesma para os três.
  */
-export async function DELETE(
+export const DELETE = comAcesso(async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -82,4 +83,4 @@ export async function DELETE(
     return NextResponse.json(corpoDaRecusa(resultado.motivo), { status: 404 });
   }
   return NextResponse.json({ ok: true });
-}
+});

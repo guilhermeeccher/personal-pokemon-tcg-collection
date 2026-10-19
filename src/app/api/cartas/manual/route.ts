@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { criarCartaManual } from "@/lib/db/consultas";
 import { validarCartaManual } from "@/lib/dominio/carta-manual";
@@ -14,7 +15,7 @@ import { corpoDasRecusas } from "@/lib/dominio/recusa";
  * `origem = 'manual'`: dali em diante ela é cadastrável, alocável em vaga
  * e exportável como qualquer outra — e o sync nunca a inativa.
  */
-export async function POST(req: Request) {
+export const POST = comAcesso(async function POST(req: Request) {
   let corpo: unknown;
   try {
     corpo = await req.json();
@@ -35,4 +36,4 @@ export async function POST(req: Request) {
     { ok: true, cartaId, idioma: validacao.carta.idioma, jaExistia },
     { status: jaExistia ? 200 : 201 },
   );
-}
+});

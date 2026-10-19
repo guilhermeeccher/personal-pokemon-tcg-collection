@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
+import { exigirSessao } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { listarJogosPossuidos } from "@/lib/db/dex";
 import { listarTrofeus } from "@/lib/db/dex-planejamento";
@@ -11,6 +12,7 @@ import { ListaJogos } from "./lista-jogos";
 
 /** /dex/jogos — os jogos que o usuário tem, com o andamento dos troféus. 404 com o módulo desligado. */
 export default async function JogosPage() {
+  await exigirSessao();
   await connection();
   if (!moduloLivingDexAtivo()) notFound();
   const [jogos, trofeus] = await Promise.all([listarJogosPossuidos(db), listarTrofeus(db)]);

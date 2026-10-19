@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { adicionarJogoPossuido, listarJogosPossuidos } from "@/lib/db/dex";
 import { corpoDaRecusa } from "@/lib/dominio/recusa";
@@ -7,14 +8,14 @@ import { corpoDaRecusa } from "@/lib/dominio/recusa";
 import { lerCorpoJson, respostaCorpoInvalido, respostaSeModuloDesligado } from "../guarda";
 
 /** GET /api/dex/jogos — os jogos que o usuário tem. */
-export async function GET() {
+export const GET = comAcesso(async function GET() {
   const desligado = respostaSeModuloDesligado();
   if (desligado) return desligado;
   return NextResponse.json({ itens: await listarJogosPossuidos(db) });
-}
+});
 
 /** POST /api/dex/jogos — `{ jogoId, desde?, notas? }`: marca um jogo do catálogo como possuído. */
-export async function POST(req: Request) {
+export const POST = comAcesso(async function POST(req: Request) {
   const desligado = respostaSeModuloDesligado();
   if (desligado) return desligado;
 
@@ -29,4 +30,4 @@ export async function POST(req: Request) {
   });
   if (!r.ok) return NextResponse.json(corpoDaRecusa(r.motivo), { status: 409 });
   return NextResponse.json({ ok: true }, { status: 201 });
-}
+});

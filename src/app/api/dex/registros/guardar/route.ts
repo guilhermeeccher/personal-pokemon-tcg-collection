@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { guardarRegistros } from "@/lib/db/dex";
 import { ehUuid } from "@/lib/dominio/uuid";
@@ -14,7 +15,7 @@ const MAX_IDS = 2000;
  * o usuário levou esses Pokémon para a caixa deles no HOME. Só mexe no que
  * está no HOME e ainda a guardar; o resto é ignorado, sem erro.
  */
-export async function POST(req: Request) {
+export const POST = comAcesso(async function POST(req: Request) {
   const desligado = respostaSeModuloDesligado();
   if (desligado) return desligado;
 
@@ -32,4 +33,4 @@ export async function POST(req: Request) {
 
   const guardados = await guardarRegistros(db, ids as string[]);
   return NextResponse.json({ ok: true, guardados });
-}
+});

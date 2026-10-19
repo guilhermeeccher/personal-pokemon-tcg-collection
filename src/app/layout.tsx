@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import "./globals.css";
 
+import { moduloAcessoLigado } from "@/lib/dominio/acesso/configuracao";
 import { moduloLivingDexAtivo } from "@/lib/modulos";
 
 import { Nav } from "./_componentes/nav";
@@ -48,6 +49,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   /* `lang` tem que acompanhar o idioma resolvido, senão leitor de tela e
      corretor do navegador continuam tratando a página como português. */
   const locale = await getLocale();
+  /* Lida a cada requisição, como a flag da Living Dex: o `.env` não existe
+     no build, e a `Nav` é de cliente. */
+  const acessoComSenha = moduloAcessoLigado(process.env);
 
   return (
     <html
@@ -66,12 +70,23 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <NextIntlClientProvider>
           {/* A flag é lida aqui, no servidor, a cada requisição — a Nav é
               componente de cliente e não enxerga o `.env`. */}
-          <Nav livingDex={moduloLivingDexAtivo()} />
+          <Nav livingDex={moduloLivingDexAtivo()} acessoComSenha={acessoComSenha} />
           <div className="flex min-w-0 flex-1 flex-col md:h-full">
             <TopBar />
             <div className="min-h-0 flex-1 md:overflow-y-auto">{children}</div>
           </div>
         </NextIntlClientProvider>
+        {/* Só com o módulo ligado. Depois de "Sair", voltar no histórico não
+            pode mostrar a página tirada do cache de histórico do navegador
+            (bfcache): `persisted` é o sinal dessa restauração, e o reload
+            passa pelo proxy, que manda ao login. Desligado, nenhum script. */}
+        {acessoComSenha && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: 'addEventListener("pageshow",function(e){if(e.persisted)location.reload();});',
+            }}
+          />
+        )}
       </body>
     </html>
   );

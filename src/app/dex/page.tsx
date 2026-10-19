@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
+import { exigirSessao } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { lerSecoesDex, listarFormasDex, listarJogosPossuidos, listarRegistrosDex } from "@/lib/db/dex";
 import { listarPlanos, listarTrofeus } from "@/lib/db/dex-planejamento";
@@ -14,6 +15,7 @@ import { VisaoGeralDex } from "./visao-geral-dex";
  * 404 com o módulo desligado; `connection()` antes da flag, como as outras.
  */
 export default async function VisaoGeralDexPage() {
+  await exigirSessao();
   await connection();
   if (!moduloLivingDexAtivo()) notFound();
 

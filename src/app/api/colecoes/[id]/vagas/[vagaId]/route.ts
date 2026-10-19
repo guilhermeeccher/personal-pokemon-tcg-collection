@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { excluirVagaDaColecao } from "@/lib/db/consultas";
 import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
@@ -11,7 +12,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
  * livre no inventário — nunca é apagada. A confirmação é da tela. Ver
  * `excluirVagaDaColecao`.
  */
-export async function DELETE(
+export const DELETE = comAcesso(async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string; vagaId: string }> },
 ) {
@@ -30,4 +31,4 @@ export async function DELETE(
     return NextResponse.json(corpoDaRecusa(resultado.motivo), { status });
   }
   return NextResponse.json({ ok: true, copiaLiberada: resultado.copiaLiberada });
-}
+});

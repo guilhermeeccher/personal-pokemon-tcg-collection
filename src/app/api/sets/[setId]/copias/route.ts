@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { inserirLoteCopias, obterVariantesDisponiveisPorCarta } from "@/lib/db/consultas";
 import { validarLoteCopias } from "@/lib/dominio/lote-copias";
@@ -23,7 +24,7 @@ import { validarVariantesContraCatalogo } from "@/lib/dominio/variantes-catalogo
  * holo). A interface já restringe isso, mas o servidor é quem garante —
  * interface que restringe sem servidor que valida não é restrição.
  */
-export async function POST(
+export const POST = comAcesso(async function POST(
   req: Request,
   { params }: { params: Promise<{ setId: string }> },
 ) {
@@ -82,4 +83,4 @@ export async function POST(
       { status: 400 },
     );
   }
-}
+});

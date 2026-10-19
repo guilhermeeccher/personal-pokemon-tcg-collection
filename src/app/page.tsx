@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
 import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
 import { Icone, type NomeIcone } from "@/app/_componentes/icone";
 import { Painel } from "@/app/_componentes/painel";
+import { exigirSessao } from "@/lib/acesso";
 
 /* Os mesmos glifos da barra lateral, para o atalho e o item de navegação
    serem reconhecíveis como a mesma coisa. O título e a descrição de cada
@@ -17,8 +18,9 @@ const ATALHOS: readonly { href: string; chave: string; icone: NomeIcone }[] = [
   { href: "/colecoes", icone: "layers", chave: "colecoes" },
 ] as const;
 
-export default function Home() {
-  const t = useTranslations("home");
+export default async function Home() {
+  await exigirSessao();
+  const t = await getTranslations("home");
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 p-4 sm:p-8">
       <CabecalhoPagina titulo={t("titulo")} descricao={t("descricao")} />

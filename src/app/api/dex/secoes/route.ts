@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { definirSecaoDex } from "@/lib/db/dex";
 import { ehSecaoLigavel } from "@/lib/dominio/dex-secoes";
@@ -12,7 +13,7 @@ import { moduloLivingDexAtivo } from "@/lib/modulos";
  *
  * 404 com o módulo desligado, como toda rota `/api/dex/...`.
  */
-export async function PATCH(req: Request) {
+export const PATCH = comAcesso(async function PATCH(req: Request) {
   if (!moduloLivingDexAtivo()) {
     return NextResponse.json({ erro: "Not found." }, { status: 404 });
   }
@@ -34,4 +35,4 @@ export async function PATCH(req: Request) {
 
   await definirSecaoDex(db, categoria, conta);
   return NextResponse.json({ ok: true });
-}
+});

@@ -9,6 +9,7 @@ import {
   isLocale,
   type Locale,
 } from "@/i18n/config";
+import { exigirSessaoNaAcao } from "@/lib/acesso";
 
 /**
  * Grava o idioma escolhido no cookie que `i18n/request.ts` lê.
@@ -20,12 +21,21 @@ import {
  * rota inteiro — sem ele, uma tela já visitada voltaria do cache no idioma
  * anterior.
  *
- * O cookie **não** é `httpOnly`: é preferência de interface, não credencial
- * (esta app não tem autenticação nenhuma — decisão de stack do AGENTS.md).
+ * O cookie **não** é `httpOnly`: é preferência de interface, não credencial.
+ * Quem autentica, quando o acesso opcional por senha está ligado
+ * (`ACESSO_COM_SENHA=1`), é o cookie de sessão, à parte; desligado, o app
+ * continua sem autenticação nenhuma, como sempre.
  * Valor desconhecido é ignorado em silêncio; quem resolve o idioma de fato
  * é `resolveLocale`, que já trata cookie inválido como ausente.
+ *
+ * `exigirSessaoNaAcao()` vem antes de tudo: uma server action é um `POST`
+ * que qualquer página pode disparar, e com o módulo ligado ela exige
+ * sessão **e** origem permitida. Desligado, a guarda volta sem ler nada.
+ * Por isso a tela de login não oferece a troca de idioma: sem sessão, esta
+ * action recusa.
  */
 export async function definirLocale(locale: Locale): Promise<void> {
+  await exigirSessaoNaAcao();
   if (!isLocale(locale)) return;
 
   const cookieStore = await cookies();

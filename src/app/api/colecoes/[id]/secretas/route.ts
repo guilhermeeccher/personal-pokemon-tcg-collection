@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { alternarSecretasDaColecao } from "@/lib/db/consultas";
 import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
@@ -12,7 +13,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
  * recusa se alguma vaga secreta estiver preenchida — nunca apaga
  * alocação do usuário.
  */
-export async function PATCH(
+export const PATCH = comAcesso(async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -45,4 +46,4 @@ export async function PATCH(
     return NextResponse.json(corpoDaRecusa(resultado.motivo), { status });
   }
   return NextResponse.json({ ok: true });
-}
+});

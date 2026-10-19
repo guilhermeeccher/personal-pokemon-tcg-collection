@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { contarCopiasElegiveisParaVagasVazias } from "@/lib/db/consultas";
 
@@ -10,7 +11,7 @@ import { contarCopiasElegiveisParaVagasVazias } from "@/lib/db/consultas";
  * cartas que preenchem vagas vazias"). Só conta e informa — regra 5 do
  * AGENTS.md: o sistema nunca aloca sozinho.
  */
-export async function GET() {
+export const GET = comAcesso(async function GET() {
   const contagem = await contarCopiasElegiveisParaVagasVazias(db);
   return NextResponse.json(contagem);
-}
+});

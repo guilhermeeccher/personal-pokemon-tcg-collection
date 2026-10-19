@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { corpoDaRecusa } from "@/lib/dominio/recusa";
 import { baixarImagensDeSets } from "@/lib/download-mypcards";
@@ -13,9 +14,9 @@ import { validarLinkMapeamentoSet } from "@/lib/dominio/mypcards";
 /**
  * GET /api/sets-mypcards — os sets já mapeados.
  */
-export async function GET() {
+export const GET = comAcesso(async function GET() {
   return NextResponse.json({ mapeamentos: await listarMapeamentos(db) });
-}
+});
 
 /**
  * POST /api/sets-mypcards — mapeia um set a partir de um link de imagem
@@ -38,7 +39,7 @@ export async function GET() {
  * chamada (ou o script) retoma de onde parou, já que a lista de
  * candidatas é recalculada a partir da ausência de foto.
  */
-export async function POST(req: Request) {
+export const POST = comAcesso(async function POST(req: Request) {
   let corpo: unknown;
   try {
     corpo = await req.json();
@@ -74,4 +75,4 @@ export async function POST(req: Request) {
     numero: numeroSet,
     cartasNaFila: pendentes.length,
   });
-}
+});

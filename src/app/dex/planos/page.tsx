@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
+import { exigirSessao } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { listarFormasDex, listarJogosPossuidos } from "@/lib/db/dex";
 import { listarPlanos, listarTrofeus } from "@/lib/db/dex-planejamento";
@@ -10,6 +11,7 @@ import { PainelPlanos } from "./painel-planos";
 
 /** /dex/planos — planos ativos com tarefas, e o histórico. */
 export default async function PlanosPage() {
+  await exigirSessao();
   await connection();
   if (!moduloLivingDexAtivo()) notFound();
   const [planos, trofeus, jogos, formas] = await Promise.all([

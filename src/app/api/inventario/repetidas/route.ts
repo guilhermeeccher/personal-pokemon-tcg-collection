@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { listarCartasRepetidas } from "@/lib/db/consultas";
 import { validarFiltrosRepetidas } from "@/lib/dominio/filtros-repetidas";
@@ -10,7 +11,7 @@ import { validarFiltrosRepetidas } from "@/lib/dominio/filtros-repetidas";
  * para `livres >= 1`. Paginado — ver `listarCartasRepetidas` para as
  * consultas e por que escalam.
  */
-export async function GET(req: Request) {
+export const GET = comAcesso(async function GET(req: Request) {
   const url = new URL(req.url);
   const resultado = validarFiltrosRepetidas({
     soLivres: url.searchParams.get("soLivres"),
@@ -30,4 +31,4 @@ export async function GET(req: Request) {
     pagina: resultado.filtros.pagina,
     tamanhoPagina: resultado.filtros.tamanhoPagina,
   });
-}
+});

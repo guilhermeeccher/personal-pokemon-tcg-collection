@@ -33,6 +33,7 @@ import {
   exigirSessao,
   exigirSessaoNaAcao,
   ipDoCliente,
+  leituraPodeGravar,
   lerCookie,
   limiteLogin,
   rotaDoModulo,
@@ -285,6 +286,33 @@ describe("exigirSessaoNaAcao", () => {
     vi.stubEnv("ACESSO_COM_SENHA", "1");
     jarra.cabecalhos = { origin: ORIGEM };
     await recusa(exigirSessaoNaAcao());
+  });
+});
+
+describe("leituraPodeGravar", () => {
+  it("desligado: true, mesmo sem origem nenhuma (o comportamento de antes)", () => {
+    expect(leituraPodeGravar(req("GET"))).toBe(true);
+    expect(leituraPodeGravar(req("GET", { origin: "https://outro.test" }))).toBe(true);
+  });
+
+  it("ligado: true só com origem da lista (o Referer do fetch da própria tela)", () => {
+    ligar();
+    expect(leituraPodeGravar(req("GET", { referer: `${ORIGEM}/inventario/precos` }))).toBe(true);
+    expect(leituraPodeGravar(req("HEAD", { origin: ORIGEM }))).toBe(true);
+  });
+
+  it("ligado: false sem Origin nem Referer, e com origem de fora", () => {
+    ligar();
+    expect(leituraPodeGravar(req("GET"))).toBe(false);
+    expect(leituraPodeGravar(req("GET", { origin: "https://outro.test" }))).toBe(false);
+    expect(leituraPodeGravar(req("GET", { origin: "https://outro.test", referer: `${ORIGEM}/x` }))).toBe(false);
+    expect(leituraPodeGravar(req("GET", { referer: "https://outro.test/pagina" }))).toBe(false);
+  });
+
+  it("configuração incompleta: false", () => {
+    ligar();
+    vi.stubEnv("SEGREDO_SESSAO", "curto");
+    expect(leituraPodeGravar(req("GET", { origin: ORIGEM }))).toBe(false);
   });
 });
 

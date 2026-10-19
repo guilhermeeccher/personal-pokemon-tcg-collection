@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { listarInventarioParaLiga } from "@/lib/db/consultas";
 import {
@@ -62,7 +63,7 @@ function comBom(bytes: Uint8Array): Uint8Array {
  * navegador salva o arquivo, e é justamente depois de salvar que o usuário
  * vai querer saber o que faltou.
  */
-export async function GET() {
+export const GET = comAcesso(async function GET() {
   const { itens, excluidas } = await listarInventarioParaLiga(db);
 
   const linhas = itens.map(linhaLiga);
@@ -128,4 +129,4 @@ export async function GET() {
       "Cache-Control": "no-store",
     },
   });
-}
+});

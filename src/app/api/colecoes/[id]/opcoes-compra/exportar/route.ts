@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import type { ParametroSet } from "@/lib/dominio/parametro-colecao";
 import { db } from "@/lib/db/client";
 import { obterColecaoPorId } from "@/lib/db/consultas";
@@ -32,7 +33,7 @@ import { linhaDaEscolha } from "@/lib/liga/lista-compra";
  *   `aba`, a lista inteira, que acima de 110 cartas não cabe numa colagem.
  *   Ver `dividirListaCompra` em `exportacao-lista-compra.ts`.
  */
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = comAcesso(async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!ehUuid(id)) {
     return NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
@@ -115,4 +116,4 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       "X-Total-Brl": String(totalDaLista(linhas)),
     },
   });
-}
+});

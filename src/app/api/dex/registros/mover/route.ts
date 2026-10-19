@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { moverRegistros } from "@/lib/db/dex";
 import { corpoDaRecusa } from "@/lib/dominio/recusa";
@@ -18,7 +19,7 @@ const MAX_IDS = 2000;
  * `dexConfirmarSemVolta` até a tela reenviar com `confirmarSemVolta: true`
  * — a confirmação de que o Pokémon não volta é do usuário, nunca da rota.
  */
-export async function POST(req: Request) {
+export const POST = comAcesso(async function POST(req: Request) {
   const desligado = respostaSeModuloDesligado();
   if (desligado) return desligado;
 
@@ -37,4 +38,4 @@ export async function POST(req: Request) {
   const r = await moverRegistros(db, ids as string[], corpo.local, corpo.confirmarSemVolta === true);
   if (!r.ok) return NextResponse.json(corpoDaRecusa(r.motivo), { status: r.status });
   return NextResponse.json({ ok: true, movidos: r.movidos });
-}
+});

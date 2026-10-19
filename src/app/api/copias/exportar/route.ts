@@ -1,3 +1,4 @@
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { listarCopiasParaExportacao } from "@/lib/db/consultas";
 import {
@@ -13,7 +14,7 @@ import {
  * planilha pt-BR. Baixa direto, sem passo intermediário — é por isso que
  * a resposta não é JSON.
  */
-export async function GET() {
+export const GET = comAcesso(async function GET() {
   const itens = await listarCopiasParaExportacao(db);
   const csv = gerarCsv(adapterNossoCsvInventario, itens);
   const nomeArquivo = nomeArquivoInventario(new Date().toISOString().slice(0, 10));
@@ -25,4 +26,4 @@ export async function GET() {
       "Content-Disposition": `attachment; filename="${nomeArquivo}"`,
     },
   });
-}
+});

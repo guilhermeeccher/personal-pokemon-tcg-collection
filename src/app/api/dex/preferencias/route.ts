@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { definirCaixasReservadas } from "@/lib/db/dex";
 import { ehCaixasReservadas, MAX_CAIXAS_RESERVADAS } from "@/lib/dominio/dex-caixas";
@@ -11,7 +12,7 @@ import { lerCorpoJson, respostaCorpoInvalido, respostaSeModuloDesligado } from "
  * HOME vêm antes da Nacional 1 (D9). Desloca só o número das caixas; não toca
  * registro nenhum.
  */
-export async function PATCH(req: Request) {
+export const PATCH = comAcesso(async function PATCH(req: Request) {
   const desligado = respostaSeModuloDesligado();
   if (desligado) return desligado;
 
@@ -25,4 +26,4 @@ export async function PATCH(req: Request) {
   }
   await definirCaixasReservadas(db, corpo.caixasReservadas);
   return NextResponse.json({ ok: true });
-}
+});

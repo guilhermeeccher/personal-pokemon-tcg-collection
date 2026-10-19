@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { atualizarJogoPossuido, removerJogoPossuido } from "@/lib/db/dex";
 import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
@@ -8,7 +9,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
 import { lerCorpoJson, respostaCorpoInvalido, respostaSeModuloDesligado } from "../../guarda";
 
 /** PATCH /api/dex/jogos/:id — `{ desde?, notas?, ativo? }`. */
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = comAcesso(async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const desligado = respostaSeModuloDesligado();
   if (desligado) return desligado;
   const { id } = await params;
@@ -33,10 +34,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json(corpoRecusa("dexJogoNaoEncontrado"), { status: 404 });
   }
   return NextResponse.json({ ok: true });
-}
+});
 
 /** DELETE /api/dex/jogos/:id — recusa se houver registro no jogo (desativar é o caminho). */
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = comAcesso(async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const desligado = respostaSeModuloDesligado();
   if (desligado) return desligado;
   const { id } = await params;
@@ -45,4 +46,4 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const r = await removerJogoPossuido(db, id);
   if (!r.ok) return NextResponse.json(corpoDaRecusa(r.motivo), { status: r.status });
   return NextResponse.json({ ok: true });
-}
+});

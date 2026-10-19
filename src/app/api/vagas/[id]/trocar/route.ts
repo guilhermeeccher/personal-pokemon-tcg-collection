@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { trocarCopiaDaVaga } from "@/lib/db/consultas";
 import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
@@ -21,7 +22,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
  * a vaga da URL não existe — inclusive quando `:id` nem tem formato de
  * UUID.
  */
-export async function POST(
+export const POST = comAcesso(async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -58,4 +59,4 @@ export async function POST(
     dividida: resultado.dividida,
     foraDePadrao: resultado.foraDePadrao,
   });
-}
+});

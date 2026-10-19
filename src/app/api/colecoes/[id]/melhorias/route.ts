@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { listarMelhoriasDaColecao } from "@/lib/db/consultas";
 import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
@@ -21,7 +22,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
  * Regra 5 do AGENTS.md: isto sugere e ordena — a troca é sempre um
  * clique do usuário, em `POST /api/vagas/:id/trocar`.
  */
-export async function GET(
+export const GET = comAcesso(async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -34,4 +35,4 @@ export async function GET(
     return NextResponse.json(corpoDaRecusa(resultado.motivo), { status: 404 });
   }
   return NextResponse.json({ itens: resultado.itens });
-}
+});

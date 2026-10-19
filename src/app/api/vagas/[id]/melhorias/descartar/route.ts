@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { descartarMelhoria, restaurarMelhoria } from "@/lib/db/consultas";
 import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
@@ -26,7 +27,7 @@ async function lerCopiaId(req: Request): Promise<string | null> {
  * sinalizar. Nada é apagado — o descarte é ausência de aviso, não
  * remoção de dado. Idempotente.
  */
-export async function POST(
+export const POST = comAcesso(async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -48,14 +49,14 @@ export async function POST(
     return NextResponse.json(corpoDaRecusa(resultado.motivo), { status: 404 });
   }
   return NextResponse.json({ ok: true });
-}
+});
 
 /**
  * DELETE /api/vagas/:id/melhorias/descartar — desfaz o descarte, para o
  * "descartei sem querer" logo depois do clique. Idempotente: desfazer o
  * que não foi descartado não é erro.
  */
-export async function DELETE(
+export const DELETE = comAcesso(async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -74,4 +75,4 @@ export async function DELETE(
 
   await restaurarMelhoria(db, id, copiaId);
   return NextResponse.json({ ok: true });
-}
+});

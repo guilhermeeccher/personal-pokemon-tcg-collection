@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { incluirCartaNaColecao } from "@/lib/db/consultas";
 import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
@@ -11,7 +12,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
  * cópia: a coleção passa a esperar essa carta, e ela entra no que falta.
  * Ver `incluirCartaNaColecao`.
  */
-export async function POST(
+export const POST = comAcesso(async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -41,4 +42,4 @@ export async function POST(
     return NextResponse.json(corpoDaRecusa(resultado.motivo), { status });
   }
   return NextResponse.json({ vagaId: resultado.vagaId }, { status: 201 });
-}
+});

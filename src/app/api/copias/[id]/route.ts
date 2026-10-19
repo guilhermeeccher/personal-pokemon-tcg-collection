@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { atualizarCopia, obterCopiaPorId, obterVariantesDisponiveisDaCarta, removerCopia } from "@/lib/db/consultas";
 import { validarEdicaoCopia } from "@/lib/dominio/copia";
@@ -7,7 +8,7 @@ import { corpoRecusa } from "@/lib/dominio/recusa";
 import { validarVariantesContraCatalogo } from "@/lib/dominio/variantes-catalogo";
 
 /** PATCH /api/copias/:id — edita campos de uma cópia (spec §5 Fase 1). */
-export async function PATCH(
+export const PATCH = comAcesso(async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -59,14 +60,14 @@ export async function PATCH(
     return NextResponse.json(corpoRecusa("copiaNaoEncontrada"), { status: 404 });
   }
   return NextResponse.json({ ok: true });
-}
+});
 
 /**
  * DELETE /api/copias/:id — remove uma cópia. Se ela estava alocada, a FK
  * `vaga.copia_id` (ON DELETE SET NULL) libera a vaga automaticamente —
  * confirmado em `src/lib/db/schema.ts` e no relatório da tarefa.
  */
-export async function DELETE(
+export const DELETE = comAcesso(async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -76,4 +77,4 @@ export async function DELETE(
     return NextResponse.json({ erro: "Cópia não encontrada." }, { status: 404 });
   }
   return NextResponse.json({ ok: true });
-}
+});

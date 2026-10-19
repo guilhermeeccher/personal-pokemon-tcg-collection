@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { obterVariantesDisponiveisDaCarta } from "@/lib/db/consultas";
 import {
@@ -58,7 +59,7 @@ function validarParams(params: Params): { ok: true; idioma: "pt" | "en" | "jp" }
 }
 
 /** POST — upload de arquivo (`arquivo` no FormData) ou download de URL (`url`). */
-export async function POST(req: Request, { params }: { params: Promise<Params> }) {
+export const POST = comAcesso(async function POST(req: Request, { params }: { params: Promise<Params> }) {
   const resolvidos = await params;
   const validacao = validarParams(resolvidos);
   if (!validacao.ok) {
@@ -179,10 +180,10 @@ export async function POST(req: Request, { params }: { params: Promise<Params> }
     },
     { status: 201 },
   );
-}
+});
 
 /** GET — serve os bytes do arquivo. Resolve sempre pelo registro do banco, nunca por caminho vindo da URL. */
-export async function GET(_req: Request, { params }: { params: Promise<Params> }) {
+export const GET = comAcesso(async function GET(_req: Request, { params }: { params: Promise<Params> }) {
   const resolvidos = await params;
   const validacao = validarParams(resolvidos);
   if (!validacao.ok) {
@@ -211,10 +212,10 @@ export async function GET(_req: Request, { params }: { params: Promise<Params> }
       "Cache-Control": "private, max-age=3600",
     },
   });
-}
+});
 
 /** DELETE — remove o registro e o arquivo. A carta volta ao estado sem foto. */
-export async function DELETE(_req: Request, { params }: { params: Promise<Params> }) {
+export const DELETE = comAcesso(async function DELETE(_req: Request, { params }: { params: Promise<Params> }) {
   const resolvidos = await params;
   const validacao = validarParams(resolvidos);
   if (!validacao.ok) {
@@ -230,4 +231,4 @@ export async function DELETE(_req: Request, { params }: { params: Promise<Params
   await apagarArquivoImagemSeExistir(removido.arquivoNome);
 
   return NextResponse.json({ ok: true });
-}
+});

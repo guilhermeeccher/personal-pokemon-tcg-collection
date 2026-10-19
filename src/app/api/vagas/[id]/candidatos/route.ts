@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { listarCandidatosDaVaga } from "@/lib/db/consultas";
 import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
@@ -20,7 +21,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
  * Postgres rejeitar a sintaxe e virar 500 (achado do coordenador,
  * 2026-08-25).
  */
-export async function GET(
+export const GET = comAcesso(async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -33,4 +34,4 @@ export async function GET(
     return NextResponse.json(corpoDaRecusa(resultado.motivo), { status: 404 });
   }
   return NextResponse.json({ itens: resultado.candidatos });
-}
+});

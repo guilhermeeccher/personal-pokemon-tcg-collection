@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { carregarContextoRegistro } from "@/lib/db/dex";
 import { adicionarTarefaManual, mapaTrofeusAtivos } from "@/lib/db/dex-planejamento";
@@ -10,7 +11,7 @@ import { ehUuid } from "@/lib/dominio/uuid";
 import { lerCorpoJson, respostaCorpoInvalido, respostaSeModuloDesligado } from "../../../guarda";
 
 /** POST /api/dex/planos/:id/tarefas — `{ titulo, tipo, descricao?, jogoId?, formaIds?, trofeuId? }`: a tarefa entra no fim. */
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const POST = comAcesso(async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const desligado = respostaSeModuloDesligado();
   if (desligado) return desligado;
   const { id } = await params;
@@ -24,4 +25,4 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const tarefaId = await adicionarTarefaManual(db, id, dados);
   if (!tarefaId) return NextResponse.json(corpoRecusa("dexPlanoNaoEncontrado"), { status: 404 });
   return NextResponse.json({ ok: true, id: tarefaId }, { status: 201 });
-}
+});

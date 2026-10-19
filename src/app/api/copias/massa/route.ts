@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { atualizarCopiasEmMassa } from "@/lib/db/consultas";
 import { validarEdicaoEmMassa } from "@/lib/dominio/edicao-massa";
@@ -20,7 +21,7 @@ import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
  * Nunca mexe em alocação (não é responsabilidade desta rota nem da
  * consulta que ela chama).
  */
-export async function PATCH(req: Request) {
+export const PATCH = comAcesso(async function PATCH(req: Request) {
   let corpo: unknown;
   try {
     corpo = await req.json();
@@ -46,4 +47,4 @@ export async function PATCH(req: Request) {
   }
 
   return NextResponse.json({ ok: true, atualizadas: aplicado.atualizadas });
-}
+});

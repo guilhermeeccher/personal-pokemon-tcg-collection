@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
+import { exigirSessao } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { lerSecoesDex, listarFormasDex, listarJogosPossuidos, listarRegistrosDex } from "@/lib/db/dex";
 import { listarTrofeus } from "@/lib/db/dex-planejamento";
@@ -15,6 +16,7 @@ import { CadastroPorJogo } from "./cadastro-por-jogo";
  * da tarefa concluída de um plano, com o jogo dela.
  */
 export default async function CadastrarPage({ searchParams }: PageProps<"/dex/cadastrar">) {
+  await exigirSessao();
   await connection();
   if (!moduloLivingDexAtivo()) notFound();
 

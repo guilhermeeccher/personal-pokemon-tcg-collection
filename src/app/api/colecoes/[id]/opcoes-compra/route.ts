@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso, leituraPodeGravar } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { nomesDosSets, obterColecaoPorId } from "@/lib/db/consultas";
 import {
@@ -146,7 +147,7 @@ async function vagasParaAgrupar(
   return vagas.map((v) => ({ chave: v.chave, rotulo: v.nome, dex: null, setNome: v.setNome }));
 }
 
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const POST = comAcesso(async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!ehUuid(id)) {
     return NextResponse.json(corpoRecusa("colecaoNaoEncontrada"), { status: 404 });
@@ -261,7 +262,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     },
     { status: 202 },
   );
-}
+});
 
 function vagasComVariasEscolhas(
   escolhas: ReadonlyArray<{ chave: string; especie: string | null; nome: string }>,
@@ -278,7 +279,7 @@ function vagasComVariasEscolhas(
     .sort((a, b) => compararChavesVaga()(a.chave, b.chave));
 }
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = comAcesso(async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!ehUuid(id)) {
     return NextResponse.json(corpoRecusa("colecaoNaoEncontrada"), { status: 404 });
@@ -358,14 +359,18 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   // Mesma limpeza do POST: quem abre a tela depois de um reinício precisa ver
   // "interrompida", não uma ampulheta eterna. E a mesma janela elástica: no
   // ritmo do robots.txt, uma rodada viva fica minutos sem bater.
-  await encerrarVarredurasMortas(
-    db,
-    id,
-    janelaSemBatimentoSegundos(
-      ritmo.intervaloSegundos,
-      requisicoesNoPiorCasoPorVaga(colecao.tipo),
-    ),
-  );
+  // Com o acesso por senha ligado, só quando a leitura vem da própria tela
+  // (ver `leituraPodeGravar`); senão a rodada aparece como está no banco.
+  if (leituraPodeGravar(req)) {
+    await encerrarVarredurasMortas(
+      db,
+      id,
+      janelaSemBatimentoSegundos(
+        ritmo.intervaloSegundos,
+        requisicoesNoPiorCasoPorVaga(colecao.tipo),
+      ),
+    );
+  }
 
   const varredura = await obterUltimaVarredura(db, id);
   if (!varredura) {
@@ -482,4 +487,4 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     vagas: agrupadas,
     ...resumoDaLista,
   });
-}
+});

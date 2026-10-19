@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { excluirColecao, obterColecaoComVagas, atualizarColecao } from "@/lib/db/consultas";
 import { validarEdicaoColecao } from "@/lib/dominio/colecao";
@@ -7,7 +8,7 @@ import { corpoRecusa } from "@/lib/dominio/recusa";
 import { ehUuid } from "@/lib/dominio/uuid";
 
 /** GET /api/colecoes/:id — lê uma coleção com suas vagas. */
-export async function GET(
+export const GET = comAcesso(async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -23,7 +24,7 @@ export async function GET(
     return NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
   }
   return NextResponse.json(colecao);
-}
+});
 
 /**
  * PATCH /api/colecoes/:id — edita nome, notas e/ou idiomaExigido. Nunca
@@ -32,7 +33,7 @@ export async function GET(
  * Exceção: ligar/desligar `incluirSecretas` tem rota própria,
  * `PATCH /api/colecoes/:id/secretas`.
  */
-export async function PATCH(
+export const PATCH = comAcesso(async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -61,14 +62,14 @@ export async function PATCH(
     return NextResponse.json(corpoRecusa("colecaoNaoEncontrada"), { status: 404 });
   }
   return NextResponse.json({ ok: true });
-}
+});
 
 /**
  * DELETE /api/colecoes/:id — exclui a coleção. As vagas caem por
  * cascade; as cópias do inventário NUNCA são tocadas (spec: excluir
  * coleção não apaga cópia).
  */
-export async function DELETE(
+export const DELETE = comAcesso(async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -81,4 +82,4 @@ export async function DELETE(
     return NextResponse.json({ erro: "Coleção não encontrada." }, { status: 404 });
   }
   return NextResponse.json({ ok: true });
-}
+});
