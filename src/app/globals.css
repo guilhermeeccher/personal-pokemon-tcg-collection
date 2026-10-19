@@ -315,3 +315,65 @@ input[type="radio"] {
     }
   }
 }
+
+/* ------------------------------------------------------------------------
+   Áreas seguras do PWA (iPhone instalado, `viewport-fit=cover`).
+
+   Só com `data-pwa` no <html> — o `layout.tsx` o põe apenas com o módulo de
+   acesso ligado — e só abaixo de 768px. Sem o atributo, nenhuma destas
+   regras se aplica; de 768px para cima também não. Fora de `@layer`, de
+   propósito: vencem as utilidades do Tailwind sem `!`. Nenhum componente
+   ganhou classe nem atributo por causa delas; os seletores usam a estrutura
+   que já existe. A borda de baixo das barras fixas e do `Modal` já soma
+   `env(safe-area-inset-bottom)` nos componentes e não é repetida aqui.
+   ------------------------------------------------------------------------ */
+@media (width < 48rem) {
+  /* O cabeçalho do celular (e o da tela de login, que é o mesmo elemento):
+     filho direto do <body> e único <header> ali — o da TopBar fica dentro do
+     wrapper e some abaixo de `md`. Recua do topo (barra de status) e das
+     laterais (entalhe, com o aparelho deitado). Os valores base são o
+     `py-3`/`px-4` que ele já tem. */
+  [data-pwa] body > header {
+    padding-top: calc(0.75rem + env(safe-area-inset-top));
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  /* A gaveta do menu aberta: o <nav> filho direto do <body> (`px-2`). */
+  [data-pwa] body > nav {
+    padding-left: max(0.5rem, env(safe-area-inset-left));
+    padding-right: max(0.5rem, env(safe-area-inset-right));
+  }
+
+  /* O conteúdo: o wrapper (`flex-1`) que guarda a TopBar e a área das telas,
+     o único <div> filho direto do <body>. As laterais valem para todas as
+     telas, inclusive o login; o recuo de baixo evita o fim da página sob o
+     indicador de início. */
+  [data-pwa] body > div {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Painel de baixo do `Modal` (`role="dialog"` que não é o próprio overlay
+     fixo, como o da imagem ampliada, que já trata os insets): fica mais
+     estreito que a tela, centralizado, para não entrar sob o entalhe. Os
+     recuos internos e o rodapé de largura total ficam como estão. */
+  [data-pwa] [role="dialog"][aria-modal="true"]:not([class~="fixed"]) {
+    max-width: calc(100% - 2 * max(env(safe-area-inset-left), env(safe-area-inset-right)));
+  }
+
+  /* O balão da `Dica` (posicionado por JS, em pixels, na janela inteira):
+     não dá para deslocá-lo daqui, então o texto é que recua das laterais. */
+  [data-pwa] [role="tooltip"] {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
+
+  /* Faixa que gruda no topo da janela (a de ações da lista de compra): sem
+     isto grudaria sob a barra de status. O <th> sticky das tabelas gruda em
+     contêiner próprio e fica de fora. */
+  [data-pwa] :is(div, section)[class~="sticky"][class~="top-0"] {
+    top: env(safe-area-inset-top);
+  }
+}

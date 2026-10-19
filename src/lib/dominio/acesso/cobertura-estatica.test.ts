@@ -54,8 +54,6 @@ const sob = (relativoAoApp: string) => `${APP}/${relativoAoApp}`;
  * acrescentar aqui. Dois GETs de hoje fazem uma única escrita de limpeza,
  * idempotente: fecham rodadas de varredura mortas
  * (`opcoes-compra` e `inventario/precos`).
- *
- * `pwa/[arquivo]` entra na onda do PWA, por quem criar a rota.
  */
 const ROTAS_COM_GET = [
   "api/cartas/route.ts",
@@ -82,6 +80,7 @@ const ROTAS_COM_GET = [
   "api/sets/route.ts",
   "api/vagas/[id]/candidatos/route.ts",
   "manifest.webmanifest/route.ts",
+  "pwa/[arquivo]/route.ts",
   "robots.txt/route.ts",
 ];
 

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Baloo_2, Nunito, IBM_Plex_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -6,6 +6,7 @@ import "./globals.css";
 
 import { moduloAcessoLigado } from "@/lib/dominio/acesso/configuracao";
 import { moduloLivingDexAtivo } from "@/lib/modulos";
+import { NOME_CURTO_APP } from "@/lib/pwa/identidade";
 
 import { Nav } from "./_componentes/nav";
 import { TopBar } from "./_componentes/topbar";
@@ -39,10 +40,32 @@ const fonteMono = IBM_Plex_Mono({
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("metadata");
-  return {
+  const base: Metadata = {
     title: t("titulo"),
     description: t("descricao"),
   };
+  /* PWA: só com o módulo de acesso ligado (a flag é lida por requisição, o
+     `.env` não existe no build). Desligado, devolve exatamente o de antes e o
+     `<head>` não muda. Sem `themeColor` (o Safari do Mac tingiria a janela) e
+     sem as convenções `app/icon.png`/`app/apple-icon.png`, que inserem
+     metadados sempre e trocariam o favicon. `icons` só leva `apple`: o
+     favicon continua sendo o `favicon.ico` do app, que o Next acrescenta à
+     parte. */
+  if (!moduloAcessoLigado(process.env)) return base;
+  return {
+    ...base,
+    manifest: "/manifest.webmanifest",
+    appleWebApp: { capable: true, title: NOME_CURTO_APP, statusBarStyle: "default" },
+    icons: { apple: [{ url: "/pwa/icone-180.png", sizes: "180x180", type: "image/png" }] },
+  };
+}
+
+/* `viewportFit: "cover"` deixa a página ocupar a tela inteira do iPhone (sob o
+   entalhe), e o `globals.css` devolve as margens com `env(safe-area-inset-*)`
+   em `[data-pwa]`. Só com o módulo ligado; desligado devolve `{}`, o que
+   mantém o `<meta name="viewport">` padrão de sempre. */
+export function generateViewport(): Viewport {
+  return moduloAcessoLigado(process.env) ? { viewportFit: "cover" } : {};
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
@@ -56,6 +79,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang={locale}
+      /* Só com o módulo ligado: é o que ativa as áreas seguras do
+         `globals.css`. Desligado, o atributo não existe e nenhuma regra nova
+         se aplica. Espalhado, e não `data-pwa={undefined}`, para que nem o
+         payload do React carregue o nome do atributo quando desligado. */
+      {...(acessoComSenha ? { "data-pwa": "" } : {})}
       className={`${fonteDisplay.variable} ${fonteSans.variable} ${fonteMono.variable} h-full antialiased`}
     >
       {/*

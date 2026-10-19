@@ -29,6 +29,7 @@ services:
       SENHA_ACESSO_HASH: ${SENHA_ACESSO_HASH:-}
       SEGREDO_SESSAO: ${SEGREDO_SESSAO:-}
       ORIGENS_PERMITIDAS: ${ORIGENS_PERMITIDAS:-}
+      PWA_ICONES_DIR: ${PWA_ICONES_DIR:-}
     # Bind mount só-leitura do clone local de tcgdex/cards-database, usado
     # por `pnpm importar:catalogo-repo` (scripts/importar-catalogo-repo.ts)
     # para popular o catálogo japonês sem depender de api.tcgdex.net (IP
@@ -37,11 +38,19 @@ services:
     # e o clone fica fora do repositório de propósito (~220 MB, MIT). Sem
     # efeito quando o host não tem o clone: o caminho só é lido sob demanda.
     #
+    # `pwa-icones`: pasta da instalação com os ícones do PWA (`icone-180.png`,
+    # `icone-192.png`, `icone-512.png`, `icone-maskable-512.png`), montada só
+    # leitura. Só é lida com o acesso por senha ligado, e só se `PWA_ICONES_DIR`
+    # apontar para `/dados/pwa-icones`; vazia, ou sem um dos arquivos, o app
+    # serve o ícone genérico do repositório. A sintaxe curta cria a pasta no
+    # host quando ela não existe (como root); por isso o `.gitkeep` versionado.
+    #
     # `imagens_locais`: volume nomeado para os arquivos de imagem local
     # que o usuário fornece por carta sem foto — a tabela `imagem_local`
     # guarda só o metadado, os bytes ficam aqui.
     volumes:
       - ${TCGDEX_REPO_HOST_PATH:-./.dados/tcgdex-cards-database}:/upstream-dados-tcgdex:ro
+      - ${PWA_ICONES_HOST_PATH:-./.dados/pwa-icones}:/dados/pwa-icones:ro
       - imagens_locais:${IMAGENS_LOCAIS_DIR:-/dados/imagens-locais}
     depends_on:
       db:

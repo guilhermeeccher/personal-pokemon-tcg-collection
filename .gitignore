@@ -45,6 +45,11 @@ yarn-error.log*
 !/.dados/tcgdex-cards-database/
 /.dados/tcgdex-cards-database/*
 !/.dados/tcgdex-cards-database/.gitkeep
+# Idem para os ícones do PWA desta instalação (arte do dono, fora do
+# repositório): só o .gitkeep é versionado.
+!/.dados/pwa-icones/
+/.dados/pwa-icones/*
+!/.dados/pwa-icones/.gitkeep
 
 # typescript
 *.tsbuildinfo
