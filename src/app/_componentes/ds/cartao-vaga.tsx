@@ -61,6 +61,12 @@ export function CartaoVaga({
    * um respiro no topo: sem ele, na vaga sem arte (a Coleção Clássica do
    * 30th não tem imagem no upstream) o título começa no topo e o "×" o
    * cobria.
+   *
+   * No celular o "×" tem área de toque de 44 (pseudo-elemento centrado no
+   * desenho de 24), que desce 28px a partir do topo do cartão. O respiro
+   * passa a `pt-9` abaixo do `md` para a miniatura — que no celular também
+   * é botão (toque abre o zoom) — começar 8px depois dessa área, e não
+   * debaixo dela. Do `md` para cima continua `pt-5`.
    */
   acaoCanto?: ReactNode;
 }) {
@@ -70,7 +76,7 @@ export function CartaoVaga({
 
   return (
     <div
-      className={`relative flex flex-col items-center gap-1 rounded-slot p-2 ${acaoCanto ? "pt-5" : ""} text-center [transition:var(--transition-surface)] ${
+      className={`relative flex flex-col items-center gap-1 rounded-slot p-2 ${acaoCanto ? "pt-5 max-md:pt-9" : ""} text-center [transition:var(--transition-surface)] ${
         preenchida
           ? "border-2 border-solid shadow-1 hover:-translate-y-[3px] hover:rotate-[-0.5deg] hover:shadow-3"
           : "border-2 border-dashed"

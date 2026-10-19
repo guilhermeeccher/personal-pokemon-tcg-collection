@@ -75,7 +75,13 @@ export function ProgressoDivisoes({
           <div
             className={`flex items-baseline justify-between gap-3 ${compacto ? "text-xs" : "text-sm"}`}
           >
-            <span className="min-w-0 truncate text-foreground">{rotulo(d)}</span>
+            {/* Corta com reticências do `md` para cima, como sempre. No
+                celular quebra a linha: a coluna é estreita, "set · secretas"
+                perdia justamente a parte, e sem `title` nem hover não havia
+                como ler o resto. */}
+            <span className="min-w-0 text-foreground max-md:[overflow-wrap:anywhere] md:truncate">
+              {rotulo(d)}
+            </span>
             <span className="shrink-0 font-mono tabular-nums whitespace-nowrap text-muted">
               {d.preenchidas}/{d.total} ·{" "}
               <span className="text-strong">

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 
 import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
 import type { ParametroPokedex, TipoColecao } from "@/lib/dominio/parametro-colecao";
@@ -32,6 +32,7 @@ import {
   useRotuloDivisao,
 } from "@/app/_componentes/ds/progresso-divisoes";
 import { Modal } from "@/app/_componentes/modal";
+import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 import type {
   CandidataMelhoriaDTO,
   CandidatoVagaDTO,
@@ -52,6 +53,16 @@ const OPCOES_REGIAO = REGIOES.map((regiao) => ({
   faixa: `${FAIXA_REGIAO[regiao].inicio}–${FAIXA_REGIAO[regiao].fim}`,
 }));
 
+/* As ações de uma linha de candidata (confirmar fora de padrão, confirmar a
+   troca, trocar/descartar). No desktop, um grupo à direita da linha, como
+   sempre. No celular a linha quebra (`max-md:flex-wrap` no `li`) e o grupo
+   desce para uma linha própria, alinhado à direita: lado a lado com a
+   miniatura e o nome, "Confirma fora de padrão?" + dois botões espremiam o
+   nome em três linhas. O `gap-3` deixa 8px entre as áreas de toque dos
+   botões de texto ("Cancelar", "Descartar"), que ganham 44 por `alvo-toque`. */
+const classesConfirmacao =
+  "flex items-center gap-2 max-md:w-full max-md:justify-end max-md:gap-3";
+
 export default function ColecaoPage() {
   const t = useTranslations("colecaoDetalhe");
   const tr = useTranslations("recusas");
@@ -60,6 +71,9 @@ export default function ColecaoPage() {
   const router = useRouter();
   const locale = useLocale();
   const rotuloDivisao = useRotuloDivisao();
+  // Uma leitura só para a grade inteira: a Pokédex nacional tem 1025 vagas, e
+  // cada cartão assinando o `matchMedia` por conta própria seria 1025 ouvintes.
+  const mobile = useEhMobile();
 
   const [colecao, setColecao] = useState<ColecaoComVagasDTO | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -241,7 +255,12 @@ export default function ColecaoPage() {
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-8">
       <div>
-        <Link href="/colecoes" className="text-sm text-accent hover:underline">
+        {/* No celular o link ganha altura de 44 de verdade (e não só área por
+            pseudo-elemento): é o primeiro alvo da tela, colado no cabeçalho. */}
+        <Link
+          href="/colecoes"
+          className="text-sm text-accent hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center"
+        >
           {t("voltar")}
         </Link>
       </div>
@@ -262,13 +281,19 @@ export default function ColecaoPage() {
           </p>
           {colecao.notas && <p className="mt-1 text-sm text-muted">{colecao.notas}</p>}
         </div>
-        <div className="flex flex-wrap gap-2">
+        {/* No celular as ações viram uma grade de duas colunas na largura
+            toda, uma linha de 44px por par (o `Botao` já tem 44 abaixo do
+            `md`): soltas no `flex-wrap`, quebravam onde o texto mandava e
+            deixavam "Excluir" sozinho no meio da linha. O primário ocupa a
+            linha inteira; "Excluir" também, quando sobraria sozinho (Pokédex e
+            customizada têm uma ação a menos que a de set). */}
+        <div className="flex flex-wrap gap-2 max-md:grid max-md:w-full max-md:grid-cols-2">
           {/* Pokédex e set: as duas têm vaga vazia que é carta a comprar
               (regra 6). Customizada não — a vaga dela nasce ao alocar. */}
           {(colecao.tipo === "pokedex" || colecao.tipo === "set") && (
             <Link
               href={`/colecoes/${colecao.id}/opcoes-compra`}
-              className={classesBotao("primario", "sm")}
+              className={classesBotao("primario", "sm", "max-md:col-span-2")}
             >
               {t("verificarOpcoes")}
             </Link>
@@ -290,7 +315,13 @@ export default function ColecaoPage() {
               {editandoCartas ? t("concluirEdicaoCartas") : t("editarCartas")}
             </Botao>
           )}
-          <Botao type="button" variante="perigo" tamanho="sm" onClick={excluir}>
+          <Botao
+            type="button"
+            variante="perigo"
+            tamanho="sm"
+            onClick={excluir}
+            className={colecaoDeSet ? "" : "max-md:col-span-2"}
+          >
             {t("excluir")}
           </Botao>
         </div>
@@ -371,12 +402,14 @@ export default function ColecaoPage() {
 
       {pokedex && colecao.progressoPorRegiao && colecao.progressoPorRegiao.length > 1 && (
         <div className="flex flex-wrap items-center gap-3 text-sm">
-          <label className="flex items-center gap-2">
+          {/* No celular o seletor ocupa o resto da linha: é o alvo de toque
+              (44 de altura vem de `classesEntrada`). */}
+          <label className="flex items-center gap-2 max-md:w-full">
               <span className="text-muted">{t("filtrar")}</span>
               <select
                 value={regiaoFiltro}
                 onChange={(e) => setRegiaoFiltro(e.target.value as Regiao | "todas")}
-                className={`${classesEntrada} p-1`}
+                className={`${classesEntrada} p-1 max-md:min-w-0 max-md:flex-1`}
               >
                 <option value="todas">{t("todasAsRegioes")}</option>
                 {colecao.progressoPorRegiao.map((p) => (
@@ -415,8 +448,11 @@ export default function ColecaoPage() {
       )}
 
       {!customizada && (
+        // No celular cada filtro é uma linha de 44 de altura no mínimo: a
+        // área de toque de uma caixa de seleção é o `label` que a envolve, e
+        // o `gap-2` deixa os 8px entre uma área e a outra.
         <div className="flex flex-col gap-2 text-sm">
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2 max-md:min-h-11">
             <input
               type="checkbox"
               checked={somenteVazias}
@@ -427,7 +463,7 @@ export default function ColecaoPage() {
           {/* Só aparece quando há o que mostrar: um filtro que sempre
               resulta em zero é ruído permanente na tela. */}
           {melhorias.length > 0 && (
-            <label className="flex items-center gap-2">
+            <label className="flex items-center gap-2 max-md:min-h-11">
               <input
                 type="checkbox"
                 checked={somenteMelhorias}
@@ -454,12 +490,26 @@ export default function ColecaoPage() {
               </span>
             </header>
           )}
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2">
+          {/* No modo de editar cartas, só no celular, a grade abre espaço para
+              a área de toque do "×" (44 x 44 em volta de um desenho de 24,
+              plantado no canto de cima, meio para fora do cartão): ela passa
+              16px acima e à direita do cartão. Com o `gap-2` de sempre ela
+              cobria o "Alocar"/"Desalocar" do cartão de cima; `gap-y-8` deixa
+              ao menos 8px entre as duas áreas, `gap-x-3` faz o mesmo com a
+              miniatura do vizinho na paisagem (cartões mais estreitos), e o
+              `pt-3` afasta a primeira linha dos filtros logo acima. Fora do
+              modo de edição, e do `md` para cima, a grade é a de sempre. */}
+          <div
+            className={`grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2 ${
+              colecaoDeSet && editandoCartas ? "max-md:gap-x-3 max-md:gap-y-8 max-md:pt-3" : ""
+            }`}
+          >
             {secao.vagas.map((v) => (
               <VagaCard
                 key={v.id}
                 vaga={v}
                 tipo={colecao.tipo}
+                mobile={mobile}
                 onExcluir={colecaoDeSet && editandoCartas ? () => excluirVaga(v) : undefined}
                 melhoria={melhoriaPorVaga.get(v.id)}
                 onAlocar={() => setVagaParaAlocar(v)}
@@ -521,6 +571,7 @@ export default function ColecaoPage() {
 function VagaCard({
   vaga,
   tipo,
+  mobile,
   onExcluir,
   melhoria,
   onAlocar,
@@ -529,6 +580,8 @@ function VagaCard({
 }: {
   vaga: VagaDaColecaoDTO;
   tipo: TipoColecao;
+  /** Abaixo de 768px (`useEhMobile`, lido uma vez pela página). */
+  mobile: boolean;
   /** Tirar a carta da coleção — só em coleção de set, no modo de edição de cartas. */
   onExcluir?: () => void;
   /** Presente só quando existe cópia livre melhor que a alocada aqui. */
@@ -542,15 +595,22 @@ function VagaCard({
   const preenchida = vaga.copiaId !== null;
   const nomeExibido = vaga.cartaNome ?? vaga.nomeEspecie;
   const numero = rotuloChaveVaga(vaga.chave);
+  const semCandidato = vaga.candidatosDisponiveis === 0;
+  const semCandidatoVisivel = mobile && semCandidato;
+  const idSemCandidato = `sem-candidato-${vaga.id}`;
   // O "×" do modo de edição fica no canto do cartão, e não numa linha de
   // texto embaixo: o "tirar da coleção" em toda vaga esticava a grade.
+  // No celular o desenho continua de 24px e a área de toque de 44 vem de
+  // `alvo-toque`; quem garante que ela não invade a vizinha é o espaçamento
+  // da grade no modo de edição (na página) e o respiro do topo do cartão
+  // (`CartaoVaga`).
   const botaoTirar = onExcluir ? (
     <button
       type="button"
       onClick={onExcluir}
       title={t("tirarDaColecao")}
       aria-label={t("tirarDaColecaoAlvo", { alvo: nomeExibido ?? `#${numero}` })}
-      className="flex h-6 w-6 items-center justify-center rounded-full border border-line bg-surface text-sm leading-none text-muted shadow-1 hover:border-danger hover:text-danger"
+      className="alvo-toque flex h-6 w-6 items-center justify-center rounded-full border border-line bg-surface text-sm leading-none text-muted shadow-1 hover:border-danger hover:text-danger"
     >
       ×
     </button>
@@ -592,8 +652,13 @@ function VagaCard({
 
            Regra 5 continua de pé: o clique ABRE a lista de candidatas com
            o motivo de cada uma; não troca nada sozinho. */
+        /* No celular, "Melhorar" e "Desalocar" ganham área de toque de 44
+           pelo pseudo-elemento (`alvo-toque`, que no `xs` já vem do `Botao`).
+           As duas áreas passam 10px e 13px além do desenho; o `gap-8` deixa
+           8px entre elas — com o `gap-1` de sempre, o toque em "Desalocar"
+           caía em "Melhorar". Só na vaga com melhoria há dois botões. */
         acao={
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-col items-center gap-1 max-md:gap-8">
             {melhoria && (
               <span title={tc("rotuloMelhoria", { total: melhoria.candidatas.length })}>
                 <Botao type="button" variante="secundario" tamanho="xs" onClick={onMelhorar}>
@@ -604,7 +669,7 @@ function VagaCard({
             <button
               type="button"
               onClick={onDesalocar}
-              className="text-[11px] text-danger hover:underline"
+              className="alvo-toque text-[11px] text-danger hover:underline"
             >
               {t("desalocar")}
             </button>
@@ -643,19 +708,30 @@ function VagaCard({
          recebe hover e a tooltip nunca apareceria — justamente no caso em
          que ela é necessária. Cinza sem explicação vira suspeita de bug. */
       acao={
-        <span title={tc("rotuloAlocacao", { total: vaga.candidatosDisponiveis })}>
-          <Botao
-            type="button"
-            variante="primario"
-            tamanho="xs"
-            onClick={onAlocar}
-            disabled={vaga.candidatosDisponiveis === 0}
-          >
-            {vaga.candidatosDisponiveis === 0
-              ? t("alocar")
-              : t("alocarComTotal", { total: vaga.candidatosDisponiveis })}
-          </Botao>
-        </span>
+        <>
+          <span title={tc("rotuloAlocacao", { total: vaga.candidatosDisponiveis })}>
+            <Botao
+              type="button"
+              variante="primario"
+              tamanho="xs"
+              onClick={onAlocar}
+              disabled={semCandidato}
+              aria-describedby={semCandidatoVisivel ? idSemCandidato : undefined}
+            >
+              {semCandidato ? t("alocar") : t("alocarComTotal", { total: vaga.candidatosDisponiveis })}
+            </Botao>
+          </span>
+          {/* No celular o `title` acima não existe, e o cinza ficaria sem
+              explicação. Texto curto e visível, fora do botão, no lugar de um
+              balão: a grade tem uma dessas por vaga vazia, e um botão "i" em
+              cada uma não cabia do lado do "Alocar" no cartão estreito da
+              paisagem. Só abaixo do `md`; no desktop continua o `title`. */}
+          {semCandidatoVisivel && (
+            <span id={idSemCandidato} className="text-[10px] leading-tight text-subtle [overflow-wrap:anywhere]">
+              {t("semCopiaLivre")}
+            </span>
+          )}
+        </>
       }
     />
   );
@@ -706,6 +782,8 @@ function EdicaoColecao({
   }
 
   return (
+    // Já é uma coluna só; no celular o seletor de idioma deixa de ter largura
+    // fixa e acompanha os outros campos (16px e 44 vêm de `classesEntrada`).
     <form onSubmit={salvar} className="flex flex-col gap-3 rounded border border-line p-4 text-sm">
       <Campo rotulo={t("campoNome")}>
         <input value={nome} onChange={(e) => setNome(e.target.value)} className={classesEntrada} />
@@ -714,7 +792,7 @@ function EdicaoColecao({
         <select
           value={idiomaExigido}
           onChange={(e) => setIdiomaExigido(e.target.value as Idioma | "")}
-          className={`w-40 ${classesEntrada}`}
+          className={`w-40 max-md:w-full ${classesEntrada}`}
         >
           <option value="">{t("qualquer")}</option>
           {IDIOMAS.map((i) => (
@@ -780,8 +858,9 @@ function ToggleSecretas({
     }
   }
 
+  // `min-h-11` no celular: a área de toque da caixa é o `label` inteiro.
   return (
-    <label className="flex items-center gap-2 text-sm">
+    <label className="flex items-center gap-2 text-sm max-md:min-h-11">
       <input
         type="checkbox"
         checked={incluirSecretas}
@@ -949,20 +1028,31 @@ function IncluirCartaAvulsa({
   return (
     <div className="flex flex-col gap-2 rounded border border-line p-3">
       <div className="text-sm font-medium text-strong">{t("incluirCartaAvulsa")}</div>
-      <form onSubmit={buscar} className="flex flex-wrap items-end gap-2 text-sm">
+      {/* No celular, uma coluna: cada campo na largura toda, e o "Buscar"
+          embaixo, também na largura toda. As larguras fixas (feitas para a
+          linha do desktop) ficam só do `md` para cima. */}
+      <form onSubmit={buscar} className="flex flex-wrap items-end gap-2 text-sm max-md:flex-col max-md:items-stretch">
         <Campo rotulo={t("campoNomeCarta")}>
-          <input value={nome} onChange={(e) => setNome(e.target.value)} className={`w-48 ${classesEntrada}`} />
+          <input
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            className={`w-48 max-md:w-full ${classesEntrada}`}
+          />
         </Campo>
         <Campo rotulo={t("campoSetCarta")}>
           <input
             value={setId}
             onChange={(e) => setSetId(e.target.value)}
             placeholder="30th"
-            className={`w-28 ${classesEntrada}`}
+            className={`w-28 max-md:w-full ${classesEntrada}`}
           />
         </Campo>
         <Campo rotulo={t("campoNumeroCarta")}>
-          <input value={numero} onChange={(e) => setNumero(e.target.value)} className={`w-20 ${classesEntrada}`} />
+          <input
+            value={numero}
+            onChange={(e) => setNumero(e.target.value)}
+            className={`w-20 max-md:w-full ${classesEntrada}`}
+          />
         </Campo>
         <Botao type="submit" variante="secundario" disabled={buscando}>
           {buscando ? t("buscando") : t("buscar")}
@@ -1087,13 +1177,14 @@ function AdicionarCopiaCustomizada({
 
   return (
     <div className="flex flex-col gap-2 rounded border border-line p-3">
-      <form onSubmit={buscar} className="flex flex-wrap items-end gap-2 text-sm">
+      {/* No celular, o campo na largura toda e o "Buscar" embaixo. */}
+      <form onSubmit={buscar} className="flex flex-wrap items-end gap-2 text-sm max-md:flex-col max-md:items-stretch">
         <Campo rotulo={t("campoAdicionarLivre")}>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("placeholderBusca")}
-            className={`w-64 ${classesEntrada}`}
+            className={`w-64 max-md:w-full ${classesEntrada}`}
           />
         </Campo>
         <Botao type="submit" variante="secundario" disabled={buscando}>
@@ -1106,7 +1197,7 @@ function AdicionarCopiaCustomizada({
           {resultados.map((c) => {
             const foraDePadrao = idiomaExigido !== null && c.idioma !== idiomaExigido;
             return (
-              <li key={c.id} className="flex items-center gap-3 py-2">
+              <li key={c.id} className="flex items-center gap-3 py-2 max-md:flex-wrap">
                 <ImagemCartaComZoom
                   imagemUrl={c.imagemUrl}
                   origem={c.imagemOrigem}
@@ -1129,12 +1220,12 @@ function AdicionarCopiaCustomizada({
                   </div>
                 </div>
                 {confirmandoId === c.id ? (
-                  <div className="flex items-center gap-2">
+                  <div className={classesConfirmacao}>
                     <span className="text-xs text-warning-fg">{t("confirmaForaDePadrao")}</span>
                     <Botao type="button" variante="secundario" tamanho="xs" onClick={() => adicionar(c, true)}>
                       {t("confirmar")}
                     </Botao>
-                    <button type="button" onClick={() => setConfirmandoId(null)} className="text-xs text-muted">
+                    <button type="button" onClick={() => setConfirmandoId(null)} className="alvo-toque text-xs text-muted">
                       {t("cancelar")}
                     </button>
                   </div>
@@ -1179,6 +1270,7 @@ function ModalAlocarVaga({
   const [erro, setErro] = useState<string | null>(null);
   const [confirmandoId, setConfirmandoId] = useState<string | null>(null);
   const [enviandoId, setEnviandoId] = useState<string | null>(null);
+  const tituloId = useId();
 
   useEffect(() => {
     fetch(`/api/vagas/${vaga.id}/candidatos`)
@@ -1217,9 +1309,22 @@ function ModalAlocarVaga({
 
   const nomeVaga = vaga.cartaNome ?? vaga.nomeEspecie;
 
+  // Esc fecha sem alocar nada; "Fechar" vai para o `rodape` (no celular, preso
+  // ao fim do sheet). O "Alocar" de cada candidata continua na linha dela: a
+  // escolha é da pessoa, candidata por candidata (regra 5).
   return (
-    <Modal>
-      <h2 className="font-medium text-foreground">
+    <Modal
+      rotuloId={tituloId}
+      onFechar={onFechar}
+      rodape={
+        <div className="flex justify-end pt-2">
+          <Botao type="button" variante="secundario" onClick={onFechar}>
+            {t("fechar")}
+          </Botao>
+        </div>
+      }
+    >
+      <h2 id={tituloId} className="font-medium text-foreground">
         {t("modalAlocarTitulo", { vaga: rotuloChaveVaga(vaga.chave) })}
         {nomeVaga ? ` — ${nomeVaga}` : ""}
       </h2>
@@ -1230,7 +1335,7 @@ function ModalAlocarVaga({
 
       <ul className="flex flex-col divide-y divide-hairline">
         {candidatos?.map((c) => (
-          <li key={c.id} className="flex items-center gap-3 py-2">
+          <li key={c.id} className="flex items-center gap-3 py-2 max-md:flex-wrap">
             <ImagemCartaComZoom
               imagemUrl={c.imagemUrl}
               origem={c.imagemOrigem}
@@ -1254,12 +1359,12 @@ function ModalAlocarVaga({
               </div>
             </div>
             {confirmandoId === c.id ? (
-              <div className="flex items-center gap-2">
+              <div className={classesConfirmacao}>
                 <span className="text-xs text-warning-fg">{t("confirmaForaDePadrao")}</span>
                 <Botao type="button" variante="secundario" tamanho="xs" onClick={() => alocar(c, true)}>
                   {t("confirmar")}
                 </Botao>
-                <button type="button" onClick={() => setConfirmandoId(null)} className="text-xs text-muted">
+                <button type="button" onClick={() => setConfirmandoId(null)} className="alvo-toque text-xs text-muted">
                   {t("cancelar")}
                 </button>
               </div>
@@ -1282,12 +1387,6 @@ function ModalAlocarVaga({
           </EstadoVazio>
         )}
       </ul>
-
-      <div className="flex justify-end pt-2">
-        <Botao type="button" variante="secundario" onClick={onFechar}>
-          {t("fechar")}
-        </Botao>
-      </div>
     </Modal>
   );
 }
@@ -1348,6 +1447,7 @@ function ModalMelhoriaVaga({
   const [enviandoId, setEnviandoId] = useState<string | null>(null);
   const [confirmandoId, setConfirmandoId] = useState<string | null>(null);
   const [descartadas, setDescartadas] = useState<string[]>([]);
+  const tituloId = useId();
 
   const { atual } = melhoria;
 
@@ -1407,9 +1507,22 @@ function ModalMelhoriaVaga({
     }
   }
 
+  // Esc fecha como o "Fechar" (e recarrega as melhorias, para o descarte
+  // sumir); "Fechar" vai para o `rodape`. Trocar e descartar ficam na linha
+  // de cada candidata, e a troca continua pedindo confirmação.
   return (
-    <Modal>
-      <h2 className="font-medium text-foreground">
+    <Modal
+      rotuloId={tituloId}
+      onFechar={onFechar}
+      rodape={
+        <div className="flex justify-end pt-2">
+          <Botao type="button" variante="secundario" onClick={onFechar}>
+            {t("fechar")}
+          </Botao>
+        </div>
+      }
+    >
+      <h2 id={tituloId} className="font-medium text-foreground">
         {t("modalMelhoriaTitulo", { vaga: rotuloChaveVaga(melhoria.chave) })}
       </h2>
       <p className="text-muted">{t("modalMelhoriaExplicacao")}</p>
@@ -1442,7 +1555,7 @@ function ModalMelhoriaVaga({
         {melhoria.candidatas.map((c) => {
           const descartada = descartadas.includes(c.id);
           return (
-            <li key={c.id} className={`flex items-center gap-3 py-2 ${descartada ? "opacity-50" : ""}`}>
+            <li key={c.id} className={`flex items-center gap-3 py-2 max-md:flex-wrap ${descartada ? "opacity-50" : ""}`}>
               <ImagemCartaComZoom
                 imagemUrl={c.imagemUrl}
                 origem={c.imagemOrigem}
@@ -1475,12 +1588,12 @@ function ModalMelhoriaVaga({
                 <button
                   type="button"
                   onClick={() => alternarDescarte(c, false)}
-                  className="text-xs text-accent hover:underline"
+                  className="alvo-toque text-xs text-accent hover:underline max-md:ml-auto"
                 >
                   {t("restaurar")}
                 </button>
               ) : confirmandoId === c.id ? (
-                <div className="flex items-center gap-2">
+                <div className={classesConfirmacao}>
                   <span className="text-xs text-warning-fg">{t("confirmaTroca")}</span>
                   <Botao
                     type="button"
@@ -1494,13 +1607,13 @@ function ModalMelhoriaVaga({
                   <button
                     type="button"
                     onClick={() => setConfirmandoId(null)}
-                    className="text-xs text-muted"
+                    className="alvo-toque text-xs text-muted"
                   >
                     {t("cancelar")}
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className={classesConfirmacao}>
                   <Botao
                     type="button"
                     variante="primario"
@@ -1513,7 +1626,7 @@ function ModalMelhoriaVaga({
                   <button
                     type="button"
                     onClick={() => alternarDescarte(c, true)}
-                    className="text-xs text-muted hover:underline"
+                    className="alvo-toque text-xs text-muted hover:underline"
                     title={t("descartarTitulo")}
                   >
                     {t("descartar")}
@@ -1524,12 +1637,6 @@ function ModalMelhoriaVaga({
           );
         })}
       </ul>
-
-      <div className="flex justify-end pt-2">
-        <Botao type="button" variante="secundario" onClick={onFechar}>
-          {t("fechar")}
-        </Botao>
-      </div>
     </Modal>
   );
 }

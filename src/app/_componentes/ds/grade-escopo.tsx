@@ -47,7 +47,10 @@ export function GradeEscopo({
       {legenda && (
         <legend className="px-2 text-[13px] font-bold text-strong">{legenda}</legend>
       )}
-      <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 sm:grid-cols-3">
+      {/* No celular em pé, uma coluna (o nome da região com a faixa de números
+          não cabe em duas a 393px) e cada `label` com 44px de altura, que é a
+          área de toque da checkbox. De 640px para cima, as colunas de sempre. */}
+      <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 max-sm:grid-cols-1 max-md:gap-y-2 sm:grid-cols-3">
         {opcoes.map((opcao) => {
           const motivoVisivel = mobile && opcao.travada && opcao.motivoTravada ? opcao.motivoTravada : null;
           const idMotivo = `${idBase}-${opcao.id}`;
@@ -55,7 +58,7 @@ export function GradeEscopo({
             <label
               key={opcao.id}
               title={opcao.travada ? opcao.motivoTravada : undefined}
-              className={`flex items-center gap-2 text-sm ${
+              className={`flex items-center gap-2 text-sm max-md:min-h-11 ${
                 opcao.travada ? "text-subtle" : "cursor-pointer text-foreground"
               }`}
             >
