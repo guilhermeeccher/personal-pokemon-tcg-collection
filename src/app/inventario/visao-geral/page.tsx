@@ -118,7 +118,7 @@ export default function VisaoGeralPage() {
           <section className="flex flex-col gap-3">
             <div className="flex items-baseline justify-between gap-3">
               <h2 className="text-[length:var(--fs-title-1)] text-strong">{t("suasColecoes")}</h2>
-              <Link href="/colecoes" className="text-sm text-accent hover:underline">
+              <Link href="/colecoes" className="text-sm text-accent hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center">
                 {t("verTodas")}
               </Link>
             </div>
@@ -167,6 +167,7 @@ export default function VisaoGeralPage() {
  */
 function Joias({ joias }: { joias: CartaVitrineDTO[] }) {
   const t = useTranslations("visaoGeral");
+  const tc = useTranslations("componentes");
   const locale = useLocale();
   const inclinacoes = ["-rotate-3", "rotate-2", "-rotate-1", "rotate-3", "-rotate-2", "rotate-1"];
   return (
@@ -196,11 +197,15 @@ function Joias({ joias }: { joias: CartaVitrineDTO[] }) {
                 className={`aspect-[63/88] w-full rounded-tcg object-cover shadow-tcg [transition:var(--transition-surface)] hover:-translate-y-1.5 hover:rotate-0 ${inclinacoes[i % inclinacoes.length]}`}
               />
               <figcaption className="flex min-w-0 flex-col gap-0.5">
-                <span className="truncate text-xs font-semibold text-strong" title={j.nome}>
+                <span className="truncate text-xs font-semibold text-strong max-md:break-words max-md:whitespace-normal max-md:overflow-visible" title={j.nome}>
                   {j.nome}
                 </span>
+                {/* A raridade aqui é só o ícone, com o nome no `title`; no celular,
+                    sem hover, o nome vai escrito (o cartão da joia é estreito
+                    demais para o botão de uma `Dica`). */}
                 <MarcaRaridade raridade={j.raridade} comRotulo={false} />
-                <span className="truncate text-[11px] text-muted" title={j.setNome}>
+                <span className="text-[11px] text-muted md:hidden">{j.raridade ?? tc("semRaridade")}</span>
+                <span className="truncate text-[11px] text-muted max-md:break-words max-md:whitespace-normal max-md:overflow-visible" title={j.setNome}>
                   {j.setNome} · {j.localId}
                 </span>
                 {/* Só quando a carta já foi consultada: sem preço, nada a
@@ -424,7 +429,7 @@ function Faltante({ faltante: f, tipo }: { faltante: QuaseLaDTO["faltantes"][num
 
 function CartaoSecao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <Painel as="section" className="flex flex-col gap-1">
+    <Painel as="section" className="flex flex-col gap-1 max-md:gap-2">
       <h2 className="mb-1 text-[length:var(--fs-title-2)] text-strong">{titulo}</h2>
       {children}
     </Painel>

@@ -145,9 +145,9 @@ export default function NovaColecaoPage() {
 
         <fieldset className="flex flex-col gap-2 rounded-card border border-line bg-surface p-4">
           <legend className="px-2 text-[13px] font-bold text-strong">{t("tipo")}</legend>
-          <div className="flex flex-wrap gap-4 text-sm">
+          <div className="flex flex-wrap gap-4 text-sm max-md:gap-x-6 max-md:gap-y-2">
             {TIPOS.map((valor) => (
-              <label key={valor} className="flex items-center gap-1">
+              <label key={valor} className="flex items-center gap-1 max-md:min-h-11 max-md:gap-2">
                 <input
                   type="radio"
                   name="tipo"
@@ -163,8 +163,8 @@ export default function NovaColecaoPage() {
         {tipo === "pokedex" && (
           <fieldset className="flex flex-col gap-2 rounded-card border border-line bg-surface p-4">
             <legend className="px-2 text-[13px] font-bold text-strong">{t("escopo")}</legend>
-            <div className="flex gap-4 text-sm">
-              <label className="flex items-center gap-1">
+            <div className="flex gap-4 text-sm max-md:flex-wrap max-md:gap-x-6 max-md:gap-y-2">
+              <label className="flex items-center gap-1 max-md:min-h-11 max-md:gap-2">
                 <input
                   type="radio"
                   name="escopo"
@@ -173,7 +173,7 @@ export default function NovaColecaoPage() {
                 />
                 {t("escopoNacional")}
               </label>
-              <label className="flex items-center gap-1">
+              <label className="flex items-center gap-1 max-md:min-h-11 max-md:gap-2">
                 <input
                   type="radio"
                   name="escopo"
@@ -197,7 +197,7 @@ export default function NovaColecaoPage() {
           <fieldset className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
             <legend className="px-2 text-[13px] font-bold text-strong">{t("expansao")}</legend>
             {setsEscolhidos.length > 0 && (
-              <ul className="flex flex-col gap-1">
+              <ul className="flex flex-col gap-1 max-md:gap-2">
                 {setsEscolhidos.map((set) => (
                   <li
                     key={set.setId}
@@ -211,7 +211,7 @@ export default function NovaColecaoPage() {
                       onClick={() =>
                         setSetsEscolhidos((atuais) => atuais.filter((s) => s.setId !== set.setId))
                       }
-                      className="text-xs text-muted hover:text-danger"
+                      className="text-xs text-muted hover:text-danger max-md:min-h-11 max-md:px-2"
                       aria-label={t("removerSet", { set: set.setNome })}
                     >
                       {t("remover")}
@@ -244,7 +244,7 @@ export default function NovaColecaoPage() {
                     <span className="text-xs text-warning-fg">{t("semPt")}</span>
                   )}
                 </Campo>
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2 text-sm max-md:min-h-11">
                   <input
                     type="checkbox"
                     checked={incluirSecretas}

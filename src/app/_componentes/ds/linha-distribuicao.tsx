@@ -70,7 +70,7 @@ export function LinhaDistribuicao({
   );
 
   const classes =
-    "-mx-2 flex flex-col gap-1.5 rounded-slot px-2 py-1.5 [transition:var(--transition-control)]";
+    "-mx-2 flex flex-col gap-1.5 rounded-slot px-2 py-1.5 [transition:var(--transition-control)] max-md:min-h-11 max-md:justify-center";
 
   if (!href) return <div className={classes}>{conteudo}</div>;
 
