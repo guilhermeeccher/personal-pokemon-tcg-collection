@@ -631,9 +631,28 @@ function ModalEdicao({
     }
   }
 
+  // Um `id` fixo por cópia, e não `useId`: só há uma janela de edição aberta
+  // por vez, e assim o trecho não depende de nada fora dele.
+  const tituloId = `editar-copia-titulo-${copia.id}`;
+
   return (
-    <Modal as="form" onSubmit={salvar}>
-      <h2 className="font-medium text-foreground">
+    <Modal
+      as="form"
+      onSubmit={salvar}
+      rotuloId={tituloId}
+      onFechar={onFechar}
+      rodape={
+        <div className="flex justify-end gap-2 pt-2">
+          <Botao type="button" variante="secundario" onClick={onFechar}>
+            {t("cancelar")}
+          </Botao>
+          <Botao type="submit" variante="primario" disabled={salvando}>
+            {salvando ? t("salvando") : t("salvar")}
+          </Botao>
+        </div>
+      }
+    >
+      <h2 id={tituloId} className="font-medium text-foreground">
         {t("modalEditarTitulo", { carta: copia.cartaNome })} — {copia.setNome} #
         {copia.cartaLocalId}
       </h2>
@@ -746,15 +765,6 @@ function ModalEdicao({
       </Campo>
 
       {erro && <p className="text-danger">{erro}</p>}
-
-      <div className="flex justify-end gap-2 pt-2">
-        <Botao type="button" variante="secundario" onClick={onFechar}>
-          {t("cancelar")}
-        </Botao>
-        <Botao type="submit" variante="primario" disabled={salvando}>
-          {salvando ? t("salvando") : t("salvar")}
-        </Botao>
-      </div>
     </Modal>
   );
 }
