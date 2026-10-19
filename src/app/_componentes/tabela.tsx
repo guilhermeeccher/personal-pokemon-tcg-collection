@@ -6,11 +6,10 @@
  * escritos por quem chama (colspan, checkbox de seleção etc. variam
  * tela a tela) — só a moldura e as classes de cor são compartilhadas.
  *
- * O cabeçalho ainda NÃO é sticky. O design system pede cabeçalho fixo, mas
- * isso depende de a área de conteúdo ter rolagem própria — hoje a página
- * inteira rola, e o wrapper aqui é `overflow-x-auto`, um contêiner de
- * rolagem sem altura própria, onde `sticky` não teria onde grudar. Entra
- * junto com o "chrome fixo, conteúdo rola" da Fase C.
+ * O cabeçalho é `sticky` (`classesCelulaCabecalho`), mas só gruda quando a
+ * tabela tem rolagem própria: com `rolagemPropria`, de `md` para cima, o
+ * wrapper ganha altura e é ele quem rola. Sem isso o wrapper `overflow-auto`
+ * não tem altura própria e o `sticky` não tem onde grudar.
  */
 
 import type { ReactNode } from "react";
