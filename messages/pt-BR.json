@@ -197,6 +197,19 @@
     "rotuloMelhoria": "{total, plural, =0 {Nenhuma cópia livre sua é melhor que esta.} =1 {1 cópia livre sua é melhor que a alocada aqui.} other {# cópias livres suas são melhores que a alocada aqui.}}"
   },
   "componentes": {
+    "mobile": {
+      "fechar": "Fechar",
+      "filtros": "Filtros",
+      "filtrosAtivos": "Filtros ({total})",
+      "limparFiltros": "Limpar filtros",
+      "diminuir": "Diminuir {nome}",
+      "aumentar": "Aumentar {nome}",
+      "ampliarImagem": "Ampliar imagem de {nome}",
+      "fecharImagem": "Fechar imagem",
+      "maisInformacoes": "Mais informações",
+      "selecionarTodos": "Selecionar todos",
+      "alterar": "Alterar"
+    },
     "semRaridade": "Sem raridade",
     "variante": {
       "normal": "normal",

@@ -197,6 +197,19 @@
     "rotuloMelhoria": "{total, plural, =0 {No free copy of yours is better than this one.} =1 {1 free copy of yours is better than the one allocated here.} other {# free copies of yours are better than the one allocated here.}}"
   },
   "componentes": {
+    "mobile": {
+      "fechar": "Close",
+      "filtros": "Filters",
+      "filtrosAtivos": "Filters ({total})",
+      "limparFiltros": "Clear filters",
+      "diminuir": "Decrease {nome}",
+      "aumentar": "Increase {nome}",
+      "ampliarImagem": "Enlarge image of {nome}",
+      "fecharImagem": "Close image",
+      "maisInformacoes": "More information",
+      "selecionarTodos": "Select all",
+      "alterar": "Change"
+    },
     "semRaridade": "No rarity",
     "variante": {
       "normal": "normal",
