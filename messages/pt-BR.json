@@ -769,7 +769,8 @@
       "colunaData": "Data",
       "colunaTotal": "Total",
       "colunaMedia": "Média por carta",
-      "colunaCartas": "Cartas"
+      "colunaCartas": "Cartas",
+      "toqueParaVer": "Toque num ponto do gráfico para ver o valor. Toque fora para soltar."
     },
     "rodadas": {
       "titulo": "Pesquisas anteriores",

@@ -13,15 +13,41 @@
  * Largura medida (ResizeObserver) e o SVG desenhado nela, em vez de um
  * viewBox esticado: assim o texto dos eixos mantém o tamanho em 400 px.
  * Cores só por tokens (`var(--…)`); a série usa o acento de ação.
+ *
+ * ## Celular (abaixo de 768px)
+ *
+ * O ponteiro de hoje é do mouse: `pointermove` aponta o ponto mais próximo e
+ * `pointerleave` solta. No dedo isso não serve — o `pointerleave` dispara
+ * assim que o dedo sai, e o valor sumiria antes de ser lido. Por isso, no
+ * celular e só para toque:
+ *
+ * - O toque (`pointerup`) fixa o ponto mais próximo e ele fica até outro
+ *   toque no gráfico (que troca de ponto) ou um toque fora dele (que solta).
+ *   Arrastar o dedo na horizontal também aponta (o gráfico só cede a rolagem
+ *   vertical, `touch-pan-y`); o `pointerleave` do toque não solta nada.
+ * - O valor aparece num painel embaixo do gráfico, e não na caixa flutuante
+ *   do desktop: o dedo que tocou cobriria a caixa, e num gráfico de ~300px
+ *   ela vazaria da tela. O painel tem altura reservada (com uma dica de uso
+ *   enquanto nada está fixo), para o gráfico não pular quando ele aparece.
+ * - O mouse, mesmo numa janela estreita, segue o comportamento de sempre.
+ *
+ * Os textos do SVG ficam em 12px no celular (11px é o piso do app) e a
+ * margem do eixo y cresce para o rótulo caber. Os rótulos "N cartas" sobre os
+ * pontos saem no celular: em ~270px eles encostam na linha e uns nos outros,
+ * e o que dizem está no painel (ao tocar) e na tabela de pontos.
  */
 
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
+import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
+
 import type { PontoDaSerie } from "@/lib/dominio/historico-precos";
 
 const ALTURA = 220;
 const MARGEM = { topo: 26, direita: 20, base: 28, esquerda: 56 };
+/** Com 12px o rótulo "R$ 4.000" do eixo pede mais que os 56px de margem. */
+const MARGEM_MOBILE = { ...MARGEM, esquerda: 64 };
 const RAIO = 5;
 const HORA_MS = 3_600_000;
 /** Respiro nas pontas: o primeiro e o último ponto não encostam no eixo. */
@@ -42,6 +68,21 @@ export function GraficoValorTotal({ serie }: { serie: readonly PontoDaSerie[] })
   const caixa = useRef<HTMLDivElement>(null);
   const [largura, setLargura] = useState(0);
   const [ativo, setAtivo] = useState<number | null>(null);
+  const mobile = useEhMobile();
+  const fonte = mobile ? 12 : 11;
+  const margem = mobile ? MARGEM_MOBILE : MARGEM;
+
+  // Celular: o ponto fica fixo até um toque fora do gráfico. O painel com o
+  // valor fica fora da área protegida: tocar nele também solta o ponto.
+  useEffect(() => {
+    if (!mobile || ativo === null) return;
+    const soltar = (e: PointerEvent) => {
+      if (e.target instanceof Node && caixa.current?.contains(e.target)) return;
+      setAtivo(null);
+    };
+    document.addEventListener("pointerdown", soltar);
+    return () => document.removeEventListener("pointerdown", soltar);
+  }, [mobile, ativo]);
 
   useEffect(() => {
     const el = caixa.current;
@@ -79,19 +120,19 @@ export function GraficoValorTotal({ serie }: { serie: readonly PontoDaSerie[] })
   if (serie.length === 0) return null;
 
   const w = Math.max(largura, 0);
-  const areaW = Math.max(w - MARGEM.esquerda - MARGEM.direita, 1);
-  const areaH = ALTURA - MARGEM.topo - MARGEM.base;
+  const areaW = Math.max(w - margem.esquerda - margem.direita, 1);
+  const areaH = ALTURA - margem.topo - margem.base;
   const { topo, ticks } = escalaY(Math.max(...serie.map((p) => p.somaMedios)));
   const tempos = serie.map((p) => new Date(p.tiradoEm).getTime());
   const t0 = Math.min(...tempos);
   const t1 = Math.max(...tempos, t0 + HORA_MS);
   const x = (i: number) =>
     serie.length === 1
-      ? MARGEM.esquerda + areaW / 2
-      : MARGEM.esquerda + FOLGA_X + ((tempos[i] - t0) / (t1 - t0)) * (areaW - 2 * FOLGA_X);
-  const y = (v: number) => MARGEM.topo + areaH - (v / topo) * areaH;
+      ? margem.esquerda + areaW / 2
+      : margem.esquerda + FOLGA_X + ((tempos[i] - t0) / (t1 - t0)) * (areaW - 2 * FOLGA_X);
+  const y = (v: number) => margem.topo + areaH - (v / topo) * areaH;
   const caminho = serie.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.somaMedios).toFixed(1)}`).join(" ");
-  const rotularCartas = serie.length <= 6;
+  const rotularCartas = serie.length <= 6 && !mobile;
   // Pontos no mesmo dia: o eixo mostra a hora junto, senão as duas pontas leriam igual.
   const mesmoDia = diaCurto(serie[0].tiradoEm) === diaCurto(serie[serie.length - 1].tiradoEm);
   const dia = (iso: string) => (mesmoDia ? `${diaCurto(iso)} ${horaCurta(iso)}` : diaCurto(iso));
@@ -132,25 +173,33 @@ export function GraficoValorTotal({ serie }: { serie: readonly PontoDaSerie[] })
             role="img"
             aria-label={t("rotuloGrafico", { pontos: serie.length })}
             onPointerMove={apontar}
-            onPointerLeave={() => setAtivo(null)}
+            onPointerUp={(e) => {
+              if (mobile && e.pointerType === "touch") apontar(e);
+            }}
+            onPointerLeave={(e) => {
+              // O dedo "sai" do gráfico ao levantar: soltar aqui apagaria o valor
+              // antes de ele ser lido. No toque, quem solta é o toque fora.
+              if (mobile && e.pointerType === "touch") return;
+              setAtivo(null);
+            }}
             className="block touch-pan-y"
           >
             {ticks.map((v) => (
               <g key={v}>
                 <line
-                  x1={MARGEM.esquerda}
-                  x2={w - MARGEM.direita}
+                  x1={margem.esquerda}
+                  x2={w - margem.direita}
                   y1={y(v)}
                   y2={y(v)}
                   stroke="var(--hairline)"
                   strokeWidth={1}
                 />
                 <text
-                  x={MARGEM.esquerda - 8}
+                  x={margem.esquerda - 8}
                   y={y(v)}
                   textAnchor="end"
                   dominantBaseline="middle"
-                  fontSize={11}
+                  fontSize={fonte}
                   fill="var(--muted)"
                 >
                   {brlCurto(v)}
@@ -163,7 +212,7 @@ export function GraficoValorTotal({ serie }: { serie: readonly PontoDaSerie[] })
             )}
 
             {p && ativo !== null && (
-              <line x1={x(ativo)} x2={x(ativo)} y1={MARGEM.topo} y2={MARGEM.topo + areaH} stroke="var(--line)" strokeWidth={1} />
+              <line x1={x(ativo)} x2={x(ativo)} y1={margem.topo} y2={margem.topo + areaH} stroke="var(--line)" strokeWidth={1} />
             )}
 
             {serie.map((q, i) => (
@@ -181,7 +230,7 @@ export function GraficoValorTotal({ serie }: { serie: readonly PontoDaSerie[] })
                     x={x(i)}
                     y={y(q.somaMedios) - 12}
                     textAnchor={i === 0 && serie.length > 1 ? "start" : i === serie.length - 1 && serie.length > 1 ? "end" : "middle"}
-                    fontSize={11}
+                    fontSize={fonte}
                     fill="var(--muted)"
                   >
                     {t("cartasNoPonto", { cartas: q.cartasComPreco })}
@@ -194,24 +243,24 @@ export function GraficoValorTotal({ serie }: { serie: readonly PontoDaSerie[] })
               x={x(0)}
               y={ALTURA - 8}
               textAnchor={serie.length === 1 ? "middle" : "start"}
-              fontSize={11}
+              fontSize={fonte}
               fill="var(--muted)"
             >
               {dia(serie[0].tiradoEm)}
             </text>
             {serie.length > 1 && (
-              <text x={x(serie.length - 1)} y={ALTURA - 8} textAnchor="end" fontSize={11} fill="var(--muted)">
+              <text x={x(serie.length - 1)} y={ALTURA - 8} textAnchor="end" fontSize={fonte} fill="var(--muted)">
                 {dia(ultima.tiradoEm)}
               </text>
             )}
           </svg>
         )}
 
-        {p && ativo !== null && (
+        {p && ativo !== null && !mobile && (
           <div
             role="status"
             className="pointer-events-none absolute z-10 rounded-card border border-hairline bg-surface-elevated p-2 text-xs shadow-1"
-            style={{ top: MARGEM.topo + areaH * 0.5, ...(tooltipNaEsquerda ? { right: w - x(ativo) + 10 } : { left: x(ativo) + 10 }) }}
+            style={{ top: margem.topo + areaH * 0.5, ...(tooltipNaEsquerda ? { right: w - x(ativo) + 10 } : { left: x(ativo) + 10 }) }}
           >
             <div className="font-semibold text-strong">{diaHora(p.tiradoEm)}</div>
             <div className="font-mono tabular-nums text-strong">{brl(p.somaMedios)}</div>
@@ -221,8 +270,29 @@ export function GraficoValorTotal({ serie }: { serie: readonly PontoDaSerie[] })
         )}
       </div>
 
+      {mobile && (
+        <div
+          role="status"
+          // Altura do estado com ponto (4 linhas de 20px + intervalos + padding
+          // + borda ≈ 112px) reservada também no estado vazio: escolher um ponto
+          // não pode empurrar a página para baixo.
+          className="flex min-h-[7.5rem] flex-col justify-center gap-0.5 rounded-card border border-hairline bg-surface-elevated p-3 text-sm"
+        >
+          {p ? (
+            <>
+              <div className="font-semibold text-strong">{diaHora(p.tiradoEm)}</div>
+              <div className="font-mono tabular-nums text-strong">{brl(p.somaMedios)}</div>
+              <div className="text-muted">{t("tooltipMedia", { media: brl(p.precoMedioPorCarta) })}</div>
+              <div className="text-muted">{t("tooltipCartas", { cartas: p.cartasComPreco })}</div>
+            </>
+          ) : (
+            <p className="text-muted">{t("toqueParaVer")}</p>
+          )}
+        </div>
+      )}
+
       <details className="text-sm">
-        <summary className="cursor-pointer text-muted">{t("verTabela")}</summary>
+        <summary className="cursor-pointer text-muted max-md:py-3">{t("verTabela")}</summary>
         <div className="overflow-x-auto">
           <table className="mt-2 w-full text-left text-xs">
             <thead>

@@ -769,7 +769,8 @@
       "colunaData": "Date",
       "colunaTotal": "Total",
       "colunaMedia": "Average per card",
-      "colunaCartas": "Cards"
+      "colunaCartas": "Cards",
+      "toqueParaVer": "Tap a point on the chart to see its value. Tap outside to release it."
     },
     "rodadas": {
       "titulo": "Previous lookups",

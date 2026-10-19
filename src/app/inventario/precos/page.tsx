@@ -17,11 +17,20 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Botao } from "@/app/_componentes/botao";
 import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
+import { Dica } from "@/app/_componentes/dica";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { MarcaRaridade } from "@/app/_componentes/ds/marca-raridade";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
-import { classesCelulaCabecalho, classesLinha, classesLinhaCabecalho, Tabela } from "@/app/_componentes/tabela";
+import {
+  classesCabecalhoEmpilhado,
+  classesCelulaCabecalho,
+  classesCelulaEmpilhada,
+  classesLinha,
+  classesLinhaCabecalho,
+  classesTabelaEmpilhada,
+  Tabela,
+} from "@/app/_componentes/tabela";
 import { Painel } from "@/app/_componentes/painel";
 import { formatarDuracao } from "@/lib/dominio/estimativa-varredura";
 import { VALIDADE_CONSULTA_HORAS } from "@/lib/dominio/frescor-consulta";
@@ -87,6 +96,32 @@ interface RespostaDTO {
 
 /** Cartas por página na tabela de preços — pedido do usuário, 2026-10-11. */
 const CARTAS_POR_PAGINA = 50;
+
+/* ------------------------------------------------------------------------
+   Tabelas no celular (só abaixo de 768px): empilhadas, pela mesma marcação
+
+   Escolha: empilhar, e não rolar de lado com a primeira coluna fixa. A tabela
+   de preços é uma lista de cartas — cada linha é uma carta com um punhado de
+   atributos —, não uma matriz para comparar coluna a coluna. Rolar de lado
+   esconderia justamente o que importa (o preço médio é a 6ª de 8 colunas) e
+   tiraria da tela, no iPhone, a metade dos números. Cartão por carta é o
+   padrão de mercado para esse formato (listas de cartas e de ativos em apps
+   de coleção e de corretora): o nome em cima, o contexto (set, número,
+   raridade) embaixo e os três preços lado a lado, com o rótulo na frente de
+   cada um, já que o cabeçalho some. O mesmo vale para a tabela de rodadas.
+
+   Flex com quebra, como o inventário: os três preços correm numa linha e
+   quebram sozinhos se um valor de quatro dígitos não couber, em vez de a
+   grade de três trilhas fixas cortá-lo a 320px.
+   ------------------------------------------------------------------------ */
+const classesLinhaCartao =
+  "max-md:flex max-md:flex-wrap max-md:items-center max-md:gap-x-3 max-md:gap-y-1.5 max-md:p-3";
+
+/** Rótulo da coluna que o cabeçalho escondido deixou de mostrar; só no celular. */
+const classesRotuloCampo = "font-sans text-xs text-muted md:hidden";
+
+/** Um dos três preços: rótulo em cima do valor, alinhados à esquerda no cartão. */
+const classesCampoPreco = "max-md:flex max-md:flex-auto max-md:flex-col max-md:text-left max-md:text-sm";
 
 /* Só a pontuação do número muda com o idioma da interface; a moeda é sempre
    o real (AGENTS.md: nenhuma conversão de moeda). */
@@ -230,7 +265,15 @@ export default function PrecosPage() {
 
       <Painel as="section" className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <Botao type="button" variante="primario" onClick={disparar} disabled={disparando || rodando}>
+          {/* O rótulo é longo e o botão não quebra linha: no celular ele ocupa a
+              largura toda e quebra, em vez de estourar a tela a 320px. */}
+          <Botao
+            type="button"
+            variante="primario"
+            onClick={disparar}
+            disabled={disparando || rodando}
+            className="max-md:w-full max-md:whitespace-normal"
+          >
             {disparando ? t("iniciando") : rodando ? t("emAndamentoBotao") : t("atualizar")}
           </Botao>
           <span className="text-sm text-muted">
@@ -299,8 +342,8 @@ export default function PrecosPage() {
         </p>
       )}
 
-      <Tabela>
-        <thead>
+      <Tabela className={classesTabelaEmpilhada}>
+        <thead className={classesCabecalhoEmpilhado}>
           <tr className={classesLinhaCabecalho}>
             <th className={classesCelulaCabecalho}>{t("colunaCarta")}</th>
             <th className={classesCelulaCabecalho}>{t("colunaSet")}</th>
@@ -312,40 +355,56 @@ export default function PrecosPage() {
             <th className={classesCelulaCabecalho}>{t("colunaConsultado")}</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className={classesTabelaEmpilhada}>
           {itensDaPagina.map((i) => (
-            <tr key={i.cartaId} className={classesLinha}>
-              <td className="p-2 font-semibold text-strong">{i.nome}</td>
-              <td className="p-2 text-muted">{i.setNome}</td>
-              <td className="p-2 font-mono tabular-nums text-muted">{i.localId}</td>
-              <td className="p-2">
+            <tr key={i.cartaId} className={`${classesLinha} ${classesLinhaCartao}`}>
+              <td className={`p-2 font-semibold text-strong ${classesCelulaEmpilhada} max-md:basis-full`}>{i.nome}</td>
+              <td className={`p-2 text-muted ${classesCelulaEmpilhada} max-md:text-xs`}>{i.setNome}</td>
+              <td className={`p-2 font-mono tabular-nums text-muted ${classesCelulaEmpilhada} max-md:text-xs`}>
+                <span className={classesRotuloCampo}>{t("colunaNumero")} </span>
+                {i.localId}
+              </td>
+              <td className={`p-2 ${classesCelulaEmpilhada} max-md:basis-full`}>
                 <MarcaRaridade raridade={i.raridade} />
               </td>
               {i.encontrada ? (
                 <>
-                  <td className="p-2 text-right font-mono tabular-nums">
+                  <td className={`p-2 text-right font-mono tabular-nums ${classesCelulaEmpilhada} ${classesCampoPreco}`}>
+                    <span className={classesRotuloCampo}>{t("colunaMinimo")}</span>
                     {i.preco !== null ? brl(i.preco, locale) : "—"}
                   </td>
-                  <td className="p-2 text-right font-mono font-semibold tabular-nums">
+                  <td
+                    className={`p-2 text-right font-mono font-semibold tabular-nums ${classesCelulaEmpilhada} ${classesCampoPreco}`}
+                  >
+                    <span className={`${classesRotuloCampo} font-normal`}>{t("colunaMedio")}</span>
                     {i.precoMedio !== null ? brl(i.precoMedio, locale) : "—"}
                   </td>
-                  <td className="p-2 text-right font-mono tabular-nums">
+                  <td className={`p-2 text-right font-mono tabular-nums ${classesCelulaEmpilhada} ${classesCampoPreco}`}>
+                    <span className={classesRotuloCampo}>{t("colunaMaximo")}</span>
                     {i.precoMaximo !== null ? brl(i.precoMaximo, locale) : "—"}
                   </td>
                 </>
               ) : (
-                <td colSpan={3} className="p-2 text-right text-muted" title={t("naoEncontradaTitulo")}>
-                  {t("naoEncontrada")}
+                <td
+                  colSpan={3}
+                  className={`p-2 text-right text-muted ${classesCelulaEmpilhada} max-md:basis-full max-md:text-left`}
+                  title={t("naoEncontradaTitulo")}
+                >
+                  {/* O `title` não existe no toque: a explicação vira um toggletip. */}
+                  <Dica texto={t("naoEncontradaTitulo")}>
+                    <span>{t("naoEncontrada")}</span>
+                  </Dica>
                 </td>
               )}
-              <td className="p-2 whitespace-nowrap text-muted">
+              <td className={`p-2 whitespace-nowrap text-muted ${classesCelulaEmpilhada} max-md:basis-full max-md:text-xs`}>
+                <span className={classesRotuloCampo}>{t("colunaConsultado")}: </span>
                 {new Date(i.consultadoEm).toLocaleDateString(locale)}
               </td>
             </tr>
           ))}
           {dados && dados.itens.length === 0 && (
-            <tr>
-              <td colSpan={8} className="p-4">
+            <tr className="max-md:block">
+              <td colSpan={8} className="p-4 max-md:block">
                 <EstadoVazio>{t("vazio")}</EstadoVazio>
               </td>
             </tr>
@@ -354,7 +413,7 @@ export default function PrecosPage() {
       </Tabela>
 
       {totalPaginas > 1 && (
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-sm max-md:gap-2">
           <Botao
             variante="secundario"
             disabled={paginaVisivel <= 1}
@@ -362,7 +421,7 @@ export default function PrecosPage() {
           >
             {t("anterior")}
           </Botao>
-          <span>{t("paginacao", { pagina: paginaVisivel, totalPaginas })}</span>
+          <span className="max-md:text-center">{t("paginacao", { pagina: paginaVisivel, totalPaginas })}</span>
           <Botao
             variante="secundario"
             disabled={paginaVisivel >= totalPaginas}
@@ -377,8 +436,8 @@ export default function PrecosPage() {
         <section className="flex flex-col gap-2">
           <h2 className="text-base font-semibold text-strong">{t("rodadas.titulo")}</h2>
           <p className="text-xs text-muted">{t("rodadas.explicacao")}</p>
-          <Tabela>
-            <thead>
+          <Tabela className={classesTabelaEmpilhada}>
+            <thead className={classesCabecalhoEmpilhado}>
               <tr className={classesLinhaCabecalho}>
                 <th className={classesCelulaCabecalho}>{t("rodadas.colunaData")}</th>
                 <th className={classesCelulaCabecalho}>{t("rodadas.colunaSituacao")}</th>
@@ -394,46 +453,62 @@ export default function PrecosPage() {
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className={classesTabelaEmpilhada}>
               {dados.rodadas.map((r) => {
                 const viva = r.concluidaEm === null;
+                const situacao = (
+                  <Distintivo tom={viva ? "aviso" : r.erro ? "perigo" : "neutro"}>
+                    {viva
+                      ? t("rodadas.emAndamento")
+                      : r.erro
+                        ? t("rodadas.interrompida")
+                        : t("rodadas.concluida")}
+                  </Distintivo>
+                );
                 return (
-                  <tr key={r.id} className={classesLinha}>
-                    <td className="p-2 sm:whitespace-nowrap">
+                  <tr key={r.id} className={`${classesLinha} ${classesLinhaCartao}`}>
+                    <td className={`p-2 sm:whitespace-nowrap ${classesCelulaEmpilhada} max-md:flex-1 max-md:whitespace-nowrap`}>
                       {new Date(r.criadoEm).toLocaleString(locale, {
                         dateStyle: "short",
                         timeStyle: "short",
                       })}
                     </td>
                     {/* O motivo da interrupção é uma frase longa: vai no title, não na célula. */}
-                    <td className="p-2" title={r.erro ?? undefined}>
-                      <Distintivo tom={viva ? "aviso" : r.erro ? "perigo" : "neutro"}>
-                        {viva
-                          ? t("rodadas.emAndamento")
-                          : r.erro
-                            ? t("rodadas.interrompida")
-                            : t("rodadas.concluida")}
-                      </Distintivo>
+                    <td className={`p-2 ${classesCelulaEmpilhada}`} title={r.erro ?? undefined}>
+                      {/* O motivo da interrupção vai no `title` da célula; no toque
+                          ele vira um toggletip ao lado do selo. */}
+                      {r.erro ? <Dica texto={r.erro}>{situacao}</Dica> : situacao}
                     </td>
-                    <td className="hidden p-2 text-right font-mono whitespace-nowrap tabular-nums sm:table-cell">
+                    {/* "Cartas", escondida até o `sm` na tabela, ganha linha própria no
+                        cartão: sem o cabeçalho, o rótulo vem na frente. */}
+                    <td
+                      className={`hidden p-2 text-right font-mono whitespace-nowrap tabular-nums md:table-cell ${classesCelulaEmpilhada} max-md:basis-full max-md:text-left max-md:text-xs`}
+                    >
+                      <span className={classesRotuloCampo}>{t("rodadas.colunaCartas")} </span>
                       {t("rodadas.cartas", { feitas: r.cartasConsultadas, total: r.totalCartas })}
                     </td>
-                    <td className="hidden p-2 text-right font-mono tabular-nums sm:table-cell">
-                      {r.requisicoes}
-                    </td>
-                    <td className="p-2 text-right font-mono whitespace-nowrap tabular-nums">
+                    {/* Requisições: continua escondida no celular, como já era até o `sm`
+                        (é o custo da rodada, não o que o usuário veio ver); no cartão a
+                        linha seguinte é o total com o "Excluir", e os três não cabem a 320px. */}
+                    <td className="hidden p-2 text-right font-mono tabular-nums md:table-cell">{r.requisicoes}</td>
+                    <td
+                      className={`p-2 text-right font-mono whitespace-nowrap tabular-nums ${classesCelulaEmpilhada} max-md:flex max-md:flex-1 max-md:flex-col max-md:text-left`}
+                    >
+                      {/* Rótulo em cima do valor: lado a lado, o total de quatro dígitos
+                          e o "Excluir" disputavam a mesma linha a 320px. */}
+                      <span className={classesRotuloCampo}>{t("rodadas.colunaTotal")}</span>
                       {r.somaMedios === null ? (
                         t("rodadas.semPonto")
                       ) : r.noGrafico ? (
                         brl(r.somaMedios, locale)
                       ) : (
-                        <span className="flex flex-col items-end text-muted">
+                        <span className="flex flex-col items-end text-muted max-md:items-start">
                           {brl(r.somaMedios, locale)}
                           <span className="font-sans text-xs">{t("rodadas.foraDoGrafico")}</span>
                         </span>
                       )}
                     </td>
-                    <td className="p-2 text-right">
+                    <td className={`p-2 text-right ${classesCelulaEmpilhada} max-md:ml-auto`}>
                       <Botao
                         type="button"
                         variante="perigo"
@@ -448,8 +523,8 @@ export default function PrecosPage() {
                 );
               })}
               {dados.rodadas.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="p-4">
+                <tr className="max-md:block">
+                  <td colSpan={6} className="p-4 max-md:block">
                     <EstadoVazio>{t("rodadas.vazio")}</EstadoVazio>
                   </td>
                 </tr>
