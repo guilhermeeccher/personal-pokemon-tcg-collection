@@ -21,6 +21,10 @@
  * AGENTS.md. Um set filtrado para fora ("só Inglês") continua podendo
  * receber cópia física em qualquer idioma; este filtro só decide o que
  * aparece na lista de expansões.
+ *
+ * No celular (`max-md:`): campo de busca e select com 16px (abaixo disso o
+ * Safari do iPhone dá zoom ao focar) e 44px de altura; pílulas de idioma com
+ * 44px de altura e 8px entre elas. De 768px para cima, nada muda.
  */
 
 import { useFormatter, useTranslations } from "next-intl";
@@ -125,7 +129,7 @@ export function SeletorExpansao({
 
   return (
     <div className="flex flex-col gap-2">
-      <fieldset className="flex flex-wrap items-center gap-1 text-sm">
+      <fieldset className="flex flex-wrap items-center gap-1 text-sm max-md:gap-2">
         <legend className="mb-1 font-medium">{t("idiomaCatalogo")}</legend>
         {opcoesIdioma.map((opcao) => (
           <button
@@ -133,7 +137,7 @@ export function SeletorExpansao({
             type="button"
             onClick={() => setFiltroIdioma(opcao.filtro)}
             aria-pressed={filtroIdioma === opcao.filtro}
-            className={`rounded border px-2 py-1 text-xs ${
+            className={`rounded border px-2 py-1 text-xs max-md:min-h-11 max-md:px-3 max-md:text-sm ${
               filtroIdioma === opcao.filtro
                 ? "border-accent bg-accent text-accent-fg"
                 : "border-line text-muted"
@@ -150,13 +154,13 @@ export function SeletorExpansao({
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
             placeholder={t("placeholderBuscar")}
-            className="w-full max-w-xs rounded border border-line bg-transparent p-2"
+            className="w-full max-w-xs rounded border border-line bg-transparent p-2 max-md:min-h-11 max-md:text-base"
           />
         </label>
         <label className="flex flex-1 flex-col gap-1 text-sm">
           <span className="font-medium">{t("expansao")}</span>
           <select
-            className="w-full max-w-xl rounded border border-line bg-transparent p-2"
+            className="w-full max-w-xl rounded border border-line bg-transparent p-2 max-md:min-h-11 max-md:text-base"
             value={setSelecionadoId}
             onChange={(e) => {
               const novoId = e.target.value;

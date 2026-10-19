@@ -62,7 +62,7 @@ function ListaModulos({
                     href={item.href}
                     onClick={onNavegar}
                     aria-current={isAtivo ? "page" : undefined}
-                    className={`flex items-center gap-2.5 rounded-pill px-3 py-1.5 text-[13px] [transition:var(--transition-control)] ${
+                    className={`flex items-center gap-2.5 rounded-pill px-3 py-1.5 text-[13px] [transition:var(--transition-control)] max-md:min-h-11 ${
                       isAtivo
                         ? "bg-accent font-bold text-accent-fg"
                         : "text-invert-muted hover:bg-shell-hover hover:text-invert"
@@ -88,7 +88,7 @@ function Marca({ onNavegar }: { onNavegar?: () => void }) {
     <Link
       href="/"
       onClick={onNavegar}
-      className="flex items-center gap-2.5 text-invert [transition:var(--transition-control)] hover:opacity-80"
+      className="flex items-center gap-2.5 text-invert [transition:var(--transition-control)] hover:opacity-80 max-md:min-h-11"
     >
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--raio-sm)] bg-accent text-[11px] font-bold text-accent-fg">
         CP
@@ -122,7 +122,9 @@ export function Nav({ livingDex }: { livingDex: boolean }) {
 
   return (
     <>
-      {/* Mobile: barra superior com marca + botão de abrir/fechar. */}
+      {/* Mobile: barra superior com marca + botão de abrir/fechar. O botão, a
+          marca e os itens do menu têm 44px de altura (`max-md:min-h-11`); o
+          botão também 44 de largura. */}
       <header className="flex items-center justify-between border-b border-shell-line bg-shell px-4 py-3 md:hidden">
         <Marca onNavegar={() => setAberto(false)} />
         <button
@@ -130,7 +132,7 @@ export function Nav({ livingDex }: { livingDex: boolean }) {
           onClick={() => setAberto((v) => !v)}
           aria-expanded={aberto}
           aria-label={aberto ? t("fecharMenu") : t("abrirMenu")}
-          className="rounded-pill p-2 text-invert-muted [transition:var(--transition-control)] hover:bg-shell-hover hover:text-invert"
+          className="rounded-pill p-2 text-invert-muted [transition:var(--transition-control)] hover:bg-shell-hover hover:text-invert max-md:inline-flex max-md:min-h-11 max-md:min-w-11 max-md:items-center max-md:justify-center"
         >
           <Icone nome={aberto ? "x" : "menu"} tamanho={20} />
         </button>

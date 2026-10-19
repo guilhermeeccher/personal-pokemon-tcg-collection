@@ -15,6 +15,9 @@
  *
  * Trocar dispara a server action e, enquanto ela roda, o grupo inteiro fica
  * `aria-busy`: a re-renderização vem do servidor e leva um quadro ou dois.
+ *
+ * No celular (`max-md:`) cada pílula tem 44 x 44 de área, com 8px entre elas.
+ * O desenho de 28px segue valendo de 768px para cima.
  */
 
 import { useTransition } from "react";
@@ -35,7 +38,7 @@ export function SeletorLocale() {
 
   return (
     <div
-      className="flex items-center gap-1 px-3"
+      className="flex items-center gap-1 px-3 max-md:gap-2"
       role="group"
       aria-label={t("rotulo")}
       aria-busy={trocando}
@@ -52,7 +55,7 @@ export function SeletorLocale() {
             aria-pressed={ativo}
             disabled={trocando}
             onClick={() => iniciarTroca(() => definirLocale(locale))}
-            className={`rounded-pill px-2 py-0.5 text-[11px] font-bold tracking-[0.04em] [transition:var(--transition-control)] ${
+            className={`rounded-pill px-2 py-0.5 text-[11px] font-bold tracking-[0.04em] [transition:var(--transition-control)] max-md:inline-flex max-md:min-h-11 max-md:min-w-11 max-md:items-center max-md:justify-center ${
               ativo
                 ? "bg-accent text-accent-fg"
                 : "text-invert-muted hover:bg-shell-hover hover:text-invert"

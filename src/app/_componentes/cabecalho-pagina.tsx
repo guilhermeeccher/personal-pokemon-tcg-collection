@@ -8,6 +8,11 @@
  * O título usa a face arredondada (via a regra global de h1-h4) no tamanho
  * --fs-title-1. Duas telas reimplementavam este cabeçalho à mão — `colecoes/
  * falta` e `colecoes/[id]/opcoes-compra` — e passaram a usar o componente.
+ *
+ * No celular (`max-md:`) as ações ocupam a largura toda, abaixo do título, e
+ * quebram de linha em vez de estourar a tela; botões de 44px de altura que
+ * sobram ficam um sob o outro. De 768px para cima, a faixa à direita de
+ * sempre.
  */
 
 import type { ReactNode } from "react";
@@ -27,7 +32,7 @@ export function CabecalhoPagina({
         <h1 className="text-[length:var(--fs-title-1)] text-strong">{titulo}</h1>
         {descricao && <p className="mt-1 text-sm text-muted">{descricao}</p>}
       </div>
-      {acoes && <div className="flex shrink-0 gap-2">{acoes}</div>}
+      {acoes && <div className="flex shrink-0 gap-2 max-md:w-full max-md:shrink max-md:flex-wrap">{acoes}</div>}
     </div>
   );
 }

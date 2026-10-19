@@ -32,11 +32,19 @@ const VARIANTES: Record<VarianteBotao, string> = {
 };
 
 /* Alturas fixas do design system (--control-h-sm/-h/-lg). Botão de linha de
-   tabela e de barra de ação ficam alinhados sem cada tela calibrar padding. */
+   tabela e de barra de ação ficam alinhados sem cada tela calibrar padding.
+
+   Abaixo de 768px (`max-md:`) todo botão chega a 44 x 44 de área de toque:
+   `md` e `sm` crescem de verdade (altura e largura mínimas de 44, que só
+   pesam num botão só de ícone — um com texto já é mais largo), e o `xs`
+   mantém o desenho de 24px e ganha a área por `alvo-toque` (pseudo-elemento
+   em `globals.css`), porque um botão de tabela com 44px de altura de fato
+   estouraria a linha. O `max-md:relative` ancora o pseudo-elemento. De 768px
+   para cima, as três classes não existem. */
 const TAMANHOS: Record<TamanhoBotao, string> = {
-  md: "h-[34px] px-5 text-[13px]",
-  sm: "h-[28px] px-4 text-xs",
-  xs: "h-6 px-3 text-[11px]",
+  md: "h-[34px] px-5 text-[13px] max-md:min-h-11 max-md:min-w-11",
+  sm: "h-[28px] px-4 text-xs max-md:min-h-11 max-md:min-w-11",
+  xs: "h-6 px-3 text-[11px] alvo-toque max-md:relative",
 };
 
 export function classesBotao(

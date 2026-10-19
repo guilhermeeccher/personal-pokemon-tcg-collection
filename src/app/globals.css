@@ -223,3 +223,95 @@ input[type="radio"] {
     transform: none;
   }
 }
+
+/* ------------------------------------------------------------------------
+   Base de toque — só abaixo de 768px (a fronteira `md` do shell).
+
+   Tudo daqui para baixo está dentro de `@media (width < 48rem)`: de 768px
+   para cima o site sai idêntico ao que era. Capacidade de toque (`hover:
+   none`, `pointer: coarse`) nunca decide sozinha, porque pegaria notebook
+   com tela sensível e iPad em retrato, que são desktop.
+   ------------------------------------------------------------------------ */
+@media (width < 48rem) {
+  /* O iOS infla o texto ao girar o aparelho; `100%` desliga isso e deixa o
+     tamanho que o CSS pediu. */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Sem o atraso de toque duplo e sem o zoom por toque duplo nos controles:
+     o toque dispara na hora. A pinça da página continua livre (só
+     `manipulation`, não `none`). */
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  label,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  /* O flash cinza padrão do WebKit ao tocar fica discreto, no acento. */
+  a,
+  button,
+  summary,
+  label,
+  [role="button"] {
+    -webkit-tap-highlight-color: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+}
+
+/* Caixa e botão de opção a 20px no celular (o padrão do navegador, 13px, é
+   alvo pequeno demais). Na camada `base` de propósito: uma tela que precise
+   de outro tamanho num caso específico o vence com uma classe sua, sem
+   `!important`. A área de toque de verdade é o `label` que envolve o
+   controle, e quem escreve a tela é quem garante o `label`. */
+@layer base {
+  @media (width < 48rem) {
+    input[type="checkbox"],
+    input[type="radio"] {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+
+    /* `alvo-toque` precisa de um elemento posicionado para o pseudo-elemento
+       se ancorar nele. O `relative` é o padrão e mora na camada `base`,
+       abaixo de qualquer utilitário: um botão que já é `absolute`, `fixed`
+       ou `sticky` mantém o seu. */
+    :where(.alvo-toque) {
+      position: relative;
+    }
+  }
+}
+
+/* Área de toque de 44 x 44 sem mudar o desenho do controle.
+
+   Para controle que o desenho pede menor que 44px (o botão `xs`, um "×"
+   pequeno): um pseudo-elemento transparente, centrado, com no mínimo 44px
+   nos dois eixos, e que cresce junto se o controle for maior. Clique nele
+   chega ao próprio controle. Só abaixo de 768px; em cima, a classe não faz
+   nada.
+
+   Limite que a tela precisa respeitar: o pseudo-elemento invade a vizinhança
+   (10px para cada lado num botão de 24px). Dois controles com menos de 8px
+   de intervalo disputam a faixa em comum, e quem vem depois no DOM ganha.
+   Onde isso acontecer, a tela aumenta o intervalo no celular. O controle com
+   `overflow-hidden` recorta o pseudo-elemento; não use a classe nele. */
+@utility alvo-toque {
+  @media (width < 48rem) {
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      min-width: 2.75rem;
+      min-height: 2.75rem;
+      transform: translate(-50%, -50%);
+    }
+  }
+}

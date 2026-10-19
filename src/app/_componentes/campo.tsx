@@ -13,9 +13,13 @@
 import type { ReactNode } from "react";
 
 /* Altura mínima em vez de fixa: a mesma classe veste <input>, <select> e
-   <textarea> (este último com `rows`, que precisa poder crescer). */
+   <textarea> (este último com `rows`, que precisa poder crescer).
+
+   No celular (`max-md:`): 16px e 44px de altura mínima. Abaixo de 16px o
+   Safari do iPhone dá zoom na página ao focar o campo e não desfaz sozinho;
+   44px é o alvo de toque mínimo. De 768px para cima, nada muda. */
 export const classesEntrada =
-  "min-h-[34px] rounded-control border border-line bg-surface px-3 py-1.5 text-foreground placeholder:text-subtle [transition:var(--transition-control)]";
+  "min-h-[34px] rounded-control border border-line bg-surface px-3 py-1.5 text-foreground placeholder:text-subtle [transition:var(--transition-control)] max-md:min-h-11 max-md:text-base";
 
 export function Campo({
   rotulo,
