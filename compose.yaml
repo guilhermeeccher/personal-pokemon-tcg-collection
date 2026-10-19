@@ -21,6 +21,14 @@ services:
       # Módulo opcional Living Dex (ver `.env.example` e `lib/modulos.ts`).
       # Vazio = desligado.
       MODULO_LIVING_DEX: ${MODULO_LIVING_DEX:-}
+      # Acesso opcional por senha (ver `.env.example` e `lib/acesso.ts`).
+      # Vazio = desligado. Repassadas aqui porque o `.env` não chega ao
+      # container sozinho: sem estas linhas o módulo ficaria desligado em
+      # silêncio, com o app aberto mesmo com `ACESSO_COM_SENHA=1` no `.env`.
+      ACESSO_COM_SENHA: ${ACESSO_COM_SENHA:-}
+      SENHA_ACESSO_HASH: ${SENHA_ACESSO_HASH:-}
+      SEGREDO_SESSAO: ${SEGREDO_SESSAO:-}
+      ORIGENS_PERMITIDAS: ${ORIGENS_PERMITIDAS:-}
     # Bind mount só-leitura do clone local de tcgdex/cards-database, usado
     # por `pnpm importar:catalogo-repo` (scripts/importar-catalogo-repo.ts)
     # para popular o catálogo japonês sem depender de api.tcgdex.net (IP
