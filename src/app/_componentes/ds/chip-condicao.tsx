@@ -4,9 +4,17 @@
  * Os códigos nunca são traduzidos, e o nome completo em inglês vai no
  * `title`: é vocabulário de colecionador, e traduzir atrapalharia quem
  * compra e vende. Regra do design system, que aqui bate com a do projeto.
+ *
+ * `dica` (padrão `false`): no celular o `title` não existe, e quem quer o
+ * nome completo ao toque liga a prop, que envolve o selo em `Dica`. Com
+ * `false` — ou em 768px ou mais, onde a `Dica` devolve o filho como veio — a
+ * saída é a de sempre. Só ligue onde o selo está solto: a `Dica` tem um
+ * botão e não pode ficar dentro de `label`, `a` ou `button`.
  */
 
 import type { Condicao } from "@/lib/dominio/enums";
+
+import { Dica } from "../dica";
 
 const MAPA: Record<Condicao, { completo: string; cor: string }> = {
   NM: { completo: "Near Mint", cor: "var(--cond-nm)" },
@@ -21,9 +29,9 @@ export function corCondicao(condicao: Condicao): string {
   return MAPA[condicao].cor;
 }
 
-export function ChipCondicao({ condicao }: { condicao: Condicao }) {
+export function ChipCondicao({ condicao, dica = false }: { condicao: Condicao; dica?: boolean }) {
   const { completo, cor } = MAPA[condicao];
-  return (
+  const chip = (
     <span
       title={completo}
       className="inline-flex h-5 items-center rounded-pill border px-2 font-mono text-[11px] font-medium tracking-[0.01em]"
@@ -36,4 +44,5 @@ export function ChipCondicao({ condicao }: { condicao: Condicao }) {
       {condicao}
     </span>
   );
+  return dica ? <Dica texto={completo}>{chip}</Dica> : chip;
 }

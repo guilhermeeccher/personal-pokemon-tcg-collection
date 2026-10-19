@@ -40,11 +40,48 @@
  *
  * Se a imagem falhar ao carregar mesmo assim, cai no estado vazio de
  * sempre: o componente renderiza o `fallback` (por padrão, nada).
+ *
+ * ## Celular (abaixo de 768px)
+ *
+ * No toque não há passar o mouse, e o iOS ainda dispara `mouseenter` falso
+ * depois de um toque — o zoom por hover abriria sozinho, atrasado, sobre o
+ * que o usuário acabou de tocar. Por isso, abaixo de 768px o hover é
+ * desligado e entra o zoom por toque:
+ *
+ * - Um toque na miniatura abre a imagem grande sobreposta (portal em
+ *   `document.body`, `z-50`, fundo escuro). Usa o `click`, que o navegador
+ *   não dispara depois de uma rolagem ou arrasto: é isso que distingue
+ *   "toque" de "arrasto" sem medir nada à mão.
+ * - O toque que abre não aciona o pai (`stopPropagation` +
+ *   `preventDefault`): a miniatura vive dentro de linhas e de `label`s.
+ * - Fecha no "×" (44px), no fundo ou com Esc. Tocar na própria imagem não
+ *   fecha, e a pinça fica liberada (nenhum `touch-action` restritivo).
+ * - É uma camada modal (`useCamada`, nível `zoom`): fica acima da janela do
+ *   `Modal`, o Esc fecha só ela e a janela continua travando o fundo. O foco
+ *   vai para o "×", o Tab circula entre os controles do zoom enquanto ele é a
+ *   camada modal do topo, e ao fechar o foco volta para a miniatura.
+ * - A miniatura vira um controle (`role="button"`, nome acessível) num
+ *   invólucro com área de toque de 44px. O invólucro só existe no celular; o
+ *   desktop renderiza exatamente o que sempre renderizou.
  */
 
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent as TecladoReact,
+  type MouseEvent as MouseReact,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { createPortal } from "react-dom";
+
+import { Icone } from "./icone";
+import { useCamada } from "./use-camada";
+import { useEhMobile } from "./use-eh-mobile";
 
 import { seloOrigemImagem, type OrigemImagem } from "@/lib/dominio/origem-imagem";
 import { urlImagemCarta } from "@/lib/imagens";
@@ -55,6 +92,11 @@ const LARGURA_ZOOM_PX = 280;
 // Proporção real da arte da TCGdex (245x337 em baixa resolução).
 const PROPORCAO_ALTURA_LARGURA = 337 / 245;
 const ALTURA_ZOOM_PX = Math.round(LARGURA_ZOOM_PX * PROPORCAO_ALTURA_LARGURA);
+// Área de toque mínima do controle (R3).
+const ALVO_TOQUE_PX = 44;
+
+const SELETOR_FOCAVEIS =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 interface Posicao {
   top: number;
@@ -113,6 +155,9 @@ export function ImagemCartaComZoom({
   fallback?: ReactNode;
 }) {
   const t = useTranslations("componentes");
+  const mobile = useEhMobile();
+  const [ampliada, setAmpliada] = useState(false);
+  const gatilhoRef = useRef<HTMLSpanElement | null>(null);
   const [visivel, setVisivel] = useState(false);
   const [posicao, setPosicao] = useState<Posicao | null>(null);
   // Guarda QUAL url falhou, não um "falhou: sim/não". O React reaproveita
@@ -147,9 +192,29 @@ export function ImagemCartaComZoom({
   const tituloSelo = selo ? t(`seloOrigem.${origem}`) : null;
 
 
+  // Cruzou para o celular com um hover aberto ou pendente (girou o aparelho):
+  // o hover não existe abaixo de 768px e não pode reaparecer sozinho, na
+  // posição velha, quando a tela voltar a ser desktop. Ajuste de estado na
+  // própria renderização (padrão do React para estado derivado), sem efeito.
+  if (mobile && visivel) setVisivel(false);
+  // E o atraso de exibição ainda pendente morre na mesma virada, para não
+  // abrir depois sem um hover novo.
+  useEffect(() => {
+    if (mobile && timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, [mobile]);
+
   function aoEntrar() {
-    if (!urlGrande) return;
+    // No celular o hover é desligado (ver o cabeçalho): o `mouseenter`
+    // emulado depois de um toque abriria o zoom por conta própria.
+    if (!urlGrande || mobile) return;
     timerRef.current = setTimeout(() => {
+      // Só abre se o ponteiro ainda está sobre a miniatura e a tela continua
+      // desktop: o atraso pode vencer depois de a tela virar celular (e até
+      // depois de voltar a desktop, sem hover nenhum).
+      if (window.matchMedia("(width < 48rem)").matches || !imgRef.current?.matches(":hover")) return;
       const rect = imgRef.current?.getBoundingClientRect();
       if (!rect) return;
       setPosicao(calcularPosicao(rect));
@@ -162,6 +227,11 @@ export function ImagemCartaComZoom({
     timerRef.current = null;
     setVisivel(false);
   }
+
+  const fechar = useCallback(() => setAmpliada(false), []);
+  // Girou para 768px ou mais com o zoom aberto: ele não existe mais nessa
+  // largura, e não deve reaparecer sozinho se o aparelho voltar ao retrato.
+  if (!mobile && ampliada) setAmpliada(false);
 
   if (!urlMini || urlQueFalhou === urlMini) return fallback;
 
@@ -184,6 +254,60 @@ export function ImagemCartaComZoom({
     />
   );
 
+  // Em tela de celular o invólucro vira o controle; fora dele (sem imagem
+  // grande para mostrar) cai no desenho de sempre.
+  if (mobile && urlGrande) {
+    // A miniatura costuma ser mais estreita que 44px (32 na lista): o
+    // pseudo-elemento amplia só o que falta, sem ocupar lugar no fluxo.
+    const extraX = Math.max(0, (ALVO_TOQUE_PX - width) / 2);
+    const extraY = Math.max(0, (ALVO_TOQUE_PX - height) / 2);
+    return (
+      <>
+        <span
+          ref={gatilhoRef}
+          role="button"
+          tabIndex={0}
+          aria-label={t("mobile.ampliarImagem", { nome: alt })}
+          aria-haspopup="dialog"
+          onClick={(e: MouseReact) => {
+            // A miniatura vive dentro de linhas e de `label`s: o toque que
+            // abre o zoom não pode marcar, selecionar nem navegar nada.
+            e.preventDefault();
+            e.stopPropagation();
+            setAmpliada(true);
+          }}
+          onKeyDown={(e: TecladoReact) => {
+            if (e.key !== "Enter" && e.key !== " ") return;
+            e.preventDefault();
+            e.stopPropagation();
+            setAmpliada(true);
+          }}
+          style={{ "--extra-x": `-${extraX}px`, "--extra-y": `-${extraY}px` } as CSSProperties}
+          className="relative inline-block cursor-zoom-in leading-none after:absolute after:inset-x-(--extra-x) after:inset-y-(--extra-y) after:content-['']"
+        >
+          {miniatura}
+          {selo && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute bottom-0 right-0 rounded-tl-sm bg-black/70 px-0.5 text-[8px] font-semibold leading-tight text-white"
+            >
+              {selo.texto}
+            </span>
+          )}
+        </span>
+        {ampliada ? (
+          <ZoomMobile
+            urlGrande={urlGrande}
+            alt={alt}
+            legenda={tituloSelo}
+            gatilhoRef={gatilhoRef}
+            onFechar={fechar}
+          />
+        ) : null}
+      </>
+    );
+  }
+
   return (
     <>
       {selo ? (
@@ -202,7 +326,7 @@ export function ImagemCartaComZoom({
       ) : (
         miniatura
       )}
-      {visivel && posicao && urlGrande && typeof document !== "undefined"
+      {visivel && posicao && urlGrande && !mobile && typeof document !== "undefined"
         ? createPortal(
             <div
               role="presentation"
@@ -223,5 +347,117 @@ export function ImagemCartaComZoom({
           )
         : null}
     </>
+  );
+}
+
+/**
+ * A imagem grande do celular. Componente à parte porque só existe montado
+ * (aberto, abaixo de 768px): `useCamada` e o foco entram e saem com ele.
+ */
+function ZoomMobile({
+  urlGrande,
+  alt,
+  legenda,
+  gatilhoRef,
+  onFechar,
+}: {
+  urlGrande: string;
+  alt: string;
+  /** Explicação do selo de foto emprestada: no celular o `title` não existe. */
+  legenda: string | null;
+  gatilhoRef: RefObject<HTMLElement | null>;
+  onFechar: () => void;
+}) {
+  const t = useTranslations("componentes");
+  const fundoRef = useRef<HTMLDivElement | null>(null);
+  const fecharRef = useRef<HTMLButtonElement | null>(null);
+  const { ehModalDoTopo } = useCamada(true, { nivel: "zoom", onEsc: onFechar, travaRolagem: true });
+
+  // Foco: guarda quem tinha, vai para o "×" (nunca para um campo — abriria o
+  // teclado) e, ao fechar, volta para quem tinha o foco antes, se ainda
+  // estiver na página. No iPhone um toque não foca a miniatura, então "quem
+  // tinha" costuma ser o `body`: nesse caso volta para a miniatura tocada, que
+  // está no mesmo lugar de onde veio (inclusive dentro da janela de editar
+  // cópia, para o foco não escapar dela).
+  useEffect(() => {
+    const guardado = document.activeElement;
+    const gatilho = gatilhoRef.current;
+    fecharRef.current?.focus({ preventScroll: true });
+    return () => {
+      const guardadoServe = guardado instanceof HTMLElement && guardado.isConnected && guardado !== document.body;
+      const alvo = guardadoServe ? guardado : gatilho;
+      if (alvo instanceof HTMLElement && alvo.isConnected) alvo.focus({ preventScroll: true });
+    };
+  }, [gatilhoRef]);
+
+  // Tab circula entre os controles do zoom enquanto ele é a camada modal do
+  // topo. Hoje é só o "×", então o Tab fica nele; o laço já serve para o dia
+  // em que houver mais de um.
+  useEffect(() => {
+    function aoTeclar(e: KeyboardEvent) {
+      if (e.key !== "Tab" || !ehModalDoTopo()) return;
+      const fundo = fundoRef.current;
+      if (!fundo) return;
+      const itens = Array.from(fundo.querySelectorAll<HTMLElement>(SELETOR_FOCAVEIS));
+      if (itens.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const i = itens.indexOf(document.activeElement as HTMLElement);
+      if (i === -1) {
+        e.preventDefault();
+        itens[0].focus();
+      } else if (e.shiftKey && i === 0) {
+        e.preventDefault();
+        itens[itens.length - 1].focus();
+      } else if (!e.shiftKey && i === itens.length - 1) {
+        e.preventDefault();
+        itens[0].focus();
+      }
+    }
+    document.addEventListener("keydown", aoTeclar);
+    return () => document.removeEventListener("keydown", aoTeclar);
+  }, [ehModalDoTopo]);
+
+  return createPortal(
+    <div
+      ref={fundoRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={alt}
+      // O portal sobe pela árvore do React: sem o `stopPropagation`, o toque
+      // no fundo chegaria ao `onClick` da linha ou da janela de baixo.
+      onClick={(e) => {
+        e.stopPropagation();
+        onFechar();
+      }}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-black/80 p-4"
+    >
+      <button
+        ref={fecharRef}
+        type="button"
+        aria-label={t("mobile.fecharImagem")}
+        onClick={(e) => {
+          e.stopPropagation();
+          onFechar();
+        }}
+        className="absolute right-[max(0.5rem,env(safe-area-inset-right))] top-[max(0.5rem,env(safe-area-inset-top))] inline-flex size-11 items-center justify-center rounded-full bg-black/60 text-white"
+      >
+        <Icone nome="x" tamanho={22} />
+      </button>
+      {/* eslint-disable-next-line @next/next/no-img-element -- imagem ampliada pontual (uma por vez); não é um caso de otimização de imagem. */}
+      <img
+        src={urlGrande}
+        alt={alt}
+        // Tocar na imagem não fecha. Nenhum `touch-action` restritivo: a
+        // pinça do navegador continua livre. A largura sai do menor entre o
+        // espaço lateral, um teto e o que a altura da tela comporta.
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: `min(100%, 24rem, calc((100dvh - 8rem) * ${1 / PROPORCAO_ALTURA_LARGURA}))` }}
+        className="block h-auto rounded-lg"
+      />
+      {legenda ? <p className="max-w-full text-center text-sm text-white/80">{legenda}</p> : null}
+    </div>,
+    document.body,
   );
 }

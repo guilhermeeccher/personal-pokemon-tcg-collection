@@ -10,10 +10,17 @@
  *
  * Os glifos são genéricos de propósito — círculo, losango, estrela — e
  * nunca os símbolos oficiais de raridade, que são material licenciado.
+ *
+ * `dica` (padrão `false`): sem o rótulo ao lado, o glifo só se explica pelo
+ * `title`, que o celular não tem. Com `comRotulo={false}` e `dica`, o glifo
+ * vem envolto em `Dica` (botão "i" que mostra a raridade ao toque). Com o
+ * rótulo visível não há o que explicar, por isso o tipo recusa `dica` ali.
+ * Com `false` — ou em 768px ou mais — a saída é a de sempre.
  */
 
 import { useTranslations } from "next-intl";
 
+import { Dica } from "../dica";
 import { Icone, type NomeIcone } from "../icone";
 import { classificarRaridade, type ClasseRaridade } from "@/lib/dominio/raridade-visual";
 
@@ -33,17 +40,17 @@ export function corRaridade(raridade: string | null | undefined): string {
 export function MarcaRaridade({
   raridade,
   comRotulo = true,
+  dica = false,
 }: {
   raridade: string | null | undefined;
-  comRotulo?: boolean;
-}) {
+} & ({ comRotulo?: true; dica?: false } | { comRotulo: false; dica?: boolean })) {
   const t = useTranslations("componentes");
   const { cor, icone } = MAPA[classificarRaridade(raridade)];
   /* A raridade em si nunca é traduzida — é texto livre do catálogo, em 56
      valores distintos (ver o cabeçalho). Só a ausência dela tem rótulo
      nosso, e esse fala o idioma da interface. */
   const rotulo = raridade ?? t("semRaridade");
-  return (
+  const marca = (
     <span className="inline-flex items-center gap-1.5 text-xs" title={rotulo}>
       <span style={{ color: cor }} className="shrink-0">
         <Icone nome={icone} tamanho={13} />
@@ -51,4 +58,5 @@ export function MarcaRaridade({
       {comRotulo && <span className="text-muted">{rotulo}</span>}
     </span>
   );
+  return dica ? <Dica texto={rotulo}>{marca}</Dica> : marca;
 }

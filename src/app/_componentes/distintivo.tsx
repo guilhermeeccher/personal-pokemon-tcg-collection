@@ -7,9 +7,17 @@
  *
  * Pílula, como toda forma de chip no design system — ali nada é de canto
  * quadrado.
+ *
+ * `dica` (padrão `false`): o `title` não existe no celular. Com `dica` e um
+ * `title`, a etiqueta vem envolta em `Dica` (botão "i" que mostra o texto ao
+ * toque). Sem `title` não há o que mostrar e a prop não faz nada. Só ligue
+ * onde a etiqueta está solta, fora de `label`, `a` e `button`. Com `false` —
+ * ou em 768px ou mais — a saída é a de sempre.
  */
 
 import type { ReactNode } from "react";
+
+import { Dica } from "./dica";
 
 export type TomDistintivo = "neutro" | "acento" | "sucesso" | "aviso" | "perigo";
 
@@ -26,13 +34,15 @@ export function Distintivo({
   className = "",
   children,
   title,
+  dica = false,
 }: {
   tom?: TomDistintivo;
   className?: string;
   children: ReactNode;
   title?: string;
+  dica?: boolean;
 }) {
-  return (
+  const etiqueta = (
     <span
       title={title}
       className={`inline-flex items-center rounded-pill px-2 py-0.5 text-xs font-semibold whitespace-nowrap ${TONS[tom]} ${className}`}
@@ -40,4 +50,5 @@ export function Distintivo({
       {children}
     </span>
   );
+  return dica && title ? <Dica texto={title}>{etiqueta}</Dica> : etiqueta;
 }
