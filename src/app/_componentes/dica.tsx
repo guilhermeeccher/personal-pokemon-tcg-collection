@@ -123,7 +123,11 @@ function DicaMobile({ texto, children }: { texto: string; children: ReactNode })
   }, [aberto]);
 
   return (
-    <span className="inline-flex items-center gap-1">
+    // `min-h-11`: a área de 44px do botão passa 12px acima e abaixo do desenho;
+    // com o invólucro na altura dela, uma linha de selos que quebra não põe a
+    // área de uma Dica em cima da da linha de baixo (o intervalo entre linhas,
+    // de 8px, fica por conta de quem usa).
+    <span className="inline-flex min-h-11 items-center gap-1">
       {children}
       <button
         ref={botaoRef}
@@ -138,9 +142,13 @@ function DicaMobile({ texto, children }: { texto: string; children: ReactNode })
         aria-expanded={aberto}
         aria-controls={aberto ? id : undefined}
         aria-describedby={aberto ? id : undefined}
-        // Desenho de 20px com área de toque de 44 pelo pseudo-elemento, que
-        // não ocupa lugar no fluxo: a linha do selo não engorda.
-        className="relative inline-flex size-5 shrink-0 items-center justify-center rounded-full border border-line bg-surface font-mono text-[11px] font-semibold leading-none text-muted after:absolute after:left-1/2 after:top-1/2 after:size-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
+        // Desenho de 20px com área de toque de 44 pelo pseudo-elemento. O
+        // espaço dessa área é reservado no layout: na altura, pelo `min-h-11`
+        // do invólucro; na largura, à direita, pelo `mr-3` abaixo.
+        // `mr-3`: a área de 44px passa 12px de cada lado do desenho de 20px; à
+        // direita, esses 12px ficam reservados no layout, e o intervalo que o
+        // consumidor já põe entre controles (8px) sobra inteiro depois deles.
+        className="relative mr-3 inline-flex size-5 shrink-0 items-center justify-center rounded-full border border-line bg-surface font-mono text-[11px] font-semibold leading-none text-muted after:absolute after:left-1/2 after:top-1/2 after:size-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
       >
         i
       </button>
