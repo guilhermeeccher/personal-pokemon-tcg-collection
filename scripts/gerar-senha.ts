@@ -13,7 +13,10 @@
  *
  * **stdout recebe só a linha do `.env`**, com aspas simples e uma quebra de
  * linha — nada de aviso, nada de eco — para dar para redirecionar direto:
- * `pnpm --silent senha:gerar >> .env`. Prompts, avisos e erros vão para o
+ * `./node_modules/.bin/tsx scripts/gerar-senha.ts >> .env` — direto pelo tsx, e não por `pnpm
+ * senha:gerar`: quando a senha é recusada, o pnpm escreve no stdout a própria
+ * linha de falha (`[ELIFECYCLE] …`, mesmo com `--silent`), e o `>>` a
+ * gravaria no `.env`, que o Compose deixa de ler. Prompts, avisos e erros vão para o
  * stderr. A senha em texto não é escrita em lugar nenhum.
  *
  * Com stdin num terminal, lê sem eco. Com stdin redirecionado (um pipe ou

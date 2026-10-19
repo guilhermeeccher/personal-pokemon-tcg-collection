@@ -374,8 +374,10 @@ router. Keep the app listening on this machine only:
 ```bash
 # 1. Generate the password hash (you type the password twice; nothing is echoed).
 #    Use a long random password from your password manager. Needs Node.js 22+ and
-#    `pnpm install` in this folder; it reads no database and no .env.
-pnpm -s senha:gerar >> .env
+#    `pnpm install` in this folder; it reads no database and no .env. Run it through tsx
+#    directly: if the password is refused, `pnpm` prints its own failure line to stdout,
+#    and the `>>` would write that line into .env.
+./node_modules/.bin/tsx scripts/gerar-senha.ts >> .env
 
 # 2. Add the rest to .env:
 ACESSO_COM_SENHA=1
