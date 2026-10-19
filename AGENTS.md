@@ -745,6 +745,13 @@ of it**. These rules keep both true.
 - **One tree, not two.** A table that does not fit becomes a list of cards through CSS on the same
   markup (`classesTabelaEmpilhada` and siblings in `tabela.tsx`). Never render a second, mobile-only
   copy of an editable list: refs, Tab order and the reducer state would split.
+- **Dex → Cadastrar virtualizes its list below 768px, and only that screen does**
+  (`useWindowVirtualizer` in `cadastro-por-jogo.tsx`). With HOME it has ~1,220 rows and ~36,000
+  nodes, and a tap on the stepper took ~310 ms (Chromium, iPhone profile, CPU 4x) — the browser
+  painting and hit-testing the whole page, not React. Only the rows near the screen exist there;
+  from 768px up the virtualizer is off and every row renders as before. It is the same `tbody` and
+  the same row markup at both widths, so this is still one tree. Do not extend it to another screen
+  without measuring that screen first.
 - **Nothing only on hover or in `title`.** On mobile, card zoom opens on tap
   (`imagem-carta-zoom.tsx`) and hover-only information shows as visible text or through `Dica`
   (`dica.tsx`), never inside a `label`, `a` or `button`.

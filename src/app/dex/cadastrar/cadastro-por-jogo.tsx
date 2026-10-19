@@ -39,12 +39,66 @@
  * a media query por conta própria, e 2.782 assinaturas no desktop seriam um
  * custo novo para um layout que não mudou. No desktop a linha devolve o
  * mesmo `<input>` de sempre.
+ *
+ * ## Lista virtual no celular
+ *
+ * Com o HOME (sem catálogo) a lista tem ~1.220 linhas, ~36 mil nós e ~4.900
+ * botões de stepper, e o − / + ficou lento no iPhone. Medido em 2026-10-19
+ * (perfil iPhone 14 Pro no Chromium, Event Timing do toque até o quadro):
+ * ~72 ms com a CPU normal e ~310 ms com ela 4x mais lenta. O React custava
+ * 5–15 ms — o memo da linha vale, só a linha tocada redesenha —; o resto era
+ * o navegador pintando e procurando o alvo do toque numa página daquele
+ * tamanho. Num experimento antes da mudança (filtro que deixava 44 linhas
+ * na página, outra medida, do clique ao quadro) o toque caía de ~55/~150 ms
+ * para ~12/~22 ms, e `content-visibility` só dividia o custo por dois. Com a
+ * lista virtual, ~32 ms nas duas CPUs (p95 40 ms; o piso é o próprio quadro),
+ * no começo, no meio e no fim da lista.
+ *
+ * Por isso, abaixo de 768px, só as linhas perto da tela existem
+ * (`useWindowVirtualizer`, rolagem da janela, que é quem rola no celular):
+ * cada uma é posicionada por `translateY` dentro do `tbody`, que guarda a
+ * altura da lista inteira. De 768px para cima o virtualizador fica desligado
+ * (`enabled: false` não instala observador nenhum) e o `tbody` é o de
+ * sempre, com todas as linhas — o desktop não mudou. O `tbody` é o mesmo
+ * elemento nos dois tamanhos, então cruzar 768px preserva, pela chave, as
+ * linhas que existem dos dois lados; e o `initialRect` dá a altura da janela
+ * já no primeiro render do celular, senão o intervalo nasceria vazio e
+ * desmontaria todas as linhas por um quadro.
+ *
+ * - **Alturas**: 169px é só a estimativa inicial — é a altura de 97% dos
+ *   cartões medidos a 320, 393 e 734px; os outros têm de 185 a 197. Com 177
+ *   (a média de 169 e 185), recarregar no meio da lista voltava ~26 linhas
+ *   fora do lugar, porque o erro se acumula linha a linha. Cada linha montada é medida, e a medida fica guardada pela forma;
+ *   uma altura que envelheceu (o "tenho" apareceu, o aparelho girou) é
+ *   corrigida quando a linha volta a montar. O cache nunca é limpo de
+ *   propósito: limpar faria toda linha acima da tela voltar à estimativa e a
+ *   vista pular, e girar o aparelho se mexe menos sem isso.
+ * - **Foco**: a linha com foco nunca desmonta, nem as vizinhas dela — rolar
+ *   com o teclado aberto não pode tirar o campo da página (o teclado do
+ *   iPhone fecharia), e o "próximo"/"anterior" do teclado precisa da linha
+ *   ao lado. O foco é guardado pelo id da forma, não pelo índice, que muda
+ *   com o filtro; se a forma sai da lista, nada é retido.
+ * - **O que se aceitou**: a busca do Safari só acha linhas montadas (o filtro
+ *   da tela cobre isso), e recarregar fundo na lista pode voltar algumas
+ *   linhas fora do lugar, porque a posição é refeita com estimativas.
+ *   Decisão de 2026-10-19.
  */
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { type ChangeEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { defaultRangeExtractor, type Range, useWindowVirtualizer } from "@tanstack/react-virtual";
+import {
+  type ChangeEvent,
+  type FocusEvent,
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { Alerta } from "@/app/_componentes/alerta";
 import { Botao, classesBotao } from "@/app/_componentes/botao";
@@ -86,6 +140,16 @@ const classesOpcao = (ativa: boolean) =>
     ativa ? "border-accent bg-accent text-accent-fg" : "border-line text-muted hover:bg-surface-hover"
   }`;
 
+/* Lista virtual do celular: ver "Lista virtual no celular" no cabeçalho. */
+const estimarAlturaLinha = () => 169;
+const LINHAS_ALEM_DA_TELA = 10;
+
+/** Id da forma da linha que contém o elemento (só no celular a linha tem `data-forma`). */
+function formaDaLinha(alvo: EventTarget | null): string | null {
+  if (!(alvo instanceof Element)) return null;
+  return alvo.closest<HTMLElement>("tr[data-forma]")?.dataset.forma ?? null;
+}
+
 function lerQuantidade(texto: string): number {
   const n = Number.parseInt(texto, 10);
   if (!Number.isFinite(n) || n < 0) return 0;
@@ -104,6 +168,9 @@ const LinhaForma = memo(function LinhaForma({
   tenhoShiny,
   ehMobile,
   aoMudar,
+  indice,
+  medir,
+  deslocamento,
 }: {
   forma: FormaDexDTO;
   /** Nome da forma na tela (macho/fêmea traduzidos), ou nulo. */
@@ -120,6 +187,14 @@ const LinhaForma = memo(function LinhaForma({
   /** Vem de cima (um `useEhMobile()` só): ver o cabeçalho do arquivo. */
   ehMobile: boolean;
   aoMudar: (formaId: string, trilha: Trilha, valor: number) => void;
+  /* As três só existem na lista virtual do celular; no desktop chegam
+     `undefined` e o `tr` sai como sempre. */
+  /** Posição na lista filtrada. */
+  indice?: number;
+  /** `measureElement` do virtualizador (estável, não quebra o memo). */
+  medir?: (el: Element | null) => void;
+  /** Distância do topo do `tbody`, em px. */
+  deslocamento?: number;
 }) {
   const t = useTranslations("dex");
   const marcada = normal + shiny > 0;
@@ -153,6 +228,16 @@ const LinhaForma = memo(function LinhaForma({
   const temAlgum = tenhoNormal > 0 || tenhoShiny > 0;
   return (
     <tr
+      ref={medir}
+      data-index={indice}
+      data-forma={indice === undefined ? undefined : forma.id}
+      // O cabeçalho é a linha 1 (`aria-rowcount` na tabela conta com ele).
+      aria-rowindex={indice === undefined ? undefined : indice + 2}
+      style={
+        deslocamento === undefined
+          ? undefined
+          : { position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${deslocamento}px)` }
+      }
       className={`${classesLinha} ${classesLinhaEmpilhada} max-md:grid-cols-[2.5rem_minmax(0,1fr)_minmax(0,1fr)_2.5rem] max-md:items-center ${marcada ? "bg-accent-soft" : ""}`}
     >
       <td className={`p-1 ${classesCelulaEmpilhada}`}>
@@ -237,6 +322,8 @@ export function CadastroPorJogo({
   const rotulo = useRotuloForma(formas);
   const ehMobile = useEhMobile();
   const controlesRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
+  const corpoRef = useRef<HTMLTableSectionElement>(null);
 
   const idioma = useLocale() as IdiomaTrofeu;
   const opcoes = useMemo(
@@ -292,6 +379,132 @@ export function CadastroPorJogo({
     });
   }, []);
 
+  /* ---- Lista virtual (só abaixo de 768px) ---------------------------- */
+
+  /* Topo do `tbody` no documento: a origem da lista para o virtualizador.
+     Muda quando algo acima dele muda de altura (alerta, filtros quebrando
+     linha, fontes), e tudo isso faz o `main` mudar de tamanho. */
+  const [margemLista, setMargemLista] = useState(0);
+  const [focoId, setFocoId] = useState<string | null>(null);
+  const reconciliarFocoRef = useRef<number | null>(null);
+
+  const indiceFoco = useMemo(
+    () => (focoId === null ? -1 : visiveis.findIndex((f) => f.id === focoId)),
+    [focoId, visiveis],
+  );
+  const chaveDaLinha = useCallback((i: number) => visiveis[i].id, [visiveis]);
+  /* O intervalo visível mais a linha com foco e as duas vizinhas, em ordem
+     crescente e sem repetição (a ordem do DOM segue a da lista). */
+  const extrairIntervalo = useCallback(
+    (intervalo: Range) => {
+      const base = defaultRangeExtractor(intervalo);
+      if (indiceFoco < 0) return base;
+      const retidas = [indiceFoco - 1, indiceFoco, indiceFoco + 1].filter((i) => i >= 0 && i < intervalo.count);
+      return [...new Set([...base, ...retidas])].sort((a, b) => a - b);
+    },
+    [indiceFoco],
+  );
+  const virtual = useWindowVirtualizer({
+    count: visiveis.length,
+    enabled: ehMobile,
+    estimateSize: estimarAlturaLinha,
+    overscan: LINHAS_ALEM_DA_TELA,
+    scrollMargin: margemLista,
+    getItemKey: chaveDaLinha,
+    rangeExtractor: extrairIntervalo,
+    // `ehMobile` só é verdadeiro no cliente: aqui `window` existe.
+    initialRect: ehMobile ? { width: window.innerWidth, height: window.innerHeight } : undefined,
+  });
+
+  useLayoutEffect(() => {
+    if (!ehMobile) return;
+    const medir = () => {
+      const corpo = corpoRef.current;
+      if (!corpo) return;
+      const topo = Math.round(corpo.getBoundingClientRect().top + window.scrollY);
+      setMargemLista((atual) => (atual === topo ? atual : topo));
+    };
+    medir();
+    const observador = new ResizeObserver(medir);
+    if (mainRef.current) observador.observe(mainRef.current);
+    window.addEventListener("resize", medir);
+    return () => {
+      observador.disconnect();
+      window.removeEventListener("resize", medir);
+    };
+  }, [ehMobile]);
+
+  /* A tabela inteira tem `visiveis.length` linhas, mas só parte delas existe
+     no DOM: a contagem vai na tabela para o leitor de tela. */
+  useEffect(() => {
+    if (!ehMobile) return;
+    const tabela = corpoRef.current?.closest("table");
+    if (!tabela) return;
+    tabela.setAttribute("aria-rowcount", String(visiveis.length + 1));
+    return () => tabela.removeAttribute("aria-rowcount");
+  }, [ehMobile, visiveis.length]);
+
+  /* Ao voltar para o desktop o React tira as propriedades do `style`, mas deixa
+     o atributo vazio (`style=""`) no `tbody` e nas linhas que continuaram
+     montadas. Não muda nada na tela; sai mesmo assim, para o DOM do desktop
+     ficar igual ao de sempre. Só na passagem celular → desktop. */
+  const eraMobileRef = useRef(false);
+  useLayoutEffect(() => {
+    const corpo = corpoRef.current;
+    if (eraMobileRef.current && !ehMobile && corpo) {
+      for (const el of [corpo, ...corpo.querySelectorAll(':scope > tr[style=""]')]) {
+        if (el.getAttribute("style") === "") el.removeAttribute("style");
+      }
+    }
+    eraMobileRef.current = ehMobile;
+  }, [ehMobile]);
+
+  useEffect(() => {
+    if (!ehMobile) return;
+    return () => {
+      if (reconciliarFocoRef.current !== null) window.clearTimeout(reconciliarFocoRef.current);
+      reconciliarFocoRef.current = null;
+      setFocoId(null);
+    };
+  }, [ehMobile]);
+
+  const aoFocarCorpo = (e: FocusEvent<HTMLTableSectionElement>) => {
+    if (reconciliarFocoRef.current !== null) window.clearTimeout(reconciliarFocoRef.current);
+    reconciliarFocoRef.current = null;
+    setFocoId(formaDaLinha(e.target));
+  };
+  /* Na saída o foco ainda não chegou ao destino (e `relatedTarget` pode vir
+     nulo no Safari): espera um giro e pergunta ao documento onde ele está. */
+  const aoDesfocarCorpo = () => {
+    if (reconciliarFocoRef.current !== null) window.clearTimeout(reconciliarFocoRef.current);
+    reconciliarFocoRef.current = window.setTimeout(() => {
+      reconciliarFocoRef.current = null;
+      const ativo = document.activeElement;
+      setFocoId(corpoRef.current?.contains(ativo) ? formaDaLinha(ativo) : null);
+    }, 0);
+  };
+
+  const linhasVirtuais = ehMobile ? virtual.getVirtualItems() : null;
+  const linha = (f: FormaDexDTO, posicao?: { indice: number; inicio: number }) => (
+    <LinhaForma
+      key={f.id}
+      forma={f}
+      rotulo={rotulo.forma(f)}
+      disponibilidade={catalogo?.get(f.id)}
+      comCatalogo={catalogo !== null}
+      trancadaPor={trancadas.get(f.numero) ?? null}
+      normal={quantidades[f.id]?.normal ?? 0}
+      shiny={quantidades[f.id]?.shiny ?? 0}
+      tenhoNormal={tenho[f.id]?.normal ?? 0}
+      tenhoShiny={tenho[f.id]?.shiny ?? 0}
+      ehMobile={ehMobile}
+      aoMudar={aoMudar}
+      indice={posicao?.indice}
+      medir={posicao ? virtual.measureElement : undefined}
+      deslocamento={posicao ? posicao.inicio - margemLista : undefined}
+    />
+  );
+
   /* No celular o botão está na barra fixa da base e o resultado aparece no
      topo, fora da tela: sem isto o usuário toca em "Cadastrar" e não vê nada
      acontecer (a lista só zera as quantidades). Só leva o resultado à vista;
@@ -336,7 +549,7 @@ export function CadastroPorJogo({
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 sm:p-8 md:h-full max-md:pb-[calc(6rem+env(safe-area-inset-bottom))]!">
+    <main ref={mainRef} className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 sm:p-8 md:h-full max-md:pb-[calc(6rem+env(safe-area-inset-bottom))]!">
       <CabecalhoPagina titulo={t("cadastrar.titulo")} />
 
       {/* Jogo, filtro e botão ficam parados; só a tabela rola (`rolagemPropria`). */}
@@ -431,23 +644,19 @@ export function CadastroPorJogo({
             <th className={classesCelulaCabecalho}>{t("cadastrar.colShiny")}</th>
           </tr>
         </thead>
-        <tbody className={classesTabelaEmpilhada}>
-          {visiveis.map((f) => (
-            <LinhaForma
-              key={f.id}
-              forma={f}
-              rotulo={rotulo.forma(f)}
-              disponibilidade={catalogo?.get(f.id)}
-              comCatalogo={catalogo !== null}
-              trancadaPor={trancadas.get(f.numero) ?? null}
-              normal={quantidades[f.id]?.normal ?? 0}
-              shiny={quantidades[f.id]?.shiny ?? 0}
-              tenhoNormal={tenho[f.id]?.normal ?? 0}
-              tenhoShiny={tenho[f.id]?.shiny ?? 0}
-              ehMobile={ehMobile}
-              aoMudar={aoMudar}
-            />
-          ))}
+        {/* Desktop: todas as linhas, sem `style` nem handler. Celular: só o
+            intervalo virtual, e o `tbody` guarda a altura da lista inteira;
+            lista vazia fica sem altura, com a linha "nada" em fluxo normal. */}
+        <tbody
+          ref={corpoRef}
+          className={classesTabelaEmpilhada}
+          style={linhasVirtuais && visiveis.length > 0 ? { position: "relative", height: virtual.getTotalSize() } : undefined}
+          onFocus={ehMobile ? aoFocarCorpo : undefined}
+          onBlur={ehMobile ? aoDesfocarCorpo : undefined}
+        >
+          {linhasVirtuais
+            ? linhasVirtuais.map((item) => linha(visiveis[item.index], { indice: item.index, inicio: item.start }))
+            : visiveis.map((f) => linha(f))}
           {visiveis.length === 0 && (
             <tr className="max-md:block">
               <td colSpan={6} className="p-4 text-center text-sm text-muted max-md:block">
