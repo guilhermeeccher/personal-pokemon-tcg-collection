@@ -110,7 +110,11 @@ export default function OQueFaltaPage() {
 
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-4 p-4 sm:p-8">
-      <Link href="/colecoes" className="text-sm text-accent hover:underline">
+      {/* Celular: 44 de altura de toque, sem esticar o link até a borda. */}
+      <Link
+        href="/colecoes"
+        className="text-sm text-accent hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center max-md:self-start"
+      >
         {t("voltar")}
       </Link>
       <CabecalhoPagina
@@ -127,7 +131,7 @@ export default function OQueFaltaPage() {
       {/* Só aparece quando existe alguma: filtro que sempre dá zero é
           ruído fixo na tela. */}
       {totalAlocavel > 0 && (
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-sm max-md:min-h-11">
           <input
             type="checkbox"
             checked={somenteAlocaveis}
@@ -152,7 +156,7 @@ export default function OQueFaltaPage() {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Link
                 href={`/colecoes/${colecao.id}`}
-                className="text-[length:var(--fs-title-2)] text-strong hover:underline"
+                className="text-[length:var(--fs-title-2)] text-strong hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center"
               >
                 {colecao.nome}
               </Link>
@@ -165,7 +169,11 @@ export default function OQueFaltaPage() {
                 </span>
               </span>
             </div>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3 md:grid-cols-4">
+            {/* Celular: duas colunas com intervalo de 8px (o de 16 comia a largura
+                do texto). A vaga não é um controle; o que se toca nela é a
+                miniatura (zoom), que não pode encolher abaixo dos 44px de área
+                de toque quando o nome é comprido. */}
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm max-md:gap-x-2 sm:grid-cols-3 md:grid-cols-4">
               {exibidos.map((item) => {
                 const alocavel = item.candidatosDisponiveis > 0;
                 return (
@@ -179,7 +187,7 @@ export default function OQueFaltaPage() {
                     /* A vaga com cópia disponível ganha moldura sólida e
                        cor de sucesso: na grade toda tracejada do "falta",
                        ela é a única que exige ação diferente de comprar. */
-                    className={`flex items-center gap-2 rounded-slot p-1.5 ${
+                    className={`flex items-center gap-2 rounded-slot p-1.5 max-md:gap-1.5 max-md:[&>:first-child]:shrink-0 ${
                       alocavel
                         ? "border-2 border-solid border-success-fg/40 bg-success-soft/30 text-foreground"
                         : "border-2 border-dashed border-line text-muted"
@@ -192,7 +200,7 @@ export default function OQueFaltaPage() {
                       chave={item.chave}
                       alt={item.nome ?? rotuloChaveVaga(item.chave)}
                     />
-                    <span className="text-xs leading-tight">
+                    <span className="text-xs leading-tight max-md:min-w-0 max-md:text-[13px] max-md:break-words">
                       <span className="font-mono">#{rotuloChaveVaga(item.chave)}</span>
                       {item.nome ? ` — ${item.nome}` : ""}
                       {alocavel && (

@@ -32,6 +32,8 @@ import { compararChavesVaga, rotuloChaveVaga } from "@/lib/dominio/chave-vaga-se
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
 import { Icone } from "@/app/_componentes/icone";
+import { Dica } from "@/app/_componentes/dica";
+import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 import { PainelSemEstoque } from "./painel-sem-estoque";
 
 /**
@@ -258,6 +260,7 @@ export default function OpcoesCompraPage() {
   const t = useTranslations("opcoesCompra");
   const tr = useTranslations("recusas");
   const locale = useLocale();
+  const ehMobile = useEhMobile();
   const { id } = useParams<{ id: string }>();
 
   const dinheiro = useCallback((valor: number) => brl(valor, locale), [locale]);
@@ -562,7 +565,11 @@ export default function OpcoesCompraPage() {
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-4 p-4">
-      <Link href={`/colecoes/${id}`} className="text-sm text-accent hover:underline">
+      {/* No celular o link ganha 44 de altura de toque, sem esticar até a borda. */}
+      <Link
+        href={`/colecoes/${id}`}
+        className="text-sm text-accent hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center max-md:self-start"
+      >
         {t("voltar")}
       </Link>
 
@@ -576,7 +583,10 @@ export default function OpcoesCompraPage() {
 
       <section className="rounded-card border border-hairline bg-surface p-4 shadow-1">
         <h2 className="mb-3 text-sm font-semibold text-foreground">{t("parametros")}</h2>
-        <div className="flex flex-wrap items-end gap-4">
+        {/* Celular: uma coluna só, cada campo na largura toda e o botão de
+            busca embaixo, na largura toda — lado a lado, o teto e o select não
+            cabem em 393px sem estreitar o texto. */}
+        <div className="flex flex-wrap items-end gap-4 max-md:grid max-md:grid-cols-1 max-md:items-stretch max-md:gap-3">
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-muted">{t("tetoPorCarta")}</span>
             <input
@@ -617,7 +627,7 @@ export default function OpcoesCompraPage() {
           {/* No set toda opção é a carta do próprio set, que está no catálogo
               por construção — o filtro não teria o que esconder. */}
           {!ehSet && (
-            <label className="flex items-center gap-2 text-sm text-muted">
+            <label className="flex items-center gap-2 text-sm text-muted max-md:min-h-11">
               <input
                 type="checkbox"
                 checked={incluirFora}
@@ -627,7 +637,7 @@ export default function OpcoesCompraPage() {
             </label>
           )}
 
-          <label className="flex items-center gap-2 text-sm text-muted">
+          <label className="flex items-center gap-2 text-sm text-muted max-md:min-h-11">
             <input
               type="checkbox"
               checked={reconsultarTudo}
@@ -639,6 +649,7 @@ export default function OpcoesCompraPage() {
           <Botao
             type="button"
             variante="primario"
+            className="max-md:w-full"
             onClick={dispararVarredura}
             disabled={disparando || rodando}
           >
@@ -715,38 +726,41 @@ export default function OpcoesCompraPage() {
       )}
 
       {(dados?.selecionadas ?? 0) > 0 && (
-        <section className="sticky top-0 z-10 flex flex-wrap items-center gap-3 rounded-card border-2 border-accent bg-surface p-3 shadow-3">
-          <strong className="text-sm text-foreground">
+        /* Celular: a barra cola no topo e fica compacta — o total numa linha,
+           os avisos pequenos na seguinte e os dois downloads lado a lado, cada
+           um com metade da largura. Em retrato isso dá ~110px (um oitavo da
+           tela); deitado (>= 640px) os botões sobem para a linha do total e a
+           barra não passa de ~64px dos 343 disponíveis. */
+        <section className="sticky top-0 z-10 flex flex-wrap items-center gap-3 rounded-card border-2 border-accent bg-surface p-3 shadow-3 max-md:gap-x-2 max-md:gap-y-2 max-md:p-2">
+          <strong className="text-sm text-foreground max-md:basis-full max-md:sm:basis-auto">
             {t("cartasNaLista", {
               total: dados?.selecionadas ?? 0,
               valor: dinheiro(totalSelecionado),
             })}
           </strong>
           {(dados?.semPreco ?? 0) > 0 && (
-            <span
-              className="text-xs text-muted"
-              title={t("semPrecoTitulo")}
-            >
-              {t("semPrecoConhecido", { total: dados?.semPreco ?? 0 })}
-            </span>
+            <Dica texto={t("semPrecoTitulo")}>
+              <span className="text-xs text-muted" title={t("semPrecoTitulo")}>
+                {t("semPrecoConhecido", { total: dados?.semPreco ?? 0 })}
+              </span>
+            </Dica>
           )}
           {(dados?.guardadas ?? 0) > 0 && (
-            <span
-              className="text-xs text-muted"
-              title={t("guardadasTitulo")}
-            >
-              {t("guardadas", { total: dados?.guardadas ?? 0 })}
-            </span>
+            <Dica texto={t("guardadasTitulo")}>
+              <span className="text-xs text-muted" title={t("guardadasTitulo")}>
+                {t("guardadas", { total: dados?.guardadas ?? 0 })}
+              </span>
+            </Dica>
           )}
           <a
             href={`/api/colecoes/${id}/opcoes-compra/exportar?formato=csv`}
-            className={classesBotao("secundario", "sm")}
+            className={classesBotao("secundario", "sm", "max-md:flex-1 max-md:sm:ml-auto max-md:sm:flex-none")}
           >
             {t("baixarCsv")}
           </a>
           <a
             href={`/api/colecoes/${id}/opcoes-compra/exportar?formato=texto`}
-            className={classesBotao("secundario", "sm")}
+            className={classesBotao("secundario", "sm", "max-md:flex-1 max-md:sm:flex-none")}
           >
             {t("baixarListaTexto")}
           </a>
@@ -769,18 +783,21 @@ export default function OpcoesCompraPage() {
       {dados && abaAtiva && (
         <section className="flex flex-col gap-2 rounded-card border border-hairline bg-surface p-3 shadow-1">
           <header className="flex flex-wrap items-center gap-2">
-            <h2 className="text-sm font-semibold text-foreground">
+            <h2 className="text-sm font-semibold text-foreground max-md:basis-full">
               {t("compraPorLista")}
             </h2>
+            {/* Celular: título numa linha e os dois botões da aba lado a lado,
+                cada um com metade da largura (44 de altura pelo `Botao`). */}
             <a
               href={`/api/colecoes/${id}/opcoes-compra/exportar?formato=liga&aba=${encodeURIComponent(abaAtiva.id)}`}
-              className={`${classesBotao("secundario", "sm")} ml-auto`}
+              className={classesBotao("secundario", "sm", "ml-auto max-md:ml-0 max-md:flex-1")}
             >
               {t("baixarListaLiga")}
             </a>
             <Botao
               variante="secundario"
               tamanho="sm"
+              className="max-md:flex-1"
               onClick={() => void copiar(abaAtiva.texto)}
             >
               {copiado ? t("copiado") : t("copiar")}
@@ -791,7 +808,15 @@ export default function OpcoesCompraPage() {
               deles aceita até 110 cartas por busca. Na Pokédex a divisão é por
               região — ver `dividirListaCompra`, que também registra o custo
               (cada colagem é uma otimização de lojas separada na Liga). */}
-          <div role="tablist" aria-label={t("abasLiga")} className="flex flex-wrap gap-1">
+          {/* Celular: as abas ficam numa fileira só, com rolagem horizontal própria
+              (a página não rola de lado), e sangram até a borda do cartão para
+              a rolagem não parecer cortada. Cada aba tem 44 de altura e 8px de
+              intervalo. */}
+          <div
+            role="tablist"
+            aria-label={t("abasLiga")}
+            className="flex flex-wrap gap-1 max-md:-mx-3 max-md:flex-nowrap max-md:gap-2 max-md:overflow-x-auto max-md:overscroll-x-contain max-md:px-3 max-md:pb-1"
+          >
             {abas.map((aba) => {
               const ativa = aba.id === abaAtiva.id;
               return (
@@ -800,11 +825,25 @@ export default function OpcoesCompraPage() {
                   type="button"
                   role="tab"
                   aria-selected={ativa}
-                  onClick={() => {
+                  onClick={(e) => {
                     setAbaEscolhida(aba.id);
                     setCopiado(false);
+                    // A fileira de abas rola de lado no celular: a aba tocada
+                    // pela metade vem inteira para a vista. Só a rolagem
+                    // horizontal da própria fileira — `scrollIntoView` também
+                    // poderia rolar a página na vertical.
+                    if (ehMobile) {
+                      const aba = e.currentTarget;
+                      const fileira = aba.parentElement;
+                      if (fileira) {
+                        const esq = aba.offsetLeft - fileira.offsetLeft;
+                        const dir = esq + aba.offsetWidth;
+                        if (esq < fileira.scrollLeft) fileira.scrollLeft = esq;
+                        else if (dir > fileira.scrollLeft + fileira.clientWidth) fileira.scrollLeft = dir - fileira.clientWidth;
+                      }
+                    }
                   }}
-                  className={`rounded border px-2 py-1 text-xs ${
+                  className={`rounded border px-2 py-1 text-xs max-md:min-h-11 max-md:shrink-0 max-md:px-3 max-md:whitespace-nowrap ${
                     ativa ? "border-accent bg-accent text-accent-fg" : "border-line text-muted"
                   }`}
                 >
@@ -845,7 +884,7 @@ export default function OpcoesCompraPage() {
       <PainelSemEstoque colecaoId={id} aoAlterar={carregar} />
 
       {dados && dados.vagas.length > 0 && (
-        <label className="flex items-center gap-2 text-sm text-muted">
+        <label className="flex items-center gap-2 text-sm text-muted max-md:min-h-11">
           <input
             type="checkbox"
             checked={soComOpcao}
@@ -918,7 +957,7 @@ export default function OpcoesCompraPage() {
                   type="button"
                   aria-expanded={!recolhida}
                   onClick={() => definirRecolhidas([vaga], !recolhida)}
-                  className={`flex w-full flex-wrap items-center gap-2 px-3 py-2 text-left ${
+                  className={`flex w-full flex-wrap items-center gap-2 px-3 py-2 text-left max-md:min-h-11 ${
                     recolhida ? "" : "border-b border-line"
                   }`}
                 >
@@ -972,61 +1011,76 @@ export default function OpcoesCompraPage() {
                 ) : (
                   <ul className="divide-y divide-line">
                 {vaga.opcoes.map((opcao) => (
+                  /* Celular: a linha vira um cartão — caixa (44) e miniatura
+                     (44) à esquerda, e à direita nome, edição, selos e, por
+                     último, preço e "ver ofertas". Os grupos de texto são
+                     `md:contents`: no desktop somem do layout e os filhos
+                     continuam sendo itens da mesma linha de sempre. */
                   <li
                     key={opcao.id}
-                    className="flex flex-wrap items-center gap-3 px-3 py-2 text-sm"
+                    className="flex flex-wrap items-center gap-3 px-3 py-2 text-sm max-md:flex-nowrap max-md:items-start max-md:gap-2 max-md:py-1"
                   >
-                    <input
-                      type="checkbox"
-                      checked={opcao.selecionada}
-                      onChange={() => void alternar(opcao)}
-                      aria-label={t("selecionarOpcao", {
-                        nome: opcao.nome,
-                        edicao: opcao.edicaoNome,
-                      })}
-                    />
+                    <label className="md:contents max-md:flex max-md:size-11 max-md:shrink-0 max-md:items-center max-md:justify-center">
+                      <input
+                        type="checkbox"
+                        checked={opcao.selecionada}
+                        onChange={() => void alternar(opcao)}
+                        aria-label={t("selecionarOpcao", {
+                          nome: opcao.nome,
+                          edicao: opcao.edicaoNome,
+                        })}
+                      />
+                    </label>
                     {/* Só a carta que casou com o nosso catálogo tem foto. A
                         LigaPokemon publica a dela, mas o projeto decidiu em
                         2026-08-29 não fazer hotlink de terceiro. */}
-                    <ImagemCartaComZoom
-                      imagemUrl={opcao.imagemUrl}
-                      origem={opcao.imagemOrigem}
-                      alt={`${opcao.nome} (${opcao.numero})`}
-                      width={34}
-                      height={47}
-                      fallback={
-                        <span
-                          className="inline-block shrink-0 rounded-tcg border border-dashed border-line"
-                          style={{ width: 34, height: 47 }}
-                          title={t("semFoto")}
-                        />
-                      }
-                    />
-                    <span className="min-w-40 font-medium text-foreground">{opcao.nome}</span>
-                    <span className="text-muted">
-                      {opcao.edicaoNome} ({opcao.numero}
-                      {opcao.total ? `/${opcao.total}` : ""})
-                    </span>
-                    {opcao.raridade && <Distintivo tom="neutro">{opcao.raridade}</Distintivo>}
-                    {opcao.semEstoque && (
-                      <Distintivo tom="perigo" title={t("semEstoqueOpcaoTitulo")}>
-                        {t("semEstoqueOpcao")}
-                      </Distintivo>
-                    )}
-                    {opcao.cartaId === null && (
-                      <Distintivo tom="aviso" title={t("foraDoCatalogoTitulo")}>
-                        {t("foraDoCatalogo")}
-                      </Distintivo>
-                    )}
-                    <strong className="ml-auto text-foreground">{dinheiro(opcao.preco)}</strong>
-                    <a
-                      href={`${SITE}${opcao.caminho}`}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="text-xs text-accent hover:underline"
-                    >
-                      {t("verOfertas")}
-                    </a>
+                    <div className="md:contents max-md:flex max-md:min-h-11 max-md:w-11 max-md:shrink-0 max-md:items-center max-md:justify-center">
+                      <ImagemCartaComZoom
+                        imagemUrl={opcao.imagemUrl}
+                        origem={opcao.imagemOrigem}
+                        alt={`${opcao.nome} (${opcao.numero})`}
+                        width={34}
+                        height={47}
+                        fallback={
+                          <span
+                            className="inline-block shrink-0 rounded-tcg border border-dashed border-line"
+                            style={{ width: 34, height: 47 }}
+                            title={t("semFoto")}
+                          />
+                        }
+                      />
+                    </div>
+                    <div className="md:contents max-md:flex max-md:min-w-0 max-md:flex-1 max-md:flex-col max-md:gap-1 max-md:py-1">
+                      <span className="min-w-40 font-medium text-foreground max-md:min-w-0">{opcao.nome}</span>
+                      <span className="text-muted">
+                        {opcao.edicaoNome} ({opcao.numero}
+                        {opcao.total ? `/${opcao.total}` : ""})
+                      </span>
+                      <div className="md:contents max-md:flex max-md:flex-wrap max-md:items-center max-md:gap-x-2 max-md:gap-y-2 max-md:empty:hidden">
+                        {opcao.raridade && <Distintivo tom="neutro">{opcao.raridade}</Distintivo>}
+                        {opcao.semEstoque && (
+                          <Distintivo tom="perigo" title={t("semEstoqueOpcaoTitulo")} dica>
+                            {t("semEstoqueOpcao")}
+                          </Distintivo>
+                        )}
+                        {opcao.cartaId === null && (
+                          <Distintivo tom="aviso" title={t("foraDoCatalogoTitulo")} dica>
+                            {t("foraDoCatalogo")}
+                          </Distintivo>
+                        )}
+                      </div>
+                      <div className="md:contents max-md:flex max-md:items-center max-md:justify-between max-md:gap-2">
+                        <strong className="ml-auto text-foreground max-md:ml-0">{dinheiro(opcao.preco)}</strong>
+                        <a
+                          href={`${SITE}${opcao.caminho}`}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="text-xs text-accent hover:underline max-md:inline-flex max-md:min-h-11 max-md:min-w-11 max-md:items-center max-md:justify-end"
+                        >
+                          {t("verOfertas")}
+                        </a>
+                      </div>
+                    </div>
                   </li>
                 ))}
                   </ul>

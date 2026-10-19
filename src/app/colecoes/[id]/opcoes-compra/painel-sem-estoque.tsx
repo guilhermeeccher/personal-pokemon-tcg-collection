@@ -123,7 +123,9 @@ export function PainelSemEstoque({
 
   return (
     <details className="rounded-card border border-hairline bg-surface p-3 shadow-1">
-      <summary className="cursor-pointer text-sm font-semibold text-foreground">
+      {/* Celular: o `py-3` leva a linha do título aos 44 de altura de toque sem
+          trocar o `display` do `summary` (que perderia a seta de abrir). */}
+      <summary className="cursor-pointer text-sm font-semibold text-foreground max-md:py-3">
         {t("semEstoqueTitulo", { total: registros.length })}
       </summary>
 
@@ -144,10 +146,11 @@ export function PainelSemEstoque({
           className={`${classesEntrada} font-mono text-xs`}
           aria-label={t("semEstoqueCampo")}
         />
-        <div>
+        <div className="max-md:flex">
           <Botao
             variante="secundario"
             tamanho="sm"
+            className="max-md:flex-1"
             disabled={ocupado || texto.trim() === ""}
             onClick={() => void enviar(false)}
           >
@@ -193,16 +196,26 @@ export function PainelSemEstoque({
                 </ul>
               </Alerta>
             )}
-            <div className="flex gap-2">
+            {/* Segundo passo. Celular: a prévia pode ser longa, então a linha de
+                confirmar fica colada na borda de baixo da tela enquanto a prévia
+                estiver à vista — o "Confirmar" nunca fica uma rolagem adiante —
+                e cada botão ocupa metade da largura. */}
+            <div className="flex gap-2 max-md:sticky max-md:bottom-0 max-md:-mx-3 max-md:-mb-3 max-md:rounded-b-card max-md:border-t max-md:border-line max-md:bg-inset max-md:px-3 max-md:pt-2 max-md:pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
               <Botao
                 variante="primario"
                 tamanho="sm"
+                className="max-md:flex-1"
                 disabled={ocupado}
                 onClick={() => void enviar(true)}
               >
                 {t("semEstoqueConfirmar")}
               </Botao>
-              <Botao variante="secundario" tamanho="sm" onClick={() => setPrevia(null)}>
+              <Botao
+                variante="secundario"
+                tamanho="sm"
+                className="max-md:flex-1"
+                onClick={() => setPrevia(null)}
+              >
                 {t("semEstoqueCancelar")}
               </Botao>
             </div>
