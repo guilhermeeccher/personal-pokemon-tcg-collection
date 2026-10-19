@@ -55,11 +55,15 @@ interface PosicaoBalao {
   bottom?: number;
   left: number;
   largura: number;
+  /** Altura máxima: o espaço do lado escolhido; texto maior rola dentro do balão. */
+  alturaMaxima: number;
 }
 
 /**
- * Prefere abrir abaixo do botão (o dedo que tocou não cobre o texto); sem
- * espaço, abre acima. Sempre dentro da tela, com margem.
+ * Abre do lado com mais espaço, preferindo abaixo do botão (o dedo que tocou
+ * não cobre o texto). A altura do texto não é conhecida antes de renderizar
+ * (há erros longos, não só rótulos curtos), então o balão fica limitado ao
+ * espaço daquele lado e rola por dentro se precisar — nunca sai da tela.
  */
 function calcularPosicao(rect: DOMRect): PosicaoBalao {
   const larguraTela = window.innerWidth;
@@ -67,10 +71,12 @@ function calcularPosicao(rect: DOMRect): PosicaoBalao {
   const largura = Math.min(LARGURA_MAXIMA_PX, larguraTela - 2 * MARGEM_PX);
   const centro = rect.left + rect.width / 2;
   const left = Math.min(Math.max(centro - largura / 2, MARGEM_PX), larguraTela - largura - MARGEM_PX);
-  // Estimativa grosseira do que "cabe abaixo": o balão tem poucas linhas.
-  const espacoAbaixo = alturaTela - rect.bottom;
-  if (espacoAbaixo >= 120) return { top: rect.bottom + DISTANCIA_PX, left, largura };
-  return { bottom: alturaTela - rect.top + DISTANCIA_PX, left, largura };
+  const espacoAbaixo = alturaTela - rect.bottom - DISTANCIA_PX - MARGEM_PX;
+  const espacoAcima = rect.top - DISTANCIA_PX - MARGEM_PX;
+  if (espacoAbaixo >= 120 || espacoAbaixo >= espacoAcima) {
+    return { top: rect.bottom + DISTANCIA_PX, left, largura, alturaMaxima: Math.max(espacoAbaixo, 0) };
+  }
+  return { bottom: alturaTela - rect.top + DISTANCIA_PX, left, largura, alturaMaxima: Math.max(espacoAcima, 0) };
 }
 
 export function Dica({ texto, children }: { texto: string; children: ReactNode }) {
@@ -111,7 +117,12 @@ function DicaMobile({ texto, children }: { texto: string; children: ReactNode })
       if (alvo && (botaoRef.current?.contains(alvo) || balaoRef.current?.contains(alvo))) return;
       setAberto(false);
     }
-    const fecharAoMover = () => setAberto(false);
+    // Rolar a página tira o balão do lugar: fecha. Rolar o texto DENTRO do
+    // balão (texto longo) não conta.
+    const fecharAoMover = (e: Event) => {
+      if (e.target instanceof Node && balaoRef.current?.contains(e.target)) return;
+      setAberto(false);
+    };
     document.addEventListener("pointerdown", aoTocar, true);
     window.addEventListener("scroll", fecharAoMover, { capture: true, passive: true });
     window.addEventListener("resize", fecharAoMover);
@@ -170,8 +181,9 @@ function DicaMobile({ texto, children }: { texto: string; children: ReactNode })
                 bottom: posicao.bottom,
                 left: posicao.left,
                 width: posicao.largura,
+                maxHeight: posicao.alturaMaxima,
               }}
-              className="z-60 rounded-lg border border-line bg-surface-elevated px-3 py-2 text-sm text-foreground shadow-xl"
+              className="z-60 overflow-y-auto overscroll-contain rounded-lg border border-line bg-surface-elevated px-3 py-2 text-sm text-foreground shadow-xl"
             >
               {texto}
             </div>,

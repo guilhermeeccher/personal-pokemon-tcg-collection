@@ -101,7 +101,7 @@ const FILTROS_DO_PAINEL = (Object.keys(FILTROS_VAZIOS) as (keyof Filtros)[]).fil
    o recuo é só de 4px: a última linha são as ações, cuja área de 44 já folga.
    ------------------------------------------------------------------------ */
 const classesLinhaCartao =
-  "max-md:relative max-md:flex max-md:flex-wrap max-md:items-center max-md:gap-x-2 max-md:gap-y-1.5 max-md:pt-3 max-md:pr-3 max-md:pb-1 max-md:pl-[6.5rem]";
+  "max-md:relative max-md:flex max-md:flex-wrap max-md:items-center max-md:gap-x-2 max-md:gap-y-2 max-md:pt-3 max-md:pr-3 max-md:pb-1 max-md:pl-[6.5rem]";
 
 /** Botão de ação da linha: o desenho de link de sempre, com 44px de área no celular. */
 const classesAcaoLinha = "max-md:mr-0 max-md:inline-flex max-md:min-h-11 max-md:min-w-11 max-md:items-center max-md:px-2";

@@ -21,6 +21,7 @@ import { Campo, classesEntrada } from "@/app/_componentes/campo";
 import { CartaoVaga } from "@/app/_componentes/ds/cartao-vaga";
 import { ChipVariante } from "@/app/_componentes/ds/chip-variante";
 import { GradeEscopo, type OpcaoEscopo } from "@/app/_componentes/ds/grade-escopo";
+import { Dica } from "@/app/_componentes/dica";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { ImagemCartaComZoom } from "@/app/_componentes/imagem-carta-zoom";
@@ -1631,6 +1632,10 @@ function ModalMelhoriaVaga({
                   >
                     {t("descartar")}
                   </button>
+                  {/* O que "Descartar" faz está no `title` do botão; no celular,
+                      sem hover, vai num "i" ao lado (fora do botão). No desktop
+                      a Dica não renderiza nada. */}
+                  <Dica texto={t("descartarTitulo")}>{null}</Dica>
                 </div>
               )}
             </li>

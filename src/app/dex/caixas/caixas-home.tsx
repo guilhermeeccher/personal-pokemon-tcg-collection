@@ -141,6 +141,10 @@ export function CaixasHome({
     caixa: number;
     posicao: number;
   } | null>(null);
+  // O detalhe só existe no celular: girar o aparelho para a largura de
+  // desktop com ele aberto o descarta (lá o toque navega direto), e voltar ao
+  // retrato não o traz de volta. Ajuste na renderização, sem efeito.
+  if (!ehMobile && detalhe) setDetalhe(null);
 
   const estados = useMemo(() => mapearEstadosDex(registros), [registros]);
   const caixas = useMemo(
@@ -309,7 +313,7 @@ export function CaixasHome({
         </div>
       )}
       {cartao}
-      {detalhe && (
+      {detalhe && ehMobile && (
         <Modal
           rotulo={detalhe.nome}
           onFechar={() => setDetalhe(null)}
