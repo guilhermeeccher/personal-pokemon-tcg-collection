@@ -716,6 +716,55 @@ service workers and the like.
 
 ---
 
+## Mobile layout — below 768px, and only there
+
+The app is used on a phone with the card in hand (an iPhone in Safari, over HTTP on the local
+network). Every screen works there, and **the desktop layout (768px and up) does not change because
+of it**. These rules keep both true.
+
+- **Mobile means width below 768px** — the same `md` breakpoint where the shell swaps the side rail
+  for the top bar. In CSS that is `max-md:`; in code it is `useEhMobile()`
+  (`app/_componentes/use-eh-mobile.ts`), which starts `false` on the server and during hydration.
+  Touch capability (`hover: none`, `pointer: coarse`) never decides on its own: it would catch
+  touch laptops and an iPad in portrait, which get the desktop layout. The effective width decides:
+  a phone turned sideways usually stays below 768px (an iPhone 14 Pro in Safari reports about
+  734px) and then gets the mobile layout.
+- **Nothing new reaches the desktop by accident.** What counts is the effect at 768px and up: a
+  class, attribute, wrapper or event that changes what the desktop shows or does is a desktop
+  change, decided on purpose, never as a side effect of a mobile fix. (Markup rendered only when
+  `useEhMobile()` is true has no desktop effect, whatever classes it carries.) Two such changes were
+  decided on purpose (2026-10-18): the `Modal` is a real dialog at every width (Esc when `onFechar`
+  is given, focus moved in, contained and restored), and the search quantity field can be cleared
+  while typing.
+- **Fields are 16px on mobile** (`classesEntrada` does it). Below 16px Safari zooms the page when a
+  field gets focus and does not zoom back.
+- **Touch targets are at least 44 x 44px, 8px apart.** `Botao` gives the 44px; a smaller control
+  keeps its look and gets the area from the `alvo-toque` utility in `globals.css`. The 8px between
+  areas is the screen's job: an enlarged area reaches past the control, so the gap around it has to
+  account for that. Informative badges are not targets.
+- **One tree, not two.** A table that does not fit becomes a list of cards through CSS on the same
+  markup (`classesTabelaEmpilhada` and siblings in `tabela.tsx`). Never render a second, mobile-only
+  copy of an editable list: refs, Tab order and the reducer state would split.
+- **Nothing only on hover or in `title`.** On mobile, card zoom opens on tap
+  (`imagem-carta-zoom.tsx`) and hover-only information shows as visible text or through `Dica`
+  (`dica.tsx`), never inside a `label`, `a` or `button`.
+- **Overlays share one stack** (`use-camada.ts`): Esc closes only the top layer, focus containment
+  belongs to the top modal layer (a `Dica` balloon is not modal), and the page scroll lock is
+  reference-counted. The `Modal` is a bottom sheet on mobile with its actions in `rodape`, kept in
+  view at the bottom of the sheet.
+- **Quantity steppers use `Quantidade`**, which renders the plain input on desktop and the input
+  between − and + buttons on mobile. Its `value` is required: crossing the 768px line swaps the two
+  trees and remounts the input, and an uncontrolled one would lose what was typed.
+- **A fixed bottom action bar** (bulk save, bulk selection) reserves its height in the page padding,
+  so the end of the list is never hidden under it.
+
+The tests do not cover layout. A mobile change is checked by looking at it at phone widths (320,
+393 and the sideways width) in Portuguese and English, by comparing the desktop before and after at
+768, 1024 and 1400px, and finally on a real iPhone in Safari: emulation does not reproduce focus
+zoom, the virtual keyboard over fixed bars, or `dvh`.
+
+---
+
 ## Definition of done
 
 A change is only done when:
@@ -723,6 +772,8 @@ A change is only done when:
 - `pnpm typecheck`, `pnpm lint` and `pnpm test` pass — with `pnpm exec next typegen` before the
   typecheck;
 - the business rules that were touched have tests, and the tests run without a database;
+- a layout change was checked as the "Mobile layout" section says (phone widths, desktop compared
+  before and after);
 - the app comes up through `docker compose up -d --build` with no manual intervention;
 - no collection data, card image or personal name entered the diff;
 - the comment that explained the decision you changed was updated along with it — a comment that
