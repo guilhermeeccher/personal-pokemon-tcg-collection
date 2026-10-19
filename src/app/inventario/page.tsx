@@ -24,7 +24,18 @@ import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { ImagemCartaComZoom } from "@/app/_componentes/imagem-carta-zoom";
 import { Modal } from "@/app/_componentes/modal";
 import { Painel } from "@/app/_componentes/painel";
-import { classesCelulaCabecalho, classesLinha, classesLinhaCabecalho, Tabela } from "@/app/_componentes/tabela";
+import {
+  classesCabecalhoComControle,
+  classesCelulaCabecalho,
+  classesCelulaCabecalhoControle,
+  classesCelulaCabecalhoOculta,
+  classesCelulaEmpilhada,
+  classesLinha,
+  classesLinhaCabecalho,
+  classesTabelaEmpilhada,
+  Tabela,
+} from "@/app/_componentes/tabela";
+import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 import type { CopiaDoInventarioDTO, DestinoElegivelDaCopiaDTO } from "@/lib/dominio/tipos-cliente";
 import { NomeCarta } from "@/app/_componentes/nome-carta";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
@@ -63,6 +74,38 @@ const FILTROS_VAZIOS: Filtros = {
 
 const TAMANHO_PAGINA = 50;
 
+/** Os filtros que, no celular, ficam no painel recolhível — todos menos a busca por nome. */
+const FILTROS_DO_PAINEL = (Object.keys(FILTROS_VAZIOS) as (keyof Filtros)[]).filter((chave) => chave !== "q");
+
+/* ------------------------------------------------------------------------
+   Linha do inventário no celular (só abaixo de 768px)
+
+   A mesma `<tr>` vira um cartão: à esquerda, uma calha com a caixa de
+   seleção e a miniatura; à direita, o resto em linhas — nome, set, os selos
+   (quantidade, variante, idioma, condição, graded), a localização, a
+   alocação e as ações.
+
+   Por que flex com quebra, e não a grade de `classesLinhaEmpilhada`: os
+   selos são cinco células, e na grade cada célula ocupa uma trilha própria
+   — virariam cinco linhas de um selo só, um cartão de 194 cópias por página
+   comprido demais. Na linha flexível elas correm lado a lado e quebram
+   sozinhas; quem precisa de linha própria (nome, set, alocação, ações)
+   ganha `basis-full`. A calha é posicionada (`absolute`) e não um item do
+   fluxo porque assim o texto da direita começa no topo, ao lado da
+   miniatura, em vez de descer para debaixo dela.
+
+   Medidas da calha: a caixa ocupa 0–44px (o `label` de 44 é a área de
+   toque), a miniatura 52–96px (a área de toque do zoom tem 44 de largura),
+   8px entre as duas; o texto começa em 104px (`pl-[6.5rem]`). As duas
+   alinham pelo centro: ambas começam em `top-3` e têm 44 de altura. Embaixo
+   o recuo é só de 4px: a última linha são as ações, cuja área de 44 já folga.
+   ------------------------------------------------------------------------ */
+const classesLinhaCartao =
+  "max-md:relative max-md:flex max-md:flex-wrap max-md:items-center max-md:gap-x-2 max-md:gap-y-1.5 max-md:pt-3 max-md:pr-3 max-md:pb-1 max-md:pl-[6.5rem]";
+
+/** Botão de ação da linha: o desenho de link de sempre, com 44px de área no celular. */
+const classesAcaoLinha = "max-md:mr-0 max-md:inline-flex max-md:min-h-11 max-md:min-w-11 max-md:items-center max-md:px-2";
+
 function paraQueryString(filtros: Filtros, pagina: number): string {
   const params = new URLSearchParams();
   for (const [chave, valor] of Object.entries(filtros)) {
@@ -75,7 +118,12 @@ function paraQueryString(filtros: Filtros, pagina: number): string {
 
 export default function InventarioPage() {
   const t = useTranslations("inventario");
+  const tm = useTranslations("componentes.mobile");
+  const ehMobile = useEhMobile();
   const [filtros, setFiltros] = useState<Filtros>(FILTROS_VAZIOS);
+  // Só a visibilidade do painel de filtros no celular. O estado dos filtros
+  // continua todo em `filtros`: fechar o painel não limpa nem muda nada.
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   const [pagina, setPagina] = useState(1);
   const [itens, setItens] = useState<CopiaDoInventarioDTO[]>([]);
   const [total, setTotal] = useState(0);
@@ -221,9 +269,19 @@ export default function InventarioPage() {
   }
 
   const totalPaginas = Math.max(1, Math.ceil(total / TAMANHO_PAGINA));
+  const filtrosAtivos = FILTROS_DO_PAINEL.filter((chave) => filtros[chave] !== "").length;
+  const idPainelFiltros = "inventario-filtros";
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 sm:p-8 md:h-full">
+    // Com seleção, a barra de ações fica fixa embaixo no celular: o fim da
+    // página (paginação) ganha o espaço dela para não ficar escondido atrás.
+    // O `!` é necessário: o `sm:p-8` (celular deitado, 640–767px) vem depois
+    // na folha de estilos e devolveria o recuo de 32px por cima deste.
+    <main
+      className={`mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 sm:p-8 md:h-full${
+        selecionados.size > 0 ? " max-md:pb-[calc(7rem+env(safe-area-inset-bottom))]!" : ""
+      }`}
+    >
       <CabecalhoPagina
         titulo={t("titulo")}
         descricao={t("descricao", { total })}
@@ -251,102 +309,141 @@ export default function InventarioPage() {
         <input
           value={filtros.q}
           onChange={(e) => atualizarFiltro("q", e.target.value)}
+            aria-label={ehMobile ? t("placeholderBusca") : undefined}
           placeholder={t("placeholderBusca")}
           className={`col-span-2 ${classesEntrada}`}
         />
-        <select
-          value={filtros.set}
-          onChange={(e) => atualizarFiltro("set", e.target.value)}
-          className={classesEntrada}
+        {/* Filtros recolhíveis no celular: a busca por nome fica à vista; o
+            resto mora num painel aberto por este botão, ao lado de "Limpar
+            filtros". Só visibilidade — os valores ficam em `filtros`, iguais
+            com o painel aberto ou fechado e ao girar o aparelho. O botão não
+            existe para o desktop (`md:hidden`), e o painel ali é
+            `md:contents`: não gera caixa, e os campos voltam a ser itens
+            diretos desta grade, na posição e na ordem de sempre.
+
+            No celular, o painel vem por último na grade (`order-last`): o
+            botão e o "Limpar" ficam juntos numa linha e o painel abre embaixo
+            deles. Na ordem do Tab ele segue o botão que o abre, que é o
+            padrão de um painel recolhível; o "Limpar" vem depois. */}
+        <Botao
+          type="button"
+          variante="secundario"
+          className="md:hidden"
+          aria-expanded={ehMobile ? filtrosAbertos : undefined}
+          aria-controls={ehMobile ? idPainelFiltros : undefined}
+          onClick={() => setFiltrosAbertos((aberto) => !aberto)}
         >
-          <option value="">{t("filtroSet")}</option>
-          {opcoes.sets.map((s) => (
-            <option key={s.setId} value={s.setId}>
-              {s.setNome}
-            </option>
-          ))}
-        </select>
-        <select
-          value={filtros.idioma}
-          onChange={(e) => atualizarFiltro("idioma", e.target.value)}
-          className={classesEntrada}
+          {filtrosAtivos > 0 ? tm("filtrosAtivos", { total: filtrosAtivos }) : tm("filtros")}
+        </Botao>
+        <div
+          id={ehMobile ? idPainelFiltros : undefined}
+          className={`md:contents max-md:order-last max-md:col-span-full max-md:grid-cols-2 max-md:gap-3 max-md:sm:grid-cols-4 ${
+            filtrosAbertos ? "max-md:grid" : "max-md:hidden"
+          }`}
         >
-          <option value="">{t("filtroIdioma")}</option>
-          {IDIOMAS.map((i) => (
-            <option key={i} value={i}>
-              {i}
-            </option>
-          ))}
-        </select>
-        <select
-          value={filtros.raridade}
-          onChange={(e) => atualizarFiltro("raridade", e.target.value)}
-          className={classesEntrada}
-        >
-          <option value="">{t("filtroRaridade")}</option>
-          {opcoes.raridades.map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
-        <select
-          value={filtros.variante}
-          onChange={(e) => atualizarFiltro("variante", e.target.value)}
-          className={classesEntrada}
-        >
-          <option value="">{t("filtroVariante")}</option>
-          {VARIANTES_COPIA.map((v) => (
-            <option key={v} value={v}>
-              {v}
-            </option>
-          ))}
-        </select>
-        <select
-          value={filtros.condicao}
-          onChange={(e) => atualizarFiltro("condicao", e.target.value)}
-          className={classesEntrada}
-        >
-          <option value="">{t("filtroCondicao")}</option>
-          {CONDICOES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        <select
-          value={filtros.graded}
-          onChange={(e) => atualizarFiltro("graded", e.target.value)}
-          className={classesEntrada}
-        >
-          <option value="">{t("filtroGraded")}</option>
-          <option value="true">{t("filtroGradedSim")}</option>
-          <option value="false">{t("filtroGradedNao")}</option>
-        </select>
-        <select
-          value={filtros.alocacao}
-          onChange={(e) => atualizarFiltro("alocacao", e.target.value)}
-          className={classesEntrada}
-        >
-          <option value="">{t("filtroAlocacao")}</option>
-          <option value="alocada">{t("filtroAlocacaoAlocadas")}</option>
-          <option value="livre">{t("filtroAlocacaoLivres")}</option>
-        </select>
-        <select
-          value={filtros.semImagem}
-          onChange={(e) => atualizarFiltro("semImagem", e.target.value)}
-          className={classesEntrada}
-          title={t("filtroImagemTitulo")}
-        >
-          <option value="">{t("filtroImagem")}</option>
-          <option value="true">{t("filtroImagemSem")}</option>
-        </select>
-        <input
-          value={filtros.localizacao}
-          onChange={(e) => atualizarFiltro("localizacao", e.target.value)}
-          placeholder={t("placeholderLocalizacao")}
-          className={classesEntrada}
-        />
+          <select
+            value={filtros.set}
+            onChange={(e) => atualizarFiltro("set", e.target.value)}
+            aria-label={ehMobile ? t("filtroSet") : undefined}
+            className={classesEntrada}
+          >
+            <option value="">{t("filtroSet")}</option>
+            {opcoes.sets.map((s) => (
+              <option key={s.setId} value={s.setId}>
+                {s.setNome}
+              </option>
+            ))}
+          </select>
+          <select
+            value={filtros.idioma}
+            onChange={(e) => atualizarFiltro("idioma", e.target.value)}
+            aria-label={ehMobile ? t("filtroIdioma") : undefined}
+            className={classesEntrada}
+          >
+            <option value="">{t("filtroIdioma")}</option>
+            {IDIOMAS.map((i) => (
+              <option key={i} value={i}>
+                {i}
+              </option>
+            ))}
+          </select>
+          <select
+            value={filtros.raridade}
+            onChange={(e) => atualizarFiltro("raridade", e.target.value)}
+            aria-label={ehMobile ? t("filtroRaridade") : undefined}
+            className={classesEntrada}
+          >
+            <option value="">{t("filtroRaridade")}</option>
+            {opcoes.raridades.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
+          <select
+            value={filtros.variante}
+            onChange={(e) => atualizarFiltro("variante", e.target.value)}
+            aria-label={ehMobile ? t("filtroVariante") : undefined}
+            className={classesEntrada}
+          >
+            <option value="">{t("filtroVariante")}</option>
+            {VARIANTES_COPIA.map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
+          </select>
+          <select
+            value={filtros.condicao}
+            onChange={(e) => atualizarFiltro("condicao", e.target.value)}
+            aria-label={ehMobile ? t("filtroCondicao") : undefined}
+            className={classesEntrada}
+          >
+            <option value="">{t("filtroCondicao")}</option>
+            {CONDICOES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <select
+            value={filtros.graded}
+            onChange={(e) => atualizarFiltro("graded", e.target.value)}
+            aria-label={ehMobile ? t("filtroGraded") : undefined}
+            className={classesEntrada}
+          >
+            <option value="">{t("filtroGraded")}</option>
+            <option value="true">{t("filtroGradedSim")}</option>
+            <option value="false">{t("filtroGradedNao")}</option>
+          </select>
+          <select
+            value={filtros.alocacao}
+            onChange={(e) => atualizarFiltro("alocacao", e.target.value)}
+            aria-label={ehMobile ? t("filtroAlocacao") : undefined}
+            className={classesEntrada}
+          >
+            <option value="">{t("filtroAlocacao")}</option>
+            <option value="alocada">{t("filtroAlocacaoAlocadas")}</option>
+            <option value="livre">{t("filtroAlocacaoLivres")}</option>
+          </select>
+          <select
+            value={filtros.semImagem}
+            onChange={(e) => atualizarFiltro("semImagem", e.target.value)}
+            aria-label={ehMobile ? t("filtroImagem") : undefined}
+            className={classesEntrada}
+            title={t("filtroImagemTitulo")}
+          >
+            <option value="">{t("filtroImagem")}</option>
+            <option value="true">{t("filtroImagemSem")}</option>
+          </select>
+          <input
+            value={filtros.localizacao}
+            onChange={(e) => atualizarFiltro("localizacao", e.target.value)}
+            aria-label={ehMobile ? t("placeholderLocalizacao") : undefined}
+            placeholder={t("placeholderLocalizacao")}
+            className={`max-md:col-span-2 ${classesEntrada}`}
+          />
+        </div>
         <Botao type="button" variante="secundario" onClick={limparFiltros}>
           {t("limparFiltros")}
         </Botao>
@@ -356,57 +453,100 @@ export default function InventarioPage() {
       {mensagem && <p className="text-sm text-success-fg">{mensagem}</p>}
       {carregando && <p className="text-sm text-muted">{t("carregando")}</p>}
 
+      {/* Seleção em massa: no celular, barra fixa embaixo, na zona do polegar,
+          enquanto houver seleção (o `main` reserva o espaço dela). `z-30`:
+          acima do conteúdo, abaixo do sheet (`z-40`), que a cobre quando a
+          edição em massa abre. Em pé, o texto numa linha e os botões embaixo;
+          deitado (640px ou mais), tudo numa linha só, para a barra não comer
+          um quarto da altura. No desktop, o painel de sempre, no lugar de
+          sempre. */}
       {selecionados.size > 0 && (
-        <Painel padding="sm" className="flex items-center justify-between">
-          <span className="text-sm">{t("selecionadas", { total: selecionados.size })}</span>
-          <div className="flex gap-2">
-            <Botao type="button" variante="primario" tamanho="sm" onClick={() => setEditandoMassa(true)}>
+        <Painel
+          padding="sm"
+          className="flex items-center justify-between max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:flex-wrap max-md:gap-2 max-md:rounded-none max-md:border-x-0 max-md:border-b-0 max-md:border-line max-md:px-4 max-md:pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+        >
+          <span className="text-sm max-md:basis-full max-md:sm:basis-auto">
+            {t("selecionadas", { total: selecionados.size })}
+          </span>
+          <div className="flex gap-2 max-md:basis-full max-md:sm:basis-auto">
+            <Botao
+              type="button"
+              variante="primario"
+              tamanho="sm"
+              className="max-md:flex-1"
+              onClick={() => setEditandoMassa(true)}
+            >
               {t("editarSelecionadas")}
             </Botao>
-            <Botao type="button" variante="secundario" tamanho="sm" onClick={() => setSelecionados(new Set())}>
+            <Botao
+              type="button"
+              variante="secundario"
+              tamanho="sm"
+              className="max-md:flex-1"
+              onClick={() => setSelecionados(new Set())}
+            >
               {t("limparSelecao")}
             </Botao>
           </div>
         </Painel>
       )}
 
-      <Tabela rolagemPropria>
-        <thead>
-          <tr className={classesLinhaCabecalho}>
-            <th className={classesCelulaCabecalho}>
-              <input
-                type="checkbox"
-                checked={itens.length > 0 && selecionados.size === itens.length}
-                onChange={alternarSelecaoTodos}
-                aria-label={t("selecionarTodos")}
-              />
+      {/* No celular a tabela vira lista de cartões (ver `classesLinhaCartao`).
+          O cabeçalho continua visível como uma faixa só com o "selecionar
+          todos" — o único controle que ele tem; as demais células saem de
+          cena. A faixa ocupa a largura toda (a linha do cabeçalho é bloco, e
+          não a faixa com recuo de `classesLinhaCabecalhoComControle`): o fundo
+          e a régua são da célula, e um recuo na linha deixaria as pontas sem
+          fundo. A caixa fica a 12px da borda, alinhada com a das linhas. */}
+      <Tabela rolagemPropria className={classesTabelaEmpilhada}>
+        <thead className={classesCabecalhoComControle}>
+          <tr className={`${classesLinhaCabecalho} max-md:block`}>
+            <th className={`${classesCelulaCabecalho} ${classesCelulaCabecalhoControle} max-md:p-0`}>
+              <label className="md:contents max-md:flex max-md:min-h-11 max-md:flex-1 max-md:items-center max-md:gap-3 max-md:pl-3">
+                <input
+                  type="checkbox"
+                  checked={itens.length > 0 && selecionados.size === itens.length}
+                  onChange={alternarSelecaoTodos}
+                  aria-label={t("selecionarTodos")}
+                />
+                <span className="md:hidden">{tm("selecionarTodos")}</span>
+              </label>
             </th>
-            <th className={classesCelulaCabecalho}></th>
-            <th className={classesCelulaCabecalho}>{t("colunaCarta")}</th>
-            <th className={classesCelulaCabecalho}>{t("colunaSet")}</th>
-            <th className={classesCelulaCabecalho}>{t("colunaQtd")}</th>
-            <th className={classesCelulaCabecalho}>{t("colunaVariante")}</th>
-            <th className={classesCelulaCabecalho}>{t("colunaIdioma")}</th>
-            <th className={classesCelulaCabecalho}>{t("colunaCondicao")}</th>
-            <th className={classesCelulaCabecalho}>{t("colunaGraded")}</th>
-            <th className={classesCelulaCabecalho}>{t("colunaLocalizacao")}</th>
-            <th className={classesCelulaCabecalho}>{t("colunaVaga")}</th>
-            <th className={classesCelulaCabecalho}></th>
+            <th className={`${classesCelulaCabecalho} ${classesCelulaCabecalhoOculta}`}></th>
+            <th className={`${classesCelulaCabecalho} ${classesCelulaCabecalhoOculta}`}>{t("colunaCarta")}</th>
+            <th className={`${classesCelulaCabecalho} ${classesCelulaCabecalhoOculta}`}>{t("colunaSet")}</th>
+            <th className={`${classesCelulaCabecalho} ${classesCelulaCabecalhoOculta}`}>{t("colunaQtd")}</th>
+            <th className={`${classesCelulaCabecalho} ${classesCelulaCabecalhoOculta}`}>{t("colunaVariante")}</th>
+            <th className={`${classesCelulaCabecalho} ${classesCelulaCabecalhoOculta}`}>{t("colunaIdioma")}</th>
+            <th className={`${classesCelulaCabecalho} ${classesCelulaCabecalhoOculta}`}>{t("colunaCondicao")}</th>
+            <th className={`${classesCelulaCabecalho} ${classesCelulaCabecalhoOculta}`}>{t("colunaGraded")}</th>
+            <th className={`${classesCelulaCabecalho} ${classesCelulaCabecalhoOculta}`}>{t("colunaLocalizacao")}</th>
+            <th className={`${classesCelulaCabecalho} ${classesCelulaCabecalhoOculta}`}>{t("colunaVaga")}</th>
+            <th className={`${classesCelulaCabecalho} ${classesCelulaCabecalhoOculta}`}></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className={classesTabelaEmpilhada}>
           {itens.map((c) => {
             return (
-              <tr key={c.id} className={classesLinha}>
-                <td className="p-2">
-                  <input
-                    type="checkbox"
-                    checked={selecionados.has(c.id)}
-                    onChange={() => alternarSelecao(c.id)}
-                    aria-label={t("selecionarCarta", { carta: c.cartaNome })}
-                  />
+              <tr key={c.id} className={`${classesLinha} ${classesLinhaCartao}`}>
+                {/* O `label` é a área de toque de 44 da caixa no celular; no
+                    desktop é `contents` e a célula sai como sempre. */}
+                <td className="p-2 max-md:absolute max-md:top-3 max-md:left-0 max-md:p-0">
+                  <label className="md:contents max-md:flex max-md:size-11 max-md:items-center max-md:justify-center">
+                    <input
+                      type="checkbox"
+                      checked={selecionados.has(c.id)}
+                      onChange={() => alternarSelecao(c.id)}
+                      aria-label={t("selecionarCarta", { carta: c.cartaNome })}
+                    />
+                  </label>
                 </td>
-                <td className="p-2">
+                {/* Miniatura centrada numa coluna de 44 (a largura da área de
+                    toque do zoom). O "+ foto"/"trocar" de `AdicionarImagemLocal`
+                    é filho direto da célula e ganha aqui os 44px de área no
+                    celular; `>` e não descendente, para não alcançar os botões
+                    da janela que ele abre, renderizada dentro da mesma célula. */}
+                <td className="p-2 max-md:absolute max-md:top-3 max-md:left-[3.25rem] max-md:flex max-md:w-11 max-md:flex-col max-md:items-center max-md:p-0 max-md:[&>button]:inline-flex max-md:[&>button]:min-h-11 max-md:[&>button]:min-w-11 max-md:[&>button]:items-center max-md:[&>button]:justify-center">
                   <ImagemCartaComZoom
                     imagemUrl={c.imagemUrl}
                     origem={c.imagemOrigem}
@@ -451,46 +591,92 @@ export default function InventarioPage() {
                     />
                   )}
                 </td>
-                <td className="p-2">
+                <td className={`p-2 ${classesCelulaEmpilhada} max-md:basis-full`}>
                   <NomeCarta nome={c.cartaNome} nomeEspecie={c.nomeEspecie} />{" "}
                   <span className="text-muted">#{c.cartaLocalId}</span>
                 </td>
-                <td className="p-2 text-muted">{c.setNome}</td>
-                <td className="p-2 font-mono tabular-nums">{c.quantidade}</td>
-                <td className="p-2">
+                <td className={`p-2 text-muted ${classesCelulaEmpilhada} max-md:basis-full max-md:text-xs`}>
+                  {c.setNome}
+                </td>
+                {/* Daqui até a condição, os selos correm numa linha só no
+                    celular. Sem o cabeçalho, um número solto não diz o que é:
+                    o rótulo da coluna entra antes dele, só no celular. */}
+                <td className={`p-2 font-mono tabular-nums ${classesCelulaEmpilhada} max-md:text-xs`}>
+                  <span className="font-sans text-muted md:hidden">{t("colunaQtd")} </span>
+                  {c.quantidade}
+                </td>
+                <td className={`p-2 ${classesCelulaEmpilhada}`}>
                   <ChipVariante variante={c.variante} tamanho="sm" />
                 </td>
-                <td className="p-2 font-mono text-xs">{c.idioma}</td>
-                <td className="p-2">
-                  <ChipCondicao condicao={c.condicao} />
+                <td className={`p-2 font-mono text-xs ${classesCelulaEmpilhada}`}>{c.idioma}</td>
+                {/* Selo solto, fora de controle: no celular ganha a `Dica` com
+                    o nome completo da condição, que no desktop é o `title`. */}
+                <td className={`p-2 ${classesCelulaEmpilhada}`}>
+                  <ChipCondicao condicao={c.condicao} dica />
                 </td>
-                <td className="p-2 font-mono text-xs">
+                {/* Graded e localização vazias são um "—" na tabela, que
+                    mantém a coluna legível; no cartão seriam ruído, e somem.
+                    Com valor, levam o nome do campo na frente. */}
+                <td
+                  className={`p-2 font-mono text-xs ${classesCelulaEmpilhada} ${
+                    c.gradedEmpresa ? "" : "max-md:hidden"
+                  }`}
+                >
+                  <span className="font-sans text-muted md:hidden">{t("colunaGraded")} </span>
                   {c.gradedEmpresa ? `${c.gradedEmpresa} ${c.gradedNota ?? ""}` : "—"}
                 </td>
-                <td className="p-2 text-muted">{c.localizacao ?? "—"}</td>
-                <td className="p-2">
+                <td
+                  className={`p-2 text-muted ${classesCelulaEmpilhada} max-md:basis-full max-md:text-xs ${
+                    c.localizacao ? "" : "max-md:hidden"
+                  }`}
+                >
+                  <span className="md:hidden">{t("colunaLocalizacao")}: </span>
+                  {c.localizacao ?? "—"}
+                </td>
+                <td className={`p-2 ${classesCelulaEmpilhada} max-md:basis-full`}>
                   {c.alocada ? (
-                    <Distintivo tom="acento">
+                    <Distintivo tom="acento" className="max-md:whitespace-normal">
                       {c.colecaoNome} #{c.vagaChave ? rotuloChaveVaga(c.vagaChave) : ""}
                     </Distintivo>
                   ) : (
                     <Distintivo tom="neutro">{t("livre")}</Distintivo>
                   )}
                 </td>
-                <td className="p-2 whitespace-nowrap">
+                {/* Ações com 44px de altura no celular e 8px entre as áreas
+                    (`gap-2`); o recuo negativo alinha o texto da primeira com
+                    o resto do cartão. "Remover", destrutiva, vai para a ponta
+                    oposta, longe das outras. Quebram de linha quando não cabem
+                    (a 320px, com a calha da miniatura, sobram ~170px). */}
+                <td className="p-2 whitespace-nowrap max-md:-ml-2 max-md:flex max-md:min-w-0 max-md:basis-full max-md:flex-wrap max-md:gap-2 max-md:p-0">
                   {c.alocada ? (
-                    <button type="button" onClick={() => desalocar(c)} className="mr-2 text-warning-fg hover:underline">
+                    <button
+                      type="button"
+                      onClick={() => desalocar(c)}
+                      className={`mr-2 text-warning-fg hover:underline ${classesAcaoLinha}`}
+                    >
                       {t("desalocar")}
                     </button>
                   ) : (
-                    <button type="button" onClick={() => setAlocando(c)} className="mr-2 text-accent hover:underline">
+                    <button
+                      type="button"
+                      onClick={() => setAlocando(c)}
+                      className={`mr-2 text-accent hover:underline ${classesAcaoLinha}`}
+                    >
                       {t("alocar")}
                     </button>
                   )}
-                  <button type="button" onClick={() => setEditando(c)} className="mr-2 text-accent hover:underline">
+                  <button
+                    type="button"
+                    onClick={() => setEditando(c)}
+                    className={`mr-2 text-accent hover:underline ${classesAcaoLinha}`}
+                  >
                     {t("editar")}
                   </button>
-                  <button type="button" onClick={() => remover(c)} className="text-danger hover:underline">
+                  <button
+                    type="button"
+                    onClick={() => remover(c)}
+                    className={`text-danger hover:underline ${classesAcaoLinha} max-md:ml-auto`}
+                  >
                     {t("remover")}
                   </button>
                 </td>
@@ -498,8 +684,8 @@ export default function InventarioPage() {
             );
           })}
           {itens.length === 0 && !carregando && (
-            <tr>
-              <td colSpan={12} className="p-4">
+            <tr className="max-md:block">
+              <td colSpan={12} className="p-4 max-md:block">
                 <EstadoVazio>{t("vazio")}</EstadoVazio>
               </td>
             </tr>
@@ -711,7 +897,9 @@ function ModalEdicao({
 
       <fieldset className="flex flex-col gap-2 rounded border border-line p-3">
         <legend className="px-1 text-muted">{t("colunaGraded")}</legend>
-        <div className="grid grid-cols-3 gap-3">
+        {/* Três campos de texto lado a lado não cabem em 393px com 16px de
+            fonte: no celular, um por linha. Mesmo para a aquisição abaixo. */}
+        <div className="grid grid-cols-3 gap-3 max-md:grid-cols-1">
           <input
             value={gradedEmpresa}
             onChange={(e) => setGradedEmpresa(e.target.value)}
@@ -735,7 +923,7 @@ function ModalEdicao({
 
       <fieldset className="flex flex-col gap-2 rounded border border-line p-3">
         <legend className="px-1 text-muted">{t("aquisicao")}</legend>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3 max-md:grid-cols-1">
           <input
             type="date"
             value={aquisicaoData}
@@ -849,9 +1037,22 @@ function ModalAlocarDestino({
     }
   }
 
+  // Mesmo raciocínio do `id` fixo em `ModalEdicao`: uma janela por vez.
+  const tituloId = `alocar-copia-titulo-${copia.id}`;
+
   return (
-    <Modal>
-      <h2 className="font-medium text-foreground">
+    <Modal
+      rotuloId={tituloId}
+      onFechar={onFechar}
+      rodape={
+        <div className="flex justify-end pt-2">
+          <Botao type="button" variante="secundario" onClick={onFechar}>
+            {t("fechar")}
+          </Botao>
+        </div>
+      }
+    >
+      <h2 id={tituloId} className="font-medium text-foreground">
         {t("modalAlocarTitulo", { carta: copia.cartaNome })}{" "}
         <span className="text-muted">#{copia.cartaLocalId}</span>
       </h2>
@@ -864,7 +1065,10 @@ function ModalAlocarDestino({
         {destinos?.map((d) => {
           const chave = chaveDestino(d);
           return (
-            <li key={chave} className="flex items-center gap-3 py-2">
+            // No celular: mais altura por candidato, para as áreas de toque
+            // de 44 dos botões `xs` de duas linhas vizinhas não se tocarem; e a
+            // confirmação de fora de padrão desce para uma linha própria.
+            <li key={chave} className="flex items-center gap-3 py-2 max-md:flex-wrap max-md:py-3">
               <div className="flex-1">
                 <div>
                   {d.colecaoNome}
@@ -884,12 +1088,16 @@ function ModalAlocarDestino({
                 </div>
               </div>
               {confirmandoChave === chave ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 max-md:basis-full max-md:justify-end">
                   <span className="text-xs text-warning-fg">{t("confirmaForaDePadrao")}</span>
                   <Botao type="button" variante="secundario" tamanho="xs" onClick={() => alocar(d, true)}>
                     {t("confirmar")}
                   </Botao>
-                  <button type="button" onClick={() => setConfirmandoChave(null)} className="text-xs text-muted">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmandoChave(null)}
+                    className="alvo-toque text-xs text-muted"
+                  >
                     {t("cancelar")}
                   </button>
                 </div>
@@ -913,12 +1121,6 @@ function ModalAlocarDestino({
           </EstadoVazio>
         )}
       </ul>
-
-      <div className="flex justify-end pt-2">
-        <Botao type="button" variante="secundario" onClick={onFechar}>
-          {t("fechar")}
-        </Botao>
-      </div>
     </Modal>
   );
 }
@@ -951,6 +1153,7 @@ function ModalEdicaoMassa({
   onSalvo: (msg: string) => void;
 }) {
   const t = useTranslations("inventario");
+  const ehMobile = useEhMobile();
   const tr = useTranslations("recusas");
   const [alterarCondicao, setAlterarCondicao] = useState(false);
   const [condicao, setCondicao] = useState<Condicao>("NM");
@@ -1001,21 +1204,67 @@ function ModalEdicaoMassa({
     }
   }
 
+  const tituloId = "editar-massa-titulo";
+
+  /* No celular, um campo por bloco: a caixa e o nome do campo numa linha de
+     44px (o `label` inteiro é a área de toque da caixa) e o controle embaixo,
+     na largura toda — o nome com largura fixa e o controle ao lado não cabem
+     em 393px com campo de 16px. */
+  const classesLinhaCampo = "flex items-center gap-2 max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-2";
+  const classesNomeCampo = "w-28 text-muted max-md:inline-flex max-md:min-h-11 max-md:w-auto max-md:flex-1 max-md:items-center";
+
   return (
-    <Modal>
-      <h2 className="font-medium text-foreground">
+    <Modal
+      rotuloId={tituloId}
+      onFechar={onFechar}
+      rodape={
+        // No celular a pergunta de confirmação ocupa uma linha própria acima
+        // dos botões; ao lado deles, não caberia.
+        <div className="flex items-center justify-end gap-2 pt-2 max-md:flex-wrap">
+          {confirmando ? (
+            <>
+              <span className="mr-auto text-warning-fg max-md:basis-full">
+                {t("massaConfirma", { total: itens.length })}
+              </span>
+              <Botao type="button" variante="secundario" onClick={() => setConfirmando(false)}>
+                {t("voltar")}
+              </Botao>
+              <Botao type="button" variante="primario" disabled={enviando} onClick={aplicar}>
+                {enviando ? t("aplicando") : t("confirmar")}
+              </Botao>
+            </>
+          ) : (
+            <>
+              <Botao type="button" variante="secundario" onClick={onFechar}>
+                {t("cancelar")}
+              </Botao>
+              <Botao
+                type="button"
+                variante="primario"
+                disabled={!algumCampoMarcado}
+                onClick={() => setConfirmando(true)}
+              >
+                {t("massaAplicar", { total: itens.length })}
+              </Botao>
+            </>
+          )}
+        </div>
+      }
+    >
+      <h2 id={tituloId} className="font-medium text-foreground">
         {t("massaTitulo", { total: itens.length })}
       </h2>
       <p className="text-muted">{t("massaExplicacao")}</p>
 
-      <label className="flex items-center gap-2">
+      <label className={classesLinhaCampo}>
         <input type="checkbox" checked={alterarCondicao} onChange={(e) => setAlterarCondicao(e.target.checked)} />
-        <span className="w-28 text-muted">{t("colunaCondicao")}</span>
+        <span className={classesNomeCampo}>{t("colunaCondicao")}</span>
         <select
+          aria-label={ehMobile ? t("colunaCondicao") : undefined}
           value={condicao}
           disabled={!alterarCondicao}
           onChange={(e) => setCondicao(e.target.value as Condicao)}
-          className={`flex-1 disabled:opacity-40 ${classesEntrada}`}
+          className={`flex-1 disabled:opacity-40 max-md:basis-full ${classesEntrada}`}
         >
           {CONDICOES.map((c) => (
             <option key={c} value={c}>
@@ -1025,30 +1274,32 @@ function ModalEdicaoMassa({
         </select>
       </label>
 
-      <label className="flex items-center gap-2">
+      <label className={classesLinhaCampo}>
         <input
           type="checkbox"
           checked={alterarLocalizacao}
           onChange={(e) => setAlterarLocalizacao(e.target.checked)}
         />
-        <span className="w-28 text-muted">{t("colunaLocalizacao")}</span>
+        <span className={classesNomeCampo}>{t("colunaLocalizacao")}</span>
         <input
+          aria-label={ehMobile ? t("colunaLocalizacao") : undefined}
           value={localizacao}
           disabled={!alterarLocalizacao}
           onChange={(e) => setLocalizacao(e.target.value)}
           placeholder={t("placeholderFichario")}
-          className={`flex-1 disabled:opacity-40 ${classesEntrada}`}
+          className={`flex-1 disabled:opacity-40 max-md:basis-full ${classesEntrada}`}
         />
       </label>
 
-      <label className="flex items-center gap-2">
+      <label className={classesLinhaCampo}>
         <input type="checkbox" checked={alterarIdioma} onChange={(e) => setAlterarIdioma(e.target.checked)} />
-        <span className="w-28 text-muted">{t("campoIdiomaFisico")}</span>
+        <span className={classesNomeCampo}>{t("campoIdiomaFisico")}</span>
         <select
+          aria-label={ehMobile ? t("campoIdiomaFisico") : undefined}
           value={idioma}
           disabled={!alterarIdioma}
           onChange={(e) => setIdioma(e.target.value as Idioma)}
-          className={`flex-1 disabled:opacity-40 ${classesEntrada}`}
+          className={`flex-1 disabled:opacity-40 max-md:basis-full ${classesEntrada}`}
         >
           {IDIOMAS.map((i) => (
             <option key={i} value={i}>
@@ -1058,20 +1309,21 @@ function ModalEdicaoMassa({
         </select>
       </label>
 
-      <label className="flex items-center gap-2">
+      <label className={classesLinhaCampo}>
         <input
           type="checkbox"
           checked={alterarVariante}
           disabled={variantesComuns.length === 0}
           onChange={(e) => setAlterarVariante(e.target.checked)}
         />
-        <span className="w-28 text-muted">{t("colunaVariante")}</span>
+        <span className={classesNomeCampo}>{t("colunaVariante")}</span>
         {variantesComuns.length > 0 ? (
           <select
             value={variante}
+            aria-label={ehMobile ? t("colunaVariante") : undefined}
             disabled={!alterarVariante}
             onChange={(e) => setVariante(e.target.value as VarianteCopia)}
-            className={`flex-1 disabled:opacity-40 ${classesEntrada}`}
+            className={`flex-1 disabled:opacity-40 max-md:basis-full ${classesEntrada}`}
           >
             {variantesComuns.map((v) => (
               <option key={v} value={v}>
@@ -1080,41 +1332,11 @@ function ModalEdicaoMassa({
             ))}
           </select>
         ) : (
-          <span className="flex-1 text-xs text-warning-fg">{t("semVarianteComum")}</span>
+          <span className="flex-1 text-xs text-warning-fg max-md:basis-full">{t("semVarianteComum")}</span>
         )}
       </label>
 
       {erro && <p className="text-danger">{erro}</p>}
-
-      <div className="flex items-center justify-end gap-2 pt-2">
-        {confirmando ? (
-          <>
-            <span className="mr-auto text-warning-fg">
-              {t("massaConfirma", { total: itens.length })}
-            </span>
-            <Botao type="button" variante="secundario" onClick={() => setConfirmando(false)}>
-              {t("voltar")}
-            </Botao>
-            <Botao type="button" variante="primario" disabled={enviando} onClick={aplicar}>
-              {enviando ? t("aplicando") : t("confirmar")}
-            </Botao>
-          </>
-        ) : (
-          <>
-            <Botao type="button" variante="secundario" onClick={onFechar}>
-              {t("cancelar")}
-            </Botao>
-            <Botao
-              type="button"
-              variante="primario"
-              disabled={!algumCampoMarcado}
-              onClick={() => setConfirmando(true)}
-            >
-              {t("massaAplicar", { total: itens.length })}
-            </Botao>
-          </>
-        )}
-      </div>
     </Modal>
   );
 }
