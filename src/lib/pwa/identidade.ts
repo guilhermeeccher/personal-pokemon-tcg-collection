@@ -8,7 +8,7 @@
    título do `appleWebApp`. Ficam juntos para trocar de uma vez se o rótulo
    não couber ou não agradar no aparelho. */
 export const NOME_APP = "Coleção Pokémon";
-export const NOME_CURTO_APP = "Coleção";
+export const NOME_CURTO_APP = "Coleção PKMN";
 
 /* Cores do design system (`src/app/tokens/colors.css`), em hex literal porque
    o manifesto não resolve `var()`:
