@@ -12,7 +12,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 
 import { Alerta } from "@/app/_componentes/alerta";
 import { Botao } from "@/app/_componentes/botao";
@@ -21,7 +21,17 @@ import { Campo, classesEntrada } from "@/app/_componentes/campo";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { Modal } from "@/app/_componentes/modal";
 import { textoDaRecusa, textosDasRecusas } from "@/app/_componentes/recusa";
-import { classesCelulaCabecalho, classesLinha, classesLinhaCabecalho, Tabela } from "@/app/_componentes/tabela";
+import {
+  classesCabecalhoEmpilhado,
+  classesCelulaCabecalho,
+  classesCelulaEmpilhada,
+  classesLinha,
+  classesLinhaCabecalho,
+  classesLinhaEmpilhada,
+  classesTabelaEmpilhada,
+  Tabela,
+} from "@/app/_componentes/tabela";
+import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 import { filtrarFormasDex } from "@/lib/dominio/dex-grade";
 import { agruparInventario, compararPorNome, type GrupoInventario } from "@/lib/dominio/dex-inventario";
 import { JOGOS_DEX, jogoDex, LOCAL_HOME, ORIGEM_HOME } from "@/lib/dominio/dex-jogos";
@@ -42,6 +52,8 @@ export function InventarioDex({
 }) {
   const t = useTranslations("dex");
   const tr = useTranslations("recusas");
+  const tm = useTranslations("componentes.mobile");
+  const ehMobile = useEhMobile();
   const router = useRouter();
   const rotulo = useRotuloForma(formas);
   const recarregar = () => router.refresh();
@@ -52,6 +64,8 @@ export function InventarioDex({
   const [soShiny, setSoShiny] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [corrigindo, setCorrigindo] = useState<GrupoInventario | null>(null);
+  // Só a visibilidade dos filtros secundários muda no celular; o estado deles é o de sempre.
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
 
   const formaPorId = useMemo(() => new Map(formas.map((f) => [f.id, f])), [formas]);
   const ativos = jogos.filter((j) => j.ativo);
@@ -76,6 +90,15 @@ export function InventarioDex({
       .sort((a, b) => compararPorNome(a.forma, b.forma));
   }, [registros, filtroLocal, soShiny, busca, formas, formaPorId]);
 
+  // "Busca" fica sempre à vista no celular e não entra na conta do painel.
+  const filtrosAtivos = (filtroLocal ? 1 : 0) + (soShiny ? 1 : 0);
+  const painelFiltros = filtrosAbertos ? "" : "max-md:hidden";
+
+  function limparFiltros() {
+    setFiltroLocal("");
+    setSoShiny(false);
+  }
+
   const totalPokemon = linhas.reduce((soma, l) => soma + l.grupo.ids.length, 0);
 
   async function apagarUm(grupo: GrupoInventario, forma: FormaDexDTO) {
@@ -90,8 +113,11 @@ export function InventarioDex({
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 sm:p-8 md:h-full">
       <CabecalhoPagina titulo={t("inventario.titulo")} />
 
-      <div className="flex flex-wrap items-end gap-3">
-        <Campo rotulo={t("inventario.filtroLocal")}>
+      {/* No celular os filtros viram coluna: a busca primeiro, depois a faixa "Filtros (n)" e,
+          só aberto, "onde está" e "só shiny" (a ordem visual vem de `order`; no desktop o DOM e a
+          linha de sempre). */}
+      <div className="flex flex-wrap items-end gap-3 max-md:flex-col max-md:items-stretch max-md:gap-2">
+        <Campo rotulo={t("inventario.filtroLocal")} className={`max-md:order-3 ${painelFiltros}`}>
           <select className={classesEntrada} value={filtroLocal} onChange={(e) => setFiltroLocal(e.target.value)}>
             <option value="">{t("inventario.todos")}</option>
             <option value={LOCAL_HOME}>{t("home")}</option>
@@ -102,7 +128,7 @@ export function InventarioDex({
             ))}
           </select>
         </Campo>
-        <Campo rotulo={t("inventario.buscar")}>
+        <Campo rotulo={t("inventario.buscar")} className="max-md:order-1">
           <input
             className={classesEntrada}
             value={busca}
@@ -110,19 +136,31 @@ export function InventarioDex({
             onChange={(e) => setBusca(e.target.value)}
           />
         </Campo>
-        <label className="flex h-[34px] items-center gap-2 text-sm">
+        {ehMobile && (
+          <div className="order-2 flex gap-2">
+            <Botao type="button" aria-expanded={filtrosAbertos} onClick={() => setFiltrosAbertos((a) => !a)}>
+              {filtrosAtivos > 0 ? tm("filtrosAtivos", { total: String(filtrosAtivos) }) : tm("filtros")}
+            </Botao>
+            {filtrosAtivos > 0 && (
+              <Botao type="button" onClick={limparFiltros}>
+                {tm("limparFiltros")}
+              </Botao>
+            )}
+          </div>
+        )}
+        <label className={`flex h-[34px] items-center gap-2 text-sm max-md:order-4 max-md:h-11 ${painelFiltros}`}>
           <input type="checkbox" checked={soShiny} onChange={(e) => setSoShiny(e.target.checked)} />
           {t("inventario.soShiny")}
         </label>
-        <span className="ml-auto text-xs text-muted">
+        <span className="ml-auto text-xs text-muted max-md:order-5 max-md:ml-0">
           {t("inventario.total", { linhas: String(linhas.length), pokemon: String(totalPokemon) })}
         </span>
       </div>
 
       {(erro || erroMover) && <Alerta tom="perigo">{erro ?? erroMover}</Alerta>}
 
-      <Tabela rolagemPropria>
-        <thead>
+      <Tabela rolagemPropria className={classesTabelaEmpilhada}>
+        <thead className={classesCabecalhoEmpilhado}>
           <tr className={classesLinhaCabecalho}>
             <th className={classesCelulaCabecalho} />
             <th className={classesCelulaCabecalho}>{t("inventario.colPokemon")}</th>
@@ -132,15 +170,18 @@ export function InventarioDex({
             <th className={classesCelulaCabecalho} />
           </tr>
         </thead>
-        <tbody>
+        <tbody className={classesTabelaEmpilhada}>
           {linhas.map(({ grupo: g, forma }) => {
             const destinos = [LOCAL_HOME, ...ativos.map((j) => j.jogoId)].filter((d) => d !== g.local);
             return (
-              <tr key={g.chave} className={classesLinha}>
-                <td className="p-1">
+              <tr
+                key={g.chave}
+                className={`${classesLinha} ${classesLinhaEmpilhada} max-md:grid-cols-[2.5rem_minmax(0,1fr)_auto] max-md:items-center`}
+              >
+                <td className={`p-1 ${classesCelulaEmpilhada}`}>
                   <SpriteDex sprite={forma.sprite} shiny={g.shiny} tamanho={40} />
                 </td>
-                <td className="p-2">
+                <td className={`p-2 ${classesCelulaEmpilhada} max-md:col-start-2`}>
                   <span className="mr-1 font-mono text-xs tabular-nums text-muted">#{String(forma.numero).padStart(4, "0")}</span>
                   <span className="font-semibold text-strong">{forma.especie}</span>
                   {rotulo.forma(forma) && <span className="ml-1 text-xs text-muted">{rotulo.forma(forma)}</span>}
@@ -153,22 +194,44 @@ export function InventarioDex({
                     <div className="text-xs text-muted">{[g.capturadoEm, g.notas].filter(Boolean).join(" · ")}</div>
                   )}
                 </td>
-                <td className="p-2 text-xs">{nomeLocal(g.jogoOrigem)}</td>
-                <td className="p-2">
+                {/* No celular o cabeçalho some, então origem e local ganham o rótulo da coluna
+                    como texto auxiliar (só montado ali: o desktop segue sem ele). */}
+                <td
+                  className={`p-2 text-xs ${classesCelulaEmpilhada} max-md:col-span-3 max-md:flex max-md:items-center max-md:justify-between max-md:gap-3`}
+                >
+                  {ehMobile && <span className="text-muted">{t("inventario.colOrigem")}</span>}
+                  {nomeLocal(g.jogoOrigem)}
+                </td>
+                <td
+                  className={`p-2 ${classesCelulaEmpilhada} max-md:col-span-3 max-md:flex max-md:items-center max-md:justify-between max-md:gap-3`}
+                >
+                  {ehMobile && <span className="text-xs text-muted">{t("inventario.colLocal")}</span>}
                   <Distintivo tom={g.local === LOCAL_HOME ? "sucesso" : "neutro"}>{nomeLocal(g.local)}</Distintivo>
                 </td>
-                <td className="p-2 font-mono tabular-nums">{g.ids.length}</td>
-                <td className="p-2">
-                  <div className="flex flex-wrap justify-end gap-1">
+                <td
+                  className={`p-2 font-mono tabular-nums ${classesCelulaEmpilhada} max-md:col-start-3 max-md:row-start-1 max-md:text-sm max-md:before:content-['×']`}
+                >
+                  {ehMobile && <span className="sr-only">{t("inventario.colQtd")}</span>}
+                  {g.ids.length}
+                </td>
+                <td className={`p-2 ${classesCelulaEmpilhada} max-md:col-span-3`}>
+                  {/* Celular: grade de 2 colunas, cada ação com 44 de altura e 8px de intervalo. */}
+                  <div className="flex flex-wrap justify-end gap-1 max-md:grid max-md:grid-cols-2 max-md:justify-stretch max-md:gap-2">
                     {g.local !== LOCAL_HOME && (
-                      <Botao tamanho="xs" variante="primario" disabled={ocupado} onClick={() => mover([g.ids[0]], LOCAL_HOME)}>
+                      <Botao
+                        tamanho="xs"
+                        variante="primario"
+                        className="max-md:h-11 max-md:w-full"
+                        disabled={ocupado}
+                        onClick={() => mover([g.ids[0]], LOCAL_HOME)}
+                      >
                         {t("inventario.enviarHome")}
                       </Botao>
                     )}
                     {destinos.length > 1 && (
                       <select
                         aria-label={t("inventario.moverPara")}
-                        className={`${classesEntrada} !min-h-6 !py-0 text-xs`}
+                        className={`${classesEntrada} md:!min-h-6 md:!py-0 text-xs max-md:w-full`}
                         value=""
                         disabled={ocupado}
                         onChange={(e) => e.target.value && mover([g.ids[0]], e.target.value)}
@@ -181,10 +244,16 @@ export function InventarioDex({
                         ))}
                       </select>
                     )}
-                    <Botao tamanho="xs" disabled={ocupado} onClick={() => setCorrigindo(g)}>
+                    <Botao tamanho="xs" className="max-md:h-11 max-md:w-full" disabled={ocupado} onClick={() => setCorrigindo(g)}>
                       {t("inventario.corrigir")}
                     </Botao>
-                    <Botao tamanho="xs" variante="perigo" disabled={ocupado} onClick={() => apagarUm(g, forma)}>
+                    <Botao
+                      tamanho="xs"
+                      variante="perigo"
+                      className="max-md:h-11 max-md:w-full"
+                      disabled={ocupado}
+                      onClick={() => apagarUm(g, forma)}
+                    >
                       {t("inventario.apagar")}
                     </Botao>
                   </div>
@@ -194,7 +263,7 @@ export function InventarioDex({
           })}
           {linhas.length === 0 && (
             <tr>
-              <td colSpan={6} className="p-4 text-center text-sm text-muted">
+              <td colSpan={6} className="p-4 text-center text-sm text-muted max-md:block">
                 {registros.length === 0 ? t("inventario.vazio") : t("inventario.nenhum")}
               </td>
             </tr>
@@ -241,6 +310,7 @@ function CorrecaoGrupo({
   const [erros, setErros] = useState<string[]>([]);
   const [salvando, setSalvando] = useState(false);
   const meus = new Set(jogos.map((j) => j.jogoId));
+  const tituloId = useId();
 
   async function salvar(e: React.FormEvent) {
     e.preventDefault();
@@ -263,12 +333,27 @@ function CorrecaoGrupo({
   }
 
   return (
-    <Modal as="form" onSubmit={salvar}>
-      <h3 className="text-base font-bold text-strong">
+    <Modal
+      as="form"
+      onSubmit={salvar}
+      rotuloId={tituloId}
+      onFechar={() => aoFechar(false)}
+      rodape={
+        <div className="flex justify-end gap-2">
+          <Botao type="button" onClick={() => aoFechar(false)}>
+            {t("inventario.cancelar")}
+          </Botao>
+          <Botao type="submit" variante="primario" disabled={salvando}>
+            {t("inventario.salvar")}
+          </Botao>
+        </div>
+      }
+    >
+      <h3 id={tituloId} className="text-base font-bold text-strong">
         {t("inventario.corrigirTitulo", { quantidade: String(grupo.ids.length) })}
       </h3>
       <p className="font-semibold">{nome}</p>
-      <label className="flex items-center gap-2 text-sm font-medium">
+      <label className="flex items-center gap-2 text-sm font-medium max-md:min-h-11">
         <input
           type="checkbox"
           checked={dados.shiny}
@@ -323,14 +408,6 @@ function CorrecaoGrupo({
           </ul>
         </Alerta>
       )}
-      <div className="flex justify-end gap-2">
-        <Botao type="button" onClick={() => aoFechar(false)}>
-          {t("inventario.cancelar")}
-        </Botao>
-        <Botao type="submit" variante="primario" disabled={salvando}>
-          {t("inventario.salvar")}
-        </Botao>
-      </div>
     </Modal>
   );
 }

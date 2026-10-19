@@ -10,7 +10,7 @@
  */
 
 import { useTranslations } from "next-intl";
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 
 import { Botao } from "@/app/_componentes/botao";
 import { Modal } from "@/app/_componentes/modal";
@@ -33,6 +33,7 @@ export function useTransferencia(aoConcluir: () => void): {
   const [pendente, setPendente] = useState<Pendente | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const tituloId = useId();
 
   async function enviar(ids: string[], local: string, confirmarSemVolta: boolean) {
     setOcupado(true);
@@ -62,15 +63,23 @@ export function useTransferencia(aoConcluir: () => void): {
   }
 
   const modal = pendente ? (
-    <Modal>
-      <h3 className="text-base font-bold text-strong">{t("transferencia.titulo")}</h3>
+    // O Esc cancela (fecha sem transferir): a confirmação só acontece pelo clique em "Transferir".
+    <Modal
+      rotuloId={tituloId}
+      onFechar={() => setPendente(null)}
+      rodape={
+        <div className="flex justify-end gap-2">
+          <Botao onClick={() => setPendente(null)}>{t("transferencia.cancelar")}</Botao>
+          <Botao variante="primario" disabled={ocupado} onClick={() => enviar(pendente.ids, pendente.local, true)}>
+            {t("transferencia.confirmar")}
+          </Botao>
+        </div>
+      }
+    >
+      <h3 id={tituloId} className="text-base font-bold text-strong">
+        {t("transferencia.titulo")}
+      </h3>
       <p>{pendente.frase}</p>
-      <div className="flex justify-end gap-2">
-        <Botao onClick={() => setPendente(null)}>{t("transferencia.cancelar")}</Botao>
-        <Botao variante="primario" disabled={ocupado} onClick={() => enviar(pendente.ids, pendente.local, true)}>
-          {t("transferencia.confirmar")}
-        </Botao>
-      </div>
     </Modal>
   ) : null;
 

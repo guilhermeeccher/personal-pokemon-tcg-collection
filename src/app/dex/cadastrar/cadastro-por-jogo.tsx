@@ -22,12 +22,29 @@
  *
  * 1.391 linhas com dois campos cada: a linha é memorizada e só redesenha
  * quando a quantidade dela muda.
+ *
+ * ## No celular (abaixo de 768px)
+ *
+ * A mesma tabela vira uma lista de cartões, pela mesma marcação (`tr`/`td`
+ * com `max-md:`; ver `tabela.tsx`): sprite, nome e número em cima, o "tenho"
+ * embaixo e as duas quantidades uma sob a outra, cada uma numa linha inteira
+ * com o rótulo visível à esquerda (lado a lado, a 320px, sobravam ~21px para
+ * cada número).
+ * "Cadastrar (N)" desce para uma barra fixa na base, na zona do polegar —
+ * com 1.391 linhas, um botão no topo da página ficaria a uma rolagem inteira
+ * de distância do que o usuário acabou de marcar.
+ *
+ * O stepper (`Quantidade`) só é montado no celular, e quem decide é o
+ * componente de cima, uma vez, por `useEhMobile()`: cada `Quantidade` assina
+ * a media query por conta própria, e 2.782 assinaturas no desktop seriam um
+ * custo novo para um layout que não mudou. No desktop a linha devolve o
+ * mesmo `<input>` de sempre.
  */
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { memo, useCallback, useMemo, useState } from "react";
+import { type ChangeEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Alerta } from "@/app/_componentes/alerta";
 import { Botao, classesBotao } from "@/app/_componentes/botao";
@@ -35,7 +52,18 @@ import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
 import { classesEntrada } from "@/app/_componentes/campo";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { textosDasRecusas } from "@/app/_componentes/recusa";
-import { classesCelulaCabecalho, classesLinha, classesLinhaCabecalho, Tabela } from "@/app/_componentes/tabela";
+import { Quantidade } from "@/app/_componentes/quantidade";
+import {
+  classesCabecalhoEmpilhado,
+  classesCelulaCabecalho,
+  classesCelulaEmpilhada,
+  classesLinha,
+  classesLinhaCabecalho,
+  classesLinhaEmpilhada,
+  classesTabelaEmpilhada,
+  Tabela,
+} from "@/app/_componentes/tabela";
+import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 import { catalogoDoJogo, type DisponibilidadeForma } from "@/lib/dominio/dex-disponibilidade";
 import { filtrarFormasDex, type VistaDex } from "@/lib/dominio/dex-grade";
 import { ORIGEM_HOME } from "@/lib/dominio/dex-jogos";
@@ -50,8 +78,11 @@ import { useRotuloForma } from "../_componentes/use-rotulo-forma";
 type Quantidades = Record<string, { normal: number; shiny: number }>;
 type Trilha = "normal" | "shiny";
 
+/* No celular a pílula chega a 44px de altura e largura (`min-h-11 min-w-11`),
+   com mais respiro lateral; o intervalo de 8px entre elas vem do `gap-2` do
+   grupo. De 768px para cima as classes `max-md:` não existem. */
 const classesOpcao = (ativa: boolean) =>
-  `rounded-pill border px-3 py-1 text-xs font-semibold [transition:var(--transition-control)] ${
+  `rounded-pill border px-3 py-1 text-xs font-semibold [transition:var(--transition-control)] max-md:inline-flex max-md:min-h-11 max-md:min-w-11 max-md:items-center max-md:justify-center max-md:px-4 max-md:text-sm ${
     ativa ? "border-accent bg-accent text-accent-fg" : "border-line text-muted hover:bg-surface-hover"
   }`;
 
@@ -71,6 +102,7 @@ const LinhaForma = memo(function LinhaForma({
   shiny,
   tenhoNormal,
   tenhoShiny,
+  ehMobile,
   aoMudar,
 }: {
   forma: FormaDexDTO;
@@ -85,56 +117,98 @@ const LinhaForma = memo(function LinhaForma({
   shiny: number;
   tenhoNormal: number;
   tenhoShiny: number;
+  /** Vem de cima (um `useEhMobile()` só): ver o cabeçalho do arquivo. */
+  ehMobile: boolean;
   aoMudar: (formaId: string, trilha: Trilha, valor: number) => void;
 }) {
   const t = useTranslations("dex");
   const marcada = normal + shiny > 0;
-  const campo = (trilha: Trilha, valor: number) => (
-    <input
-      type="number"
-      inputMode="numeric"
-      min={0}
-      max={MAX_QUANTIDADE_POR_LINHA}
-      aria-label={`${forma.especie} ${rotulo ?? ""} ${trilha}`}
-      className={`${classesEntrada} w-16 text-right tabular-nums`}
-      value={valor || ""}
-      onChange={(e) => aoMudar(forma.id, trilha, lerQuantidade(e.target.value))}
-    />
-  );
+  const campo = (trilha: Trilha, valor: number) => {
+    const nome = `${forma.especie} ${rotulo ?? ""} ${trilha}`;
+    const props = {
+      type: "number",
+      inputMode: "numeric",
+      min: 0,
+      max: MAX_QUANTIDADE_POR_LINHA,
+      "aria-label": nome,
+      // `max-md:px-1`/`text-center`: o campo do stepper divide a linha com o
+      // rótulo e dois botões de 44px; sem apertar o respiro lateral, em telas
+      // de 320px ele ficaria estreito para dois dígitos.
+      className: `${classesEntrada} w-16 text-right tabular-nums max-md:px-1 max-md:text-center`,
+      value: valor || "",
+      onChange: (e: ChangeEvent<HTMLInputElement>) => aoMudar(forma.id, trilha, lerQuantidade(e.target.value)),
+    } as const;
+    if (!ehMobile) return <input {...props} />;
+    return (
+      <Quantidade
+        rotulo={nome.replace(/\s+/g, " ")}
+        inputProps={props}
+        onAjustar={(delta) => aoMudar(forma.id, trilha, Math.min(Math.max(valor + delta, 0), MAX_QUANTIDADE_POR_LINHA))}
+      />
+    );
+  };
+  /* Celular: a grade tem 4 colunas (sprite · nome · nome · número); o "tenho" e
+     cada quantidade ocupam a linha inteira (`col-span-full`), uma sob a outra. */
+  const rotuloCampo = "text-xs font-semibold text-muted md:hidden";
+  const temAlgum = tenhoNormal > 0 || tenhoShiny > 0;
   return (
-    <tr className={`${classesLinha} ${marcada ? "bg-accent-soft" : ""}`}>
-      <td className="p-1">
+    <tr
+      className={`${classesLinha} ${classesLinhaEmpilhada} max-md:grid-cols-[2.5rem_minmax(0,1fr)_minmax(0,1fr)_2.5rem] max-md:items-center ${marcada ? "bg-accent-soft" : ""}`}
+    >
+      <td className={`p-1 ${classesCelulaEmpilhada}`}>
         <SpriteDex sprite={forma.sprite} shiny={false} tamanho={40} />
       </td>
-      <td className="p-2">
+      <td
+        className={`p-2 ${classesCelulaEmpilhada} max-md:col-span-2 max-md:flex max-md:flex-wrap max-md:items-center max-md:gap-x-2 max-md:gap-y-1`}
+      >
         <span className="font-semibold text-strong">{forma.especie}</span>
-        {rotulo && <span className="ml-1 text-xs text-muted">{rotulo}</span>}
+        {rotulo && <span className="ml-1 text-xs text-muted max-md:ml-0">{rotulo}</span>}
         {comCatalogo && !disponibilidade && (
-          <Distintivo className="ml-2">{t("cadastrar.foraDoJogo")}</Distintivo>
+          <Distintivo className="ml-2 max-md:ml-0">{t("cadastrar.foraDoJogo")}</Distintivo>
         )}
         {disponibilidade && disponibilidade.como !== "livre" && (
-          <Distintivo tom="aviso" className="ml-2">
+          <Distintivo tom="aviso" className="ml-2 max-md:ml-0">
             {t(`cadastrar.como.${disponibilidade.como}`)}
           </Distintivo>
         )}
         {trancadaPor && (
-          <Distintivo className="ml-2" title={trancadaPor}>
+          /* O texto já diz o checkpoint; o `title` repetiria o mesmo, então não
+             precisa de `Dica`. O nome do troféu é longo: quebra no celular. */
+          <Distintivo className="ml-2 max-md:ml-0 max-md:whitespace-normal" title={trancadaPor}>
             {t("cadastrar.trancada", { checkpoint: trancadaPor })}
           </Distintivo>
         )}
         {disponibilidade && !disponibilidade.transferivel && (
-          <Distintivo tom="perigo" className="ml-2">
+          <Distintivo tom="perigo" className="ml-2 max-md:ml-0">
             {t("cadastrar.naoVaiAoHome")}
           </Distintivo>
         )}
       </td>
-      <td className="p-2 font-mono text-xs tabular-nums text-muted">{forma.numero}</td>
-      <td className="p-2 text-xs tabular-nums">
+      <td className={`p-2 font-mono text-xs tabular-nums text-muted ${classesCelulaEmpilhada} max-md:text-right`}>
+        {forma.numero}
+      </td>
+      {/* Sem nada que contar a célula fica vazia e `empty:hidden` a tira do
+          cartão (senão sobraria um vão de 8px). O rótulo só entra quando há
+          o que rotular, para não tirar o `:empty`. */}
+      <td className={`p-2 text-xs tabular-nums ${classesCelulaEmpilhada} max-md:col-span-full max-md:empty:hidden`}>
+        {temAlgum && <span className={`${rotuloCampo} mr-1.5`}>{t("cadastrar.colTenho")}</span>}
         {tenhoNormal > 0 && <span className="mr-1">{tenhoNormal}</span>}
         {tenhoShiny > 0 && <Distintivo tom="acento">★{tenhoShiny}</Distintivo>}
       </td>
-      <td className="p-1">{campo("normal", normal)}</td>
-      <td className="p-1">{campo("shiny", shiny)}</td>
+      {/* Normal e shiny um sob o outro, cada um numa linha inteira com o rótulo
+          à esquerda: lado a lado, a 320px, sobravam ~21px para cada número. */}
+      <td className={`p-1 ${classesCelulaEmpilhada} max-md:col-span-full max-md:flex max-md:items-center max-md:gap-3`}>
+        <span aria-hidden className={`${rotuloCampo} max-md:w-14 max-md:shrink-0`}>
+          {t("cadastrar.colNormal")}
+        </span>
+        {campo("normal", normal)}
+      </td>
+      <td className={`p-1 ${classesCelulaEmpilhada} max-md:col-span-full max-md:flex max-md:items-center max-md:gap-3`}>
+        <span aria-hidden className={`${rotuloCampo} max-md:w-14 max-md:shrink-0`}>
+          {t("cadastrar.colShiny")}
+        </span>
+        {campo("shiny", shiny)}
+      </td>
     </tr>
   );
 });
@@ -161,6 +235,8 @@ export function CadastroPorJogo({
   const tr = useTranslations("recusas");
   const router = useRouter();
   const rotulo = useRotuloForma(formas);
+  const ehMobile = useEhMobile();
+  const controlesRef = useRef<HTMLDivElement>(null);
 
   const idioma = useLocale() as IdiomaTrofeu;
   const opcoes = useMemo(
@@ -216,6 +292,20 @@ export function CadastroPorJogo({
     });
   }, []);
 
+  /* No celular o botão está na barra fixa da base e o resultado aparece no
+     topo, fora da tela: sem isto o usuário toca em "Cadastrar" e não vê nada
+     acontecer (a lista só zera as quantidades). Só leva o resultado à vista;
+     não mexe em nenhum estado. Fora do celular a página nem rola o suficiente
+     para isso importar, e o efeito não faz nada. */
+  useEffect(() => {
+    if (erros.length === 0 && !sucesso) return;
+    // Pergunta à media query na hora, e não ao `ehMobile` do render: pôr o
+    // valor nas dependências faria girar o aparelho com um aviso na tela
+    // voltar a rolar a página para o topo.
+    if (!window.matchMedia("(width < 48rem)").matches) return;
+    controlesRef.current?.scrollIntoView({ block: "start" });
+  }, [erros, sucesso]);
+
   async function cadastrar() {
     if (total === 0) return;
     setEnviando(true);
@@ -246,12 +336,12 @@ export function CadastroPorJogo({
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 sm:p-8 md:h-full">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 sm:p-8 md:h-full max-md:pb-[calc(6rem+env(safe-area-inset-bottom))]!">
       <CabecalhoPagina titulo={t("cadastrar.titulo")} />
 
       {/* Jogo, filtro e botão ficam parados; só a tabela rola (`rolagemPropria`). */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("cadastrar.jogo")}>
+      <div ref={controlesRef} className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-1.5 max-md:gap-2" role="group" aria-label={t("cadastrar.jogo")}>
           {opcoes.map((o) => (
             <button
               key={o.id}
@@ -269,7 +359,7 @@ export function CadastroPorJogo({
             </Link>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("vista.rotulo")}>
+        <div className="flex flex-wrap items-center gap-1.5 max-md:gap-2" role="group" aria-label={t("vista.rotulo")}>
           {(["principal", "cosmeticas"] as const).map((v) => (
             <button
               key={v}
@@ -285,17 +375,17 @@ export function CadastroPorJogo({
         <div className="flex flex-wrap items-center gap-3">
           <input
             aria-label={t("cadastrar.filtrar")}
-            className={`${classesEntrada} w-56`}
+            className={`${classesEntrada} w-56 max-md:w-full`}
             value={filtro}
             placeholder={t("cadastrar.placeholderFiltrar")}
             onChange={(e) => setFiltro(e.target.value)}
           />
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm max-md:min-h-11">
             <input type="checkbox" checked={soQueNaoTenho} onChange={(e) => setSoQueNaoTenho(e.target.checked)} />
             {t("cadastrar.soQueNaoTenho")}
           </label>
           {catalogo ? (
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 text-sm max-md:min-h-11">
               <input type="checkbox" checked={mostrarTodas} onChange={(e) => setMostrarTodas(e.target.checked)} />
               {t("cadastrar.mostrarTodas")}
             </label>
@@ -304,13 +394,16 @@ export function CadastroPorJogo({
               {t(jogoId === ORIGEM_HOME ? "cadastrar.direto" : "cadastrar.semCatalogo")}
             </span>
           )}
-          <div className="ml-auto flex gap-2">
+          {/* Celular: a mesma div vira a barra fixa da base (zona do polegar),
+              com a altura de 44 + 12 de cada lado e a área segura do iPhone.
+              O `pb` da `main` reserva esse espaço para nada ficar escondido. */}
+          <div className="ml-auto flex gap-2 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:ml-0 max-md:justify-end max-md:border-t max-md:border-line max-md:bg-surface max-md:px-4 max-md:pt-3 max-md:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
             {total > 0 && (
               <Botao tamanho="sm" onClick={() => setQuantidades({})} disabled={enviando}>
                 {t("cadastrar.limpar")}
               </Botao>
             )}
-            <Botao variante="primario" tamanho="sm" onClick={cadastrar} disabled={enviando || total === 0}>
+            <Botao variante="primario" tamanho="sm" className="max-md:flex-1" onClick={cadastrar} disabled={enviando || total === 0}>
               {t("cadastrar.cadastrar", { quantidade: String(total) })}
             </Botao>
           </div>
@@ -327,8 +420,8 @@ export function CadastroPorJogo({
         {sucesso && <Alerta tom="sucesso">{sucesso}</Alerta>}
       </div>
 
-      <Tabela rolagemPropria>
-        <thead>
+      <Tabela rolagemPropria className={classesTabelaEmpilhada}>
+        <thead className={classesCabecalhoEmpilhado}>
           <tr className={classesLinhaCabecalho}>
             <th className={classesCelulaCabecalho} />
             <th className={classesCelulaCabecalho}>{t("cadastrar.colPokemon")}</th>
@@ -338,7 +431,7 @@ export function CadastroPorJogo({
             <th className={classesCelulaCabecalho}>{t("cadastrar.colShiny")}</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className={classesTabelaEmpilhada}>
           {visiveis.map((f) => (
             <LinhaForma
               key={f.id}
@@ -351,12 +444,13 @@ export function CadastroPorJogo({
               shiny={quantidades[f.id]?.shiny ?? 0}
               tenhoNormal={tenho[f.id]?.normal ?? 0}
               tenhoShiny={tenho[f.id]?.shiny ?? 0}
+              ehMobile={ehMobile}
               aoMudar={aoMudar}
             />
           ))}
           {visiveis.length === 0 && (
-            <tr>
-              <td colSpan={6} className="p-4 text-center text-sm text-muted">
+            <tr className="max-md:block">
+              <td colSpan={6} className="p-4 text-center text-sm text-muted max-md:block">
                 {t("cadastrar.nada")}
               </td>
             </tr>
