@@ -64,6 +64,9 @@ The glossary below is the key. Read it once and the code reads fine.
 | `jogo possuído` | owned game | Living Dex: a game of the fixed catalog the user marked as owned. Table `dex_jogo_possuido`. |
 | `local` | location | Living Dex: where a record is now — `home`, or a game id. |
 | `ida e volta` / `só envio` | two-way / send-only | Living Dex: how a game connects to HOME (`ida_e_volta`, `so_envio`). A send-only game never gets a Pokémon back. |
+| `plano` | plan | Living Dex: what the user does in the games next, usually a week, made in a planning session or on screen. Table `dex_plano`. |
+| `tarefa` | task | Living Dex: one item of a plan — catch, evolve, trade, progress, transfer. Table `dex_tarefa`. |
+| `etapa` | step | Living Dex: one line of a task's checklist, with optional details. Table `dex_tarefa_etapa`, rules in `lib/dominio/dex-etapas.ts`. Not to be confused with `PassoSessao`, a write step of a session batch. |
 
 Route paths are in Portuguese too:
 

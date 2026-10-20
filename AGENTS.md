@@ -653,15 +653,40 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
   may aim at trophies; a task may target slots (`forma_ids`) and a trophy. **Finishing a catch,
   evolve or trade task offers the add screen, already on the task's game; it never records the
   Pokémon itself** (`/dex/cadastrar?jogo=…&busca=…`).
+- **A task may carry a checklist of steps** (`dex_tarefa_etapa`, `lib/dominio/dex-etapas.ts`): a
+  short text (1 to 200 characters) and optional multi-line details (up to 2,000), at most 50 per
+  task. A task like a multi-part quest used to be squeezed into one description line, which said
+  nothing about where the user stopped. Rules that hold on screen, in the API and in a session
+  batch alike:
+  - **Steps change only while the task is open in an active plan.** A done or dropped task and a
+    closed plan are history; reopening frees them again.
+  - **Checking the last step never finishes the task.** The screen shows that every step is done,
+    next to "Done", and the click stays the user's: finishing is what offers the add screen, and
+    only the user knows the quest is over.
+  - **Order is renumbered 1..n on every delete and reorder**, and reordering takes the whole list
+    of ids, which must be exactly the current set — a stale list (another tab changed it) is
+    refused instead of losing or duplicating a position. Reordering is move up / move down
+    buttons, not drag: dragging fights page scroll on a phone.
+  - The domain word is **`etapa`, never `passo`**: `PassoSessao` already names a write step of a
+    session batch.
 - **Planning sessions run outside the app**, with an assistant, through two commands:
   - `pnpm dex:estado` prints the state that opens a session (markdown, or `--json`): progress, each
     owned game with its trophies, what it reaches now and what is locked behind which checkpoint,
-    Pokémon not in HOME yet, active plans and tasks closed since the last session. Read-only.
+    Pokémon not in HOME yet, active plans and tasks closed since the last session. Read-only. Each
+    open task of an active plan lists its steps with `[x]`/`[ ]`, the step id (what `status`
+    needs) and the details cut to one line; `--json` carries them whole.
   - `pnpm dex:aplicar` writes a session batch read from stdin (`lib/dominio/dex-sessao.ts`):
-    earned trophies, plans with tasks, task and plan status, and Pokémon the user said they caught.
-    **Always run `--simular` first.** Every batch and every item that creates something has a `ref`;
-    a ref already applied is skipped (`dex_sessao_ref`), so re-running a batch changes nothing, and a
-    later batch can point at an earlier plan by its ref. One invalid item refuses the whole batch.
+    earned trophies, plans with tasks, task steps, task, plan and step status, and Pokémon the user
+    said they caught. **Always run `--simular` first.** Every batch and every item that creates
+    something has a `ref`; a ref already applied is skipped (`dex_sessao_ref`), so re-running a
+    batch changes nothing, and a later batch can point at an earlier plan by its ref. One invalid
+    item refuses the whole batch. Steps come in with a new task (`etapas` on the task item) or are
+    **appended** to the end of an existing one (an item of the `etapas` list, with its own `ref` and
+    `tarefaRef` or `tarefaId`), so the next session adds what it found without rewriting what the
+    user already checked; a step is checked or unchecked by `{ etapaId, feita }` in `status`. Both
+    follow the screen's rules (open task in an active plan, 50 at most), checked against the state
+    when the batch starts; a skipped ref is not checked again, so a re-run never fails because the
+    task closed since.
     Records go in only as born in a game, only with forms in that game's catalog, under the same
     rules as the add screen — or as born in HOME (`jogoId: "home"`), which has no catalog, so any
     active form goes. **Moving to HOME is not in the batch**: leaving a send-only game needs
