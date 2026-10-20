@@ -892,7 +892,11 @@
     "dexTrofeuNaoEncontrado": "Troféu não encontrado.",
     "dexTrofeuCalculado": "Este troféu do HOME conta sozinho, pelos Pokémon que estão no HOME.",
     "dexPlanoNaoEncontrado": "Plano não encontrado.",
-    "dexTarefaNaoEncontrada": "Tarefa não encontrada."
+    "dexTarefaNaoEncontrada": "Tarefa não encontrada.",
+    "dexEtapaNaoEncontrada": "Etapa não encontrada.",
+    "dexEtapasDemais": "Uma tarefa tem no máximo {maximo} etapas.",
+    "dexTarefaFechada": "A tarefa precisa estar aberta, num plano ativo, para mudar as etapas.",
+    "dexOrdemEtapasInvalida": "As etapas mudaram em outro lugar. A lista foi atualizada; tente de novo."
   },
   "dex": {
     "categoria": {

@@ -892,7 +892,11 @@
     "dexTrofeuNaoEncontrado": "Trophy not found.",
     "dexTrofeuCalculado": "This HOME trophy counts on its own, from the Pokémon in HOME.",
     "dexPlanoNaoEncontrado": "Plan not found.",
-    "dexTarefaNaoEncontrada": "Task not found."
+    "dexTarefaNaoEncontrada": "Task not found.",
+    "dexEtapaNaoEncontrada": "Step not found.",
+    "dexEtapasDemais": "A task takes at most {maximo} steps.",
+    "dexTarefaFechada": "The task has to be open, in an active plan, to change its steps.",
+    "dexOrdemEtapasInvalida": "The steps changed somewhere else. The list was refreshed; try again."
   },
   "dex": {
     "categoria": {
