@@ -1166,7 +1166,9 @@
       "subir": "Move \"{etapa}\" up",
       "descer": "Move \"{etapa}\" down",
       "confirmarExcluirEtapa": "Delete the step \"{etapa}\"?",
-      "todasFeitas": "All steps done — mark the task as done."
+      "todasFeitas": "All steps done — mark the task as done.",
+      "editarEtapas": "Edit steps",
+      "fecharEdicaoEtapas": "Close editing"
     },
     "visaoGeral": {
       "titulo": "Overview",

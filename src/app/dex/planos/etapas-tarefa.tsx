@@ -14,6 +14,10 @@
  *   (outra aba mexeu) volta como recusa, e a tela recarrega a lista.
  * - **O detalhe é texto de várias linhas, sempre visível** — nunca só em
  *   hover ou `title`, que o celular não tem.
+ * - **Seguir e organizar são modos separados.** Aberta, a lista é só caixa,
+ *   texto e detalhe: é o que o usuário lê com o controle na mão, e quatro
+ *   botões por etapa (subir, descer, editar, excluir) enterravam o texto no
+ *   celular. Os botões aparecem com "Editar etapas", por tarefa.
  * - Um formulário por vez: acrescentar e editar usam o mesmo, no lugar.
  * - **A caixa muda no toque**, antes da resposta: a marcação otimista vale
  *   enquanto a lista recebida for a mesma (`base`), e some sozinha quando o
@@ -53,6 +57,7 @@ export function EtapasDaTarefa({
   const t = useTranslations("dex.planos");
   const router = useRouter();
   const [form, setForm] = useState<Formulario | null>(null);
+  const [organizando, setOrganizando] = useState(false);
   const [marcacao, setMarcacao] = useState<{ id: string; feita: boolean; base: EtapaDexDTO[] } | null>(null);
   const feita = (e: EtapaDexDTO) => (marcacao && marcacao.base === tarefa.etapas && marcacao.id === e.id ? marcacao.feita : e.feita);
   const ids = tarefa.etapas.map((e) => e.id);
@@ -144,7 +149,7 @@ export function EtapasDaTarefa({
                     {e.detalhe && <span className="text-sm break-words whitespace-pre-line text-muted">{e.detalhe}</span>}
                   </span>
                 </label>
-                {editavel && (
+                {editavel && organizando && (
                   <div className="flex flex-wrap gap-1.5 max-md:gap-2">
                     <Botao
                       tamanho="xs"
@@ -186,7 +191,7 @@ export function EtapasDaTarefa({
         (form?.etapaId === null ? (
           formulario(form)
         ) : (
-          <div>
+          <div className="flex flex-wrap gap-2">
             <Botao
               tamanho="xs"
               className={classesBotaoLinha}
@@ -195,6 +200,19 @@ export function EtapasDaTarefa({
             >
               {t("adicionarEtapa")}
             </Botao>
+            {tarefa.etapas.length > 0 && (
+              <Botao
+                tamanho="xs"
+                className={classesBotaoLinha}
+                aria-pressed={organizando}
+                onClick={() => {
+                  setOrganizando(!organizando);
+                  setForm(null);
+                }}
+              >
+                {organizando ? t("fecharEdicaoEtapas") : t("editarEtapas")}
+              </Botao>
+            )}
           </div>
         ))}
     </div>

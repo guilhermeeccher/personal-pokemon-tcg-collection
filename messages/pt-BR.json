@@ -1166,7 +1166,9 @@
       "subir": "Subir \"{etapa}\"",
       "descer": "Descer \"{etapa}\"",
       "confirmarExcluirEtapa": "Excluir a etapa \"{etapa}\"?",
-      "todasFeitas": "Todas as etapas feitas — marque a tarefa como feita."
+      "todasFeitas": "Todas as etapas feitas — marque a tarefa como feita.",
+      "editarEtapas": "Editar etapas",
+      "fecharEdicaoEtapas": "Fechar edição"
     },
     "visaoGeral": {
       "titulo": "Visão geral",
