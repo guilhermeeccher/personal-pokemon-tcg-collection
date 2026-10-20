@@ -97,6 +97,7 @@ describe("montarRetrato", () => {
       trofeuId: null,
       status: "feita" as const,
       concluidaEm,
+      etapas: [],
     });
     const r = montarRetrato(
       entrada({
@@ -120,5 +121,59 @@ describe("montarRetrato", () => {
     const md = retratoEmMarkdown(r, (id) => id);
     expect(md).toContain("## Active plans");
     expect(md).toContain("- [x] depois");
+  });
+
+  it("plano ativo mostra o checklist das tarefas abertas, com id e detalhe resumido", () => {
+    const base = {
+      ordem: 1,
+      descricao: null,
+      tipo: "progresso" as const,
+      jogoId: "firered",
+      formaIds: [],
+      trofeuId: null,
+      concluidaEm: null,
+    };
+    const etapa = (id: string, texto: string, feita: boolean, detalhe: string | null = null) => ({
+      id,
+      ordem: 1,
+      texto,
+      detalhe,
+      feita,
+      feitaEm: feita ? "2026-10-11T10:00:00.000Z" : null,
+    });
+    const r = montarRetrato(
+      entrada({
+        planos: [
+          {
+            id: "p",
+            titulo: "Semana",
+            objetivo: null,
+            inicio: "2026-10-05",
+            fim: null,
+            status: "ativo",
+            origem: "sessao",
+            trofeuIds: [],
+            tarefas: [
+              {
+                ...base,
+                id: "t1",
+                titulo: "Missão",
+                status: "aberta",
+                etapas: [etapa("e1", "Ir ao porto", true), etapa("e2", "Falar com alguém", false, `linha um\n${"x".repeat(100)}`)],
+              },
+              { ...base, id: "t2", titulo: "Velha", status: "feita", etapas: [etapa("e3", "Feita antes", true)] },
+            ],
+          },
+        ],
+      }),
+    );
+    const md = retratoEmMarkdown(r, (id) => id);
+    expect(md).toContain("- [ ] Missão (progresso, firered, 1/2 steps) `t1`");
+    expect(md).toContain("  - [x] Ir ao porto `e1`");
+    expect(md).toMatch(/ {2}- \[ \] Falar com alguém `e2` — linha um x+…\n/);
+    expect(md).toContain("- [x] Velha (progresso, firered, 1/1 steps) `t2`");
+    expect(md).not.toContain("Feita antes");
+    // O `--json` leva o detalhe inteiro.
+    expect(r.planosAtivos[0].tarefas[0].etapas[1].detalhe).toHaveLength(109);
   });
 });

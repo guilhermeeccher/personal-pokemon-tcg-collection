@@ -1,10 +1,17 @@
 /**
- * Living Dex, D3 — troféus, planos, tarefas e o lote de sessão. Nenhuma
- * consulta toca tabela de cartas.
+ * Living Dex, D3 — troféus, planos, tarefas (com as etapas) e o lote de
+ * sessão. Nenhuma consulta toca tabela de cartas.
  */
 import { asc, desc, eq, inArray, sql } from "drizzle-orm";
 
 import { catalogoDoJogo } from "@/lib/dominio/dex-disponibilidade";
+import {
+  recusaSeExcede,
+  recusaSeFechada,
+  validarNovaOrdem,
+  type DadosEtapa,
+  type EdicaoEtapa,
+} from "@/lib/dominio/dex-etapas";
 import { recusa, type Recusa } from "@/lib/dominio/recusa";
 import {
   planejarLote,
@@ -16,11 +23,11 @@ import {
   type StatusPlanoDex,
   type StatusTarefaDex,
 } from "@/lib/dominio/dex-sessao";
-import type { PlanoDexDTO, TarefaDexDTO, TrofeuDexDTO } from "@/lib/dominio/tipos-cliente";
+import type { EtapaDexDTO, PlanoDexDTO, TarefaDexDTO, TrofeuDexDTO } from "@/lib/dominio/tipos-cliente";
 
 import type { db as dbPadrao } from "./client";
 import { carregarContextoRegistro, comAGuardar, listarFormasDex } from "./dex";
-import { dexPlano, dexRegistro, dexSessaoRef, dexTarefa, dexTrofeu, dexTrofeuObtido } from "./schema";
+import { dexPlano, dexRegistro, dexSessaoRef, dexTarefa, dexTarefaEtapa, dexTrofeu, dexTrofeuObtido } from "./schema";
 
 type Db = typeof dbPadrao;
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
@@ -111,6 +118,26 @@ export async function listarPlanos(db: Db): Promise<PlanoDexDTO[]> {
       ),
     )
     .orderBy(asc(dexTarefa.ordem));
+  const etapas =
+    tarefas.length === 0
+      ? []
+      : await db
+          .select()
+          .from(dexTarefaEtapa)
+          .where(
+            inArray(
+              dexTarefaEtapa.tarefaId,
+              tarefas.map((t) => t.id),
+            ),
+          )
+          .orderBy(asc(dexTarefaEtapa.ordem));
+  const porTarefa = new Map<string, EtapaDexDTO[]>();
+  for (const e of etapas) {
+    porTarefa.set(e.tarefaId, [
+      ...(porTarefa.get(e.tarefaId) ?? []),
+      { id: e.id, ordem: e.ordem, texto: e.texto, detalhe: e.detalhe, feita: e.feita, feitaEm: isoOuNulo(e.feitaEm) },
+    ]);
+  }
   const porPlano = new Map<string, TarefaDexDTO[]>();
   for (const t of tarefas) {
     porPlano.set(t.planoId, [
@@ -126,6 +153,7 @@ export async function listarPlanos(db: Db): Promise<PlanoDexDTO[]> {
         trofeuId: t.trofeuId,
         status: t.status,
         concluidaEm: isoOuNulo(t.concluidaEm),
+        etapas: porTarefa.get(t.id) ?? [],
       },
     ]);
   }
@@ -199,24 +227,176 @@ export async function adicionarTarefaManual(db: Db, planoId: string, dados: Dado
 export const mudarStatusTarefa = (db: Db, id: string, status: StatusTarefaDex) => gravarStatusTarefa(db, id, status);
 export const mudarStatusPlano = (db: Db, id: string, status: StatusPlanoDex) => gravarStatusPlano(db, id, status);
 
+// --- Etapas --------------------------------------------------------------
+
+type FalhaEtapa = { ok: false; motivo: Recusa; status: number };
+const falha = (motivo: Recusa, status: number): FalhaEtapa => ({ ok: false, motivo, status });
+
+/**
+ * Confere que a tarefa existe e está aberta num plano ativo, e trava a
+ * linha dela até o fim da transação: duas mudanças simultâneas nas etapas
+ * da mesma tarefa (outra aba, um `dex:aplicar`) se enfileiram, e o "fim da
+ * lista" de uma não é o mesmo número da outra.
+ */
+async function travarTarefaEditavel(tx: Tx, tarefaId: string): Promise<{ ok: true } | FalhaEtapa> {
+  const [t] = await tx
+    .select({ status: dexTarefa.status, plano: dexPlano.status })
+    .from(dexTarefa)
+    .innerJoin(dexPlano, eq(dexPlano.id, dexTarefa.planoId))
+    .where(eq(dexTarefa.id, tarefaId))
+    .for("update", { of: dexTarefa });
+  if (!t) return falha(recusa("dexTarefaNaoEncontrada"), 404);
+  const r = recusaSeFechada({ status: t.status }, { status: t.plano });
+  return r ? falha(r, 409) : { ok: true };
+}
+
+/** A tarefa de uma etapa, já travada e conferida. */
+async function travarTarefaDaEtapa(tx: Tx, etapaId: string): Promise<{ ok: true; tarefaId: string } | FalhaEtapa> {
+  const [e] = await tx.select({ tarefaId: dexTarefaEtapa.tarefaId }).from(dexTarefaEtapa).where(eq(dexTarefaEtapa.id, etapaId));
+  if (!e) return falha(recusa("dexEtapaNaoEncontrada"), 404);
+  const r = await travarTarefaEditavel(tx, e.tarefaId);
+  return r.ok ? { ok: true, tarefaId: e.tarefaId } : r;
+}
+
+/** Acrescenta as etapas no fim da tarefa, na ordem dada. Quem chama já conferiu tarefa e limite. */
+async function inserirEtapas(tx: Tx, tarefaId: string, etapas: readonly DadosEtapa[]): Promise<string[]> {
+  if (etapas.length === 0) return [];
+  const [{ ultima }] = await tx
+    .select({ ultima: sql<number>`coalesce(max(${dexTarefaEtapa.ordem}), 0)::int` })
+    .from(dexTarefaEtapa)
+    .where(eq(dexTarefaEtapa.tarefaId, tarefaId));
+  const r = await tx
+    .insert(dexTarefaEtapa)
+    .values(etapas.map((e, i) => ({ ...e, tarefaId, ordem: ultima + i + 1 })))
+    .returning({ id: dexTarefaEtapa.id });
+  return r.map((x) => x.id);
+}
+
+/** `feita_em` acompanha `feita`: a primeira vez que marcou fica; desmarcar limpa. */
+const camposFeita = (feita: boolean) => ({
+  feita,
+  feitaEm: feita ? sql`coalesce(${dexTarefaEtapa.feitaEm}, now())` : null,
+});
+
+/** Renumera as etapas da tarefa de 1 a n, na ordem atual. Só reescreve a linha cuja posição mudou. */
+async function renumerarEtapas(tx: Tx, tarefaId: string): Promise<void> {
+  const linhas = await tx
+    .select({ id: dexTarefaEtapa.id, ordem: dexTarefaEtapa.ordem })
+    .from(dexTarefaEtapa)
+    .where(eq(dexTarefaEtapa.tarefaId, tarefaId))
+    .orderBy(asc(dexTarefaEtapa.ordem), asc(dexTarefaEtapa.criadoEm));
+  await gravarOrdem(
+    tx,
+    linhas.map((l) => l.id),
+    new Map(linhas.map((l) => [l.id, l.ordem])),
+  );
+}
+
+async function gravarOrdem(tx: Tx, ids: readonly string[], atual: ReadonlyMap<string, number>): Promise<void> {
+  for (const [i, id] of ids.entries()) {
+    if (atual.get(id) === i + 1) continue;
+    await tx
+      .update(dexTarefaEtapa)
+      .set({ ordem: i + 1, atualizadoEm: new Date() })
+      .where(eq(dexTarefaEtapa.id, id));
+  }
+}
+
+/** Etapa nova pela tela: entra no fim. */
+export async function adicionarEtapa(db: Db, tarefaId: string, dados: DadosEtapa): Promise<{ ok: true; id: string } | FalhaEtapa> {
+  return db.transaction(async (tx) => {
+    const t = await travarTarefaEditavel(tx, tarefaId);
+    if (!t.ok) return t;
+    const [{ total }] = await tx
+      .select({ total: sql<number>`count(*)::int` })
+      .from(dexTarefaEtapa)
+      .where(eq(dexTarefaEtapa.tarefaId, tarefaId));
+    const demais = recusaSeExcede(total, 1);
+    if (demais) return falha(demais, 409);
+    const [id] = await inserirEtapas(tx, tarefaId, [dados]);
+    return { ok: true, id };
+  });
+}
+
+/** Muda texto, detalhe e/ou feita. */
+export async function editarEtapa(db: Db, etapaId: string, edicao: EdicaoEtapa): Promise<{ ok: true } | FalhaEtapa> {
+  return db.transaction(async (tx) => {
+    const t = await travarTarefaDaEtapa(tx, etapaId);
+    if (!t.ok) return t;
+    const { feita, ...textos } = edicao;
+    await tx
+      .update(dexTarefaEtapa)
+      .set({ ...textos, ...(feita === undefined ? {} : camposFeita(feita)), atualizadoEm: new Date() })
+      .where(eq(dexTarefaEtapa.id, etapaId));
+    return { ok: true };
+  });
+}
+
+/** Exclui a etapa e fecha o buraco na ordem. */
+export async function excluirEtapa(db: Db, etapaId: string): Promise<{ ok: true } | FalhaEtapa> {
+  return db.transaction(async (tx) => {
+    const t = await travarTarefaDaEtapa(tx, etapaId);
+    if (!t.ok) return t;
+    await tx.delete(dexTarefaEtapa).where(eq(dexTarefaEtapa.id, etapaId));
+    await renumerarEtapas(tx, t.tarefaId);
+    return { ok: true };
+  });
+}
+
+/**
+ * Grava a ordem nova (`ids`, a lista inteira), numa transação. Lista que não
+ * é exatamente o conjunto atual é recusada (`validarNovaOrdem`).
+ */
+export async function reordenarEtapas(db: Db, tarefaId: string, ids: unknown): Promise<{ ok: true } | FalhaEtapa> {
+  return db.transaction(async (tx) => {
+    const t = await travarTarefaEditavel(tx, tarefaId);
+    if (!t.ok) return t;
+    const linhas = await tx
+      .select({ id: dexTarefaEtapa.id, ordem: dexTarefaEtapa.ordem })
+      .from(dexTarefaEtapa)
+      .where(eq(dexTarefaEtapa.tarefaId, tarefaId));
+    const nova = validarNovaOrdem(
+      linhas.map((l) => l.id),
+      ids,
+    );
+    if (!Array.isArray(nova)) return falha(nova, 409);
+    await gravarOrdem(tx, nova, new Map(linhas.map((l) => [l.id, l.ordem])));
+    return { ok: true };
+  });
+}
+
 // --- Lote de sessão ------------------------------------------------------
 
 export async function carregarContextoSessao(db: Db): Promise<ContextoSessao> {
-  const [trofeus, obtidos, refs, planos, tarefas, registro, formas] = await Promise.all([
+  const [trofeus, obtidos, refs, planos, tarefas, etapas, registro, formas] = await Promise.all([
     db.select({ id: dexTrofeu.id, jogoId: dexTrofeu.jogoId }).from(dexTrofeu).where(eq(dexTrofeu.ativo, true)),
     idsTrofeusObtidos(db),
-    db.select({ ref: dexSessaoRef.ref, tipo: dexSessaoRef.tipo }).from(dexSessaoRef),
-    db.select({ id: dexPlano.id }).from(dexPlano),
-    db.select({ id: dexTarefa.id }).from(dexTarefa),
+    db.select({ ref: dexSessaoRef.ref, tipo: dexSessaoRef.tipo, entidadeId: dexSessaoRef.entidadeId }).from(dexSessaoRef),
+    db.select({ id: dexPlano.id, status: dexPlano.status }).from(dexPlano),
+    db
+      .select({ id: dexTarefa.id, status: dexTarefa.status, plano: dexPlano.status })
+      .from(dexTarefa)
+      .innerJoin(dexPlano, eq(dexPlano.id, dexTarefa.planoId)),
+    db.select({ id: dexTarefaEtapa.id, tarefaId: dexTarefaEtapa.tarefaId }).from(dexTarefaEtapa),
     carregarContextoRegistro(db),
     listarFormasDex(db),
   ]);
+  const etapasPorTarefa = new Map<string, number>();
+  for (const e of etapas) etapasPorTarefa.set(e.tarefaId, (etapasPorTarefa.get(e.tarefaId) ?? 0) + 1);
   return {
     trofeus: new Map(trofeus.map((t) => [t.id, t.jogoId])),
     obtidos,
     refs: new Map(refs.map((r) => [r.ref, r.tipo])),
+    entidades: new Map(refs.flatMap((r) => (r.entidadeId ? [[r.ref, r.entidadeId] as const] : []))),
     planos: new Set(planos.map((p) => p.id)),
-    tarefas: new Set(tarefas.map((t) => t.id)),
+    planosAtivos: new Set(planos.filter((p) => p.status === "ativo").map((p) => p.id)),
+    tarefas: new Map(
+      tarefas.map((t) => [
+        t.id,
+        { editavel: recusaSeFechada({ status: t.status }, { status: t.plano }) === null, etapas: etapasPorTarefa.get(t.id) ?? 0 },
+      ]),
+    ),
+    etapas: new Map(etapas.map((e) => [e.id, e.tarefaId])),
     registro,
     formasDoJogo: (jogoId) => {
       const c = catalogoDoJogo(jogoId, formas);
@@ -267,10 +447,24 @@ export async function aplicarLoteSessao(
         }
         case "tarefa": {
           const id = await inserirTarefa(tx, resolver(p.plano), p.dados);
+          await inserirEtapas(tx, id, p.etapas);
           ids.set(p.ref, id);
           await registrarRef(p.ref, "tarefa", id);
           break;
         }
+        case "etapas": {
+          // A ref aponta para a tarefa que recebeu as etapas, para o histórico.
+          const tarefaId = resolver(p.tarefa);
+          await inserirEtapas(tx, tarefaId, p.etapas);
+          await registrarRef(p.ref, "etapas", tarefaId);
+          break;
+        }
+        case "status-etapa":
+          await tx
+            .update(dexTarefaEtapa)
+            .set({ ...camposFeita(p.feita), atualizadoEm: new Date() })
+            .where(eq(dexTarefaEtapa.id, p.etapaId));
+          break;
         case "status-tarefa":
           await gravarStatusTarefa(tx, resolver(p.tarefa), p.status);
           break;

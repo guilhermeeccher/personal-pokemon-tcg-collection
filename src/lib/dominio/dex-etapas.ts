@@ -93,17 +93,17 @@ export function lerDadosEtapa(bruta: unknown): DadosEtapa | string[] {
  * 50 é conferido à parte (`recusaSeExcede`), porque depende de quantas a
  * tarefa já tem.
  */
-export function lerListaDeEtapas(v: unknown): DadosEtapa[] | string[] {
-  if (v === undefined) return [];
-  if (!Array.isArray(v)) return ["etapas must be a list"];
+export function lerListaDeEtapas(v: unknown): { etapas: DadosEtapa[] } | { erros: string[] } {
+  if (v === undefined) return { etapas: [] };
+  if (!Array.isArray(v)) return { erros: ["etapas must be a list"] };
   const erros: string[] = [];
-  const dados: DadosEtapa[] = [];
+  const etapas: DadosEtapa[] = [];
   v.forEach((bruta, i) => {
     const r = lerDadosEtapa(bruta);
     if (Array.isArray(r)) erros.push(...r.map((e) => `etapas[${i}]: ${e}`));
-    else dados.push(r);
+    else etapas.push(r);
   });
-  return erros.length > 0 ? erros : dados;
+  return erros.length > 0 ? { erros } : { etapas };
 }
 
 /**

@@ -52,16 +52,18 @@ describe("lerDadosEtapa", () => {
 
 describe("lerListaDeEtapas", () => {
   it("ausente é lista vazia; a ordem é a do lote", () => {
-    expect(lerListaDeEtapas(undefined)).toEqual([]);
-    expect(lerListaDeEtapas([{ texto: "1" }, { texto: "2", detalhe: "d" }])).toEqual([
-      { texto: "1", detalhe: null },
-      { texto: "2", detalhe: "d" },
-    ]);
+    expect(lerListaDeEtapas(undefined)).toEqual({ etapas: [] });
+    expect(lerListaDeEtapas([{ texto: "1" }, { texto: "2", detalhe: "d" }])).toEqual({
+      etapas: [
+        { texto: "1", detalhe: null },
+        { texto: "2", detalhe: "d" },
+      ],
+    });
   });
 
   it("os problemas vêm com a posição; não-lista é recusada", () => {
-    expect(lerListaDeEtapas([{ texto: "ok" }, { texto: "" }])).toEqual(["etapas[1]: missing texto"]);
-    expect(lerListaDeEtapas({ texto: "a" })).toEqual(["etapas must be a list"]);
+    expect(lerListaDeEtapas([{ texto: "ok" }, { texto: "" }])).toEqual({ erros: ["etapas[1]: missing texto"] });
+    expect(lerListaDeEtapas({ texto: "a" })).toEqual({ erros: ["etapas must be a list"] });
   });
 });
 

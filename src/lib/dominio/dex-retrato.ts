@@ -3,6 +3,10 @@
  * dex:estado`, spec §7.1). Módulo puro: recebe o que o banco tem e monta o
  * retrato, em objeto (o `--json`) e em markdown.
  *
+ * Os planos ativos vão inteiros, com as etapas de cada tarefa (no markdown,
+ * o checklist das tarefas abertas, com o id de cada etapa e o detalhe
+ * resumido; no `--json`, tudo).
+ *
  * O retrato responde, por jogo, à pergunta da sessão: o que dá para buscar
  * agora, o que está trancado atrás de qual checkpoint, e quantas vagas
  * vazias cada checkpoint ainda abre. É daí que sai "o que destravar a
@@ -211,6 +215,12 @@ const pct = (p: ProgressoTrilha) => `${p.noHome}/${p.contam} in HOME${p.noJogo ?
 const listaCurta = (v: readonly VagaRetrato[], max = 40) =>
   v.length <= max ? v.map((x) => x.nome).join(", ") : `${v.slice(0, max).map((x) => x.nome).join(", ")} … (+${v.length - max})`;
 
+/** O detalhe de uma etapa numa linha só, cortado: o inteiro está no `--json`. */
+export function resumir(texto: string, max = 80): string {
+  const linha = texto.replace(/\s+/g, " ").trim();
+  return linha.length <= max ? linha : `${linha.slice(0, max - 1).trimEnd()}…`;
+}
+
 /** O retrato em markdown, para ler no começo da sessão. Em inglês, como os comandos do repositório. */
 export function retratoEmMarkdown(r: Retrato, nomeTrofeu: (id: string) => string): string {
   const l: string[] = [];
@@ -293,7 +303,14 @@ export function retratoEmMarkdown(r: Retrato, nomeTrofeu: (id: string) => string
     if (p.trofeuIds.length) l.push(`Aims at: ${p.trofeuIds.map(nomeTrofeu).join(", ")}`, "");
     for (const t of p.tarefas) {
       const caixa = t.status === "feita" ? "[x]" : t.status === "descartada" ? "[-]" : "[ ]";
-      l.push(`- ${caixa} ${t.titulo} (${t.tipo}${t.jogoId ? `, ${t.jogoId}` : ""}) \`${t.id}\``);
+      const contagem = t.etapas.length ? `, ${t.etapas.filter((e) => e.feita).length}/${t.etapas.length} steps` : "";
+      l.push(`- ${caixa} ${t.titulo} (${t.tipo}${t.jogoId ? `, ${t.jogoId}` : ""}${contagem}) \`${t.id}\``);
+      // Só a tarefa aberta abre o checklist: é nela que a sessão continua, e o
+      // id da etapa é o que o `status-etapa` do lote pede. Fechada, a contagem basta.
+      if (t.status !== "aberta") continue;
+      for (const e of t.etapas) {
+        l.push(`  - ${e.feita ? "[x]" : "[ ]"} ${e.texto} \`${e.id}\`${e.detalhe ? ` — ${resumir(e.detalhe)}` : ""}`);
+      }
     }
     l.push("");
   }

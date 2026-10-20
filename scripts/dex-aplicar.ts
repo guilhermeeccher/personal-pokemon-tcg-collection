@@ -1,8 +1,9 @@
 /**
  * `pnpm dex:aplicar` — grava o lote de uma sessão de planejamento (spec
- * §7.2): troféus conquistados, planos com tarefas, status de tarefa e de
- * plano, e Pokémon que o usuário disse ter pegado. O lote vem em JSON pelo
- * stdin; o formato e as regras estão em `src/lib/dominio/dex-sessao.ts`.
+ * §7.2): troféus conquistados, planos com tarefas, etapas de tarefa, status
+ * de tarefa, de plano e de etapa, e Pokémon que o usuário disse ter pegado.
+ * O lote vem em JSON pelo stdin; o formato e as regras estão em
+ * `src/lib/dominio/dex-sessao.ts`.
  *
  *   docker compose exec -T app pnpm dex:aplicar --simular < lote.json
  *   docker compose exec -T app pnpm dex:aplicar < lote.json
@@ -32,9 +33,13 @@ function descrever(p: PassoSessao): string {
     case "plano":
       return `plan: "${p.dados.titulo}" (${p.dados.inicio}${p.dados.fim ? ` to ${p.dados.fim}` : ""})`;
     case "tarefa":
-      return `  task: "${p.dados.titulo}" (${p.dados.tipo}) in plan ${alvo(p.plano)}`;
+      return `  task: "${p.dados.titulo}" (${p.dados.tipo}) in plan ${alvo(p.plano)}${p.etapas.length ? `, with ${p.etapas.length} step(s)` : ""}`;
+    case "etapas":
+      return `${p.etapas.length} step(s) appended to task ${alvo(p.tarefa)}: ${p.etapas.map((e) => `"${e.texto}"`).join(", ")}`;
     case "status-tarefa":
       return `task ${alvo(p.tarefa)} → ${p.status}`;
+    case "status-etapa":
+      return `step ${p.etapaId} → ${p.feita ? "done" : "not done"}`;
     case "status-plano":
       return `plan ${alvo(p.plano)} → ${p.status}`;
     case "registros":

@@ -472,6 +472,16 @@ export interface TrofeuDexDTO {
   obtido: { em: string | null; origem: "sessao" | "manual" | "calculado"; notas: string | null } | null;
 }
 
+/** Uma etapa do checklist de uma tarefa (`lib/dominio/dex-etapas.ts`). */
+export interface EtapaDexDTO {
+  id: string;
+  ordem: number;
+  texto: string;
+  detalhe: string | null;
+  feita: boolean;
+  feitaEm: string | null;
+}
+
 export interface TarefaDexDTO {
   id: string;
   ordem: number;
@@ -483,6 +493,8 @@ export interface TarefaDexDTO {
   trofeuId: string | null;
   status: "aberta" | "feita" | "descartada";
   concluidaEm: string | null;
+  /** Em ordem; vazia quando a tarefa não tem checklist. */
+  etapas: EtapaDexDTO[];
 }
 
 export interface PlanoDexDTO {
