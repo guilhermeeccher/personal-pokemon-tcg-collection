@@ -15,6 +15,10 @@
  * - **O detalhe é texto de várias linhas, sempre visível** — nunca só em
  *   hover ou `title`, que o celular não tem.
  * - Um formulário por vez: acrescentar e editar usam o mesmo, no lugar.
+ * - **A caixa muda no toque**, antes da resposta: a marcação otimista vale
+ *   enquanto a lista recebida for a mesma (`base`), e some sozinha quando o
+ *   `router.refresh()` traz a lista nova — sem efeito para limpar, e sem a
+ *   caixa voltar ao estado velho por um instante. Recusada, some na hora.
  */
 
 import { useRouter } from "next/navigation";
@@ -49,6 +53,8 @@ export function EtapasDaTarefa({
   const t = useTranslations("dex.planos");
   const router = useRouter();
   const [form, setForm] = useState<Formulario | null>(null);
+  const [marcacao, setMarcacao] = useState<{ id: string; feita: boolean; base: EtapaDexDTO[] } | null>(null);
+  const feita = (e: EtapaDexDTO) => (marcacao && marcacao.base === tarefa.etapas && marcacao.id === e.id ? marcacao.feita : e.feita);
   const ids = tarefa.etapas.map((e) => e.id);
 
   async function salvar(f: Formulario) {
@@ -57,6 +63,11 @@ export function EtapasDaTarefa({
       ? await enviar(`/api/dex/etapas/${f.etapaId}`, "PATCH", corpo)
       : await enviar(`/api/dex/tarefas/${tarefa.id}/etapas`, "POST", corpo);
     if (ok) setForm(null);
+  }
+
+  async function marcar(e: EtapaDexDTO, valor: boolean) {
+    setMarcacao({ id: e.id, feita: valor, base: tarefa.etapas });
+    if (!(await enviar(`/api/dex/etapas/${e.id}`, "PATCH", { feita: valor }))) setMarcacao(null);
   }
 
   async function excluir(e: EtapaDexDTO) {
@@ -124,12 +135,12 @@ export function EtapasDaTarefa({
                   <input
                     type="checkbox"
                     className="mt-0.5 size-4 shrink-0 max-md:mt-0 max-md:size-5"
-                    checked={e.feita}
+                    checked={feita(e)}
                     disabled={!editavel || ocupado}
-                    onChange={(ev) => void enviar(`/api/dex/etapas/${e.id}`, "PATCH", { feita: ev.target.checked })}
+                    onChange={(ev) => void marcar(e, ev.target.checked)}
                   />
                   <span className="flex min-w-0 flex-col gap-0.5">
-                    <span className={`break-words ${e.feita ? "text-muted line-through" : "text-foreground"}`}>{e.texto}</span>
+                    <span className={`break-words ${feita(e) ? "text-muted line-through" : "text-foreground"}`}>{e.texto}</span>
                     {e.detalhe && <span className="text-sm break-words whitespace-pre-line text-muted">{e.detalhe}</span>}
                   </span>
                 </label>

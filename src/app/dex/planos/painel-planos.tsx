@@ -166,27 +166,33 @@ export function PainelPlanos({
                         aria-expanded={aberta}
                         aria-controls={idEtapas}
                         onClick={() => alternar(x.id)}
-                        className="flex flex-wrap items-center gap-2 rounded-control text-left max-md:min-h-11"
+                        className="flex items-start gap-2 rounded-control text-left max-md:min-h-11"
                       >
-                        <Icone
-                          nome="chevron-right"
-                          tamanho={13}
-                          className={`shrink-0 text-muted [transition:var(--transition-control)] ${aberta ? "rotate-90" : ""}`}
-                        />
-                        <span
-                          id={`${idEtapas}-titulo`}
-                          className={`font-semibold ${x.status === "feita" ? "line-through" : ""} ${x.status === "aberta" ? "text-strong" : ""}`}
-                        >
-                          {x.titulo}
+                        {/* A seta fica numa coluna própria, na altura da primeira linha: com o
+                            título quebrando no celular, ela não sobra sozinha numa linha. */}
+                        <span className="flex h-6 shrink-0 items-center">
+                          <Icone
+                            nome="chevron-right"
+                            tamanho={13}
+                            className={`text-muted [transition:var(--transition-control)] ${aberta ? "rotate-90" : ""}`}
+                          />
                         </span>
-                        <Distintivo>{t(`planos.tipo.${x.tipo}`)}</Distintivo>
-                        {x.jogoId && <Distintivo>{jogoDex(x.jogoId)?.nome ?? x.jogoId}</Distintivo>}
-                        {x.trofeuId && <Distintivo tom="aviso">{trofeuPorId.get(x.trofeuId)?.textos[idioma].titulo ?? x.trofeuId}</Distintivo>}
-                        {progresso.total > 0 && (
-                          <span className="font-mono text-xs tabular-nums text-muted">
-                            {t("planos.etapasContagem", { feitas: progresso.feitas, total: progresso.total })}
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span
+                            id={`${idEtapas}-titulo`}
+                            className={`font-semibold ${x.status === "feita" ? "line-through" : ""} ${x.status === "aberta" ? "text-strong" : ""}`}
+                          >
+                            {x.titulo}
                           </span>
-                        )}
+                          <Distintivo>{t(`planos.tipo.${x.tipo}`)}</Distintivo>
+                          {x.jogoId && <Distintivo>{jogoDex(x.jogoId)?.nome ?? x.jogoId}</Distintivo>}
+                          {x.trofeuId && <Distintivo tom="aviso">{trofeuPorId.get(x.trofeuId)?.textos[idioma].titulo ?? x.trofeuId}</Distintivo>}
+                          {progresso.total > 0 && (
+                            <span className="font-mono text-xs tabular-nums text-muted">
+                              {t("planos.etapasContagem", { feitas: progresso.feitas, total: progresso.total })}
+                            </span>
+                          )}
+                        </span>
                       </button>
                       {x.descricao && <p className="text-sm text-muted">{x.descricao}</p>}
                       {x.formaIds.length > 0 && (
