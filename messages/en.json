@@ -1154,7 +1154,19 @@
       "fim": "End",
       "criar": "Create plan",
       "novoPlano": "New plan",
-      "historico": "History ({quantidade})"
+      "historico": "History ({quantidade})",
+      "etapasContagem": "{feitas}/{total} steps",
+      "semEtapas": "No steps yet.",
+      "adicionarEtapa": "Add step",
+      "etapaTexto": "Step",
+      "etapaDetalhe": "Details (optional)",
+      "salvar": "Save",
+      "editar": "Edit",
+      "excluir": "Delete",
+      "subir": "Move \"{etapa}\" up",
+      "descer": "Move \"{etapa}\" down",
+      "confirmarExcluirEtapa": "Delete the step \"{etapa}\"?",
+      "todasFeitas": "All steps done — mark the task as done."
     },
     "visaoGeral": {
       "titulo": "Overview",

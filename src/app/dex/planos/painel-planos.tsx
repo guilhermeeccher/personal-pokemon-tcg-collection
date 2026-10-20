@@ -2,10 +2,18 @@
 
 /**
  * Planos — o que fazer nos jogos, montado nas sessões com o Claude ou aqui
- * mesmo. Cada plano tem tarefas marcáveis e pode mirar troféus.
+ * mesmo. Cada plano tem tarefas marcáveis e pode mirar troféus; cada tarefa
+ * pode ter um checklist de etapas (`etapas-tarefa.tsx`).
  *
  * Concluir uma tarefa de captura ou evolução **oferece** o cadastro, já no
  * jogo da tarefa; nunca registra o Pokémon sozinho (regra 8 da spec).
+ *
+ * As etapas ficam recolhidas: o cabeçalho da tarefa é o botão que abre o
+ * checklist ali mesmo, e recolhida ela mostra só a contagem (`n/m etapas`).
+ * Uma página com vários planos abertos de uma vez viraria uma parede de
+ * caixinhas. **Marcar a última etapa não conclui a tarefa**: aparece um
+ * aviso junto do "Feita", e o clique continua do usuário — é ele quem sabe
+ * se a missão acabou, e concluir é o que oferece o cadastro.
  */
 
 import Link from "next/link";
@@ -19,8 +27,10 @@ import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
 import { Campo, classesEntrada } from "@/app/_componentes/campo";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
+import { Icone } from "@/app/_componentes/icone";
 import { Painel } from "@/app/_componentes/painel";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { progressoEtapas, todasFeitas } from "@/lib/dominio/dex-etapas";
 import { jogoDex } from "@/lib/dominio/dex-jogos";
 import { TIPOS_TAREFA, type StatusPlanoDex, type StatusTarefaDex } from "@/lib/dominio/dex-sessao";
 import type { IdiomaTrofeu } from "@/lib/dominio/dex-trofeus";
@@ -28,6 +38,8 @@ import type { FormaDexDTO, JogoPossuidoDTO, PlanoDexDTO, TarefaDexDTO, TrofeuDex
 
 import { hojeLocal } from "../_componentes/hoje";
 import { SpriteDex } from "../_componentes/sprite-dex";
+
+import { EtapasDaTarefa } from "./etapas-tarefa";
 
 type TrofeuResumo = Pick<TrofeuDexDTO, "id" | "jogoId" | "textos">;
 
@@ -54,17 +66,30 @@ export function PainelPlanos({
   const [novaTarefa, setNovaTarefa] = useState<null | { planoId: string; titulo: string; tipo: string; jogoId: string }>(null);
   /** Tarefa recém-concluída que pede o cadastro do Pokémon. */
   const [oferta, setOferta] = useState<TarefaDexDTO | null>(null);
+  /** Tarefas com o checklist aberto. Todas começam recolhidas. */
+  const [expandidas, setExpandidas] = useState<ReadonlySet<string>>(() => new Set());
 
   const formaPorId = new Map(formas.map((f) => [f.id, f]));
   const trofeuPorId = new Map(trofeus.map((x) => [x.id, x]));
   const ativos = planos.filter((p) => p.status === "ativo");
   const fechados = planos.filter((p) => p.status !== "ativo");
 
-  async function enviar(url: string, method: string, corpo: unknown): Promise<boolean> {
+  function alternar(tarefaId: string) {
+    setExpandidas((atual) => {
+      const nova = new Set(atual);
+      if (!nova.delete(tarefaId)) nova.add(tarefaId);
+      return nova;
+    });
+  }
+
+  async function enviar(url: string, method: string, corpo?: unknown): Promise<boolean> {
     setOcupado(true);
     setErro(null);
     try {
-      const r = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) });
+      const r = await fetch(url, {
+        method,
+        ...(corpo === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) }),
+      });
       if (!r.ok) {
         setErro(textoDaRecusa(tr, await r.json().catch(() => null), t("planos.erro")));
         return false;
@@ -127,52 +152,85 @@ export function PainelPlanos({
 
         {p.tarefas.length > 0 && (
           <ul className="flex flex-col divide-y divide-hairline">
-            {p.tarefas.map((x) => (
-              <li key={x.id} className="flex flex-wrap items-start gap-2 py-2">
-                <div className={`flex flex-1 flex-col gap-1 ${x.status === "aberta" ? "" : "text-muted"}`}>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`font-semibold ${x.status === "feita" ? "line-through" : ""} ${x.status === "aberta" ? "text-strong" : ""}`}>
-                      {x.titulo}
-                    </span>
-                    <Distintivo>{t(`planos.tipo.${x.tipo}`)}</Distintivo>
-                    {x.jogoId && <Distintivo>{jogoDex(x.jogoId)?.nome ?? x.jogoId}</Distintivo>}
-                    {x.trofeuId && <Distintivo tom="aviso">{trofeuPorId.get(x.trofeuId)?.textos[idioma].titulo ?? x.trofeuId}</Distintivo>}
-                  </div>
-                  {x.descricao && <p className="text-sm text-muted">{x.descricao}</p>}
-                  {x.formaIds.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1">
-                      {x.formaIds.map((id) => {
-                        const f = formaPorId.get(id);
-                        return f ? (
-                          <span key={id} className="flex items-center text-xs" title={f.especie}>
-                            <SpriteDex sprite={f.sprite} shiny={false} tamanho={32} />
-                            {f.especie}
+            {p.tarefas.map((x) => {
+              const aberta = expandidas.has(x.id);
+              const idEtapas = `etapas-${x.id}`;
+              const progresso = progressoEtapas(x.etapas);
+              const editavel = p.status === "ativo" && x.status === "aberta";
+              return (
+                <li key={x.id} className="flex flex-col gap-2 py-2">
+                  <div className="flex flex-wrap items-start gap-2">
+                    <div className={`flex flex-1 flex-col gap-1 ${x.status === "aberta" ? "" : "text-muted"}`}>
+                      <button
+                        type="button"
+                        aria-expanded={aberta}
+                        aria-controls={idEtapas}
+                        onClick={() => alternar(x.id)}
+                        className="flex flex-wrap items-center gap-2 rounded-control text-left max-md:min-h-11"
+                      >
+                        <Icone
+                          nome="chevron-right"
+                          tamanho={13}
+                          className={`shrink-0 text-muted [transition:var(--transition-control)] ${aberta ? "rotate-90" : ""}`}
+                        />
+                        <span
+                          id={`${idEtapas}-titulo`}
+                          className={`font-semibold ${x.status === "feita" ? "line-through" : ""} ${x.status === "aberta" ? "text-strong" : ""}`}
+                        >
+                          {x.titulo}
+                        </span>
+                        <Distintivo>{t(`planos.tipo.${x.tipo}`)}</Distintivo>
+                        {x.jogoId && <Distintivo>{jogoDex(x.jogoId)?.nome ?? x.jogoId}</Distintivo>}
+                        {x.trofeuId && <Distintivo tom="aviso">{trofeuPorId.get(x.trofeuId)?.textos[idioma].titulo ?? x.trofeuId}</Distintivo>}
+                        {progresso.total > 0 && (
+                          <span className="font-mono text-xs tabular-nums text-muted">
+                            {t("planos.etapasContagem", { feitas: progresso.feitas, total: progresso.total })}
                           </span>
-                        ) : null;
-                      })}
+                        )}
+                      </button>
+                      {x.descricao && <p className="text-sm text-muted">{x.descricao}</p>}
+                      {x.formaIds.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1">
+                          {x.formaIds.map((id) => {
+                            const f = formaPorId.get(id);
+                            return f ? (
+                              <span key={id} className="flex items-center text-xs" title={f.especie}>
+                                <SpriteDex sprite={f.sprite} shiny={false} tamanho={32} />
+                                {f.especie}
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                {p.status === "ativo" && (
-                  <div className="flex gap-1.5 max-md:gap-2">
-                    {x.status === "aberta" ? (
-                      <>
-                        <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" variante="primario" disabled={ocupado} onClick={() => statusTarefa(x, "feita")}>
-                          {t("planos.feita")}
-                        </Botao>
-                        <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" disabled={ocupado} onClick={() => statusTarefa(x, "descartada")}>
-                          {t("planos.descartar")}
-                        </Botao>
-                      </>
-                    ) : (
-                      <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" disabled={ocupado} onClick={() => statusTarefa(x, "aberta")}>
-                        {t("planos.reabrir")}
-                      </Botao>
+                    {p.status === "ativo" && (
+                      <div className="flex gap-1.5 max-md:gap-2">
+                        {x.status === "aberta" ? (
+                          <>
+                            <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" variante="primario" disabled={ocupado} onClick={() => statusTarefa(x, "feita")}>
+                              {t("planos.feita")}
+                            </Botao>
+                            <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" disabled={ocupado} onClick={() => statusTarefa(x, "descartada")}>
+                              {t("planos.descartar")}
+                            </Botao>
+                          </>
+                        ) : (
+                          <Botao tamanho="xs" className="max-md:h-11 max-md:min-w-11" disabled={ocupado} onClick={() => statusTarefa(x, "aberta")}>
+                            {t("planos.reabrir")}
+                          </Botao>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </li>
-            ))}
+                  {editavel && todasFeitas(x.etapas) && (
+                    <p className="rounded-control bg-success-soft px-3 py-1.5 text-sm font-semibold text-success-fg">{t("planos.todasFeitas")}</p>
+                  )}
+                  <div id={idEtapas} hidden={!aberta}>
+                    <EtapasDaTarefa id={idEtapas} tarefa={x} editavel={editavel} ocupado={ocupado} enviar={enviar} />
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
 

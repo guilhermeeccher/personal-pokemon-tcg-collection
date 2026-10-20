@@ -1154,7 +1154,19 @@
       "fim": "Fim",
       "criar": "Criar plano",
       "novoPlano": "Novo plano",
-      "historico": "Histórico ({quantidade})"
+      "historico": "Histórico ({quantidade})",
+      "etapasContagem": "{feitas}/{total} etapas",
+      "semEtapas": "Nenhuma etapa ainda.",
+      "adicionarEtapa": "Adicionar etapa",
+      "etapaTexto": "Etapa",
+      "etapaDetalhe": "Detalhe (opcional)",
+      "salvar": "Salvar",
+      "editar": "Editar",
+      "excluir": "Excluir",
+      "subir": "Subir \"{etapa}\"",
+      "descer": "Descer \"{etapa}\"",
+      "confirmarExcluirEtapa": "Excluir a etapa \"{etapa}\"?",
+      "todasFeitas": "Todas as etapas feitas — marque a tarefa como feita."
     },
     "visaoGeral": {
       "titulo": "Visão geral",
