@@ -1102,6 +1102,38 @@ export const dexTarefa = pgTable(
 );
 
 /**
+ * Uma etapa de uma tarefa: o checklist de uma missão de vários passos (uma
+ * "Missão Safira") que antes ficava espremido na descrição. Regras em
+ * `lib/dominio/dex-etapas.ts`.
+ *
+ * `ordem` é renumerada de 1 a n a cada exclusão e reordenação, e não tem
+ * unicidade no banco: a reordenação reescreve todas as linhas da tarefa numa
+ * transação, e uma unique em (tarefa, ordem) obrigaria a constraint
+ * deferrable só para isso. `feita_em` acompanha `feita` (marcar grava a
+ * primeira vez, desmarcar limpa), como `concluida_em` da tarefa.
+ *
+ * `cascade` da tarefa: a etapa não existe sem ela, e nada aponta para etapa.
+ * Marcar a última etapa **não** conclui a tarefa — quem fecha é o usuário.
+ */
+export const dexTarefaEtapa = pgTable(
+  "dex_tarefa_etapa",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tarefaId: uuid("tarefa_id")
+      .notNull()
+      .references(() => dexTarefa.id, { onDelete: "cascade" }),
+    ordem: integer("ordem").notNull(),
+    texto: text("texto").notNull(),
+    detalhe: text("detalhe"),
+    feita: boolean("feita").notNull().default(false),
+    feitaEm: timestamp("feita_em", { withTimezone: true }),
+    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+    atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("dex_tarefa_etapa_tarefa_idx").on(t.tarefaId)],
+);
+
+/**
  * Cada `ref` que um lote de sessão (`pnpm dex:aplicar`) já gravou, e o que
  * ela virou. É o que torna o lote idempotente (reaplicar não duplica), o
  * que deixa um lote posterior apontar para o plano de um anterior pela
@@ -1109,7 +1141,7 @@ export const dexTarefa = pgTable(
  */
 export const dexSessaoRef = pgTable("dex_sessao_ref", {
   ref: text("ref").primaryKey(),
-  /** `lote`, `trofeu`, `plano`, `tarefa` ou `registros`. */
+  /** `lote`, `trofeu`, `plano`, `tarefa`, `etapas` ou `registros`. */
   tipo: text("tipo").notNull(),
   /** Id do plano ou da tarefa criada; nulo nos outros tipos. */
   entidadeId: uuid("entidade_id"),

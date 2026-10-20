@@ -211,6 +211,13 @@
       "when": 1792187661958,
       "tag": "0029_living_dex_lancamento",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1792536494536,
+      "tag": "0030_living_dex_etapas",
+      "breakpoints": true
     }
   ]
 }
