@@ -3,7 +3,13 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { aGuardarDepoisDoMovimento, aGuardarNaCriacao, montarRecebidos, type RegistroParaRecebidos } from "./dex-recebidos";
+import {
+  aGuardarDepoisDoMovimento,
+  aGuardarNaCriacao,
+  montarRecebidos,
+  pendentesAGuardar,
+  type RegistroParaRecebidos,
+} from "./dex-recebidos";
 import { resolverSecoes } from "./dex-secoes";
 import { lerRegistrosCsv } from "./seed-catalogo";
 import { COLUNAS_DEX_FORMA, converterLinhaDexForma } from "./seed-dex";
@@ -100,5 +106,46 @@ describe("montarRecebidos", () => {
     expect(r.caixas.map((c) => [c.trilha, c.caixa.grupo, c.itens[0].registro.formaId])).toEqual([
       ["normal", "cosmetica", "magearna-original"],
     ]);
+  });
+});
+
+describe("pendentesAGuardar", () => {
+  /* A página inicial conta por esta função; a tela Recebidos monta as caixas.
+     Os dois números têm de ser o mesmo em qualquer rodada. */
+  const igualAosRecebidos = (registros: RegistroParaRecebidos[], secoes = todas) => {
+    const pendentes = pendentesAGuardar(registros);
+    const r = montarRecebidos(formas, registros, secoes, 0);
+    expect(pendentes.map((p) => p.id)).toEqual(r.ids);
+    expect(pendentes).toHaveLength(r.ids.length);
+    return pendentes;
+  };
+
+  it("conta as cópias extras, que não têm lugar nas caixas", () => {
+    const pendentes = igualAosRecebidos([reg("bulbasaur", { aGuardar: false }), reg("bulbasaur"), reg("pikachu"), reg("pikachu")]);
+    expect(pendentes.map((p) => p.formaId)).toEqual(["bulbasaur", "pikachu", "pikachu"]);
+  });
+
+  it("conta o que está fora das caixas (seção desligada, shiny de forma sem shiny)", () => {
+    const semGenero = resolverSecoes([{ categoria: "genero", conta: false }]);
+    const pendentes = igualAosRecebidos(
+      [reg("venusaur-femea"), reg("magearna-original", { shiny: true }), reg("magearna-original")],
+      semGenero,
+    );
+    expect(pendentes).toHaveLength(3);
+  });
+
+  it("não conta o que já foi guardado nem o que está fora do HOME", () => {
+    const pendentes = igualAosRecebidos([
+      reg("bulbasaur", { aGuardar: false }),
+      reg("ivysaur", { local: "firered", aGuardar: false }),
+      // Fora do HOME o "a guardar" não vale, mesmo que viesse ligado.
+      reg("charmander", { local: "firered" }),
+      reg("venusaur"),
+    ]);
+    expect(pendentes.map((p) => p.formaId)).toEqual(["venusaur"]);
+  });
+
+  it("rodada vazia", () => {
+    expect(igualAosRecebidos([reg("bulbasaur", { aGuardar: false })])).toEqual([]);
   });
 });

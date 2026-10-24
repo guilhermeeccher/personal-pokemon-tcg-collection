@@ -79,8 +79,21 @@ export interface Recebidos<T extends FormaParaCaixa, R extends RegistroParaReceb
 const TRILHAS: readonly TrilhaDex[] = ["normal", "shiny"];
 
 /**
+ * Os registros "a guardar" no HOME, com e sem lugar nas caixas, na ordem
+ * recebida. É a definição única da rodada: `montarRecebidos` parte dela, e a
+ * página inicial conta por ela (`resumo-inicio.ts`) sem montar as caixas —
+ * o número de lá e o da tela Recebidos não podem divergir.
+ */
+export function pendentesAGuardar<R extends Pick<RegistroParaRecebidos, "local" | "aGuardar">>(
+  registros: readonly R[],
+): R[] {
+  return registros.filter((r) => r.local === LOCAL_HOME && r.aGuardar);
+}
+
+/**
  * Os Pokémon "a guardar" no HOME, por caixa de destino. `registros` na ordem
- * de cadastro: quem chegou antes fica com a vaga, o resto é extra.
+ * de cadastro: quem chegou antes fica com a vaga, o resto é extra. A rodada
+ * é a de `pendentesAGuardar`; `ids` é ela inteira.
  */
 export function montarRecebidos<T extends FormaParaCaixa, R extends RegistroParaRecebidos>(
   formas: readonly T[],
@@ -89,7 +102,7 @@ export function montarRecebidos<T extends FormaParaCaixa, R extends RegistroPara
   reservadas: number,
 ): Recebidos<T, R> {
   const noHome = registros.filter((r) => r.local === LOCAL_HOME);
-  const pendentes = noHome.filter((r) => r.aGuardar);
+  const pendentes = pendentesAGuardar(registros);
   const caixas: CaixaRecebidos<T, R>[] = [];
   const semLugar: Recebidos<T, R>["semLugar"] = [];
 
