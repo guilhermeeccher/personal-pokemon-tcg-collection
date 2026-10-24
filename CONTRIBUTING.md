@@ -42,7 +42,7 @@ The glossary below is the key. Read it once and the code reads fine.
 | `cadastro` | card entry | Adding copies to the inventory, either by set grid or by search. |
 | `opcoes-compra` | buy options | The offers found by a scan for a slot, with price, edition and number. Table `liga_opcao`. |
 | `ritmo` | pace | The interval between two requests to LigaPokemon, read live from their `Crawl-delay`. `lib/liga/ritmo.ts`. |
-| `frescor` | freshness | How recently a slot was queried. A slot queried in the last 24 h is skipped by a new scan. `lib/dominio/frescor-consulta.ts`. |
+| `frescor` | freshness | How recently a slot got an offer recorded. A slot with an offer recorded in the last 24 h is skipped by a new scan; a search that found nothing records no offer, so that slot is searched again. `lib/dominio/frescor-consulta.ts`. |
 | `set` | set | An expansion, in the TCGdex sense. The word is the same in both languages and is used as-is in the code. |
 | `liga` | Liga | Short for LigaPokemon, the Brazilian marketplace the price collector reads. |
 | `melhoria` | upgrade | A copy better than the one currently in the slot (rarity > language > variant). It is flagged, never applied on its own. |
@@ -54,11 +54,11 @@ The glossary below is the key. Read it once and the code reads fine.
 | `receita` | recipe | The sets a set collection was created from (`parametro.sets`). After creation the collection is its list of slots, edited card by card. |
 | `excluidas` | removed | Recipe cards the user took out of a set collection, so the secrets toggle does not bring them back. |
 | `secretas` | secret cards | Cards numbered above the official count of a set. A collection flag decides whether they get slots. |
-| `alocacao` | allocation | Attaching a copy to a slot. A copy is allocated to at most one slot, ever. |
+| `alocacao` | allocation | Attaching a copy to a slot. A copy is allocated to at most one slot at a time. |
 | `dominio` | domain | `src/lib/dominio/`: the pure, tested business-rule modules. |
 | `dex_forma` | dex slot | Living Dex (optional module): one species in one form HOME stores in a box of its own. Table `dex_forma`, from `seed/dex-forma.csv`. |
 | `trilha` | track | Living Dex: `normal` or `shiny`. The same forms are slots in both; a Pokémon fills one track only. |
-| `secao` | section | Living Dex: the slot's category — `base`, `regional`, `genero` (gender), `cosmetica` (cosmetic), `especial` (special). Every section but `base` can be left out of the count. |
+| `secao` | section | Living Dex: the slot's category: `base`, `regional`, `genero` (gender), `cosmetica` (cosmetic), `especial` (special). `regional`, `genero` and `especial` can be left out of the count; `cosmetica` is a view of its own, beside the main one. |
 | `shiny_obtenivel` | shiny obtainable | Living Dex: `false` for a form never released as shiny. It stays in the grid and leaves the shiny total. |
 | `registro` | record | Living Dex: one Pokémon the user has — a slot, shiny or not, where it came from and where it is. Table `dex_registro`. |
 | `jogo possuído` | owned game | Living Dex: a game of the fixed catalog the user marked as owned. Table `dex_jogo_possuido`. |
@@ -67,16 +67,23 @@ The glossary below is the key. Read it once and the code reads fine.
 | `plano` | plan | Living Dex: what the user does in the games next, usually a week, made in a planning session or on screen. Table `dex_plano`. |
 | `tarefa` | task | Living Dex: one item of a plan — catch, evolve, trade, progress, transfer. Table `dex_tarefa`. |
 | `etapa` | step | Living Dex: one line of a task's checklist, with optional details. Table `dex_tarefa_etapa`, rules in `lib/dominio/dex-etapas.ts`. Not to be confused with `PassoSessao`, a write step of a session batch. |
+| `trofeu` | trophy | Living Dex: one milestone of a game, `bronze`, `prata` (silver) or `ouro` (gold); the platinum is derived, never a row. A `checkpoint` unlocks species in that save, a `marco` (milestone) unlocks nothing. HOME trophies are computed from the records. Table `dex_trofeu`, from `seed/dex-trofeus.json`. |
+| `caixa` | box | Living Dex: a HOME box of 30 slots. Computed on every read (`lib/dominio/dex-caixas.ts`), never stored. |
+| `a guardar` | to put away | Living Dex: a record that arrived in HOME and was not put in its box yet. Column `dex_registro.a_guardar`; the Received screen lists them. |
+| `sessão` | session | Living Dex: a planning session held outside the app with an assistant, read by `pnpm dex:estado` and written back by `pnpm dex:aplicar`. |
+| `preço` | price | A card's LigaPokemon price in BRL, kept with its date. Table `preco_carta_liga`, history in `preco_carta_liga_historico`. |
 
 Route paths are in Portuguese too:
 
 | Path | What it is |
 |---|---|
+| `/` | the home page: the shortcuts and a summary of each module |
 | `/colecoes` | collections; `/colecoes/nova` creates one, `/colecoes/falta` is the missing list across collections |
 | `/colecoes/[id]/opcoes-compra` | the buy options and the buy list for one collection |
-| `/inventario` | the inventory; `/inventario/repetidas` is duplicates, `/inventario/visao-geral` is the overview |
+| `/inventario` | the inventory; `/inventario/repetidas` is duplicates, `/inventario/visao-geral` is the overview, `/inventario/precos` is the prices of your special cards |
 | `/cadastro` | card entry; `/cadastro/set` is the grid for a whole set, `/cadastro/busca` is one card by search |
-| `/dex` | the optional Living Dex module (`MODULO_LIVING_DEX=1`): `/dex/pokedex` is the slot grid, `/dex/cadastrar` adds Pokémon by game, `/dex/inventario` lists them, `/dex/jogos` lists the owned games. 404 when the module is off |
+| `/dex` | the optional Living Dex module (`MODULO_LIVING_DEX=1`), its overview: `/dex/pokedex` is the slot grid, `/dex/caixas` the HOME boxes, `/dex/recebidos` what is waiting to be put away, `/dex/cadastrar` adds Pokémon by game, `/dex/inventario` lists them, `/dex/jogos` lists the owned games, `/dex/trofeus` the trophies, `/dex/planos` the plans. 404 when the module is off |
+| `/login` | the login of the optional password access (`ACESSO_COM_SENHA=1`). 404 when the module is off |
 
 ## Environment
 
@@ -125,9 +132,11 @@ Beyond CI, for the PR to be accepted:
 
 - **a business rule that was touched has a test**, and the test runs without a database;
 - **no collection data in the diff** — not aggregated, not as a fixture "just for testing";
-- **no card image files.** The screenshots in `docs/screenshots/` are the maintainer's own,
-  published once and deliberately; they are not a precedent for putting card art in a PR;
-- **no person's name, e-mail, IP, hostname or machine path** in code, comment or commit message;
+- **no card image files and no per-card image reference.** The screenshots in `docs/screenshots/`
+  are the maintainer's own, published deliberately; they are not a precedent for putting card art
+  in a PR;
+- **no person's name, e-mail, IP, hostname or machine path** in code, comment, commit message or
+  document;
 - **the comment updated along with the code.** Almost every non-obvious decision in this repository
   has a paragraph explaining what was measured and what was discarded. If you change the decision,
   change the paragraph.

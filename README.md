@@ -1,15 +1,18 @@
 # Pokémon Collection
 
 A catalog of your **physical** Pokémon card collection, running on your own machine. You start two
-containers, open the browser and begin typing in what is in the box — the 48,372-card catalog comes
-with it and loads by itself on the first boot.
+containers, open the browser and begin typing in what is in the box. The catalog comes with it,
+48,372 card records in Portuguese, English and Japanese, and loads by itself on the first boot.
 
-The question it exists to answer is not "how much do I have", it is **"what is missing"**.
+The question it exists to answer is **"what is missing"**: which species your Pokédex still lacks,
+which numbers of a set you have not found, which empty slot a card you already own could fill.
+An optional second module, the **Living Dex**, asks the same question of your Pokémon HOME boxes.
 
-![A Pokedex collection with 125 of its 251 slots filled, the empty ones offering to be allocated](docs/screenshots/pokedex.png)
+![The home page with the Living Dex turned on: shortcuts and a summary for the cards and for the Living Dex, side by side](docs/screenshots/home.png)
 
 A collection is a grid of slots. A filled slot carries the copy allocated to it, with the language
-and variant of the card you physically own. An empty one names the species you are still missing.
+and variant of the card you physically own. An empty one names the species or the card you are
+still missing.
 
 ---
 
@@ -17,8 +20,8 @@ and variant of the card you physically own. An empty one names the species you a
 
 **This is a fan project, with no connection to Nintendo, Creatures Inc., GAME FREAK inc. or The
 Pokémon Company International.** It is not an official product, it is not endorsed by any of them,
-and it has no relationship with LigaPokemon, TCGdex or mypcards beyond reading public data that they
-publish.
+and it has no relationship with LigaPokemon, TCGdex, mypcards or PokeAPI beyond reading public data
+that they publish.
 
 Pokémon, the names of the cards, the Pokémon and the expansions, the artwork and every related
 trademark belong to their respective owners. **This repository ships no card art for the program to
@@ -33,62 +36,82 @@ Nothing here is meant for selling, professional grading or reproducing a card.
 
 ## What it is, and who it is for
 
-It is a **local, single-user system with no accounts**, built for people who have Pokémon cards at home,
-kept in a binder or a box, and want to know what they have and what they are missing.
+It is a **single-user system with no accounts**, built for people who have Pokémon cards at home,
+kept in a binder or a box, and want to know what they have and what they are missing. It runs on
+your local network, and you can reach it from your phone away from home through a tunnel with the
+optional password turned on (see [below](#optional-reaching-it-from-outside-your-network)).
 
 It fits well if you:
 
 - are building a **Pokédex** (one slot per species) and want the list of what has not come in yet;
 - are closing out an **expansion** card by card and need to know which numbers are missing;
 - have duplicates scattered around and want to set aside what can be traded;
+- keep a **living dex in Pokémon HOME** and want to track it across your games;
 - like having the data at home, in a Postgres that is yours, instead of in a spreadsheet or in a
   service that can shut down.
 
-It is not for anyone who wants a public, multi-user site, or sales and trading control.
+It is not meant for a public, multi-user site, or for sales and trading control.
 
-### What it does
+### What it does with your cards
 
-- **Quick entry by set** — pick the expansion, tick the whole card grid and submit in one go. This is
-  the path for typing in a large collection without dying halfway through.
-- **Entry by search** — for a single card, by name, set or number.
+- **Home page** with the screens you use most and a summary of each module: how far each collection
+  has come and which regions or sets are closest to complete.
+- **Quick entry by set**: pick the expansion, tick the whole card grid and submit in one go. This is
+  the path for typing in a large collection without giving up halfway through.
+- **Entry by search** for a single card, by name, set or number.
 - **Inventory** with search and filters: set, language, rarity, variant, condition, graded, location,
   allocated or free.
 - **Collections** of three kinds: Pokédex, complete set or custom. Each one has a grid of slots, copy
-  allocation and **the list of what is missing** — which is the main output of the system. A set
-  collection can join several sets (an expansion and its classic collection, say), and once created
-  it is yours to edit: add a single card from any set, or take one out.
-- **Duplicates** — what is left over for trading, with total, allocated and free per card.
-- **Overview** — totals and distribution by expansion, rarity, language, condition and variant, plus
-  the progress of each collection.
-- **Upgrade flagging** — when a copy better than the one in the slot comes in (rarity, language,
-  variant), the system tells you. It never swaps on its own: the decision is always yours.
-- **LigaPokemon prices** — an optional lookup, to build the list of what to buy. Read
+  allocation and **the list of what is missing**, the main output of the system. A set collection
+  can join several sets (an expansion and its classic collection, say), and once created it is
+  yours to edit: add a single card from any set, or take one out.
+- **Duplicates**: what is left over for trading, with total, allocated and free per card.
+- **Overview**: a showcase of your cards, ordered by the average LigaPokemon price stored for them
+  (and by rarity for cards with no price yet), each collection with its progress by region or by
+  part of the set, the divisions closest to complete, and the breakdowns by expansion, rarity,
+  language, condition and variant.
+- **Upgrade flagging**: when a copy better than the one in the slot comes in (rarity, language,
+  variant), the system tells you. It never swaps on its own, and the decision is always yours.
+- **LigaPokemon prices**, optional: the offers for your empty slots, to build a buy list, and
+  prices for the special cards you own, with their history over time. Read
   [the section on it](#ligapokemon-prices) before turning it on.
-- **Export** — inventory as CSV, a collection in LigaPokemon's import format, and a buy list ready to
+- **Export**: inventory as CSV, a collection in LigaPokemon's import format, and a buy list ready to
   paste.
+
+Every screen works on a phone, which is where it gets used with the card in hand. The interface is
+available in English and Brazilian Portuguese; the selector sits at the bottom of the menu.
 
 ---
 
 ## What it looks like
 
-The list of missing cards reads the collection the other way round: every empty slot you have,
-grouped by collection. This is what you take to a shop.
+The overview opens with your cards with the highest stored price, then each collection as a binder
+cover with its progress, the divisions closest to complete and the breakdowns. Each breakdown row
+with a value opens the inventory with that filter already applied; cards with no rarity have no link.
 
-![The missing cards screen, showing 157 empty slots across two collections](docs/screenshots/missing-cards.png)
+![The overview: the cards with the highest stored price, then each collection with its progress](docs/screenshots/overview.png)
+
+Inside a collection, filled slots show the copy you own, with its language and variant, and empty
+ones show the species or the card you still need, with an allocate button when a free copy of yours
+fits. A slot whose copy can be upgraded says so.
+
+![A Pokédex collection showing filled and empty slots](docs/screenshots/pokedex.png)
+
+The list of missing cards reads every collection the other way round: each empty slot you have,
+grouped by collection, with the ones a free copy of yours already fits marked as ready to allocate.
+This is what you take to a shop.
+
+![The missing cards screen, with the empty slots of each collection](docs/screenshots/missing-cards.png)
 
 Typing in a collection you already own goes set by set. Pick one and the whole card grid comes up
 with a quantity box per card; variant, language and condition start from a batch default, and you
 change only the cards that differ from it.
 
-![Quick add by set, with the 151 set loaded and a quantity box on every card](docs/screenshots/quick-add-by-set.png)
+![Quick add by set, with a set loaded and a quantity box on every card](docs/screenshots/quick-add-by-set.png)
 
-The overview answers how much there is and how it is spread out. Every breakdown links into the
-inventory with that filter already applied.
+On a phone the menu folds into the top bar and every screen keeps working at that width.
 
-![The overview screen with totals, collection progress and breakdowns by set and rarity](docs/screenshots/overview.png)
-
-The interface is available in English and Brazilian Portuguese; the selector sits at the bottom of
-the sidebar.
+<img src="docs/screenshots/home-phone.png" alt="The home page on a phone" width="320">
 
 ---
 
@@ -96,7 +119,7 @@ the sidebar.
 
 - **Docker Engine** with the **Compose v2** plugin (`docker compose`, no hyphen). That is everything
   the application needs to run.
-- **Node.js 22+**, only if you are going to run the `pnpm` commands on your machine — tests, lint and
+- **Node.js 22+**, only if you are going to run the `pnpm` commands on your machine: tests, lint and
   typecheck. To just use the system, it is not needed.
 - A few GB of disk across Docker images, catalog and database.
 
@@ -119,11 +142,11 @@ corepack enable pnpm
 
 `corepack` ships with Node 22 and installs the pnpm version pinned in `package.json`. **It is only
 needed to run `pnpm` commands outside the container** (tests, lint). The Docker image does this on
-its own — if you only want to use the system, skip this step.
+its own; if you only want to use the system, skip this step.
 
-If you get `EACCES: permission denied` pointing at `/usr/bin/pnpm`, it is because your Node is
-installed system-wide and `corepack` is trying to write to a root directory. Use `sudo corepack
-enable pnpm`, or install into a folder of your own that is on the `PATH`:
+If you get `EACCES: permission denied` pointing at `/usr/bin/pnpm`, your Node is installed
+system-wide and `corepack` is trying to write to a root directory. Use `sudo corepack enable pnpm`,
+or install into a folder of your own that is on the `PATH`:
 
 ```bash
 corepack enable --install-directory ~/.local/bin pnpm
@@ -135,8 +158,8 @@ corepack enable --install-directory ~/.local/bin pnpm
 cp .env.example .env
 ```
 
-Open `.env` and replace `troque-esta-senha` with your password. **It appears in two places** —
-`POSTGRES_PASSWORD` and, again, inside `DATABASE_URL`. The two have to match, or the database comes
+Open `.env` and replace `troque-esta-senha` with your password. **It appears in two places**,
+`POSTGRES_PASSWORD` and again inside `DATABASE_URL`. The two have to match, or the database comes
 up with one password while the application tries to get in with another:
 
 ```dotenv
@@ -144,8 +167,8 @@ POSTGRES_PASSWORD=your-password
 DATABASE_URL=postgresql://colecao_pokemon:your-password@db:5432/colecao_pokemon
 ```
 
-The `db` in the URL is the name of the database service inside Compose, not a host of yours — do not
-change it.
+The `db` in the URL is the name of the database service inside Compose, not a host of yours. Leave
+it as it is.
 
 The rest of the file is optional, ships commented, and explains the reason for each variable.
 
@@ -156,10 +179,10 @@ docker compose up -d --build
 ```
 
 The first run takes a while: it pulls the base images, installs the dependencies and builds the
-application. The following ones are a matter of seconds.
+application. The following ones are usually much faster, since only what changed is rebuilt.
 
 If startup stops with `Bind for 0.0.0.0:3010 failed: port is already allocated`, port 3010 is already
-taken by something else on your machine. Pick another one in `.env` and bring it up again — it is the
+taken by something else on your machine. Pick another one in `.env` and bring it up again; it is the
 only place that needs to change:
 
 ```dotenv
@@ -167,7 +190,7 @@ PORTA_HOST=3011
 ```
 
 On startup the container applies the migrations and, **if the catalog is empty, loads the 48,372
-cards from the file versioned in `seed/`** — with no network request at all. To follow along:
+catalog records from the file versioned in `seed/`**, with no network request at all. To follow along:
 
 ```bash
 docker compose logs -f app
@@ -175,7 +198,7 @@ docker compose logs -f app
 
 You will see `Migrations applied.`, then `[entrypoint] checking catalog...` and, on the first
 boot, the catalog load. The `.dados/` folder that comes with the clone is the optional mount point
-for the TCGdex data clone — you can ignore it, and why it exists is
+for the TCGdex data clone. You can ignore it; why it exists is
 [further down](#tcgdex-catalog-from-a-local-clone).
 
 ### 5. Open it
@@ -198,13 +221,14 @@ docker compose up -d     # back up
 
 ## The catalog comes ready
 
-What makes a fresh install useful from birth is the `seed/` directory: the entire catalog — 48,372
-rows in Portuguese, English and Japanese — versioned as a compressed CSV of ~1 MB.
+What makes a fresh install useful from birth is the `seed/` directory: a snapshot of the TCGdex
+catalog, 48,372 rows in Portuguese, English and Japanese (one row per card and language), versioned
+as a compressed CSV of about 1 MB.
 
-**That is the point of the project.** Without it, a fresh install would start with an empty database
-and would need hours of syncing against the TCGdex API — which has already blocked this project's IP
-once, for too many requests — or a ~220 MB clone of their data repository. With it, the first boot is
-offline and finishes in minutes.
+Without it, a fresh install would start with an empty database
+and would need hours of syncing against the TCGdex API, which has already blocked this project's IP
+once for too many requests, or a clone of about 220 MB of their data repository. With it, loading
+the catalog needs no network and usually takes a few minutes.
 
 The load is automatic and happens **only when the catalog is empty**: an install that already has a
 catalog is left alone. To reload it by hand, at any time:
@@ -213,9 +237,9 @@ catalog is left alone. To reload it by hand, at any time:
 docker compose exec app pnpm seed:catalogo
 ```
 
-It is idempotent — it upserts per card and language, **never deletes** and never marks a card
-inactive. Running it twice does not duplicate a row or change a count. How to regenerate the files
-when new expansions come out, and the reason for every detail of the format, is in
+It is idempotent. It upserts per card and language, **never deletes** and never marks a card
+inactive, so running it twice does not duplicate a row or change a count. How to regenerate the
+files when new expansions come out, and the reason for every detail of the format, is in
 [`seed/README.md`](./seed/README.md).
 
 To pull new releases straight from upstream, there is the incremental sync:
@@ -224,17 +248,17 @@ To pull new releases straight from upstream, there is the incremental sync:
 docker compose exec app pnpm sync:catalogo
 ```
 
-It is a client that is polite out of obligation: a request-per-second ceiling, limited concurrency, an
-identified User-Agent, and it aborts everything on the spot if it gets blocked. Do not raise those
-numbers without knowing what you are doing — see `AGENTS.md`.
+It is a client that is polite out of obligation: a request-per-second ceiling, limited concurrency,
+an identified User-Agent, and it aborts everything on the spot if it gets blocked. Leave those
+numbers alone unless you know what you are doing; `AGENTS.md` explains each one.
 
 ### TCGdex catalog from a local clone
 
 The commands `pnpm importar:catalogo-repo`, `pnpm importar:tipos-catalogo` and
 `pnpm preencher:serie-id-ocidental` read the data from a clone of the
 [TCGdex data repository](https://github.com/tcgdex/cards-database) instead of the API. With the seed
-above, this path became rare — it existed to bring in the Japanese catalog, which now ships with the
-project — but it stays available for anyone who wants data straight from upstream without touching
+above, this path became rare. It existed to bring in the Japanese catalog, which now ships with the
+project, and it stays available for anyone who wants data straight from upstream without touching
 the API.
 
 It is also the way to get a translation the API has not published yet. The data repository runs ahead
@@ -259,15 +283,16 @@ git clone --depth 1 https://github.com/tcgdex/cards-database.git ~/tcgdex-cards-
 # TCGDEX_REPO_HOST_PATH=/your/path/tcgdex-cards-database
 ```
 
-It is about 220 MB, and the clone does not update itself — run `git pull` in it when you want newer
+It is about 220 MB, and the clone does not update itself. Run `git pull` in it when you want newer
 data.
 
 #### Why there is an empty `.dados/tcgdex-cards-database/` folder in the repository
 
 Because the mount default points at it, and **a bind mount that does not exist is created by the
-Docker daemon, which runs as root**. If the folder did not come with the clone, every install would
-gain a `root:root` directory inside the project — and an `rm -rf` on the project, on uninstall day,
-would fail with `Permission denied` without `sudo`. Versioning it empty makes you the owner.
+Docker daemon**, which in the usual setup runs as root. If the folder did not come with the clone,
+those installs would gain a `root:root` directory inside the project, and removing the project on
+uninstall day could fail with `Permission denied` without `sudo`. Versioning it empty makes you the
+owner.
 
 The side effect is that `git clone` refuses a non-empty directory, so you cannot clone the TCGdex
 repository straight into it without deleting the `.gitkeep` first. That is why the recommended path
@@ -282,7 +307,7 @@ this repository, and none is copied into your database by default. The screensho
 one exception: they are pictures of the interface with cards in it, and nothing in the program
 reads them.
 
-A minority of cards have no photo in any TCGdex source — whole energy sets, promos and galleries that
+A minority of cards have no photo in any TCGdex source: whole energy sets, promos and galleries that
 were never digitized there. For those there are two paths, both manual and both optional:
 
 - **mypcards as a secondary source.** You paste the link to the set on their site into the screen;
@@ -301,17 +326,32 @@ In both cases the files stay in the `imagens_locais` volume, on your machine, ou
 
 ## LigaPokemon prices
 
-The system can query [LigaPokemon](https://www.ligapokemon.com.br/) to build the list of what to buy:
-for each empty slot in your collection, which cards are for sale and for how much. It is optional and
-only runs when you ask for it.
+The system can query [LigaPokemon](https://www.ligapokemon.com.br/), the Brazilian card marketplace,
+in two separate rounds. Both are optional and only run when you ask for them.
+
+- **Buy options for a collection.** For each empty slot, which cards are for sale and for how much.
+  You mark the ones you want, and the choice survives every later price update. The buy list comes
+  out ready to paste into their "Buy by List", split into tabs of at most 110 cards (their limit per
+  search), one per region in a Pokédex or one per set. When their answer says some cards are out of
+  stock, you paste that answer on the screen, check the preview and confirm: those cards are
+  unselected from that collection's empty slots, and for 30 days they stay out of the offers in
+  every collection, matched by name and number, except a card you still have selected, which stays
+  visible with a flag.
+- **Prices of your special cards.** A lookup for every card you own except plain commons and
+  uncommons, one per card (its Portuguese and English rows are the same card). A lookup that finds
+  nothing keeps the last price found, with its date; every lookup goes into a history, and the prices
+  screen plots the total over time. The total also rises when more cards enter the sum, so a rising
+  line does not by itself mean the cards went up in value.
+
+Prices are in Brazilian reais, as the site shows them. Nothing is converted.
 
 ### The default pace obeys their robots.txt
 
-The interval between two requests **is not chosen by this project**: it is the `Crawl-delay` declared
-in LigaPokemon's `robots.txt`, read live and respected as written. Today that value is **360
-seconds**. If they loosen it, you benefit the same day; if they tighten it, you obey the same day. A
-read failure — network down, 5xx, malformed file — falls back to the conservative value, never to the
-aggressive one.
+The interval between two requests **is set by LigaPokemon**: it is the `Crawl-delay` declared in
+their `robots.txt`, read live and respected as written. Today that value is **360 seconds**. If they
+loosen it, you benefit the same day; if they tighten it, you obey the same day. A read failure
+(network down, 5xx, a malformed file) falls back to the conservative value, never to the aggressive
+one.
 
 Only the routes their file allows are accessed (`cards/search` and `cards/card`), and that is checked
 before each request goes out. The file can add a prohibition; it can never remove one that is
@@ -319,13 +359,14 @@ hardcoded.
 
 ### The cost of this is time, and it is a lot of time
 
-A full scan of a Pokédex goes through around 161 empty slots. At 360 seconds per request, **that
-takes about 16 hours**.
+The buy-options scan sends one search per empty slot. A Pokédex collection with 161 empty slots,
+for example, takes at least 161 × 360 seconds: **about 16 hours**.
 
 The project was built for that scale: the scan runs in the background, writes after every slot it
-queries and, when triggered again, **skips whatever was queried in the last 24 hours**. Restarting
-the container halfway through does not send it back to the start — you click again and it picks up
-where it stopped. The screen shows slots queried, slots remaining and an estimated finish.
+queries and, when triggered again, **skips every slot with an offer recorded in the last 24 hours**.
+Restarting the container halfway through does not send it back to the start: you click again and it
+picks up where it stopped. A slot whose last search found no offer is searched again. The screen
+shows slots queried, slots remaining and an estimated finish.
 
 ### If you want to go faster, the decision is yours
 
@@ -338,8 +379,8 @@ becomes yours.
 
 An honest note from whoever maintains the project: **3 seconds is the value this project used
 day to day, with no trouble.** It is slower than what the browser itself would generate opening the
-same pages — a page in the browser pulls dozens of images and scripts that the collector does not
-pull — and it is faster than their file asks for.
+same pages, since a page in the browser pulls dozens of images and scripts that the collector does
+not pull, and it is faster than their file asks for.
 
 That is the experience of **one** installation, not a promise and not a recommendation. Lowering the
 interval is the decision and the risk of whoever configures it, and the concrete risk is an IP block:
@@ -351,15 +392,48 @@ hand whoever installs it a risk that person did not choose.
 
 ## Optional: Living Dex
 
-A second, separate tool in the same app: a tracker for a **Pokémon HOME living dex** — every species
-and every form HOME stores (regional, gender, cosmetic and special forms, each a section you can leave
-out of the count), in a normal and a shiny track. You mark the games you own, add the Pokémon you have
-game by game, like the card set grid, and keep them in an inventory; the grid shows every slot as
-missing, in a game, or in HOME, and lists what you can take to HOME right now. It shares nothing with the cards but the app.
+A second, separate tool in the same app, listed in the menu as **Virtual Game**: a tracker for a
+**Pokémon HOME living dex**. It covers every species and every form HOME keeps in a box of its own,
+in a normal and a shiny track. Regional, gender and special forms are sections you can leave out of
+the count. Cosmetic forms (63 Alcremie, 20 Vivillon, 28 Unown) have a view of their own, with their
+own progress, so they do not flood the grid. It shares the app and the database with the cards, and none of
+their data.
+
+![The Living Dex overview: the latest arrivals in HOME, then progress by region](docs/screenshots/living-dex.png)
+
+- **Games and records.** You mark the games you own, from FireRed and LeafGreen to Legends: Z-A and
+  GO, and add the Pokémon you have game by game, in one batch, like the card set grid. Each Pokémon
+  is one record: which slot, shiny or not, the game it came from and where it is now. Moves follow
+  the rules HOME follows: GO, FireRed and LeafGreen only send to HOME, so a Pokémon never goes back
+  into them, and leaving one of them asks you to confirm. FireRed, LeafGreen, Brilliant Diamond,
+  Shining Pearl and GO also know which species and forms can be found in them, and which of those
+  HOME refuses to take.
+- **The grid and what to do next.** Every slot shows as missing, in a game, or in HOME, and a
+  "Take to HOME" list shows the slots a Pokémon you already have in a game would fill.
+- **HOME boxes.** The app lays out your boxes, 30 slots each, in groups that start at fixed boxes
+  (national dex, gender, regional, special, cosmetic), so a form added later never moves a Pokémon
+  you already put away. You can reserve the first boxes for incoming Pokémon, and a "Received" view
+  lists what arrived in HOME and still needs to be put in its box.
+- **Trophies.** FireRed, Brilliant Diamond and GO have a trophy list in story order, bronze to gold,
+  with a platinum when the rest is done. Some trophies are checkpoints that unlock species in that
+  save, such as the National Pokédex in FireRed. HOME trophies are computed from your records, so
+  they hold while the Pokémon stay in HOME.
+- **Plans.** A plan is what you do in your games next, made of tasks (catch, evolve, trade,
+  progress, transfer), and a task can carry a checklist of steps. Finishing a catch, evolve or trade
+  task offers a link to the add screen; it never records the Pokémon for you.
+- **Planning sessions with an assistant.** `pnpm dex:estado` prints the state that opens a session,
+  and `pnpm dex:aplicar` writes back what the session decided: trophies earned, plans, tasks, steps
+  and Pokémon caught. Run it with `--simular` first; a batch applied twice changes nothing.
+
+![The HOME boxes, with the Pokémon you have in HOME filled in](docs/screenshots/living-dex-boxes.png)
 
 It is **off by default**. To turn it on, set `MODULO_LIVING_DEX=1` in `.env` and run
-`docker compose up -d`; the slot catalog loads on that boot and a "Living Dex" group appears in the
-menu. Rules and internals: the Living Dex section of [`AGENTS.md`](./AGENTS.md).
+`docker compose up -d`; the slot catalog and the trophies load on that boot and the Virtual Game
+group appears in the menu. Sprites are loaded at display time from the PokeAPI sprites repository.
+Rules and internals:
+the Living Dex section of [`AGENTS.md`](./AGENTS.md).
+
+---
 
 ## Optional: reaching it from outside your network
 
@@ -415,16 +489,18 @@ the internet anymore when the module goes off:
 
 An app already installed on a phone keeps its icon until you delete it there.
 
+---
+
 ## What this project is **not**
 
-- **It has no accounts.** On the local network there is no login at all. For reaching it from outside,
-  there is one optional shared password (next section), and that is the whole of it: no users, no
-  profiles, no per-person data.
+- **It has no accounts.** With the default settings there is no login at all. For reaching it from
+  outside, there is one optional shared password (see the previous section), and that is the whole
+  of it: no users, no profiles, no per-person data.
 - **It is single-user.** There is no multi-user, no profile and no separation of data by person.
   Whoever opens the page sees and edits everything.
-- **It was made for your local network.** Opening port 3010 on the router hands your collection to
-  anyone who finds the address. To reach it from outside, use a VPN, or a tunnel with the password
-  access described in "Optional: reaching it from outside your network"; never a port forward.
+- **It was made for your local network.** With the default settings, opening port 3010 on the
+  router hands your collection to anyone who finds the address. To reach it from outside, use a VPN, or a tunnel with the password
+  access described in the previous section; never a port forward.
 - **It is not a service, and it has no support.** It is a personal project, open because it may be
   useful to more people. There is no SLA, no guarantee of a reply and no commitment to compatibility
   between versions. The MIT license says this in legal terms; this paragraph says it in plain words.
@@ -433,7 +509,9 @@ An app already installed on a phone keeps its icon until you delete it there.
 ### Your data is yours, and so is the backup
 
 Your collection and your images live in Docker volumes (`pgdata` and `imagens_locais`), **outside the
-repository**. None of it ever enters git. In exchange, `git pull` backs up nothing: taking care of
+repository**. Collection data, card images and per-card image references never go into the
+repository; the only exception is the screenshots in `docs/screenshots/`, pictures of the interface
+published deliberately by the maintainer. In exchange, `git pull` backs up nothing: taking care of
 those volumes is the responsibility of whoever installs the system.
 
 A database dump, with Compose running:
@@ -459,7 +537,7 @@ pnpm test
 pnpm lint
 ```
 
-The business rules live in pure modules and **the tests need no database** — they run in seconds, on
+The business rules live in pure modules and **the tests need no database**: they run in seconds, on
 a clean checkout.
 
 Before opening a PR, read [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the process and
@@ -470,7 +548,7 @@ too: if you use one, point it there before asking for the change.
 
 ## License and credits
 
-The code is MIT — see [`LICENSE`](./LICENSE).
+The code is MIT; see [`LICENSE`](./LICENSE).
 
 The card catalog in `seed/` is a derivative work of the **TCGdex** data repository, also MIT, and the
 attribution their license requires is in [`NOTICE.md`](./NOTICE.md), along with the credit to
