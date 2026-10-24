@@ -48,32 +48,41 @@
   },
   "home": {
     "titulo": "Coleção Pokémon",
-    "descricao": "Inventário e coleções — cadastro rápido por set é o ponto de partida para digitar a coleção física.",
-    "atalhos": {
-      "visaoGeral": {
-        "titulo": "Visão geral",
-        "descricao": "Sua coleção num relance: as joias, cada coleção com o progresso por divisão, o que está quase fechando e as estatísticas."
-      },
-      "cadastroSet": {
-        "titulo": "Cadastro rápido por set",
-        "descricao": "Escolha uma expansão e marque a grade inteira de cartas em uma única submissão."
-      },
-      "cadastroBusca": {
-        "titulo": "Cadastro por busca",
-        "descricao": "Para carta avulsa: busque por nome, set ou número."
-      },
-      "inventario": {
-        "titulo": "Inventário",
-        "descricao": "Lista com busca e filtros: set, idioma, raridade, variante, condição, graded, localização, alocada/livre."
-      },
-      "repetidas": {
-        "titulo": "Repetidas",
-        "descricao": "O que sobra para troca: total, alocadas e livres por carta, com o idioma físico de cada cópia."
-      },
-      "colecoes": {
-        "titulo": "Coleções",
-        "descricao": "Pokédex, set ou customizada: grade de vagas, alocação de cópias e a lista do que falta."
-      }
+    "visaoGeral": "Visão geral",
+    "atalhosDe": "Atalhos de {modulo}",
+    "atalho": {
+      "colecoes": "Coleções",
+      "inventario": "Inventário",
+      "cadastroSet": "Cadastro por set",
+      "planos": "Planos",
+      "trofeus": "Troféus",
+      "pokedex": "Pokédex"
+    },
+    "tcg": {
+      "totais": "{cartas, plural, =1 {1 carta} other {# cartas}} · {unidades, plural, =1 {1 unidade} other {# unidades}}",
+      "suasColecoes": "Suas coleções",
+      "verTodas": "Ver todas ({total, number})",
+      "semColecao": "Nenhuma coleção ainda.",
+      "criarPrimeira": "Criar a primeira coleção",
+      "cartas": "{total, plural, =1 {1 carta} other {# cartas}}",
+      "quaseLa": "Quase lá",
+      "faltam": "{total, plural, =1 {falta 1} other {faltam #}}"
+    },
+    "dex": {
+      "recebidos": "{total, plural, =1 {1 recebido para guardar} other {# recebidos para guardar}}",
+      "levarAoHome": "{total, plural, =1 {1 Pokémon para levar ao HOME} other {# Pokémon para levar ao HOME}}",
+      "progressoHome": "No HOME",
+      "planosAtivos": "Planos ativos",
+      "tarefas": "{feitas, number}/{total, plural, =1 {1 tarefa} other {# tarefas}}",
+      "etapas": "{feitas, number}/{total, plural, =1 {1 etapa} other {# etapas}}",
+      "maisTarefas": "{total, plural, =1 {+1 tarefa aberta} other {+# tarefas abertas}}",
+      "maisPlanos": "{total, plural, =1 {+1 plano ativo} other {+# planos ativos}}",
+      "semPlano": "Nenhum plano ativo.",
+      "abrirPlanos": "Abrir Planos",
+      "trofeus": "Troféus",
+      "proximoDoHome": "Próximo do HOME",
+      "todosDoHome": "Todos os troféus do HOME conquistados.",
+      "semJogos": "Marque os jogos que você tem"
     }
   },
   "colecoes": {

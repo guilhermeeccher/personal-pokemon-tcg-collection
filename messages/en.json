@@ -48,32 +48,41 @@
   },
   "home": {
     "titulo": "Pokémon Collection",
-    "descricao": "Inventory and collections — quick add by set is the starting point for typing in the physical collection.",
-    "atalhos": {
-      "visaoGeral": {
-        "titulo": "Overview",
-        "descricao": "Your collection at a glance: the gems, each collection with progress by division, what is close to done and the statistics."
-      },
-      "cadastroSet": {
-        "titulo": "Quick add by set",
-        "descricao": "Pick a set and check off the whole card grid in a single submission."
-      },
-      "cadastroBusca": {
-        "titulo": "Add by search",
-        "descricao": "For a single card: search by name, set or number."
-      },
-      "inventario": {
-        "titulo": "Inventory",
-        "descricao": "A list with search and filters: set, language, rarity, variant, condition, graded, location, allocated/free."
-      },
-      "repetidas": {
-        "titulo": "Duplicates",
-        "descricao": "What is left over for trading: total, allocated and free per card, with the physical language of each copy."
-      },
-      "colecoes": {
-        "titulo": "Collections",
-        "descricao": "Pokédex, set or custom: slot grid, copy allocation and the list of missing cards."
-      }
+    "visaoGeral": "Overview",
+    "atalhosDe": "{modulo} shortcuts",
+    "atalho": {
+      "colecoes": "Collections",
+      "inventario": "Inventory",
+      "cadastroSet": "Add by set",
+      "planos": "Plans",
+      "trofeus": "Trophies",
+      "pokedex": "Pokédex"
+    },
+    "tcg": {
+      "totais": "{cartas, plural, =1 {1 card} other {# cards}} · {unidades, plural, =1 {1 copy} other {# copies}}",
+      "suasColecoes": "Your collections",
+      "verTodas": "See all ({total, number})",
+      "semColecao": "No collections yet.",
+      "criarPrimeira": "Create your first collection",
+      "cartas": "{total, plural, =1 {1 card} other {# cards}}",
+      "quaseLa": "Almost there",
+      "faltam": "{total, plural, =1 {1 missing} other {# missing}}"
+    },
+    "dex": {
+      "recebidos": "{total, plural, =1 {1 received to put away} other {# received to put away}}",
+      "levarAoHome": "{total, plural, =1 {1 Pokémon to bring to HOME} other {# Pokémon to bring to HOME}}",
+      "progressoHome": "In HOME",
+      "planosAtivos": "Active plans",
+      "tarefas": "{feitas, number}/{total, plural, =1 {1 task} other {# tasks}}",
+      "etapas": "{feitas, number}/{total, plural, =1 {1 step} other {# steps}}",
+      "maisTarefas": "{total, plural, =1 {+1 open task} other {+# open tasks}}",
+      "maisPlanos": "{total, plural, =1 {+1 active plan} other {+# active plans}}",
+      "semPlano": "No active plan.",
+      "abrirPlanos": "Open Plans",
+      "trofeus": "Trophies",
+      "proximoDoHome": "Next in HOME",
+      "todosDoHome": "Every HOME trophy earned.",
+      "semJogos": "Mark the games you own"
     }
   },
   "colecoes": {

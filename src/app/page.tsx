@@ -1,47 +1,57 @@
-import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { connection } from "next/server";
+import { getLocale } from "next-intl/server";
 
-import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
-import { Icone, type NomeIcone } from "@/app/_componentes/icone";
-import { Painel } from "@/app/_componentes/painel";
 import { exigirSessao } from "@/lib/acesso";
+import { db } from "@/lib/db/client";
+import { lerSecoesDex, listarFormasDex, listarJogosPossuidos, listarRegistrosDex } from "@/lib/db/dex";
+import { listarPlanos, listarTrofeus } from "@/lib/db/dex-planejamento";
+import { lerTcgInicio } from "@/lib/db/inicio";
+import type { IdiomaTrofeu } from "@/lib/dominio/dex-trofeus";
+import { resumoDexInicio } from "@/lib/dominio/resumo-inicio";
+import type { ResumoDexInicioDTO } from "@/lib/dominio/tipos-cliente";
+import { moduloLivingDexAtivo } from "@/lib/modulos";
 
-/* Os mesmos glifos da barra lateral, para o atalho e o item de navegação
-   serem reconhecíveis como a mesma coisa. O título e a descrição de cada
-   atalho vivem no catálogo de mensagens, sob a chave que está aqui. */
-const ATALHOS: readonly { href: string; chave: string; icone: NomeIcone }[] = [
-  { href: "/inventario/visao-geral", icone: "chart-pie", chave: "visaoGeral" },
-  { href: "/cadastro/set", icone: "grid-2x2", chave: "cadastroSet" },
-  { href: "/cadastro/busca", icone: "search", chave: "cadastroBusca" },
-  { href: "/inventario", icone: "library", chave: "inventario" },
-  { href: "/inventario/repetidas", icone: "copy", chave: "repetidas" },
-  { href: "/colecoes", icone: "layers", chave: "colecoes" },
-] as const;
+import { Inicio } from "./inicio";
 
-export default async function Home() {
+/**
+ * Página inicial (`/`). Desde 2026-10-24 não é mais um menu de seis cartões
+ * do TCG: cada módulo tem os três atalhos que o usuário mais usa e um resumo
+ * da sua visão geral — o TCG sempre, a Living Dex só com o módulo ligado.
+ *
+ * - **Os números são os das visões gerais.** O TCG lê pelas mesmas consultas
+ *   de `GET /api/inventario/resumo`; a Dex, pelas mesmas leituras da `/dex`,
+ *   e o resumo sai de `resumoDexInicio`, que chama as mesmas funções de
+ *   domínio da `visao-geral-dex.tsx`. Divergência é bug.
+ * - **O cálculo fica no servidor.** A `/dex` manda ao navegador o catálogo
+ *   inteiro e todos os registros; esta é a primeira tela no celular, e manda
+ *   só os DTOs compactos de `tipos-cliente.ts` (seção "Página inicial").
+ * - **`connection()` antes da flag**, como nas telas da Dex: a página lê o
+ *   banco e a flag a cada requisição, e o build não tem nem um nem outro.
+ * - **O "Quase lá" recebe todas as coleções.** O corte em 4 é só da lista
+ *   "Suas coleções", e vem depois. A parte do TCG mora em `lib/db/inicio.ts`
+ *   (`lerTcgInicio`) para essa ligação ser testada.
+ *
+ * Falha de banco derruba a página, como em qualquer outra tela: não há
+ * resumo parcial.
+ */
+export default async function PaginaInicial() {
   await exigirSessao();
-  const t = await getTranslations("home");
-  return (
-    <main className="mx-auto flex max-w-6xl flex-col gap-6 p-4 sm:p-8">
-      <CabecalhoPagina titulo={t("titulo")} descricao={t("descricao")} />
-      <div className="grid gap-4 sm:grid-cols-3">
-        {ATALHOS.map((a) => (
-          <Painel
-            key={a.href}
-            as={Link}
-            href={a.href}
-            className="[transition:var(--transition-surface)] hover:-translate-y-0.5 hover:shadow-3"
-          >
-            <h2 className="flex items-center gap-2 text-[length:var(--fs-title-2)] text-strong">
-              <span className="text-accent">
-                <Icone nome={a.icone} tamanho={17} />
-              </span>
-              {t(`atalhos.${a.chave}.titulo`)}
-            </h2>
-            <p className="mt-1 text-sm text-muted">{t(`atalhos.${a.chave}.descricao`)}</p>
-          </Painel>
-        ))}
-      </div>
-    </main>
-  );
+  await connection();
+  const livingDex = moduloLivingDexAtivo();
+
+  const [tcg, dex] = await Promise.all([lerTcgInicio(db), livingDex ? lerDex() : null]);
+  return <Inicio {...tcg} dex={dex} />;
+}
+
+async function lerDex(): Promise<ResumoDexInicioDTO> {
+  const [formas, secoes, registros, jogos, trofeus, planos, idioma] = await Promise.all([
+    listarFormasDex(db),
+    lerSecoesDex(db),
+    listarRegistrosDex(db),
+    listarJogosPossuidos(db),
+    listarTrofeus(db),
+    listarPlanos(db),
+    getLocale(),
+  ]);
+  return resumoDexInicio({ formas, secoes, registros, jogos, trofeus, planos, idioma: idioma as IdiomaTrofeu });
 }
