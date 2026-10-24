@@ -508,3 +508,66 @@ export interface PlanoDexDTO {
   trofeuIds: string[];
   tarefas: TarefaDexDTO[];
 }
+
+// --- Página inicial -------------------------------------------------------
+/*
+ * O resumo das duas visões gerais que a página inicial (`/`) mostra. Formas
+ * compactas de propósito: a página é aberta no celular, e a `/dex` manda ao
+ * navegador o catálogo inteiro e todos os registros. Aqui o servidor já
+ * calculou tudo (`lib/dominio/resumo-inicio.ts`) e só os números da tela
+ * viajam. Um campo novo aqui é payload a mais em toda abertura do app.
+ */
+
+export interface ColecaoInicioDTO {
+  id: string;
+  nome: string;
+  tipo: TipoColecao;
+  vagasPreenchidas: number;
+  totalVagas: number;
+}
+
+export interface QuaseLaInicioDTO {
+  colecaoId: string;
+  colecaoNome: string;
+  divisao: Divisao;
+  faltam: number;
+  /**
+   * As primeiras vagas que faltam (até 4), decorativas: a URL já resolvida
+   * no servidor (sprite na Pokédex, carta esperada no set), `null` sem
+   * imagem; `rotulo` é o número da vaga, escrito no lugar da imagem.
+   */
+  miniaturas: { url: string | null; rotulo: string }[];
+}
+
+export interface TotaisInicioDTO {
+  cartasDistintas: number;
+  totalUnidades: number;
+}
+
+export interface ResumoDexInicioDTO {
+  /** Vista principal, como o número grande da `/dex`. */
+  progresso: Record<"normal" | "shiny", { noHome: number; contam: number }>;
+  /** Registros "a guardar" no HOME, como a tela Recebidos. */
+  recebidos: number;
+  /** Vagas que um Pokémon que já está num jogo preencheria no HOME. */
+  levarAoHome: number;
+  /** Nenhum jogo marcado como possuído. */
+  semJogos: boolean;
+  estante: { platina: number; ouro: number; prata: number; bronze: number };
+  proximoTrofeu: { titulo: string; nivel: "bronze" | "prata" | "ouro"; feito: number; alvo: number } | null;
+  /** O HOME tem troféus e todos estão conquistados. Nunca deduzido de `proximoTrofeu` nulo. */
+  todosDoHome: boolean;
+  /** Até 2 planos ativos, cada um com até 2 tarefas abertas. */
+  planos: {
+    id: string;
+    titulo: string;
+    /** Tarefas fechadas (feitas e descartadas) e o total, como na `/dex`. */
+    feitas: number;
+    total: number;
+    tarefas: { id: string; titulo: string; jogoNome: string | null; etapasFeitas: number; etapasTotal: number }[];
+    /** Tarefas abertas além das mostradas. */
+    abertasAlem: number;
+  }[];
+  /** Planos ativos além dos mostrados. */
+  planosAlem: number;
+}
