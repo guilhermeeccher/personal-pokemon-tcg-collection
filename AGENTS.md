@@ -669,6 +669,9 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
     buttons, not drag: dragging fights page scroll on a phone.
   - The domain word is **`etapa`, never `passo`**: `PassoSessao` already names a write step of a
     session batch.
+- **Catch priority in a planning session:** the main-series games come first; Pokémon GO is the
+  fallback, used only when no game the user owns reaches the slot, or as a shortcut the user
+  chose. GO matters for its history, but it never drives a plan.
 - **Planning sessions run outside the app**, with an assistant, through two commands:
   - `pnpm dex:estado` prints the state that opens a session (markdown, or `--json`): progress, each
     owned game with its trophies, what it reaches now and what is locked behind which checkpoint,
