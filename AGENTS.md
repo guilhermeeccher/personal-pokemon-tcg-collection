@@ -543,18 +543,26 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
   form's female goes in its block), **Special** and **Cosmetic** (by release: `dex_forma.lancamento`,
   PokeAPI's version-group `order`, then number, then `ordem`). A regional form's region comes from
   its id (`regiaoDaForma`), never guessed: an unknown one makes `gerar:seed-dex` fail. **Both tracks
-  share one map**: in the shiny track a form never released as shiny keeps its position as a marked
-  hole, with no position to store into. **A section that is off hides its group's boxes without
-  renumbering any other group** — box numbers on screen have gaps, on purpose. This replaced the
-  per-region layout (forms beside their species, cosmetics run at the end, shiny-locked forms
-  collapsed, toggles reshuffling a region), where one new form could renumber every later box. A
-  test fails when a group's worst case (all sections on) reaches the next anchor: moving an anchor,
-  a group's order or what goes in each group moves Pokémon in somebody's boxes, so it is a
-  deliberate, announced decision, never a side effect. Another test pins the agreed positions.
-- **Reserved boxes shift only the box number** (`dex_preferencias.caixas_reservadas`, 0 to 20, set on
-  the Boxes screen). A user who keeps HOME's first box for incoming Pokémon sets 1, and National 1
-  becomes box 2 on every screen, every anchor moving with it. Names, positions and which slots
-  share a box do not move.
+  share one arrangement**: in the shiny track a form never released as shiny keeps its position as a
+  marked hole, with no position to store into. **The shiny track sits after the normal one, in the
+  same HOME, from a fixed anchor** (`ANCORA_SHINY`, box 91 before reserved boxes; decision of
+  2026-11-09): every shiny box is the normal box + 90 (`deslocamentoDaTrilha`), and boxes 71–90 are
+  spare for the normal track, which ends at box 70 today. Fixed, not derived from where the normal
+  track ends, because Cosmetic is the last group and grows with no ceiling: a derived start would
+  renumber every shiny box whenever a cosmetic box opens. **A section that is off hides its group's
+  boxes without renumbering any other group** — box numbers on screen have gaps, on purpose. This
+  replaced the per-region layout (forms beside their species, cosmetics run at the end, shiny-locked
+  forms collapsed, toggles reshuffling a region), where one new form could renumber every later box.
+  A test fails when a group's worst case (all sections on) reaches the next anchor, another when the
+  normal track's worst case reaches `ANCORA_SHINY`, and another when the shiny track's worst case,
+  with the maximum 20 reserved boxes, does not fit in HOME's 200 boxes (`CAIXAS_HOME`): moving an
+  anchor (`ANCORA_SHINY` included, which moves every shiny Pokémon), a group's order or what goes in
+  each group moves Pokémon in somebody's boxes, so it is a deliberate, announced decision, never a
+  side effect. Another test pins the agreed positions.
+- **Reserved boxes shift only the box number, in both tracks** (`dex_preferencias.caixas_reservadas`,
+  0 to 20, set on the Boxes screen). A user who keeps HOME's first box for incoming Pokémon sets 1,
+  and National 1 becomes box 2 on every screen — shiny National 1 becomes box 92 — every anchor
+  moving with it. Names, positions and which slots share a box do not move.
 - **"Received" is the round that arrived in HOME and was not put away yet**
   (`lib/dominio/dex-recebidos.ts`, screen `/dex/recebidos`), grouped by destination box.
   `dex_registro.a_guardar` is **stored, not derived** — the system cannot know when the user tidied

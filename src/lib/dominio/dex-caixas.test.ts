@@ -5,8 +5,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   ANCORA_GRUPO,
+  ANCORA_SHINY,
+  CAIXAS_HOME,
+  deslocamentoDaTrilha,
   GRUPOS_CAIXA,
   grupoDaForma,
+  MAX_CAIXAS_RESERVADAS,
   montarCaixasDex,
   posicoesNasCaixas,
   VAGAS_POR_CAIXA,
@@ -30,6 +34,10 @@ const pos = posicoesNasCaixas(caixas);
 /** Caixa e posição de todo lugar, buraco incluído: o mapa inteiro. */
 const mapa = (cx: ReturnType<typeof montarCaixasDex>) =>
   new Map(cx.flatMap((c) => c.lugares.map((l, i) => [l.forma.id, `${c.numero}/${i + 1}`] as const)));
+
+/** O que cada caixa tem, sem o número: grupo, região, índice e as vagas na ordem. */
+const arranjo = (cx: ReturnType<typeof montarCaixasDex>) =>
+  cx.map((c) => [c.grupo, c.regiao, c.indice, c.lugares.map((l) => l.forma.id)]);
 
 describe("caixas do HOME — os grupos", () => {
   it("cada grupo começa na âncora; as Regionais, um bloco por região em caixa nova", () => {
@@ -59,8 +67,9 @@ describe("caixas do HOME — os grupos", () => {
   });
 
   /*
-   * A guarda das âncoras. No pior caso (todas as seções, trilha normal: o
-   * mapa é o mesmo nas duas), nenhum grupo pode chegar na âncora do
+   * A guarda das âncoras. No pior caso (todas as seções, trilha normal: a
+   * shiny tem o mesmo arranjo, deslocado em bloco, então as folgas entre os
+   * grupos são as mesmas nas duas), nenhum grupo pode chegar na âncora do
    * seguinte. Se este teste falhar, um grupo estourou a folga: mover as
    * âncoras é decisão de quem mantém, com aviso, porque move Pokémon nas
    * caixas de todo mundo — não se ajusta o número aqui para passar.
@@ -74,6 +83,33 @@ describe("caixas do HOME — os grupos", () => {
       const ultima = Math.max(...caixas.filter((c) => c.grupo === grupo).map((c) => c.numero));
       expect(ultima, `${grupo} chegou na caixa ${ultima}; a âncora seguinte é ${proxima}`).toBeLessThan(proxima);
     });
+  });
+
+  /*
+   * A guarda da âncora shiny, no mesmo espírito. A trilha normal no pior
+   * caso (todas as seções ligadas) tem de terminar antes da `ANCORA_SHINY`;
+   * as reservadas ficam de fora porque deslocam as duas trilhas juntas. Se
+   * falhar, as Cosméticas normais estouraram a folga: mover a âncora shiny é
+   * decisão de quem mantém, com aviso, porque move todo shiny nas caixas de
+   * todo mundo — não se ajusta o número aqui para passar.
+   */
+  it("a trilha normal termina antes da âncora da shiny", () => {
+    const ultima = Math.max(...caixas.map((c) => c.numero));
+    expect(ultima, `a normal chegou na caixa ${ultima}; a shiny começa na ${ANCORA_SHINY}`).toBeLessThan(ANCORA_SHINY);
+    expect(deslocamentoDaTrilha("normal")).toBe(0);
+    expect(deslocamentoDaTrilha("shiny")).toBe(ANCORA_SHINY - ANCORA_GRUPO.nacional);
+  });
+
+  /*
+   * E a shiny, que vem por último, tem de caber no HOME no pior caso: todas
+   * as seções e o máximo de reservadas. Se falhar, o que se decide é a
+   * âncora shiny ou o teto das reservadas, nunca este número.
+   */
+  it("a trilha shiny, com o máximo de caixas reservadas, cabe no HOME", () => {
+    const shiny = montarCaixasDex(formas, "shiny", todas, MAX_CAIXAS_RESERVADAS);
+    expect(shiny[0].numero).toBe(MAX_CAIXAS_RESERVADAS + ANCORA_SHINY);
+    const ultima = Math.max(...shiny.map((c) => c.numero));
+    expect(ultima, `a shiny chegou na caixa ${ultima}; o HOME tem ${CAIXAS_HOME}`).toBeLessThanOrEqual(CAIXAS_HOME);
   });
 
   it("Nacional corrido: a caixa N tem os números 30N−29 a 30N, só bases", () => {
@@ -165,9 +201,33 @@ describe("caixas do HOME — as posições", () => {
   it("caixas reservadas deslocam só o número, todas as âncoras juntas", () => {
     const com2 = montarCaixasDex(formas, "normal", todas, 2);
     expect(com2.map((c) => c.numero)).toEqual(caixas.map((c) => c.numero + 2));
-    expect(com2.map((c) => [c.grupo, c.regiao, c.indice, c.lugares.map((l) => l.forma.id)])).toEqual(
-      caixas.map((c) => [c.grupo, c.regiao, c.indice, c.lugares.map((l) => l.forma.id)]),
-    );
+    expect(arranjo(com2)).toEqual(arranjo(caixas));
+  });
+
+  /* As mesmas posições da normal, 90 caixas adiante (decisão de 2026-11-09). Forma sem shiny não tem posição. */
+  it("as posições shiny combinadas não mudam", () => {
+    const posShiny = posicoesNasCaixas(montarCaixasDex(formas, "shiny", todas));
+    const esperado: Record<string, [number, number]> = {
+      bulbasaur: [91, 1],
+      pikachu: [91, 25],
+      "venusaur-femea": [136, 1],
+      "raichu-alola": [142, 3],
+      "wooper-paldea": [145, 4],
+      "vivillon-polar": [156, 9],
+      "sinistcha-masterpiece": [160, 13],
+    };
+    for (const [id, [caixa, posicao]] of Object.entries(esperado)) expect(posShiny.get(id), id).toEqual({ caixa, posicao });
+    expect(posShiny.has("victini")).toBe(false);
+    expect(posShiny.has("pecharunt")).toBe(false);
+  });
+
+  it("caixas reservadas deslocam a trilha shiny também: com 2, a Nacional 1 shiny é a caixa 93", () => {
+    const shiny = montarCaixasDex(formas, "shiny", todas);
+    const com2 = montarCaixasDex(formas, "shiny", todas, 2);
+    expect(com2.map((c) => c.numero)).toEqual(shiny.map((c) => c.numero + 2));
+    expect(arranjo(com2)).toEqual(arranjo(shiny));
+    expect(posicoesNasCaixas(com2).get("bulbasaur")).toEqual({ caixa: 93, posicao: 1 });
+    expect(posicoesNasCaixas(montarCaixasDex(formas, "normal", todas, 2)).get("bulbasaur")).toEqual({ caixa: 3, posicao: 1 });
   });
 });
 
@@ -189,9 +249,16 @@ describe("caixas do HOME — nada se mexe", () => {
     expect(posicoesNasCaixas(semGenero).get("decidueye-hisui")).toEqual({ caixa: 54, posicao: 17 });
   });
 
-  it("a trilha shiny tem o mesmo mapa; forma sem shiny é buraco marcado, sem posição para guardar", () => {
+  /*
+   * As duas trilhas moram no mesmo HOME: a shiny repete o arranjo da normal
+   * (grupo, região, índice e vagas de cada caixa), mas cada número é o da
+   * normal + 90, a partir da `ANCORA_SHINY`.
+   */
+  it("a trilha shiny tem o mesmo arranjo, 90 caixas depois da normal; forma sem shiny é buraco marcado, sem posição para guardar", () => {
     const shiny = montarCaixasDex(formas, "shiny", todas);
-    expect(mapa(shiny)).toEqual(mapa(caixas));
+    expect(arranjo(shiny)).toEqual(arranjo(caixas));
+    expect(shiny.map((c) => c.numero)).toEqual(caixas.map((c) => c.numero + 90));
+    expect(shiny[0].numero).toBe(ANCORA_SHINY);
     const semShiny = formas.filter((f) => !f.shinyObtenivel);
     expect(semShiny.length).toBeGreaterThan(0);
     const buracos = shiny.flatMap((c) => c.lugares.filter((l) => l.buraco !== null));

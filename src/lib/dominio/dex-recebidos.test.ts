@@ -85,9 +85,12 @@ describe("montarRecebidos", () => {
     expect(r.ids).toEqual([repetido.id, primeiro.id, segundo.id]);
   });
 
-  it("normal e shiny são vagas diferentes, cada uma na sequência da sua trilha", () => {
+  /* As duas trilhas moram no mesmo HOME: a shiny tem as caixas dela, 90 depois das da normal (`ANCORA_SHINY`). */
+  it("normal e shiny são vagas diferentes, cada uma nas caixas da sua trilha", () => {
     const r = montarRecebidos(formas, [reg("pikachu", { shiny: true }), reg("pikachu")], todas, 0);
-    expect(resumo(r)).toEqual(["normal 1: 25=pikachu", "shiny 1: 25=pikachu"]);
+    expect(resumo(r)).toEqual(["normal 1: 25=pikachu", "shiny 91: 25=pikachu"]);
+    const com1 = montarRecebidos(formas, [reg("pikachu", { shiny: true }), reg("pikachu")], todas, 1);
+    expect(resumo(com1)).toEqual(["normal 2: 25=pikachu", "shiny 92: 25=pikachu"]);
   });
 
   it("fora das caixas: seção desligada, e shiny de forma sem shiny (buraco no mapa, não lugar)", () => {

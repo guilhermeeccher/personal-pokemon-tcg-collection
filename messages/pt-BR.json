@@ -952,6 +952,7 @@
       "contagem": "{caixas} caixas · {vagas} vagas",
       "reservadas": "Caixas antes da Nacional 1",
       "folga": "Os números pulam de propósito: as caixas entre os grupos ficam vazias no HOME, para cada grupo crescer sem mexer nos outros.",
+      "shiny": "A trilha shiny vem depois da normal, no mesmo HOME: começa na caixa {caixa}, e cada caixa shiny é a da normal + {deslocamento}.",
       "grupo": {
         "nacional": "Nacional",
         "genero": "Gênero",

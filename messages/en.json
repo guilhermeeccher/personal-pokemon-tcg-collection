@@ -952,6 +952,7 @@
       "contagem": "{caixas} boxes · {vagas} slots",
       "reservadas": "Boxes before National 1",
       "folga": "Box numbers skip on purpose: the boxes between groups stay empty in HOME, so each group can grow without moving the others.",
+      "shiny": "The shiny track comes after the normal one, in the same HOME: it starts at box {caixa}, and each shiny box is the normal one + {deslocamento}.",
       "grupo": {
         "nacional": "National",
         "genero": "Gender",

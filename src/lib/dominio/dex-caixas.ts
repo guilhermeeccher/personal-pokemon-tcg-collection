@@ -17,7 +17,13 @@
  * | Gênero     | as fêmeas, pelo número nacional                      | 46–49  | 50–51 |
  * | Regionais  | um bloco por região da forma, cada um em caixa nova  | 52–55  | 56–59 |
  * | Especiais  | por lançamento                                       | 60–61  | 62–64 |
- * | Cosméticas | por lançamento; último grupo, cresce sem teto        | 65–70  | —     |
+ * | Cosméticas | por lançamento; último grupo, o que mais cresce      | 65–70  | 71–90 |
+ *
+ * Essa é a trilha normal. A shiny repete a tabela inteira 90 caixas adiante,
+ * a partir da 91 (`ANCORA_SHINY`): Nacional 91–125, Gênero 136–139,
+ * Regionais 142–145, Especiais 150–151, Cosméticas 155–160. A folga das
+ * Cosméticas normais acaba onde a shiny começa; as shiny crescem até o fim
+ * do HOME (`CAIXAS_HOME`). Ver "As duas trilhas", abaixo.
  *
  * - **Nacional corrido, sem quebra de região**: a caixa N tem os números
  *   30N−29 a 30N. Espécie nova (#1026 em diante) entra no fim.
@@ -34,10 +40,21 @@
  *   é dado da PokeAPI: uma correção lá move posições, e o diff da coluna
  *   `lancamento` do seed mostra antes de chegar a alguém.
  * - **As âncoras são decisão, não consequência.** Um grupo que estourar a
- *   folga e invadir a âncora do seguinte faz um teste falhar: mover grupos
- *   é decisão de quem mantém, avisada, nunca efeito colateral de um seed.
+ *   folga e invadir a âncora do seguinte faz um teste falhar, e o mesmo vale
+ *   para a normal que chegar na âncora da shiny e para a shiny que, com o
+ *   máximo de reservadas, passar das caixas do HOME: mover grupos é decisão
+ *   de quem mantém, avisada, nunca efeito colateral de um seed.
  *
- * ## As duas trilhas têm o mesmo mapa
+ * ## As duas trilhas: o mesmo arranjo, a shiny depois da normal
+ *
+ * Normal e shiny moram no mesmo HOME, então não podem dividir número de
+ * caixa (decisão de 2026-11-09). A shiny tem o mesmo arranjo da normal —
+ * mesmos grupos, mesmas vagas em cada caixa, mesmas posições — e começa na
+ * caixa 91 (`ANCORA_SHINY`): cada caixa shiny é a da normal + 90
+ * (`deslocamentoDaTrilha`). A âncora é fixa, e não "fim da normal + folga",
+ * porque o último grupo da normal (Cosméticas) cresce sem teto próprio:
+ * tirar o começo da shiny de onde a normal termina renumeraria todas as
+ * caixas shiny a cada caixa cosmética nova, quebrando a regra do módulo.
  *
  * Na shiny, a forma que nunca saiu em shiny **fica no lugar, como buraco
  * marcado** (`sem_shiny`), em vez de sumir: quando o shiny do Victini sair,
@@ -65,10 +82,14 @@
  *   liberado deslocava todas as posições shiny depois dele.
  * - **2026-10-11: seção desligada saía e a região se reorganizava.** Ligar
  *   ou desligar uma seção mexia em posições que o usuário já tinha seguido.
+ * - **2026-10-16 a 2026-11-09: a trilha shiny usava os mesmos números de
+ *   caixa da normal.** As duas não cabem num HOME só: a tela mandava guardar
+ *   o Bulbasaur normal e o shiny na mesma caixa 1, posição 1.
  *
  * Caixa e posição continuam calculadas, não gravadas: dependem da trilha e
- * das seções ligadas. Mudar uma âncora, a ordem de um grupo ou o que vai em
- * cada grupo move Pokémon nas caixas de alguém — o teste fixa as posições.
+ * das seções ligadas. Mudar uma âncora (a da shiny também), a ordem de um
+ * grupo ou o que vai em cada grupo move Pokémon nas caixas de alguém — o
+ * teste fixa as posições.
  *
  * ## Caixas reservadas no início (D9, 2026-10-12)
  *
@@ -77,7 +98,8 @@
  * atrás do real. `reservadas` desloca só o **número** das caixas: Nacional
  * 1 passa a ser a caixa `reservadas + 1`, e todas as âncoras andam junto.
  * Nome, índice, posição e quais vagas ficam em cada caixa não mudam. Vale
- * para as duas trilhas.
+ * para as duas trilhas, que andam juntas: as reservadas vêm antes de tudo,
+ * então com 2 a Nacional 1 normal é a caixa 3 e a shiny, a 93.
  */
 import { REGIOES_FORMA, regiaoDaForma, type CategoriaFormaDex, type RegiaoForma } from "./dex-classificacao";
 import type { FormaParaGrade, TrilhaDex } from "./dex-grade";
@@ -109,7 +131,9 @@ export type GrupoCaixa = (typeof GRUPOS_CAIXA)[number];
  *   4 caixas; quatro de folga, para uma região nova e para um bloco crescer.
  * - Especiais: 39 = 2 caixas, a última com 9; três de folga.
  * - Cosméticas: 163 = 6 caixas, a última com 13. É o último grupo: cresce
- *   no fim sem invadir ninguém, por isso vai por último (é o que mais cresce).
+ *   no fim sem invadir nenhum grupo da trilha, por isso vai por último (é o
+ *   que mais cresce). O teto dele é a âncora da shiny (`ANCORA_SHINY`): 20
+ *   caixas de folga, 600 vagas.
  */
 export const ANCORA_GRUPO: Readonly<Record<GrupoCaixa, number>> = {
   nacional: 1,
@@ -118,6 +142,39 @@ export const ANCORA_GRUPO: Readonly<Record<GrupoCaixa, number>> = {
   especial: 60,
   cosmetica: 65,
 };
+
+/**
+ * Caixa onde a Nacional 1 da trilha shiny começa, antes das reservadas
+ * (decisão de 2026-11-09). As duas trilhas moram no mesmo HOME, então a
+ * shiny vem depois da normal, com o mesmo arranjo: cada caixa shiny é a da
+ * normal + 90 (`deslocamentoDaTrilha`).
+ *
+ * Âncora fixa, e não "onde a normal termina + uma folga", porque o último
+ * grupo da normal, Cosméticas, cresce sem teto próprio. Com o começo da
+ * shiny derivado do fim da normal, cada caixa cosmética nova que abrisse
+ * renumeraria todas as caixas shiny — justamente o que o módulo proíbe: uma
+ * vaga nova nunca muda a posição de uma que já existe.
+ *
+ * Contagens de 2026-11-09, todas as seções ligadas: a normal termina na
+ * caixa 70, e 71–90 são 20 caixas de folga para ela crescer. A shiny ocupa
+ * 91–160; com o máximo de reservadas (20) vai até a 180, dentro das 200 do
+ * HOME no plano pago (`CAIXAS_HOME`). É decisão como `ANCORA_GRUPO`, e os
+ * testes a guardam: a normal não pode chegar nela, e a shiny, com o máximo
+ * de reservadas, não pode passar do HOME.
+ */
+export const ANCORA_SHINY = 91;
+
+/** Caixas do HOME no plano pago: o teto onde a trilha shiny, que vem por último, tem de caber. */
+export const CAIXAS_HOME = 200;
+
+/**
+ * Quanto a trilha soma ao número de cada caixa: nada na normal; na shiny, o
+ * que leva a Nacional 1 à `ANCORA_SHINY`. As reservadas somam por cima, nas
+ * duas. A tela das Caixas usa o mesmo número para explicar a shiny.
+ */
+export function deslocamentoDaTrilha(trilha: TrilhaDex): number {
+  return trilha === "shiny" ? ANCORA_SHINY - ANCORA_GRUPO.nacional : 0;
+}
 
 export type FormaParaCaixa = Pick<FormaParaGrade, "numero" | "categoria" | "shinyObtenivel"> & {
   id: string;
@@ -140,7 +197,11 @@ export interface LugarNaCaixa<T extends FormaParaCaixa> {
 }
 
 export interface CaixaDex<T extends FormaParaCaixa> {
-  /** 1, 2, 3… — a caixa no HOME, já com as reservadas. Pode ter lacunas: grupo escondido não renumera os outros. */
+  /**
+   * 1, 2, 3… — a caixa no HOME, já com as reservadas e, na shiny, com o
+   * deslocamento da trilha (+90). Pode ter lacunas: grupo escondido não
+   * renumera os outros.
+   */
   numero: number;
   grupo: GrupoCaixa;
   /** Região do bloco, nas Regionais; nula nos outros grupos. */
@@ -231,6 +292,8 @@ export function montarCaixasDex<T extends FormaParaCaixa>(
     else blocos.set(chave, [f]);
   }
 
+  /* Entre as trilhas, a caixa muda só de número: grupos, índice e posições são os mesmos (o buraco `sem_shiny` continua da shiny). */
+  const inicio = reservadas + deslocamentoDaTrilha(trilha);
   const caixas: CaixaDex<T>[] = [];
   for (const grupo of GRUPOS_CAIXA) {
     if (!grupoAparece(grupo, secoes)) continue;
@@ -241,7 +304,7 @@ export function montarCaixasDex<T extends FormaParaCaixa>(
       const vagas = [...(blocos.get(regiao ? `${grupo}:${regiao}` : grupo) ?? [])].sort(ORDEM_DO_GRUPO[grupo]);
       for (let i = 0; i < vagas.length; i += VAGAS_POR_CAIXA) {
         caixas.push({
-          numero: reservadas + ANCORA_GRUPO[grupo] + usadas,
+          numero: inicio + ANCORA_GRUPO[grupo] + usadas,
           grupo,
           regiao,
           indice: i / VAGAS_POR_CAIXA + 1,

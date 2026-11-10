@@ -8,8 +8,12 @@
  *
  * A numeração tem lacunas de propósito: as caixas de folga entre os grupos
  * não aparecem, e grupo de seção desligada some sem renumerar os outros. As
- * duas trilhas têm o mesmo mapa; na shiny, a forma sem shiny é um buraco
- * marcado, sem link para o cadastro — não há shiny para guardar ali.
+ * duas trilhas têm o mesmo arranjo, mas não os mesmos números: moram no
+ * mesmo HOME, e a shiny vem depois da normal, a partir da `ANCORA_SHINY`:
+ * cada caixa + 90 (`deslocamentoDaTrilha`) — só a trilha shiny ganha a
+ * linha que explica isso. Na
+ * shiny, a forma sem shiny é um buraco marcado, sem link para o cadastro —
+ * não há shiny para guardar ali.
  *
  * O único ajuste daqui é "Caixas antes da Nacional 1" (D9): quem usa a
  * primeira caixa do HOME para Recebidos põe 1, e a numeração passa a bater
@@ -30,7 +34,9 @@ import { Modal } from "@/app/_componentes/modal";
 import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 import { Painel } from "@/app/_componentes/painel";
 import {
+  ANCORA_SHINY,
   COLUNAS_CAIXA,
+  deslocamentoDaTrilha,
   ehCaixasReservadas,
   GRUPOS_CAIXA,
   MAX_CAIXAS_RESERVADAS,
@@ -186,6 +192,14 @@ export function CaixasHome({
           })}
         </nav>
         <p className="text-xs text-muted">{t("caixas.folga")}</p>
+        {trilha === "shiny" && (
+          <p className="text-xs text-muted">
+            {t("caixas.shiny", {
+              caixa: String(caixasReservadas + ANCORA_SHINY),
+              deslocamento: String(deslocamentoDaTrilha("shiny")),
+            })}
+          </p>
+        )}
         {/* O cartão flutuante (só com mouse) diz o estado de cada vaga; no celular a vaga só
             tem a cor da moldura e o sprite apagado, então a legenda escreve o que cada uma é.
             As molduras são as mesmas de `MOLDURA`. */}

@@ -412,8 +412,9 @@ their data.
   "Take to HOME" list shows the slots a Pokémon you already have in a game would fill.
 - **HOME boxes.** The app lays out your boxes, 30 slots each, in groups that start at fixed boxes
   (national dex, gender, regional, special, cosmetic), so a form added later never moves a Pokémon
-  you already put away. You can reserve the first boxes for incoming Pokémon, and a "Received" view
-  lists what arrived in HOME and still needs to be put in its box.
+  you already put away. Shiny boxes come after the normal ones in the same HOME, with spare boxes
+  between so the normal track can grow. You can reserve the first boxes for incoming Pokémon, and a
+  "Received" view lists what arrived in HOME and still needs to be put in its box.
 - **Trophies.** FireRed, Brilliant Diamond and GO have a trophy list in story order, bronze to gold,
   with a platinum when the rest is done. Some trophies are checkpoints that unlock species in that
   save, such as the National Pokédex in FireRed. HOME trophies are computed from your records, so
