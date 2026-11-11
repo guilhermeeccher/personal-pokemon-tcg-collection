@@ -13,7 +13,7 @@
 
 import { and, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 
-import type { Database } from "./client";
+import type { Database, Transacao } from "./client";
 import {
   cartaCatalogo,
   copia,
@@ -447,7 +447,7 @@ export async function excluirRodadaDePreco(
 }
 
 export async function criarRodadaDePreco(
-  db: Database,
+  db: Database | Transacao,
   totalCartas: number,
   fonte: FontePreco = "liga",
 ): Promise<string> {
@@ -493,7 +493,7 @@ export async function concluirRodadaDePreco(
  * `JANELA_SEM_BATIMENTO_CARDMARKET_SEGUNDOS`.
  */
 export async function rodadaDePrecoViva(
-  db: Database,
+  db: Database | Transacao,
   segundosSemBatimento: number,
   fonte: FontePreco = "liga",
 ) {
@@ -509,6 +509,41 @@ export async function rodadaDePrecoViva(
     )
     .limit(1);
   return linha ?? null;
+}
+
+/**
+ * Chaves do `pg_advisory_xact_lock` da criação de rodada, uma por fonte.
+ * Números arbitrários e únicos no app (o envio ao HOME usa outro, em
+ * `dex.ts`): com o mesmo número, uma criação esperaria pela outra sem motivo.
+ */
+const TRAVA_CRIAR_RODADA: Record<FontePreco, number> = {
+  liga: 7_310_004_002,
+  cardmarket: 7_310_004_003,
+};
+
+/**
+ * Cria a rodada só se não houver outra viva da mesma fonte — a checagem e o
+ * INSERT numa transação só, serializada por fonte.
+ *
+ * Checar e depois criar, em duas idas ao banco, deixa uma corrida: dois
+ * cliques que passam juntos pela checagem criam duas rodadas, e duas rodadas
+ * consultam o upstream em paralelo. No Cardmarket a janela é larga, porque a
+ * cotação da PTAX é buscada entre a primeira checagem e a criação (até ~40 s).
+ * Com o lock, a segunda transação espera a primeira gravar e, em READ
+ * COMMITTED, enxerga a rodada nova: sai com a viva, e a rota responde 409.
+ */
+export async function criarRodadaDePrecoSeLivre(
+  db: Database,
+  totalCartas: number,
+  segundosSemBatimento: number,
+  fonte: FontePreco,
+): Promise<{ criada: string } | { viva: string }> {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(${TRAVA_CRIAR_RODADA[fonte]}::bigint)`);
+    const viva = await rodadaDePrecoViva(tx, segundosSemBatimento, fonte);
+    if (viva) return { viva: viva.id };
+    return { criada: await criarRodadaDePreco(tx, totalCartas, fonte) };
+  });
 }
 
 /**

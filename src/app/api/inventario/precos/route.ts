@@ -13,6 +13,7 @@ import { consultasCardmarketDesde, listarPrecosCardmarket } from "@/lib/db/preco
 import {
   consultasDePrecoDesde,
   criarRodadaDePreco,
+  criarRodadaDePrecoSeLivre,
   encerrarRodadasDePrecoMortas,
   listarCartasEspeciaisPossuidas,
   listarPrecos,
@@ -287,14 +288,15 @@ async function iniciarRodadaCardmarket(validadeHoras: number) {
 
   // A busca da cotação pode levar segundos (até duas tentativas com teto de
   // 20 s): um segundo clique nesse meio passaria pela checagem lá de cima.
-  // Conferir de novo logo antes de criar fecha essa janela.
-  const viva = await rodadaDePrecoViva(db, janela, "cardmarket");
-  if (viva) {
-    return NextResponse.json({ ...corpoRecusa("precosEmAndamento"), rodadaId: viva.id }, { status: 409 });
+  // A checagem final e a criação vão juntas, serializadas por fonte
+  // (`criarRodadaDePrecoSeLivre`), e o segundo clique recebe 409.
+  const criacao = await criarRodadaDePrecoSeLivre(db, pendentes.length, janela, "cardmarket");
+  if ("viva" in criacao) {
+    return NextResponse.json({ ...corpoRecusa("precosEmAndamento"), rodadaId: criacao.viva }, { status: 409 });
   }
+  const rodadaId = criacao.criada;
 
   const estimativaSegundos = segundosDeRodadaCardmarket(pendentes.length);
-  const rodadaId = await criarRodadaDePreco(db, pendentes.length, "cardmarket");
 
   // Deliberadamente sem `await`: a resposta sai agora e a rodada segue.
   void executarRodadaCardmarket(db, rodadaId, pendentes, cotacao).catch(() => {});
