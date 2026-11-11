@@ -1,10 +1,13 @@
 /**
  * A foto da tabela de preços no fim de uma rodada — o ponto do gráfico de
- * valor total. Função pura: o SQL só lê as linhas de `preco_carta_liga`, e a
- * agregação mora aqui para ser testada sem banco.
+ * valor total. Função pura: o SQL só lê as linhas da tabela de preços da
+ * fonte (`preco_carta_liga` ou `preco_carta_cardmarket`, esta passada por
+ * `comoPrecoDeCarta`), e a agregação mora aqui para ser testada sem banco.
+ * Cada fonte tem a sua série; as duas nunca se misturam.
  *
  * Regra do valor de uma carta = a da tela (`valorDaCarta`): o preço médio e,
- * sem ele, o mínimo. Carta não achada, ou sem nenhum preço, não entra.
+ * sem ele, o mínimo — na fonte Cardmarket, a tendência e, sem ela, a média.
+ * Carta não achada, ou sem nenhum preço, não entra.
  *
  * Atenção ao ler a série: o total também sobe quando **entram cartas** na
  * tabela (a rodada passou a precificar mais cartas), não só quando os preços

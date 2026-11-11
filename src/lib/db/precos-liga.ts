@@ -3,6 +3,12 @@
  * seleção, do casamento e do frescor está em
  * `lib/dominio/precos-cartas-especiais.ts`; o do ritmo, em
  * `lib/liga/cliente.ts`. Aqui só se lê e escreve.
+ *
+ * As rodadas e as fotos servem as duas fontes de preço
+ * (`lib/dominio/fonte-preco.ts`): toda função de rodada e de foto recebe a
+ * `fonte` — `liga` por padrão, para quem já chamava não mudar — e toda
+ * consulta filtra por ela. Os preços em si ficam em tabelas separadas: os
+ * da Liga aqui, os do Cardmarket em `precos-cardmarket.ts`.
  */
 
 import { and, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
@@ -13,10 +19,14 @@ import {
   copia,
   ligaRodadaPreco,
   ligaSnapshotPreco,
+  precoCartaCardmarket,
+  precoCartaCardmarketHistorico,
   precoCartaLiga,
   precoCartaLigaHistorico,
 } from "./schema";
+import type { FontePreco } from "@/lib/dominio/fonte-preco";
 import type { LinhaBuscaLiga } from "@/lib/dominio/liga-busca";
+import { comoPrecoDeCarta } from "@/lib/dominio/preco-cardmarket";
 import {
   fotoEntraNoGrafico,
   fotografarPrecos,
@@ -27,12 +37,15 @@ import {
   selecionarCartasParaPreco,
   type CartaParaPreco,
   type ConsultaDePreco,
+  type PrecoDeCarta,
 } from "@/lib/dominio/precos-cartas-especiais";
 
 /**
  * As cartas especiais que o usuário possui, uma por `carta_id`. Lê as cópias
  * (alocadas ou livres) e, das cartas que elas apontam, todas as fichas — a
- * en e a pt entram no termo de busca mesmo quando só uma é a possuída.
+ * en e a pt entram no termo de busca da Liga mesmo quando só uma é a
+ * possuída, e o conjunto delas diz em que idiomas a fonte Cardmarket pode
+ * pedir a ficha à TCGdex.
  */
 export async function listarCartasEspeciaisPossuidas(db: Database): Promise<CartaParaPreco[]> {
   const possuidas = await db.selectDistinct({ cartaId: copia.cartaId }).from(copia);
@@ -143,13 +156,28 @@ export async function gravarPrecoDeCarta(
   });
 }
 
-/**
- * Fotografa a tabela de preços inteira agora e grava como o ponto da rodada
- * (a agregação é `fotografarPrecos`). Idempotente por rodada: chamar de novo
- * não duplica. Vale também para rodada abortada por bloqueio — o que já foi
- * precificado continua valendo.
- */
-export async function registrarFotoDaRodada(db: Database, rodadaId: string): Promise<void> {
+/** A tabela de preços inteira de uma fonte, no formato do agregador. */
+async function precosParaFoto(db: Database, fonte: FontePreco): Promise<PrecoDeCarta[]> {
+  if (fonte === "cardmarket") {
+    // `comoPrecoDeCarta`: nesta fonte, o "médio" que a foto soma é a
+    // tendência (senão a média), e o "mínimo" é o `low` do Cardmarket.
+    const linhas = await db
+      .select({
+        encontrada: precoCartaCardmarket.encontrada,
+        minimo: precoCartaCardmarket.minimo,
+        tendencia: precoCartaCardmarket.tendencia,
+        media: precoCartaCardmarket.media,
+      })
+      .from(precoCartaCardmarket);
+    return linhas.map((l) =>
+      comoPrecoDeCarta({
+        encontrada: l.encontrada,
+        minimo: numero(l.minimo),
+        tendencia: numero(l.tendencia),
+        media: numero(l.media),
+      }),
+    );
+  }
   const linhas = await db
     .select({
       encontrada: precoCartaLiga.encontrada,
@@ -158,17 +186,30 @@ export async function registrarFotoDaRodada(db: Database, rodadaId: string): Pro
       precoMaximo: precoCartaLiga.precoMaximo,
     })
     .from(precoCartaLiga);
-  const foto = fotografarPrecos(
-    linhas.map((l) => ({
-      encontrada: l.encontrada,
-      preco: numero(l.preco),
-      precoMedio: numero(l.precoMedio),
-      precoMaximo: numero(l.precoMaximo),
-    })),
-  );
+  return linhas.map((l) => ({
+    encontrada: l.encontrada,
+    preco: numero(l.preco),
+    precoMedio: numero(l.precoMedio),
+    precoMaximo: numero(l.precoMaximo),
+  }));
+}
+
+/**
+ * Fotografa a tabela de preços inteira da fonte agora e grava como o ponto
+ * da rodada (a agregação é `fotografarPrecos`). Idempotente por rodada:
+ * chamar de novo não duplica. Vale também para rodada abortada por
+ * bloqueio — o que já foi precificado continua valendo.
+ */
+export async function registrarFotoDaRodada(
+  db: Database,
+  rodadaId: string,
+  fonte: FontePreco = "liga",
+): Promise<void> {
+  const foto = fotografarPrecos(await precosParaFoto(db, fonte));
   await db
     .insert(ligaSnapshotPreco)
     .values({
+      fonte,
       rodadaId,
       somaMedios: String(foto.somaMedios),
       cartasComPreco: foto.cartasComPreco,
@@ -181,8 +222,16 @@ export async function registrarFotoDaRodada(db: Database, rodadaId: string): Pro
 /**
  * A série do gráfico: uma foto por rodada concluída, da mais antiga à mais
  * nova. A de rodada interrompida fica de fora (`fotoEntraNoGrafico`).
+ *
+ * Só as fotos da fonte pedida: cada fonte tem a sua série. A Liga soma o
+ * preço médio dela, o Cardmarket soma a tendência convertida — números de
+ * natureza diferente, e emendar uma série na outra desenharia uma queda (ou
+ * uma alta) que não aconteceu.
  */
-export async function listarSerieDePrecos(db: Database): Promise<PontoDaSerie[]> {
+export async function listarSerieDePrecos(
+  db: Database,
+  fonte: FontePreco = "liga",
+): Promise<PontoDaSerie[]> {
   const linhas = await db
     .select({
       tiradoEm: ligaSnapshotPreco.tiradoEm,
@@ -194,6 +243,7 @@ export async function listarSerieDePrecos(db: Database): Promise<PontoDaSerie[]>
     })
     .from(ligaSnapshotPreco)
     .leftJoin(ligaRodadaPreco, eq(ligaRodadaPreco.id, ligaSnapshotPreco.rodadaId))
+    .where(eq(ligaSnapshotPreco.fonte, fonte))
     .orderBy(ligaSnapshotPreco.tiradoEm);
   return linhas.filter(fotoEntraNoGrafico).map((l) => ({
     tiradoEm: new Date(l.tiradoEm).toISOString(),
@@ -219,11 +269,26 @@ export interface PrecoListado {
 const numero = (v: string | null) => (v === null ? null : Number(v));
 const ORDEM_IDIOMA = { pt: 0, en: 1, jp: 2 } as const;
 
-/** Todo preço guardado, com os dados de exibição da carta (ficha pt, senão en, senão jp). */
-export async function listarPrecos(db: Database): Promise<PrecoListado[]> {
-  const precos = await db.select().from(precoCartaLiga);
-  if (precos.length === 0) return [];
+/** O que a tela de preços mostra de uma carta. */
+export interface FichaDeExibicao {
+  cartaId: string;
+  idioma: "pt" | "en" | "jp";
+  nome: string;
+  setNome: string;
+  localId: string;
+  raridade: string | null;
+}
 
+/**
+ * A ficha que representa cada carta na tela de preços: pt, senão en, senão
+ * jp — a mesma escolha para as duas fontes.
+ */
+export async function fichasDeExibicao(
+  db: Database,
+  cartaIds: readonly string[],
+): Promise<Map<string, FichaDeExibicao>> {
+  const exibicao = new Map<string, FichaDeExibicao>();
+  if (cartaIds.length === 0) return exibicao;
   const fichas = await db
     .select({
       cartaId: cartaCatalogo.id,
@@ -234,17 +299,23 @@ export async function listarPrecos(db: Database): Promise<PrecoListado[]> {
       raridade: cartaCatalogo.raridade,
     })
     .from(cartaCatalogo)
-    .where(
-      inArray(
-        cartaCatalogo.id,
-        precos.map((p) => p.cartaId),
-      ),
-    );
-  const exibicao = new Map<string, (typeof fichas)[number]>();
+    .where(inArray(cartaCatalogo.id, [...cartaIds]));
   for (const f of fichas) {
     const atual = exibicao.get(f.cartaId);
     if (!atual || ORDEM_IDIOMA[f.idioma] < ORDEM_IDIOMA[atual.idioma]) exibicao.set(f.cartaId, f);
   }
+  return exibicao;
+}
+
+/** Todo preço guardado, com os dados de exibição da carta (ficha pt, senão en, senão jp). */
+export async function listarPrecos(db: Database): Promise<PrecoListado[]> {
+  const precos = await db.select().from(precoCartaLiga);
+  if (precos.length === 0) return [];
+
+  const exibicao = await fichasDeExibicao(
+    db,
+    precos.map((p) => p.cartaId),
+  );
 
   return precos.flatMap((p) => {
     const f = exibicao.get(p.cartaId);
@@ -300,8 +371,12 @@ export interface RodadaListada {
   noGrafico: boolean;
 }
 
-/** As rodadas, da mais nova à mais antiga, com o ponto que cada uma deixou. */
-export async function listarRodadasDePreco(db: Database, limite = 50): Promise<RodadaListada[]> {
+/** As rodadas da fonte, da mais nova à mais antiga, com o ponto que cada uma deixou. */
+export async function listarRodadasDePreco(
+  db: Database,
+  fonte: FontePreco = "liga",
+  limite = 50,
+): Promise<RodadaListada[]> {
   const linhas = await db
     .select({
       rodada: ligaRodadaPreco,
@@ -310,6 +385,7 @@ export async function listarRodadasDePreco(db: Database, limite = 50): Promise<R
     })
     .from(ligaRodadaPreco)
     .leftJoin(ligaSnapshotPreco, eq(ligaSnapshotPreco.rodadaId, ligaRodadaPreco.id))
+    .where(eq(ligaRodadaPreco.fonte, fonte))
     .orderBy(desc(ligaRodadaPreco.criadoEm))
     .limit(limite);
   return linhas.map(({ rodada, somaMedios, fotoId }) => ({
@@ -336,6 +412,9 @@ export async function listarRodadasDePreco(db: Database, limite = 50): Promise<R
  * (o frescor de 24 h é contado sobre `preco_carta_liga`). O histórico por
  * carta também fica, só perde o vínculo com a rodada (`rodada_id` nulo, como
  * as linhas do backfill).
+ *
+ * Vale para as duas fontes, com a mesma regra: a fonte vem da própria
+ * rodada, e é ela que diz de qual histórico soltar o vínculo.
  */
 export async function excluirRodadaDePreco(
   db: Database,
@@ -343,7 +422,7 @@ export async function excluirRodadaDePreco(
 ): Promise<"excluida" | "naoEncontrada" | "emAndamento"> {
   return db.transaction(async (tx) => {
     const [rodada] = await tx
-      .select({ concluidaEm: ligaRodadaPreco.concluidaEm })
+      .select({ concluidaEm: ligaRodadaPreco.concluidaEm, fonte: ligaRodadaPreco.fonte })
       .from(ligaRodadaPreco)
       .where(eq(ligaRodadaPreco.id, rodadaId))
       .for("update");
@@ -351,20 +430,30 @@ export async function excluirRodadaDePreco(
     if (!rodadaPodeSerExcluida(rodada)) return "emAndamento";
 
     await tx.delete(ligaSnapshotPreco).where(eq(ligaSnapshotPreco.rodadaId, rodadaId));
-    await tx
-      .update(precoCartaLigaHistorico)
-      .set({ rodadaId: null })
-      .where(eq(precoCartaLigaHistorico.rodadaId, rodadaId));
+    if (rodada.fonte === "cardmarket") {
+      await tx
+        .update(precoCartaCardmarketHistorico)
+        .set({ rodadaId: null })
+        .where(eq(precoCartaCardmarketHistorico.rodadaId, rodadaId));
+    } else {
+      await tx
+        .update(precoCartaLigaHistorico)
+        .set({ rodadaId: null })
+        .where(eq(precoCartaLigaHistorico.rodadaId, rodadaId));
+    }
     await tx.delete(ligaRodadaPreco).where(eq(ligaRodadaPreco.id, rodadaId));
     return "excluida";
   });
 }
 
-
-export async function criarRodadaDePreco(db: Database, totalCartas: number): Promise<string> {
+export async function criarRodadaDePreco(
+  db: Database,
+  totalCartas: number,
+  fonte: FontePreco = "liga",
+): Promise<string> {
   const [linha] = await db
     .insert(ligaRodadaPreco)
-    .values({ totalCartas })
+    .values({ totalCartas, fonte })
     .returning({ id: ligaRodadaPreco.id });
   return linha.id;
 }
@@ -397,16 +486,23 @@ export async function concluirRodadaDePreco(
 }
 
 /**
- * A rodada de preços viva, se houver — o que impede duas ao mesmo tempo (o
- * limitador é por rodada e dobraria o ritmo). A janela vem do intervalo, como
- * na varredura: `janelaSemBatimentoSegundos`.
+ * A rodada de preços viva da fonte, se houver — o que impede duas ao mesmo
+ * tempo (na Liga, o limitador é por rodada e dobraria o ritmo). A janela vem
+ * do pior caso de uma carta na fonte: na Liga, do intervalo, como na
+ * varredura (`janelaSemBatimentoSegundos`); no Cardmarket,
+ * `JANELA_SEM_BATIMENTO_CARDMARKET_SEGUNDOS`.
  */
-export async function rodadaDePrecoViva(db: Database, segundosSemBatimento: number) {
+export async function rodadaDePrecoViva(
+  db: Database,
+  segundosSemBatimento: number,
+  fonte: FontePreco = "liga",
+) {
   const [linha] = await db
     .select()
     .from(ligaRodadaPreco)
     .where(
       and(
+        eq(ligaRodadaPreco.fonte, fonte),
         isNull(ligaRodadaPreco.concluidaEm),
         sql`${ligaRodadaPreco.atualizadoEm} > now() - make_interval(secs => ${segundosSemBatimento})`,
       ),
@@ -415,9 +511,17 @@ export async function rodadaDePrecoViva(db: Database, segundosSemBatimento: numb
   return linha ?? null;
 }
 
+/**
+ * Encerra as rodadas da fonte sem batimento dentro da janela. **Filtra pela
+ * fonte de propósito:** a janela é da fonte, e a do Cardmarket (minutos)
+ * aplicada a uma rodada da Liga (que pode passar horas entre batimentos)
+ * declararia morta uma rodada viva — e liberaria uma segunda em paralelo
+ * contra o site deles.
+ */
 export async function encerrarRodadasDePrecoMortas(
   db: Database,
   segundosSemBatimento: number,
+  fonte: FontePreco = "liga",
 ): Promise<number> {
   const fechadas = await db
     .update(ligaRodadaPreco)
@@ -427,6 +531,7 @@ export async function encerrarRodadasDePrecoMortas(
     })
     .where(
       and(
+        eq(ligaRodadaPreco.fonte, fonte),
         isNull(ligaRodadaPreco.concluidaEm),
         sql`${ligaRodadaPreco.atualizadoEm} <= now() - make_interval(secs => ${segundosSemBatimento})`,
       ),
@@ -435,10 +540,11 @@ export async function encerrarRodadasDePrecoMortas(
   return fechadas.length;
 }
 
-export async function obterUltimaRodadaDePreco(db: Database) {
+export async function obterUltimaRodadaDePreco(db: Database, fonte: FontePreco = "liga") {
   const [linha] = await db
     .select()
     .from(ligaRodadaPreco)
+    .where(eq(ligaRodadaPreco.fonte, fonte))
     .orderBy(desc(ligaRodadaPreco.criadoEm))
     .limit(1);
   return linha ?? null;
