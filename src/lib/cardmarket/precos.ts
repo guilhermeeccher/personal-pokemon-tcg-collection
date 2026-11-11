@@ -1,7 +1,13 @@
 /**
  * Orquestração da rodada de preços pela fonte Cardmarket
  * (`PRECO_FONTE=cardmarket`) — o que acontece quando o usuário aperta
- * "Atualizar preços (Cardmarket)". Server-only.
+ * "Atualizar preços (Cardmarket)", ou quando o comando
+ * `pnpm precos:cardmarket` roda. Server-only.
+ *
+ * Os dois entram pela mesma porta, `iniciarRodadaCardmarket`, com as mesmas
+ * recusas e a mesma trava por fonte: o botão dispara a rodada e responde na
+ * hora; o comando espera ela terminar. Uma rodada do comando aparece na tela
+ * como qualquer outra, e nunca roda junto com uma do botão.
  *
  * O preço vem do campo `pricing` da ficha da carta na TCGdex
  * (`GET /v2/<idioma>/cards/<id>`), pelo **mesmo cliente do catálogo**
@@ -20,13 +26,18 @@
  *   registrada e pulada; a rodada segue;
  * - grava por carta, e a rodada seguinte pula o que tem resposta de menos
  *   de 24 h, encontrada ou não — disparar de novo continua de onde parou.
- *   Não há fila, worker nem retomada automática com o container.
+ *   Não há fila, worker nem retomada automática com o container. Agendar a
+ *   atualização é permitido só para esta fonte, e **de fora do app**: um
+ *   agendador do host chama o comando dentro do container (AGENTS.md). Na
+ *   Liga, com o `Crawl-delay` de minutos e rodadas de horas, continua
+ *   proibido.
  *
- * A cotação (PTAX do euro) é buscada uma vez, pela rota, **antes** de a
- * rodada existir, e chega aqui pronta: a rodada inteira converte pela mesma
- * taxa, que fica gravada em cada linha.
+ * A cotação (PTAX do euro) é buscada uma vez, em `iniciarRodadaCardmarket`,
+ * **antes** de a rodada existir, e chega à rodada pronta: a rodada inteira
+ * converte pela mesma taxa, que fica gravada em cada linha.
  */
 
+import { obterPtaxEuro } from "@/lib/cotacao/ptax";
 import type { Database } from "@/lib/db/client";
 import {
   consultasCardmarketDesde,
@@ -35,12 +46,16 @@ import {
 } from "@/lib/db/precos-cardmarket";
 import {
   concluirRodadaDePreco,
+  criarRodadaDePrecoSeLivre,
+  encerrarRodadasDePrecoMortas,
   listarCartasEspeciaisPossuidas,
   registrarFotoDaRodada,
+  rodadaDePrecoViva,
   tocarProgressoDePreco,
 } from "@/lib/db/precos-liga";
 import { ErroBloqueioUpstream } from "@/lib/dominio/bloqueio-upstream";
 import type { CotacaoPtax } from "@/lib/dominio/cotacao-ptax";
+import { recusa, type Recusa } from "@/lib/dominio/recusa";
 import { JANELA_SEM_BATIMENTO_MINIMA_SEGUNDOS } from "@/lib/dominio/estimativa-varredura";
 import {
   corteDeFrescor,
@@ -253,4 +268,115 @@ export async function cartasParaConsultarCardmarket(
   const consultas = await consultasCardmarketDesde(db, corteDeFrescor({ agora, validadeHoras }));
   const { pendentes, puladas } = separarPorFrescor(todas, consultas, { agora, validadeHoras });
   return { pendentes, puladas, total: todas.length };
+}
+
+/** A rodada criada, pronta para `executarRodadaCardmarket`. */
+export interface RodadaCardmarketIniciada {
+  iniciada: true;
+  rodadaId: string;
+  pendentes: CartaParaPreco[];
+  puladas: CartaParaPreco[];
+  /** A PTAX que a rodada inteira usa para converter. */
+  cotacao: CotacaoPtax;
+}
+
+/**
+ * Um disparo recusado: a chave (com os valores) que a tela traduz, o status
+ * HTTP que a rota responde e o que acompanha cada recusa no corpo de sempre.
+ */
+export interface RodadaCardmarketRecusada {
+  iniciada: false;
+  status: 400 | 409 | 503;
+  recusa: Recusa;
+  /** Só em `precosEmAndamento`: a rodada que já está viva. */
+  rodadaId?: string;
+  /** Só em `semCartasEspeciais` e `precosJaConsultados`: as cartas que o frescor pulou. */
+  cartasPuladas?: number;
+  /**
+   * Só em `cotacaoIndisponivel`: o motivo técnico. Vai para o log e para o
+   * comando; a tela mostra só a chave.
+   */
+  detalhe?: string;
+}
+
+export type InicioRodadaCardmarket = RodadaCardmarketIniciada | RodadaCardmarketRecusada;
+
+function recusaEmAndamento(rodadaId: string): RodadaCardmarketRecusada {
+  // Duas rodadas ao mesmo tempo dobrariam a pressão sobre a TCGdex.
+  return { iniciada: false, status: 409, recusa: recusa("precosEmAndamento"), rodadaId };
+}
+
+/** A recusa de um disparo sem nada a consultar: sem carta especial, ou tudo fresco. */
+function recusaNadaAConsultar(
+  { puladas, total }: { puladas: readonly unknown[]; total: number },
+  validadeHoras: number,
+): RodadaCardmarketRecusada {
+  return {
+    iniciada: false,
+    status: 400,
+    recusa:
+      total === 0
+        ? recusa("semCartasEspeciais")
+        : recusa("precosJaConsultados", {
+            total: String(puladas.length),
+            horas: String(validadeHoras),
+          }),
+    cartasPuladas: puladas.length,
+  };
+}
+
+/**
+ * Tudo o que acontece antes de a rodada começar a consultar — a mesma porta
+ * para o botão e para o comando, para as recusas e a trava serem as mesmas.
+ * Mesma ordem de recusas da Liga — rodada viva (409), nada a consultar
+ * (400) —, mais a cotação: sem a PTAX do euro a rodada não começa (503
+ * `cotacaoIndisponivel`), em vez de gravar preço sem conversão ou convertido
+ * por uma taxa inventada. A cotação é buscada uma vez, antes de a rodada
+ * existir, e a rodada inteira converte por ela.
+ *
+ * Devolve a rodada criada, sem começar a consultar: quem chama decide se
+ * espera (`executarRodadaCardmarket` com `await`, o comando) ou não (a rota,
+ * que responde na hora).
+ */
+export async function iniciarRodadaCardmarket(
+  db: Database,
+  { validadeHoras = VALIDADE_CONSULTA_HORAS }: { validadeHoras?: number } = {},
+): Promise<InicioRodadaCardmarket> {
+  const janela = JANELA_SEM_BATIMENTO_CARDMARKET_SEGUNDOS;
+  await encerrarRodadasDePrecoMortas(db, janela, "cardmarket");
+  const emAndamento = await rodadaDePrecoViva(db, janela, "cardmarket");
+  if (emAndamento) return recusaEmAndamento(emAndamento.id);
+
+  const antes = await cartasParaConsultarCardmarket(db, { validadeHoras });
+  if (antes.pendentes.length === 0) return recusaNadaAConsultar(antes, validadeHoras);
+
+  let cotacao: CotacaoPtax;
+  try {
+    cotacao = await obterPtaxEuro();
+  } catch (err) {
+    const detalhe = err instanceof Error ? err.message : String(err);
+    // A tela mostra a recusa pela chave; o motivo técnico fica no log.
+    console.error(`[preços cardmarket] ${detalhe}`);
+    return { iniciada: false, status: 503, recusa: recusa("cotacaoIndisponivel"), detalhe };
+  }
+
+  // A busca da cotação pode levar segundos (até duas tentativas com teto de
+  // 20 s), e um segundo disparo nesse meio passaria pelas checagens lá de
+  // cima. Outra rodada pode ter começado — ou até terminado, consultando as
+  // mesmas cartas. Por isso a lista é refeita depois da cotação (a primeira
+  // só evita buscar a PTAX num disparo que não tem o que fazer), e a checagem
+  // final e a criação vão juntas, serializadas por fonte
+  // (`criarRodadaDePrecoSeLivre`): rodada viva dá 409, e o que outra já
+  // consultou sai da lista. Sobra a janela entre refazer a lista e pegar a
+  // trava — normalmente milissegundos, mas sem garantia (espera pelo banco,
+  // pausa do processo). Se outra rodada começar e terminar inteira nela, as
+  // cartas dela são consultadas de novo: requisições a mais, nunca dado
+  // errado (o upsert grava o mesmo preço e o histórico só acrescenta).
+  const depois = await cartasParaConsultarCardmarket(db, { validadeHoras });
+  if (depois.pendentes.length === 0) return recusaNadaAConsultar(depois, validadeHoras);
+  const { pendentes, puladas } = depois;
+
+  const criacao = await criarRodadaDePrecoSeLivre(db, pendentes.length, janela, "cardmarket");
+  if ("viva" in criacao) return recusaEmAndamento(criacao.viva);
+  return { iniciada: true, rodadaId: criacao.criada, pendentes, puladas, cotacao };
 }

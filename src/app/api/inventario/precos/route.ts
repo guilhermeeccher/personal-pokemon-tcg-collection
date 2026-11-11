@@ -2,18 +2,17 @@ import { NextResponse } from "next/server";
 
 import { comAcesso, leituraPodeGravar } from "@/lib/acesso";
 import {
-  cartasParaConsultarCardmarket,
   executarRodadaCardmarket,
+  iniciarRodadaCardmarket,
   JANELA_SEM_BATIMENTO_CARDMARKET_SEGUNDOS,
   segundosDeRodadaCardmarket,
+  type RodadaCardmarketRecusada,
 } from "@/lib/cardmarket/precos";
-import { obterPtaxEuro } from "@/lib/cotacao/ptax";
 import { db } from "@/lib/db/client";
 import { consultasCardmarketDesde, listarPrecosCardmarket } from "@/lib/db/precos-cardmarket";
 import {
   consultasDePrecoDesde,
   criarRodadaDePreco,
-  criarRodadaDePrecoSeLivre,
   encerrarRodadasDePrecoMortas,
   listarCartasEspeciaisPossuidas,
   listarPrecos,
@@ -22,7 +21,6 @@ import {
   obterUltimaRodadaDePreco,
   rodadaDePrecoViva,
 } from "@/lib/db/precos-liga";
-import type { CotacaoPtax } from "@/lib/dominio/cotacao-ptax";
 import {
   formatarDuracao,
   janelaSemBatimentoSegundos,
@@ -62,9 +60,11 @@ import {
  * A fonte é escolha de quem instala (`fonteDePreco`, lida a cada
  * requisição): `liga`, o padrão, é a LigaPokemon, e o ramo dela é o de
  * sempre — a resposta do `GET` só ganhou `fonte: "liga"`. `cardmarket` é a
- * tendência do Cardmarket via TCGdex, convertida pela PTAX
- * (`lib/cardmarket/precos.ts`), com as suas próprias rodadas, série e
- * janela de rodada morta; as duas fontes nunca se misturam numa resposta.
+ * tendência do Cardmarket via TCGdex (com a trava da média de 30 dias),
+ * convertida pela PTAX (`lib/cardmarket/precos.ts`), com as suas próprias
+ * rodadas, série e janela de rodada morta; as duas fontes nunca se misturam
+ * numa resposta. O `POST` do Cardmarket passa pela mesma porta do comando
+ * `pnpm precos:cardmarket` (`iniciarRodadaCardmarket`).
  */
 
 /** A janela de "rodada morta" acompanha o ritmo e o pior caso desta rodada. */
@@ -91,7 +91,7 @@ export const POST = comAcesso(async function POST(req: Request) {
   }
   const validadeHoras = (validadeBruta as number | undefined) ?? VALIDADE_CONSULTA_HORAS;
 
-  if (fonteDePreco() === "cardmarket") return iniciarRodadaCardmarket(validadeHoras);
+  if (fonteDePreco() === "cardmarket") return dispararRodadaCardmarket(validadeHoras);
 
   // Uma leitura do `robots.txt` antes de decidir (cacheada): dela saem a
   // janela de batimento e a estimativa, e a primeira requisição já sai no
@@ -243,72 +243,33 @@ export const GET = comAcesso(async function GET(req: Request) {
 
 // --- Fonte Cardmarket -------------------------------------------------------
 
-/** A recusa de um disparo sem nada a consultar: sem carta especial, ou tudo fresco. */
-function nadaAConsultar(
-  { puladas, total }: { puladas: readonly unknown[]; total: number },
-  validadeHoras: number,
-) {
-  const nada =
-    total === 0
-      ? recusa("semCartasEspeciais")
-      : recusa("precosJaConsultados", {
-          total: String(puladas.length),
-          horas: String(validadeHoras),
-        });
-  return NextResponse.json({ ...corpoDaRecusa(nada), cartasPuladas: puladas.length }, { status: 400 });
+/**
+ * A recusa no corpo de sempre: a chave em `recusa`, mais o que cada uma
+ * sempre trouxe — `rodadaId` na rodada viva (409), `cartasPuladas` quando não
+ * há o que consultar (400), nada além da chave na cotação (503). O motivo
+ * técnico (`detalhe`) fica de fora: é do log e do comando, não da tela.
+ */
+function respostaDaRecusa(r: RodadaCardmarketRecusada) {
+  return NextResponse.json(
+    {
+      ...corpoDaRecusa(r.recusa),
+      ...(r.rodadaId !== undefined ? { rodadaId: r.rodadaId } : {}),
+      ...(r.cartasPuladas !== undefined ? { cartasPuladas: r.cartasPuladas } : {}),
+    },
+    { status: r.status },
+  );
 }
 
 /**
- * `POST` com a fonte Cardmarket. Mesma ordem de recusas da Liga — rodada
- * viva (409), nada a consultar (400) —, mais a cotação: sem a PTAX do euro a
- * rodada não começa (503 `cotacaoIndisponivel`), em vez de gravar preço sem
- * conversão ou convertido por uma taxa inventada. A cotação é buscada uma
- * vez, antes de a rodada existir, e a rodada inteira converte por ela.
+ * `POST` com a fonte Cardmarket. As checagens, as recusas, a cotação e a
+ * criação da rodada são as de `iniciarRodadaCardmarket` — a mesma porta do
+ * comando `pnpm precos:cardmarket`. Aqui fica só o que é do botão: disparar
+ * a rodada sem esperar e responder na hora, com a estimativa.
  */
-async function iniciarRodadaCardmarket(validadeHoras: number) {
-  const janela = JANELA_SEM_BATIMENTO_CARDMARKET_SEGUNDOS;
-  await encerrarRodadasDePrecoMortas(db, janela, "cardmarket");
-  const emAndamento = await rodadaDePrecoViva(db, janela, "cardmarket");
-  if (emAndamento) {
-    return NextResponse.json(
-      { ...corpoRecusa("precosEmAndamento"), rodadaId: emAndamento.id },
-      { status: 409 },
-    );
-  }
-
-  const antes = await cartasParaConsultarCardmarket(db, { validadeHoras });
-  if (antes.pendentes.length === 0) return nadaAConsultar(antes, validadeHoras);
-
-  let cotacao: CotacaoPtax;
-  try {
-    cotacao = await obterPtaxEuro();
-  } catch (err) {
-    // A tela mostra a recusa pela chave; o motivo técnico fica no log.
-    console.error(`[preços cardmarket] ${err instanceof Error ? err.message : String(err)}`);
-    return NextResponse.json(corpoRecusa("cotacaoIndisponivel"), { status: 503 });
-  }
-
-  // A busca da cotação pode levar segundos (até duas tentativas com teto de
-  // 20 s), e um segundo clique nesse meio passaria pelas checagens lá de
-  // cima. Outra rodada pode ter começado — ou até terminado, consultando as
-  // mesmas cartas. Por isso a lista é refeita depois da cotação (a primeira
-  // só evita buscar a PTAX num clique que não tem o que fazer), e a checagem
-  // final e a criação vão juntas, serializadas por fonte
-  // (`criarRodadaDePrecoSeLivre`): rodada viva dá 409, e o que outra já
-  // consultou sai da lista. Sobra a janela entre refazer a lista e pegar a
-  // trava — normalmente milissegundos, mas sem garantia (espera pelo banco,
-  // pausa do processo). Se outra rodada começar e terminar inteira nela, as
-  // cartas dela são consultadas de novo: requisições a mais, nunca dado
-  // errado (o upsert grava o mesmo preço e o histórico só acrescenta).
-  const depois = await cartasParaConsultarCardmarket(db, { validadeHoras });
-  if (depois.pendentes.length === 0) return nadaAConsultar(depois, validadeHoras);
-  const { pendentes, puladas } = depois;
-
-  const criacao = await criarRodadaDePrecoSeLivre(db, pendentes.length, janela, "cardmarket");
-  if ("viva" in criacao) {
-    return NextResponse.json({ ...corpoRecusa("precosEmAndamento"), rodadaId: criacao.viva }, { status: 409 });
-  }
-  const rodadaId = criacao.criada;
+async function dispararRodadaCardmarket(validadeHoras: number) {
+  const inicio = await iniciarRodadaCardmarket(db, { validadeHoras });
+  if (!inicio.iniciada) return respostaDaRecusa(inicio);
+  const { rodadaId, pendentes, puladas, cotacao } = inicio;
 
   const estimativaSegundos = segundosDeRodadaCardmarket(pendentes.length);
 
