@@ -66,15 +66,17 @@ It is not meant for a public, multi-user site, or for sales and trading control.
   can join several sets (an expansion and its classic collection, say), and once created it is
   yours to edit: add a single card from any set, or take one out.
 - **Duplicates**: what is left over for trading, with total, allocated and free per card.
-- **Overview**: a showcase of your cards, ordered by the average LigaPokemon price stored for them
-  (and by rarity for cards with no price yet), each collection with its progress by region or by
+- **Overview**: a showcase of your cards, ordered by the price stored for them (the LigaPokemon
+  average, or the Cardmarket trend if you chose [that source](#optional-special-card-prices-from-cardmarket);
+  by rarity for cards with no price yet), each collection with its progress by region or by
   part of the set, the divisions closest to complete, and the breakdowns by expansion, rarity,
   language, condition and variant.
 - **Upgrade flagging**: when a copy better than the one in the slot comes in (rarity, language,
   variant), the system tells you. It never swaps on its own, and the decision is always yours.
 - **LigaPokemon prices**, optional: the offers for your empty slots, to build a buy list, and
   prices for the special cards you own, with their history over time. Read
-  [the section on it](#ligapokemon-prices) before turning it on.
+  [the section on it](#ligapokemon-prices) before turning it on. The special card prices can come
+  from [Cardmarket](#optional-special-card-prices-from-cardmarket) instead.
 - **Export**: inventory as CSV, a collection in LigaPokemon's import format, and a buy list ready to
   paste.
 
@@ -343,7 +345,9 @@ in two separate rounds. Both are optional and only run when you ask for them.
   screen plots the total over time. The total also rises when more cards enter the sum, so a rising
   line does not by itself mean the cards went up in value.
 
-Prices are in Brazilian reais, as the site shows them. Nothing is converted.
+Prices are in Brazilian reais, as the site shows them. Nothing is converted. (The optional
+[Cardmarket source](#optional-special-card-prices-from-cardmarket) for the special card prices is the
+one exception, and the screen says so.)
 
 ### The default pace obeys their robots.txt
 
@@ -387,6 +391,40 @@ interval is the decision and the risk of whoever configures it, and the concrete
 this project already took one from TCGdex, out of haste, before the limiter existed. The
 repository's default stays obeying the file, because shipping a tool that disobeys by default would
 hand whoever installs it a risk that person did not choose.
+
+### Optional: special card prices from Cardmarket
+
+If LigaPokemon is not an option for your install (on 2026-11-11 their firewall started refusing the
+collector while a browser on the same network got in, and this project does not work around a
+block), the prices of your special cards can come from [Cardmarket](https://www.cardmarket.com/)
+instead. No account and no key: TCGdex, the API the catalog comes from, includes Cardmarket's price
+in each card's data.
+
+```dotenv
+PRECO_FONTE=cardmarket
+```
+
+Then `docker compose up -d` to recreate the container. Without the variable, or with any other
+value, prices come from LigaPokemon exactly as before.
+
+What it measures, and what it does not:
+
+- **An international reference, not a Brazilian market price.** Each card's value is Cardmarket's
+  trend price (its average when there is no trend), in euros, converted to reais by the Central
+  Bank's PTAX: the closing selling rate of the most recent bulletin, fetched once per round. The
+  screen shows the euro value next to it, and the rate used with its date. If the rate cannot be
+  fetched, the round does not start.
+- **Compare it with LigaPokemon's lowest price, not its average.** In one install's comparison, the
+  converted trend landed close to the lowest Liga price and well below the Liga average, which
+  expensive listings pull up.
+- **Its own history.** The Cardmarket total has its own chart and its own list of past lookups. It
+  is never added to, or drawn in the same line as, the LigaPokemon numbers, and switching sources
+  does not erase the LigaPokemon prices or their history.
+- **One card at a time.** One request per card to TCGdex, in sequence, through the same polite
+  client as the catalog sync, and cards looked up in the last 24 hours are skipped. A round takes
+  minutes, not hours.
+- The overview orders your cards by the active source's price. The buy options for empty slots
+  still come from LigaPokemon only.
 
 ---
 

@@ -377,7 +377,10 @@ The source is **LigaPokemon**, read through the site's public search (`lib/liga/
 - **The screen reads a snapshot, never the site.** A live query during rendering turns into dozens
   of requests per page open.
 - **No currency conversion.** Do not convert an international price and do not expose it as if it
-  were a Brazilian market value.
+  were a Brazilian market value. There is **one** exception, and it does not touch the Liga: the
+  optional Cardmarket source of the special card prices, converted by the day's PTAX and labelled
+  as such (section "International price reference" below). The buy-options scan and everything
+  else from the Liga stay unconverted.
 - **`liga_edicao.set_id` is never filled by guesswork** — an edition linked to the wrong set points
   the price of one set at a card from another.
 - **The set's search term is the ENGLISH name**, taken from the `en` row for the same set and
@@ -437,6 +440,11 @@ specifics:
 - **Own tables, never `liga_varredura`.** `preco_carta_liga` (one row per `carta_id`, upserted) and
   `liga_rodada_preco` (the round). A scan round is tied to a collection (`colecao_id` NOT NULL);
   this one belongs to the inventory. Do not make that column nullable to share the code.
+- **Rounds and snapshots carry a `fonte`** (`liga` or `cardmarket`, enum `fonte_preco`, default
+  `liga`): `liga_rodada_preco` and `liga_snapshot_preco` serve both price sources, and every query
+  on them filters by source — one live round per source, one dead-round window per source, one
+  chart series per source. The `liga_` names are historical; renaming a table with real data in it
+  is not worth the risk.
 - **One lookup per physical card.** The pt and en rows of a `carta_id` are the same card; the
   English name is searched first, the other name only if it differs and the first found nothing.
 - **A row is never deleted, and a "not found" never overwrites a price already found** — the last
@@ -453,8 +461,10 @@ specifics:
   round ends, including an abort on a block, `liga_snapshot_preco` records the state of the whole
   price table (`fotografarPrecos`, pure, `lib/dominio/historico-precos.ts`). The chart on the screen
   plots it, and it must keep saying that the total also rises when cards enter the sum.
-- The overview's "gems" are ordered by the stored average price (cards with a price first), then
-  by the showcase rule. Prices are BRL as the site gives them; no conversion.
+- The overview's "gems" are ordered by the price stored in the **active** source (cards with a
+  price first), then by the showcase rule: the Liga's average price, or the Cardmarket trend when
+  `PRECO_FONTE=cardmarket`, never the two mixed. Liga prices are BRL as the site gives them; no
+  conversion.
 
 ### Export to LigaPokemon
 
@@ -473,6 +483,72 @@ Two things about the buy list format **have not been verified** against a real p
 declared uncertain in `exportacao-lista-compra.ts`: the leading zero (we send `003`, the way their
 search returns it) and the edition tiebreak (`(003/132)` does not say `MEG`). **Do not turn those
 uncertainties into statements** without a paste that answers them.
+
+---
+
+## International price reference — Cardmarket via TCGdex (`PRECO_FONTE=cardmarket`)
+
+On 2026-11-11 LigaPokemon started refusing the collector with a 403 from their Cloudflare firewall
+("Sorry, you have been blocked"), while a browser on the same network got in normally. **A block is
+not worked around**: no automated browser, no browser User-Agent, no session cookies, no changing
+IP. Instead, the special card prices (`/inventario/precos`) gained a second source, chosen per
+install: the **Cardmarket** price that TCGdex already returns in the `pricing` field of
+`GET /v2/<idioma>/cards/<id>` (the same API and the same client as the catalog), converted to BRL by
+the Central Bank's **PTAX**.
+
+What was measured on 2026-11-11, on a real install, and why it shaped the decisions below (no
+numbers or card names from it enter the repository — that would be collection data): the pt and en
+rows of the same card return the same Cardmarket product with the same values (the price belongs to
+the card, not to the language); the converted **trend** came close to the Liga's **lowest** price
+(in total, and card by card on the expensive ones) and well below the Liga's **average** price,
+which expensive listings pull up. TCGplayer was further off and is not used.
+
+1. **Source per install.** `PRECO_FONTE=cardmarket` turns the new source on; any other value, empty
+   or missing included, is `liga` — today's behaviour, with no visible change. Read at request time
+   (`lib/dominio/fonte-preco.ts`, like `lib/modulos.ts`), passed through `compose.yaml` with an
+   empty default, documented in `.env.example`.
+2. **The card's value is the Cardmarket trend × the euro PTAX**; without a trend, the average
+   (`avg`). The non-foil fields first, the `-holo` ones only when the trend and the average are
+   both missing (the row is then flagged `foil`). Zero, negative or non-finite counts as missing:
+   upstream writes `"trend-holo": 0` when it has no data. The screen shows the euro value and the
+   quote with its date too, and calls the trend comparable to the Liga's **lowest** price, not to
+   its average (`lib/dominio/preco-cardmarket.ts`).
+3. **Exchange rate:** the PTAX **closing** bulletin, **selling** rate, the most recent one available
+   (BCB's Olinda API, `lib/dominio/cotacao-ptax.ts`, `lib/cotacao/ptax.ts`). Fetched **once per
+   round, before the round is created**; unavailable means the round does not start (refusal
+   `cotacaoIndisponivel`, HTTP 503) — never a price stored unconverted or converted by a guessed
+   rate. The quote and its date are stored on every found price row.
+4. **The exception to "No currency conversion" is this source only.** Converted by the day's PTAX,
+   labelled with source, quote and date; never summed with, mixed into the same series as, or
+   compared with Liga values; never presented as a Brazilian market price. The Liga keeps its own
+   chart series: swapping one series for the other would draw a drop that never happened.
+5. **The Liga stays intact**, in code and in the database: its prices, history, rounds and snapshots
+   are never deleted or altered. With `cardmarket`, the prices screen and the overview gems use the
+   Cardmarket source only; with `liga`, everything is as before.
+6. **TCGdex client:** the catalog's own (`lib/sync/tcgdex.ts`) — the global limiter, the User-Agent,
+   a block aborts. The round asks for **one card at a time, sequentially, never in parallel**
+   (`lib/cardmarket/precos.ts`), languages in the order en, pt, jp, only those the card has in the
+   catalog. `ErroBloqueioUpstream` aborts the round (stored in `erro`, no retry); a 404 in one
+   language tries the next, a 404 in all of them is "not found"; any other error, after the
+   client's own retries, fails that card only and the round goes on. The per-request timeout
+   (`AbortSignal.timeout`) is passed only by this round, and a timeout is transient, never a block;
+   called without options, the client behaves exactly as the sync always had it.
+7. **The same guarantees as the Liga round:** nothing is ever deleted; a "not found" never
+   overwrites a price already found; history is append-only (`preco_carta_cardmarket_historico`,
+   "not found" included); a snapshot at the end of every round, aborted ones included (tagged
+   `fonte = 'cardmarket'`); 24-hour freshness — triggering again skips every card with a fresh
+   answer, found or not (there is no page cap here, so "not found" is an answer); one live round
+   per source; a dead round detected by heartbeat, with a window derived from one card's worst case
+   (`JANELA_SEM_BATIMENTO_CARDMARKET_SEGUNDOS`: languages × client attempts × (timeout + limiter
+   wait) + backoff, with the 1.5× margin). Moving the client's constants moves the window with them.
+
+The prices live in `preco_carta_cardmarket` (one row per `carta_id`, upserted, no FK — same reason
+as `preco_carta_liga`), holding the euro values, the BRL values, the quote and its date, the
+Cardmarket product id, the language of the row that answered and `foil`. In the aggregator
+(`comoPrecoDeCarta`) this source's "average" is the trend and its "minimum" is the Cardmarket `low`,
+so the snapshot's `soma_medios` is the sum of trends on a `cardmarket` snapshot. The GET of
+`/api/inventario/precos` answers with `fonte`, and the Cardmarket shape is the one the screen is
+written against: do not change one without the other.
 
 ---
 
