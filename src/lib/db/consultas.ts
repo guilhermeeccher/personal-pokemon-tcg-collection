@@ -2316,8 +2316,10 @@ export async function listarColecoesNaVitrine(db: Database): Promise<ColecaoNaVi
  * feita, a vitrine é a de antes.
  *
  * O preço é o da **fonte ativa** (`fonteDePreco`, lida a cada chamada): na
- * Liga, o médio, senão o mínimo (`precos-liga.ts`); no Cardmarket, a
- * tendência convertida, senão a média (`precos-cardmarket.ts`). Nunca as duas
+ * Liga, o médio, senão o mínimo (`precos-liga.ts`); no Cardmarket, o valor
+ * guardado na gravação — a tendência convertida, salvo a trava da média de 30
+ * dias, e a média quando não há tendência (`precos-cardmarket.ts`), o mesmo
+ * número que ordena a tela de preços. Nunca as duas
  * misturadas: um valor de cada fonte na mesma ordem compararia números de
  * natureza diferente.
  */

@@ -16,6 +16,13 @@
  * (`avg`). O TCGplayer, que a mesma ficha também traz, ficou mais longe na
  * medição e não entra.
  *
+ * Com uma trava: tendência acima de `LIMITE_TENDENCIA_SOBRE_MEDIA30` vezes a
+ * média de 30 dias da própria carta não é o valor dela — vale a média de 30
+ * dias (`escolherValorCardmarket`). O valor é escolhido aqui, uma vez, na
+ * gravação, e **guardado** na linha (`valor`, `valor_eur`, `criterio_valor`):
+ * a ordem da tela, o resumo, a foto do gráfico e as joias da Visão geral leem
+ * o valor guardado, e nenhum deles refaz a escolha por conta própria.
+ *
  * ## A exceção à regra "sem conversão de moeda"
  *
  * Esta é a única fonte do sistema que converte. O valor em euro é
@@ -35,6 +42,11 @@ export interface PrecoCardmarket {
   tendenciaEur: number | null;
   mediaEur: number | null;
   minimoEur: number | null;
+  /**
+   * Média dos últimos 30 dias (`avg30`, ou `avg30-holo` no conjunto foil): o
+   * freio da tendência fora da curva (`escolherValorCardmarket`).
+   */
+  media30Eur: number | null;
   /** Os valores vieram dos campos `-holo` (não havia os sem foil). */
   foil: boolean;
   /** `pricing.cardmarket.updated`: quando a TCGdex atualizou o preço. */
@@ -65,7 +77,9 @@ function precoUtil(v: unknown): number | null {
  * Usa os campos sem foil; só quando a tendência e a média sem foil faltam
  * as duas é que cai nos `-holo` (carta que só existe em foil) e marca
  * `foil`. Sem tendência e sem média no conjunto escolhido, devolve `null` —
- * o mínimo sozinho não basta para dizer quanto a carta vale.
+ * o mínimo sozinho não basta para dizer quanto a carta vale. A média de 30
+ * dias vem do mesmo conjunto (`avg30` ou `avg30-holo`): frear a tendência de
+ * uma versão com a média da outra seria comparar preços de cartas diferentes.
  *
  * Unidade diferente de euro também devolve `null`: a conversão é pela PTAX
  * do euro, e converter outra moeda com ela daria um número errado com cara
@@ -80,11 +94,13 @@ export function extrairPrecoCardmarket(pricing: unknown): PrecoCardmarket | null
   let tendencia = precoUtil(cm.trend);
   let media = precoUtil(cm.avg);
   let minimo = precoUtil(cm.low);
+  let media30 = precoUtil(cm.avg30);
   let foil = false;
   if (tendencia === null && media === null) {
     tendencia = precoUtil(cm["trend-holo"]);
     media = precoUtil(cm["avg-holo"]);
     minimo = precoUtil(cm["low-holo"]);
+    media30 = precoUtil(cm["avg30-holo"]);
     foil = true;
   }
   if (tendencia === null && media === null) return null;
@@ -100,6 +116,7 @@ export function extrairPrecoCardmarket(pricing: unknown): PrecoCardmarket | null
     tendenciaEur: tendencia,
     mediaEur: media,
     minimoEur: minimo,
+    media30Eur: media30,
     foil,
     atualizadoEm: atualizado !== null && Number.isFinite(atualizado.getTime()) ? atualizado : null,
   };
@@ -116,17 +133,117 @@ export function converterParaReais(eur: number | null, cotacao: number): number 
   return Math.round(eur * cotacao * 100) / 100;
 }
 
-/** O valor da carta nesta fonte: a tendência; sem ela, a média. */
-export function valorCardmarket(p: { tendencia: number | null; media: number | null }): number | null {
-  return p.tendencia ?? p.media;
+/**
+ * Acima de quantas vezes a média de 30 dias a tendência deixa de ser o valor
+ * da carta.
+ *
+ * O caso que criou a trava, da primeira rodada real (2026-11-11): uma carta
+ * barata veio com a tendência 10,6× a média da própria carta e, só por isso,
+ * subiu às primeiras posições das joias da Visão geral. Foi a única daquela
+ * rodada com tendência acima de 2× a média. Três vezes deixa folga para uma
+ * carta que valorizou de verdade no mês e pega o salto que só uma venda
+ * isolada explica.
+ *
+ * Errar para a média de 30 dias é o lado seguro: uma carta que disparou de
+ * fato aparece abaixo do que vale até a média alcançá-la, e a tela diz por
+ * quê; uma venda isolada levada a sério reordenaria as joias e inflaria o
+ * total do gráfico com um número que ninguém pagaria.
+ */
+export const LIMITE_TENDENCIA_SOBRE_MEDIA30 = 3;
+
+/** De onde saiu o valor da carta: a tendência, a média de 30 dias (a trava) ou a média. */
+export type CriterioValorCardmarket = "tendencia" | "media30" | "media";
+
+/** O valor da carta, em euro, e o critério que o escolheu. */
+export interface ValorCardmarket {
+  valorEur: number;
+  criterio: CriterioValorCardmarket;
+}
+
+/**
+ * Em centavos, a precisão que se guarda (`numeric(10,2)`). A comparação com
+ * o limite é feita assim, em inteiros: em ponto flutuante, `3 × 2,15` dá
+ * `6,449999…`, e uma tendência de exatamente 6,45 — 3× na conta de quem
+ * confere — cairia na trava por erro de arredondamento.
+ */
+const centavos = (v: number) => Math.round(v * 100);
+
+/**
+ * O valor da carta nesta fonte, escolhido uma vez e guardado na linha:
+ *
+ * - tendência presente, sem média de 30 dias ou até
+ *   `LIMITE_TENDENCIA_SOBRE_MEDIA30` × a média de 30 dias (inclusive) → a
+ *   tendência (`"tendencia"`);
+ * - tendência acima desse limite → a média de 30 dias (`"media30"`);
+ * - sem tendência, com média → a média (`"media"`);
+ * - sem tendência e sem média → `null`. A média de 30 dias sozinha não
+ *   entra: ela é o freio da tendência, não um substituto dela (e
+ *   `extrairPrecoCardmarket` já devolve `null` nesse caso).
+ *
+ * Valor que não é preço utilizável (zero, negativo, não finito) vale como
+ * ausente, pela mesma regra de `extrairPrecoCardmarket`: uma média de 30 dias
+ * zerada não pode virar "a carta vale nada".
+ */
+export function escolherValorCardmarket(p: {
+  tendenciaEur: number | null;
+  mediaEur: number | null;
+  media30Eur: number | null;
+}): ValorCardmarket | null {
+  const tendencia = precoUtil(p.tendenciaEur);
+  const media = precoUtil(p.mediaEur);
+  const media30 = precoUtil(p.media30Eur);
+  if (tendencia !== null) {
+    if (media30 !== null && centavos(tendencia) > LIMITE_TENDENCIA_SOBRE_MEDIA30 * centavos(media30)) {
+      return { valorEur: media30, criterio: "media30" };
+    }
+    return { valorEur: tendencia, criterio: "tendencia" };
+  }
+  if (media !== null) return { valorEur: media, criterio: "media" };
+  return null;
+}
+
+/** O que se grava de uma consulta, em reais, com o valor da carta já escolhido. */
+export interface PrecoCardmarketEmReais {
+  tendencia: number | null;
+  media: number | null;
+  minimo: number | null;
+  media30: number | null;
+  /** O valor da carta (`escolherValorCardmarket`), em euro e em reais. */
+  valorEur: number | null;
+  valor: number | null;
+  criterioValor: CriterioValorCardmarket | null;
+}
+
+/**
+ * Converte a consulta inteira pela cotação da rodada e escolhe o valor da
+ * carta. O valor em reais é a conversão do valor em euro, e não uma escolha
+ * refeita sobre os valores já convertidos: assim ele é sempre igual, centavo
+ * a centavo, à coluna de onde veio (`tendencia`, `media30` ou `media`).
+ * Consulta sem preço (`null`) devolve tudo nulo.
+ */
+export function converterPrecoCardmarket(
+  p: PrecoCardmarket | null,
+  cotacao: number,
+): PrecoCardmarketEmReais {
+  const escolha = p === null ? null : escolherValorCardmarket(p);
+  return {
+    tendencia: converterParaReais(p?.tendenciaEur ?? null, cotacao),
+    media: converterParaReais(p?.mediaEur ?? null, cotacao),
+    minimo: converterParaReais(p?.minimoEur ?? null, cotacao),
+    media30: converterParaReais(p?.media30Eur ?? null, cotacao),
+    valorEur: escolha?.valorEur ?? null,
+    valor: converterParaReais(escolha?.valorEur ?? null, cotacao),
+    criterioValor: escolha?.criterio ?? null,
+  };
 }
 
 /** Uma linha de `preco_carta_cardmarket` já em reais, no que o agregador precisa. */
 export interface LinhaPrecoCardmarket {
   encontrada: boolean;
   minimo: number | null;
-  tendencia: number | null;
   media: number | null;
+  /** O valor guardado da carta (coluna `valor`), em reais. */
+  valor: number | null;
 }
 
 /**
@@ -135,16 +252,19 @@ export interface LinhaPrecoCardmarket {
  * de duplicar a soma e a ordem.
  *
  * **Atenção aos nomes:** nesta fonte, o "médio" do agregador
- * (`precoMedio`, que é o que soma, ordena e vira `somaMedios` na foto) é a
- * **tendência** — senão a média —, e o "mínimo" (`preco`, que vira
- * `somaMinimos`) é o `low` do Cardmarket. O nome das colunas da foto ficou
- * da Liga; o significado, numa foto de fonte `cardmarket`, é este.
+ * (`precoMedio`, que é o que soma, ordena e vira `somaMedios` na foto) é o
+ * **valor guardado** da carta — a tendência, salvo a trava da média de 30
+ * dias ou a falta de tendência (`escolherValorCardmarket`) —, e o "mínimo"
+ * (`preco`, que vira `somaMinimos`) é o `low` do Cardmarket. O nome das
+ * colunas da foto ficou da Liga; o significado, numa foto de fonte
+ * `cardmarket`, é este. O valor chega pronto, lido da coluna `valor`:
+ * escolhê-lo de novo aqui deixaria a foto e a tela discordarem.
  */
 export function comoPrecoDeCarta(linha: LinhaPrecoCardmarket): PrecoDeCarta {
   return {
     encontrada: linha.encontrada,
     preco: linha.minimo,
-    precoMedio: valorCardmarket(linha),
+    precoMedio: linha.valor,
     precoMaximo: linha.media,
   };
 }

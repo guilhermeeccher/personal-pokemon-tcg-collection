@@ -4,10 +4,13 @@ import { fotografarPrecos } from "./historico-precos";
 import {
   comoPrecoDeCarta,
   converterParaReais,
+  converterPrecoCardmarket,
   cotacaoMaisRecente,
+  escolherValorCardmarket,
   extrairPrecoCardmarket,
   idiomasDeConsulta,
-  valorCardmarket,
+  LIMITE_TENDENCIA_SOBRE_MEDIA30,
+  type PrecoCardmarket,
 } from "./preco-cardmarket";
 import { compararPorValorDesc, resumirPrecos } from "./precos-cartas-especiais";
 
@@ -17,7 +20,7 @@ function pricing(cardmarket: Record<string, unknown> | null) {
 }
 
 describe("extrairPrecoCardmarket", () => {
-  it("lê tendência, média e mínimo sem foil, com produto e data", () => {
+  it("lê tendência, média, mínimo e média de 30 dias sem foil, com produto e data", () => {
     const r = extrairPrecoCardmarket(
       pricing({
         updated: "2026-01-02T03:04:05.000Z",
@@ -26,9 +29,11 @@ describe("extrairPrecoCardmarket", () => {
         trend: 2.5,
         avg: 3,
         low: 1.2,
+        avg30: 2.8,
         "trend-holo": 9,
         "avg-holo": 9,
         "low-holo": 9,
+        "avg30-holo": 9,
       }),
     );
     expect(r).toEqual({
@@ -36,16 +41,27 @@ describe("extrairPrecoCardmarket", () => {
       tendenciaEur: 2.5,
       mediaEur: 3,
       minimoEur: 1.2,
+      media30Eur: 2.8,
       foil: false,
       atualizadoEm: new Date("2026-01-02T03:04:05.000Z"),
     });
   });
 
-  it("sem tendência e sem média normais, usa os campos -holo e marca foil", () => {
+  it("sem tendência e sem média normais, usa os campos -holo (com avg30-holo) e marca foil", () => {
     const r = extrairPrecoCardmarket(
-      pricing({ trend: 0, low: 0.5, "trend-holo": 4, "avg-holo": 5, "low-holo": 3 }),
+      pricing({ trend: 0, low: 0.5, avg30: 8, "trend-holo": 4, "avg-holo": 5, "low-holo": 3, "avg30-holo": 4.5 }),
     );
-    expect(r).toMatchObject({ tendenciaEur: 4, mediaEur: 5, minimoEur: 3, foil: true });
+    expect(r).toMatchObject({ tendenciaEur: 4, mediaEur: 5, minimoEur: 3, media30Eur: 4.5, foil: true });
+  });
+
+  it("a média de 30 dias vem só do conjunto escolhido, e ausente vale null", () => {
+    // Conjunto sem foil escolhido: o avg30-holo não freia a tendência normal.
+    expect(extrairPrecoCardmarket(pricing({ trend: 2, "avg30-holo": 1 }))?.media30Eur).toBeNull();
+    // Conjunto foil escolhido: o avg30 normal não freia a tendência foil.
+    expect(extrairPrecoCardmarket(pricing({ avg30: 1, "trend-holo": 2 }))?.media30Eur).toBeNull();
+    for (const ruim of [0, -1, Number.NaN, Number.POSITIVE_INFINITY, null, "3"]) {
+      expect(extrairPrecoCardmarket(pricing({ trend: 2, avg30: ruim }))?.media30Eur).toBeNull();
+    }
   });
 
   it("uma só (tendência ou média) basta para ficar nos campos normais", () => {
@@ -112,35 +128,157 @@ describe("converterParaReais", () => {
   });
 });
 
-describe("valorCardmarket e comoPrecoDeCarta", () => {
-  it("o valor é a tendência; sem ela, a média", () => {
-    expect(valorCardmarket({ tendencia: 10, media: 20 })).toBe(10);
-    expect(valorCardmarket({ tendencia: null, media: 20 })).toBe(20);
-    expect(valorCardmarket({ tendencia: null, media: null })).toBeNull();
+describe("escolherValorCardmarket", () => {
+  it("o limite é 3× a média de 30 dias", () => {
+    expect(LIMITE_TENDENCIA_SOBRE_MEDIA30).toBe(3);
   });
 
-  it("no agregador, o médio é a tendência e o mínimo é o low", () => {
-    expect(comoPrecoDeCarta({ encontrada: true, minimo: 5, tendencia: 10, media: 20 })).toEqual({
+  it("tendência dentro do limite é o valor", () => {
+    expect(escolherValorCardmarket({ tendenciaEur: 5, mediaEur: 4, media30Eur: 4.5 })).toEqual({
+      valorEur: 5,
+      criterio: "tendencia",
+    });
+  });
+
+  it("sem média de 30 dias, a tendência vale como está, por maior que seja", () => {
+    expect(escolherValorCardmarket({ tendenciaEur: 500, mediaEur: 1, media30Eur: null })).toEqual({
+      valorEur: 500,
+      criterio: "tendencia",
+    });
+  });
+
+  it("tendência acima de 3× a média de 30 dias: vale a média de 30 dias", () => {
+    expect(escolherValorCardmarket({ tendenciaEur: 31, mediaEur: 2, media30Eur: 3 })).toEqual({
+      valorEur: 3,
+      criterio: "media30",
+    });
+    // Um centavo acima da fronteira já trava.
+    expect(escolherValorCardmarket({ tendenciaEur: 9.01, mediaEur: 2, media30Eur: 3 })).toEqual({
+      valorEur: 3,
+      criterio: "media30",
+    });
+  });
+
+  it("exatamente 3× fica na tendência, também onde o ponto flutuante erraria", () => {
+    expect(escolherValorCardmarket({ tendenciaEur: 9, mediaEur: 2, media30Eur: 3 })).toEqual({
+      valorEur: 9,
+      criterio: "tendencia",
+    });
+    // 3 × 2,15 dá 6,449999… em ponto flutuante: a conta é em centavos.
+    expect(escolherValorCardmarket({ tendenciaEur: 6.45, mediaEur: null, media30Eur: 2.15 })).toEqual({
+      valorEur: 6.45,
+      criterio: "tendencia",
+    });
+    expect(escolherValorCardmarket({ tendenciaEur: 3.3, mediaEur: null, media30Eur: 1.1 })?.criterio).toBe(
+      "tendencia",
+    );
+  });
+
+  it("sem tendência, com média: a média (a média de 30 dias não entra)", () => {
+    expect(escolherValorCardmarket({ tendenciaEur: null, mediaEur: 2, media30Eur: 50 })).toEqual({
+      valorEur: 2,
+      criterio: "media",
+    });
+  });
+
+  it("sem tendência e sem média, null — a média de 30 dias sozinha não basta", () => {
+    expect(escolherValorCardmarket({ tendenciaEur: null, mediaEur: null, media30Eur: 4 })).toBeNull();
+    expect(escolherValorCardmarket({ tendenciaEur: null, mediaEur: null, media30Eur: null })).toBeNull();
+  });
+
+  it("zero, negativo e não finito valem como ausentes", () => {
+    expect(escolherValorCardmarket({ tendenciaEur: 5, mediaEur: null, media30Eur: 0 })).toEqual({
+      valorEur: 5,
+      criterio: "tendencia",
+    });
+    expect(escolherValorCardmarket({ tendenciaEur: 0, mediaEur: 2, media30Eur: null })).toEqual({
+      valorEur: 2,
+      criterio: "media",
+    });
+    expect(
+      escolherValorCardmarket({ tendenciaEur: Number.NaN, mediaEur: -1, media30Eur: Number.POSITIVE_INFINITY }),
+    ).toBeNull();
+  });
+
+  it("a carta foil passa pela mesma trava, com a média de 30 dias da versão foil", () => {
+    const foil = extrairPrecoCardmarket(
+      pricing({ avg30: 100, "trend-holo": 40, "avg-holo": 4, "avg30-holo": 6 }),
+    );
+    expect(foil?.foil).toBe(true);
+    expect(escolherValorCardmarket(foil!)).toEqual({ valorEur: 6, criterio: "media30" });
+    const foilNoLimite = extrairPrecoCardmarket(pricing({ "trend-holo": 18, "avg30-holo": 6 }));
+    expect(escolherValorCardmarket(foilNoLimite!)).toEqual({ valorEur: 18, criterio: "tendencia" });
+  });
+});
+
+describe("converterPrecoCardmarket", () => {
+  const base: PrecoCardmarket = {
+    idProduto: 1,
+    tendenciaEur: 40,
+    mediaEur: 4,
+    minimoEur: 1,
+    media30Eur: 7,
+    foil: false,
+    atualizadoEm: null,
+  };
+
+  it("converte tudo pela cotação e guarda o valor escolhido em euro e em reais", () => {
+    expect(converterPrecoCardmarket(base, 6)).toEqual({
+      tendencia: 240,
+      media: 24,
+      minimo: 6,
+      media30: 42,
+      valorEur: 7,
+      valor: 42,
+      criterioValor: "media30",
+    });
+  });
+
+  it("o valor em reais é sempre igual à coluna de onde veio, centavo a centavo", () => {
+    const r = converterPrecoCardmarket({ ...base, tendenciaEur: 2.37, media30Eur: 2 }, 6.1706);
+    expect(r.criterioValor).toBe("tendencia");
+    expect(r.valor).toBe(r.tendencia);
+    const m = converterPrecoCardmarket({ ...base, tendenciaEur: null, mediaEur: 3.33 }, 6.1706);
+    expect(m.criterioValor).toBe("media");
+    expect(m.valor).toBe(m.media);
+  });
+
+  it("consulta sem preço guarda tudo nulo", () => {
+    expect(converterPrecoCardmarket(null, 6)).toEqual({
+      tendencia: null,
+      media: null,
+      minimo: null,
+      media30: null,
+      valorEur: null,
+      valor: null,
+      criterioValor: null,
+    });
+  });
+});
+
+describe("comoPrecoDeCarta", () => {
+  it("no agregador, o médio é o valor guardado e o mínimo é o low", () => {
+    expect(comoPrecoDeCarta({ encontrada: true, minimo: 5, media: 20, valor: 10 })).toEqual({
       encontrada: true,
       preco: 5,
       precoMedio: 10,
       precoMaximo: 20,
     });
-    expect(comoPrecoDeCarta({ encontrada: true, minimo: null, tendencia: null, media: 20 })).toMatchObject({
-      precoMedio: 20,
-    });
   });
 
-  it("o resumo e a foto somam as tendências; a ordem segue o mesmo valor", () => {
+  it("o resumo, a foto e a ordem usam o valor guardado, não a tendência", () => {
+    // A segunda linha travou na média de 30 dias: a tendência dela (que nem
+    // chega aqui) era maior, mas o que soma e ordena é o valor guardado.
     const linhas = [
-      { encontrada: true, minimo: 5, tendencia: 10, media: 20 },
-      { encontrada: true, minimo: 1, tendencia: null, media: 3 },
-      { encontrada: false, minimo: null, tendencia: null, media: null },
+      { encontrada: true, minimo: 5, media: 20, valor: 10 },
+      { encontrada: true, minimo: 1, media: 3, valor: 4 },
+      { encontrada: true, minimo: 2, media: 12, valor: 12 },
+      { encontrada: false, minimo: null, media: null, valor: null },
     ];
     const precos = linhas.map(comoPrecoDeCarta);
-    expect(resumirPrecos(precos)).toEqual({ cartasComPreco: 2, naoEncontradas: 1, somaMedios: 13 });
-    expect(fotografarPrecos(precos)).toMatchObject({ somaMedios: 13, cartasComPreco: 2, somaMinimos: 6 });
-    expect([...precos].sort(compararPorValorDesc).map((p) => p.precoMedio)).toEqual([10, 3, null]);
+    expect(resumirPrecos(precos)).toEqual({ cartasComPreco: 3, naoEncontradas: 1, somaMedios: 26 });
+    expect(fotografarPrecos(precos)).toMatchObject({ somaMedios: 26, cartasComPreco: 3, somaMinimos: 8 });
+    expect([...precos].sort(compararPorValorDesc).map((p) => p.precoMedio)).toEqual([12, 10, 4, null]);
   });
 });
 

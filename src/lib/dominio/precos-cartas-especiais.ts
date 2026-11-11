@@ -223,7 +223,8 @@ export interface PrecoDeCarta {
 
 /**
  * O valor que ordena e soma: o preço médio; sem ele, o menor. Na fonte
- * Cardmarket o "médio" que chega aqui é a tendência (`comoPrecoDeCarta`).
+ * Cardmarket o "médio" que chega aqui é o valor guardado da carta — a
+ * tendência, salvo a trava da média de 30 dias (`comoPrecoDeCarta`).
  */
 export function valorDaCarta(p: Pick<PrecoDeCarta, "preco" | "precoMedio">): number | null {
   return p.precoMedio ?? p.preco;
@@ -247,7 +248,7 @@ export interface ResumoDePrecos {
   naoEncontradas: number;
   /**
    * Soma dos preços médios (ou mínimos, sem média) das cartas com preço — na
-   * fonte Cardmarket, das tendências (`comoPrecoDeCarta`).
+   * fonte Cardmarket, dos valores guardados (`comoPrecoDeCarta`).
    */
   somaMedios: number;
 }

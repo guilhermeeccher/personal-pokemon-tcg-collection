@@ -24,6 +24,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import type { RegraTrofeuHome } from "../dominio/dex-trofeus";
+import type { CriterioValorCardmarket } from "../dominio/preco-cardmarket";
 
 // --- Enums ---------------------------------------------------------------
 
@@ -658,6 +659,13 @@ export const ligaSnapshotPreco = pgTable("liga_snapshot_preco", {
  * da PTAX que converteu: a conversão é a exceção à regra "sem conversão de
  * moeda" (AGENTS.md), e a tela tem de poder dizer de onde veio o número.
  * Em linha não encontrada, preço e cotação ficam nulos.
+ *
+ * O **valor da carta** (`valor`, `valor_eur`, `criterio_valor`) é escolhido
+ * na gravação (`escolherValorCardmarket`: a tendência, salvo a trava da média
+ * de 30 dias) e guardado aqui: é a única fonte da ordem da tela, do resumo, da
+ * foto do gráfico e das joias. As linhas de antes da migração `0032` não têm
+ * média de 30 dias; o backfill copiou para o valor a regra de então
+ * (tendência, senão média), e a trava vale a partir da consulta seguinte.
  */
 export const precoCartaCardmarket = pgTable("preco_carta_cardmarket", {
   cartaId: text("carta_id").primaryKey(),
@@ -677,6 +685,13 @@ export const precoCartaCardmarket = pgTable("preco_carta_cardmarket", {
   tendencia: numeric("tendencia", { precision: 10, scale: 2 }),
   media: numeric("media", { precision: 10, scale: 2 }),
   minimo: numeric("minimo", { precision: 10, scale: 2 }),
+  /** Média dos últimos 30 dias (`avg30`, ou `avg30-holo` na linha foil): o freio da tendência. */
+  media30Eur: numeric("media30_eur", { precision: 10, scale: 2 }),
+  media30: numeric("media30", { precision: 10, scale: 2 }),
+  /** O valor da carta, em euro e em BRL, e de qual coluna ele veio. */
+  valorEur: numeric("valor_eur", { precision: 10, scale: 2 }),
+  valor: numeric("valor", { precision: 10, scale: 2 }),
+  criterioValor: text("criterio_valor").$type<CriterioValorCardmarket>(),
   /** `pricing.cardmarket.updated`: quando a TCGdex atualizou o preço. */
   atualizadoUpstream: timestamp("atualizado_upstream", { withTimezone: true }),
   encontrada: boolean("encontrada").notNull(),
@@ -704,6 +719,11 @@ export const precoCartaCardmarketHistorico = pgTable(
     tendencia: numeric("tendencia", { precision: 10, scale: 2 }),
     media: numeric("media", { precision: 10, scale: 2 }),
     minimo: numeric("minimo", { precision: 10, scale: 2 }),
+    media30Eur: numeric("media30_eur", { precision: 10, scale: 2 }),
+    media30: numeric("media30", { precision: 10, scale: 2 }),
+    valorEur: numeric("valor_eur", { precision: 10, scale: 2 }),
+    valor: numeric("valor", { precision: 10, scale: 2 }),
+    criterioValor: text("criterio_valor").$type<CriterioValorCardmarket>(),
     encontrada: boolean("encontrada").notNull(),
     consultadoEm: timestamp("consultado_em", { withTimezone: true }).notNull().defaultNow(),
   },

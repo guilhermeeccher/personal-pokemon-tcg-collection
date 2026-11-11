@@ -159,22 +159,23 @@ export async function gravarPrecoDeCarta(
 /** A tabela de preços inteira de uma fonte, no formato do agregador. */
 async function precosParaFoto(db: Database, fonte: FontePreco): Promise<PrecoDeCarta[]> {
   if (fonte === "cardmarket") {
-    // `comoPrecoDeCarta`: nesta fonte, o "médio" que a foto soma é a
-    // tendência (senão a média), e o "mínimo" é o `low` do Cardmarket.
+    // `comoPrecoDeCarta`: nesta fonte, o "médio" que a foto soma é o valor
+    // guardado da carta (a tendência, salvo a trava da média de 30 dias), e
+    // o "mínimo" é o `low` do Cardmarket.
     const linhas = await db
       .select({
         encontrada: precoCartaCardmarket.encontrada,
         minimo: precoCartaCardmarket.minimo,
-        tendencia: precoCartaCardmarket.tendencia,
         media: precoCartaCardmarket.media,
+        valor: precoCartaCardmarket.valor,
       })
       .from(precoCartaCardmarket);
     return linhas.map((l) =>
       comoPrecoDeCarta({
         encontrada: l.encontrada,
         minimo: numero(l.minimo),
-        tendencia: numero(l.tendencia),
         media: numero(l.media),
+        valor: numero(l.valor),
       }),
     );
   }
@@ -224,9 +225,9 @@ export async function registrarFotoDaRodada(
  * nova. A de rodada interrompida fica de fora (`fotoEntraNoGrafico`).
  *
  * Só as fotos da fonte pedida: cada fonte tem a sua série. A Liga soma o
- * preço médio dela, o Cardmarket soma a tendência convertida — números de
- * natureza diferente, e emendar uma série na outra desenharia uma queda (ou
- * uma alta) que não aconteceu.
+ * preço médio dela, o Cardmarket soma o valor guardado (a tendência
+ * convertida, salvo a trava) — números de natureza diferente, e emendar uma
+ * série na outra desenharia uma queda (ou uma alta) que não aconteceu.
  */
 export async function listarSerieDePrecos(
   db: Database,

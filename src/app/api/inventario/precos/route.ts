@@ -35,11 +35,7 @@ import {
   separarPorFrescor,
   VALIDADE_CONSULTA_HORAS,
 } from "@/lib/dominio/frescor-consulta";
-import {
-  comoPrecoDeCarta,
-  cotacaoMaisRecente,
-  valorCardmarket,
-} from "@/lib/dominio/preco-cardmarket";
+import { comoPrecoDeCarta, cotacaoMaisRecente } from "@/lib/dominio/preco-cardmarket";
 import {
   compararPorValorDesc,
   resumirPrecos,
@@ -354,8 +350,10 @@ async function lerCardmarket(req: Request) {
     listarRodadasDePreco(db, "cardmarket"),
   ]);
 
-  // O valor que ordena é o da fonte: a tendência, senão a média.
-  const valor = (p: (typeof precos)[number]) => ({ preco: null, precoMedio: valorCardmarket(p) });
+  // O valor que ordena é o guardado na gravação (`valor`: a tendência, salvo
+  // a trava da média de 30 dias) — o mesmo que o resumo, a foto e as joias
+  // usam. Escolhê-lo de novo aqui deixaria a ordem e a soma discordarem.
+  const valor = (p: (typeof precos)[number]) => ({ preco: null, precoMedio: p.valor });
   const itens = [...precos]
     .sort(
       (a, b) =>
@@ -374,6 +372,10 @@ async function lerCardmarket(req: Request) {
       tendencia: p.tendencia,
       media: p.media,
       tendenciaEur: p.tendenciaEur,
+      valor: p.valor,
+      valorEur: p.valorEur,
+      criterioValor: p.criterioValor,
+      media30Eur: p.media30Eur,
       foil: p.foil,
       cotacao: p.cotacao,
       cotacaoData: p.cotacaoData,
@@ -429,7 +431,7 @@ async function lerCardmarket(req: Request) {
     cartasEspeciais: selecionadas.length,
     ultimaAtualizacao: ultimaAtualizacao?.toISOString() ?? null,
     varredura,
-    // `comoPrecoDeCarta`: a soma do resumo é a das tendências.
+    // `comoPrecoDeCarta`: a soma do resumo é a dos valores guardados.
     resumo: resumirPrecos(precos.map(comoPrecoDeCarta)),
     serie,
     rodadas: rodadas.map((r) => ({

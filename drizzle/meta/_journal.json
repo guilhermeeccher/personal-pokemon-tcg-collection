@@ -225,6 +225,13 @@
       "when": 1794416654120,
       "tag": "0031_precos_cardmarket",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794419987758,
+      "tag": "0032_precos_cardmarket_valor",
+      "breakpoints": true
     }
   ]
 }

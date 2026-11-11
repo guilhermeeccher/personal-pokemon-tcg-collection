@@ -6,7 +6,8 @@
  * Cada fonte tem a sua série; as duas nunca se misturam.
  *
  * Regra do valor de uma carta = a da tela (`valorDaCarta`): o preço médio e,
- * sem ele, o mínimo — na fonte Cardmarket, a tendência e, sem ela, a média.
+ * sem ele, o mínimo — na fonte Cardmarket, o valor guardado da carta (a
+ * tendência, salvo a trava da média de 30 dias; sem tendência, a média).
  * Carta não achada, ou sem nenhum preço, não entra.
  *
  * Atenção ao ler a série: o total também sobe quando **entram cartas** na
