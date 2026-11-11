@@ -16,19 +16,29 @@ import type { Idioma } from "@/lib/dominio/enums";
 import { converterParaReais, type PrecoCardmarket } from "@/lib/dominio/preco-cardmarket";
 
 /**
- * Quando cada carta foi consultada desde `desde` — para o pulo por frescor.
- * Encontrada ou não, tanto faz: aqui não há teto de páginas, e "a TCGdex não
- * traz preço do Cardmarket para esta carta" é resposta (ao contrário da
- * Liga, em que "não achei" só vale para o teto com que se buscou).
+ * Quando cada carta foi consultada pela última vez desde `desde` — para o
+ * pulo por frescor. Encontrada ou não, tanto faz: aqui não há teto de
+ * páginas, e "a TCGdex não traz preço do Cardmarket para esta carta" é
+ * resposta (ao contrário da Liga, em que "não achei" só vale para o teto com
+ * que se buscou).
+ *
+ * **Lê o histórico, não `preco_carta_cardmarket`.** Uma consulta que não
+ * achou preço preserva a linha de um preço achado antes, inclusive o
+ * `consultado_em` dela (`gravarPrecoCardmarket`); lido dali, o frescor seria
+ * o do preço antigo, e a carta seria perguntada de novo a cada rodada. O
+ * histórico guarda toda consulta, e a última é a resposta mais recente. O
+ * índice `(carta_id, consultado_em)` serve esta leitura.
  */
 export async function consultasCardmarketDesde(
   db: Database,
   desde: Date,
 ): Promise<Map<string, Date>> {
+  const ultima = sql<Date>`max(${precoCartaCardmarketHistorico.consultadoEm})`;
   const linhas = await db
-    .select({ cartaId: precoCartaCardmarket.cartaId, consultadoEm: precoCartaCardmarket.consultadoEm })
-    .from(precoCartaCardmarket)
-    .where(gte(precoCartaCardmarket.consultadoEm, desde));
+    .select({ cartaId: precoCartaCardmarketHistorico.cartaId, consultadoEm: ultima })
+    .from(precoCartaCardmarketHistorico)
+    .where(gte(precoCartaCardmarketHistorico.consultadoEm, desde))
+    .groupBy(precoCartaCardmarketHistorico.cartaId);
   return new Map(linhas.map((l) => [l.cartaId, new Date(l.consultadoEm)]));
 }
 
