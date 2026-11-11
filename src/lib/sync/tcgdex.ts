@@ -18,6 +18,11 @@
  *   2. User-Agent identificando quem somos — cliente anônimo em volume é o
  *      perfil que firewall bloqueia primeiro.
  *   3. Bloqueio aborta o sync na hora, em vez de virar retry.
+ *
+ * A rodada de preços da fonte Cardmarket (`lib/cardmarket/precos.ts`) usa
+ * este mesmo cliente, de propósito: o mesmo limitador, o mesmo User-Agent e
+ * o mesmo bloqueio que aborta. Ela pede uma carta por vez, nunca em
+ * paralelo, e é a única que passa `OpcoesRequisicao`.
  */
 
 import {
@@ -31,14 +36,15 @@ import { criarLimitador } from "./limitador";
 export type Idioma = "pt" | "en" | "jp";
 
 const BASE_URL = "https://api.tcgdex.net/v2";
-const TENTATIVAS = 3;
-const BACKOFF_MS = 300;
+/** Tentativas por requisição, e o backoff linear entre elas (300 ms, 600 ms). */
+export const TENTATIVAS = 3;
+export const BACKOFF_MS = 300;
 
 /**
  * Teto de requisições por segundo. Padrão conservador: o limite real deles é
  * desconhecido e o custo de errar para cima já foi pago uma vez.
  */
-const TAXA_POR_SEGUNDO = Number(process.env.SYNC_REQ_POR_SEGUNDO) || 6;
+export const TAXA_POR_SEGUNDO = Number(process.env.SYNC_REQ_POR_SEGUNDO) || 6;
 
 const USER_AGENT =
   process.env.SYNC_USER_AGENT ??
@@ -95,6 +101,29 @@ export interface CardDetalhado {
   illustrator?: string;
   dexId?: number[];
   variants?: VariantesCarta;
+  /**
+   * Preços de mercado que a TCGdex anexa à ficha (`cardmarket` em euro,
+   * `tcgplayer` em dólar). Conferido ao vivo em 2026-11-11. O sync não lê
+   * este campo; quem lê é a rodada de preços da fonte Cardmarket, e o formato
+   * é validado lá (`extrairPrecoCardmarket`), por isso `unknown` aqui.
+   */
+  pricing?: unknown;
+}
+
+/**
+ * Opções de uma requisição. Só a rodada de preços do Cardmarket as passa
+ * (`lib/cardmarket/precos.ts`); o sync chama sem nenhuma e segue exatamente
+ * como sempre foi — sem teto de tempo e sem contador.
+ */
+export interface OpcoesRequisicao {
+  /**
+   * Teto de cada tentativa, em ms (`AbortSignal.timeout`). Estourar conta
+   * como transitório — repete com backoff, como um 5xx —, nunca como
+   * bloqueio (`classificarErro`).
+   */
+  timeoutMs?: number;
+  /** Chamado a cada requisição que sai, repetições incluídas. */
+  aoRequisitar?: () => void;
 }
 
 /** Erro de item que o sync pode pular sem abortar (404 e afins). */
@@ -104,14 +133,20 @@ function esperar(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-async function buscarJson<T>(url: string): Promise<T> {
+async function buscarJson<T>(url: string, opcoes: OpcoesRequisicao = {}): Promise<T> {
   let ultimoErro: unknown;
   for (let tentativa = 1; tentativa <= TENTATIVAS; tentativa++) {
     await limitador.aguardarVez();
+    opcoes.aoRequisitar?.();
 
     let resposta: Response;
     try {
-      resposta = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+      resposta = await fetch(url, {
+        headers: { "User-Agent": USER_AGENT },
+        // Um sinal novo por tentativa: o teto vale para cada uma, não para a
+        // soma delas. Sem `timeoutMs`, a chamada é a mesma de sempre.
+        ...(opcoes.timeoutMs === undefined ? {} : { signal: AbortSignal.timeout(opcoes.timeoutMs) }),
+      });
     } catch (err) {
       // Falha de socket. Bloqueio aborta o sync inteiro na hora; oscilação
       // vale uma nova tentativa.
@@ -174,8 +209,10 @@ export function obterSet(idioma: Idioma, setId: string): Promise<SetDetalhado> {
 export function obterCarta(
   idioma: Idioma,
   cardId: string,
+  opcoes?: OpcoesRequisicao,
 ): Promise<CardDetalhado> {
   return buscarJson<CardDetalhado>(
     `${BASE_URL}/${codigoIdiomaUpstream(idioma)}/cards/${cardId}`,
+    opcoes,
   );
 }
