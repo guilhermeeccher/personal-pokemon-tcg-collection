@@ -600,6 +600,19 @@ stores, in a **normal** and a **shiny** track. It is optional and off by default
   card set grid: every Pokémon becomes one record, born in that game and still in it. One refusal
   refuses the whole batch, and nothing is written. The add screen always offers HOME after the
   owned games (`jogoId: "home"`): every slot, each Pokémon born in HOME and kept there.
+- **"New registration" sends straight to HOME** (`/dex/novo-cadastro`; the old `/dex/cadastrar`
+  stays): the user picks, on the box grid, slots not in HOME yet, then the game they leave from.
+  `POST /api/dex/registros/enviar` (`{ jogoOrigem, itens: [{ formaId, shiny }], confirmarSemVolta? }`,
+  `lib/dominio/dex-envio-home.ts`) ends every item in HOME, "to put away". **The game left from is
+  not the historical origin**: a record already in that game is moved, oldest first, keeping its
+  origin, date and notes; without one, a record is created with origin = that game. Leaving from
+  HOME always creates. One item per slot and track; the slot must not be in HOME in that track, and
+  a shiny item needs a form released as shiny. The game left from is HOME or an owned, active game;
+  a form HOME does not accept from it is refused; a `so_envio` game answers 409
+  `dexConfirmarSemVolta`, once per batch, never confirmed automatically. One transaction, serialized
+  by its own `pg_advisory_xact_lock`, so two tabs never move the same record or fill a slot twice.
+  This transfer rule lives in that route's planner, **not in `validarNovoRegistro`**: non-transfer is
+  per game left from, and putting it there would block corrections of existing records.
 - **One row per Pokémon in the database, grouped only on screen.** The inventory groups records that
   are identical except for the id (`agruparInventario`); its actions move or delete **one** Pokémon of
   the group, and a correction applies to the whole group. Do not add a quantity column to
