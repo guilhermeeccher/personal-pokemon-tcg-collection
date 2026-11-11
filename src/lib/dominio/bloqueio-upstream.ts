@@ -57,11 +57,25 @@ export function classificarStatus(status: number): ClasseErroUpstream {
  * Classifica um erro capturado de `fetch`. O código do socket vem em
  * `err.cause.code` no undici (runtime do Node 22), por isso a busca
  * desce um nível.
+ *
+ * O `TimeoutError` do `AbortSignal.timeout` (o teto por requisição da rodada
+ * de preços do Cardmarket) é transitório por nome, antes de olhar código:
+ * quem cortou a conexão foi o nosso relógio, não o firewall deles, e
+ * repetir com backoff é o certo.
  */
 export function classificarErro(err: unknown): ClasseErroUpstream {
+  if (ehTimeoutNosso(err)) return "transitorio";
   const codigo = extrairCodigo(err);
   if (codigo && CODIGOS_BLOQUEIO.has(codigo)) return "bloqueio";
   return "transitorio";
+}
+
+function ehTimeoutNosso(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    (err as { name?: unknown }).name === "TimeoutError"
+  );
 }
 
 function extrairCodigo(err: unknown): string | null {

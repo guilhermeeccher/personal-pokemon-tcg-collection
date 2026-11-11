@@ -50,6 +50,12 @@ describe("classificarErro", () => {
     expect(classificarErro(new Error("qualquer coisa"))).toBe("transitorio");
     expect(classificarErro(null)).toBe("transitorio");
   });
+
+  it("o estouro do AbortSignal.timeout é transitório, nunca bloqueio", () => {
+    expect(classificarErro(new DOMException("tempo esgotado", "TimeoutError"))).toBe("transitorio");
+    // Mesmo que algo aninhe um código de socket nele, quem cortou foi o nosso relógio.
+    expect(classificarErro({ name: "TimeoutError", cause: { code: "ECONNRESET" } })).toBe("transitorio");
+  });
 });
 
 describe("ErroBloqueioUpstream", () => {

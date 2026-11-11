@@ -1,11 +1,15 @@
 /**
- * Preço das cartas especiais — quais cartas entram na consulta à LigaPokemon,
- * como a linha certa é reconhecida e como o resultado se ordena. Módulo puro:
- * não faz requisição, não toca banco.
+ * Preço das cartas especiais — quais cartas entram na consulta de preço,
+ * como a linha certa da LigaPokemon é reconhecida e como o resultado se
+ * ordena. Módulo puro: não faz requisição, não toca banco.
+ *
+ * A seleção vale para as duas fontes de preço (`fonte-preco.ts`): a Liga e
+ * o Cardmarket via TCGdex precificam o mesmo conjunto de cartas, para a tela
+ * não mudar de assunto quando quem instala troca a fonte.
  *
  * ## Por que quase todas
  *
- * No ritmo que o `robots.txt` deles pede (~6 min por requisição), consultar o
+ * No ritmo que o `robots.txt` da Liga pede (~6 min por requisição), consultar o
  * inventário inteiro levaria semanas. Ficam de fora só as comuns e incomuns,
  * que valem centavos e são a maior parte do inventário: isso mantém a rodada
  * curta. As raras simples são baratas, mas o gráfico de valor total precisa
@@ -25,12 +29,15 @@
  * pelo texto (`ehComumOuIncomum`). O set `30th-c` (clássicas da Celebração de
  * 30 Anos, raridade "None") entra sempre, por garantia.
  *
-  * ## Uma consulta por carta física
+ * ## Uma consulta por carta física
  *
  * As linhas pt e en do mesmo `carta_id` são a mesma carta física (regra 7):
- * a Liga é consultada uma vez só, e o preço é gravado por `carta_id`. O termo
- * de busca é o nome em inglês — como a lista deles escreve — e o nome em
- * português entra como segunda tentativa, igual à vaga de set.
+ * cada fonte é consultada uma vez só por carta, e o preço é gravado por
+ * `carta_id`. Na Liga, o termo de busca é o nome em inglês — como a lista
+ * deles escreve — e o nome em português entra como segunda tentativa, igual
+ * à vaga de set. No Cardmarket, a ficha da TCGdex é pedida num idioma que a
+ * carta tem no catálogo (`idiomas`, na ordem de `idiomasDeConsulta`), e o
+ * seguinte só é tentado quando aquele responde 404.
  */
 
 import type { LinhaBuscaLiga } from "./liga-busca";
@@ -68,6 +75,12 @@ export interface CartaParaPreco {
   setSigla: string | null;
   localId: string;
   raridade: string | null;
+  /**
+   * Os idiomas das fichas da carta no catálogo (pt, en, jp, nesta ordem e
+   * sem repetição): em quais a fonte Cardmarket pode pedir a ficha à TCGdex.
+   * A Liga não usa — ela busca por nome.
+   */
+  idiomas: Array<"pt" | "en" | "jp">;
 }
 
 /** Minúsculas e sem acento, para comparar "Incomum" de qualquer jeito. */
@@ -95,9 +108,11 @@ export function ehCartaEspecial(carta: { setId: string; raridade: string | null 
 const ORDEM_EXIBICAO = ["pt", "en", "jp"] as const;
 
 /**
- * Recebe as linhas de catálogo das cartas possuídas (e, de preferência, as
- * linhas en/pt das mesmas cartas, para o termo de busca) e devolve uma carta
- * por `carta_id`, só das especiais, na ordem do catálogo (set, número).
+ * Recebe as linhas de catálogo das cartas possuídas — todas as fichas de cada
+ * `carta_id`, não só a do idioma da cópia: a en dá o termo de busca da Liga,
+ * e o conjunto de idiomas diz em quais a TCGdex tem a ficha que traz o preço
+ * do Cardmarket — e devolve uma carta por `carta_id`, só das especiais, na
+ * ordem do catálogo (set, número).
  *
  * A elegibilidade olha **todas** as linhas do `carta_id`: a raridade de uma
  * carta física não muda com o idioma da ficha, então uma ficha que diga
@@ -139,6 +154,7 @@ export function selecionarCartasParaPreco(
       setSigla: exibicao.setSigla,
       localId: exibicao.localId,
       raridade: exibicao.raridade,
+      idiomas: [...new Set(ordenado.map((l) => l.idioma))],
     });
   }
 
@@ -205,7 +221,10 @@ export interface PrecoDeCarta {
   precoMaximo: number | null;
 }
 
-/** O valor que ordena e soma: o preço médio; sem ele, o menor. */
+/**
+ * O valor que ordena e soma: o preço médio; sem ele, o menor. Na fonte
+ * Cardmarket o "médio" que chega aqui é a tendência (`comoPrecoDeCarta`).
+ */
 export function valorDaCarta(p: Pick<PrecoDeCarta, "preco" | "precoMedio">): number | null {
   return p.precoMedio ?? p.preco;
 }
@@ -226,7 +245,10 @@ export function compararPorValorDesc(
 export interface ResumoDePrecos {
   cartasComPreco: number;
   naoEncontradas: number;
-  /** Soma dos preços médios (ou mínimos, sem média) das cartas com preço. */
+  /**
+   * Soma dos preços médios (ou mínimos, sem média) das cartas com preço — na
+   * fonte Cardmarket, das tendências (`comoPrecoDeCarta`).
+   */
   somaMedios: number;
 }
 

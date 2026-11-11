@@ -80,14 +80,33 @@ describe("selecionarCartasParaPreco", () => {
       linhaCat({ cartaId: "a-1", idioma: "en", nome: "Patch", raridade: "Holo Rare" }),
     ]);
     expect(r).toHaveLength(1);
-    expect(r[0]).toMatchObject({ nome: "Fragmento", nomeBusca: "Patch", nomeAlternativo: "Fragmento" });
+    expect(r[0]).toMatchObject({
+      nome: "Fragmento",
+      nomeBusca: "Patch",
+      nomeAlternativo: "Fragmento",
+      idiomas: ["pt", "en"],
+    });
+  });
+
+  it("guarda os idiomas das fichas da carta, sem repetir, na ordem pt, en, jp", () => {
+    const r = selecionarCartasParaPreco([
+      linhaCat({ cartaId: "a-1", idioma: "jp", nome: "Carta J", raridade: "Rara" }),
+      linhaCat({ cartaId: "a-1", idioma: "en", nome: "Card", raridade: "Rare" }),
+      linhaCat({ cartaId: "a-1", idioma: "en", nome: "Card", raridade: "Rare" }),
+      linhaCat({ cartaId: "a-1", idioma: "pt", nome: "Carta", raridade: "Rara" }),
+      linhaCat({ cartaId: "b-1", idioma: "en", nome: "Outra", localId: "002", raridade: "Rare" }),
+    ]);
+    expect(r.map((c) => [c.cartaId, c.idiomas])).toEqual([
+      ["a-1", ["pt", "en", "jp"]],
+      ["b-1", ["en"]],
+    ]);
   });
 
   it("sem linha en usa o nome que tem e não repete a tentativa", () => {
     const r = selecionarCartasParaPreco([
       linhaCat({ cartaId: "a-1", nome: "Pikachu", raridade: "Rara Holo" }),
     ]);
-    expect(r[0]).toMatchObject({ nomeBusca: "Pikachu", nomeAlternativo: null });
+    expect(r[0]).toMatchObject({ nomeBusca: "Pikachu", nomeAlternativo: null, idiomas: ["pt"] });
   });
 
   it("nome igual nos dois idiomas não gera segunda tentativa", () => {
