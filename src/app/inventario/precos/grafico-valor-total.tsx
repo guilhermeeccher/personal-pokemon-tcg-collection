@@ -53,6 +53,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 
+import type { FontePreco } from "@/lib/dominio/fonte-preco";
 import type { PontoDaSerie } from "@/lib/dominio/historico-precos";
 
 const ALTURA = 220;
@@ -82,7 +83,7 @@ export function GraficoValorTotal({
   fonte: fontePreco,
 }: {
   serie: readonly PontoDaSerie[];
-  fonte: "liga" | "cardmarket";
+  fonte: FontePreco;
 }) {
   const t = useTranslations("precos.grafico");
   // `fonte`, aqui dentro, já é o tamanho do texto do SVG; a de preço é `fontePreco`.

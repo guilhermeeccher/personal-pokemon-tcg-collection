@@ -47,6 +47,7 @@ import {
 import { Painel } from "@/app/_componentes/painel";
 import { formatarDuracao } from "@/lib/dominio/estimativa-varredura";
 import { VALIDADE_CONSULTA_HORAS } from "@/lib/dominio/frescor-consulta";
+import type { FontePreco } from "@/lib/dominio/fonte-preco";
 import type { PontoDaSerie } from "@/lib/dominio/historico-precos";
 
 import { GraficoValorTotal } from "./grafico-valor-total";
@@ -95,9 +96,6 @@ interface RodadaListadaDTO {
   somaMedios: number | null;
   noGrafico: boolean;
 }
-
-/** A fonte de preço da instalação, decidida no servidor por `PRECO_FONTE`. */
-type FontePrecoDTO = "liga" | "cardmarket";
 
 /** PTAX de fechamento (venda) do euro: reais por € 1, e o dia do boletim. */
 interface CotacaoDTO {
@@ -214,7 +212,7 @@ const eur = (valor: number, locale: string) => moeda(valor, locale, "EUR");
 const dataCivil = (iso: string, locale: string) =>
   new Date(`${iso}T00:00:00Z`).toLocaleDateString(locale, { timeZone: "UTC" });
 
-export default function PrecosPage({ fonte: fonteDoServidor }: { fonte?: FontePrecoDTO }) {
+export default function PrecosPage({ fonte: fonteDoServidor }: { fonte?: FontePreco }) {
   const t = useTranslations("precos");
   const tr = useTranslations("recusas");
   const locale = useLocale();
@@ -233,7 +231,7 @@ export default function PrecosPage({ fonte: fonteDoServidor }: { fonte?: FontePr
      numa instalação Cardmarket a descrição, o botão e a explicação do ritmo
      piscariam com os textos da Liga a cada abertura. Sem nenhuma das duas, é
      a Liga — a tela de sempre. */
-  const fonte: FontePrecoDTO = dados
+  const fonte: FontePreco = dados
     ? dados.fonte === "cardmarket"
       ? "cardmarket"
       : "liga"
