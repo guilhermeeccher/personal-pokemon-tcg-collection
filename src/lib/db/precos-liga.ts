@@ -254,6 +254,31 @@ export async function listarSerieDePrecos(
   }));
 }
 
+/**
+ * A foto que uma rodada deixou, entre no gráfico ou não; `null` quando ela
+ * não deixou nenhuma (a gravação da foto falhou). É o total que o comando
+ * `pnpm precos:cardmarket` relata ao fim da rodada que ele mesmo rodou.
+ */
+export async function obterFotoDaRodada(db: Database, rodadaId: string): Promise<PontoDaSerie | null> {
+  const [l] = await db
+    .select({
+      tiradoEm: ligaSnapshotPreco.tiradoEm,
+      somaMedios: ligaSnapshotPreco.somaMedios,
+      cartasComPreco: ligaSnapshotPreco.cartasComPreco,
+      precoMedioPorCarta: ligaSnapshotPreco.precoMedioPorCarta,
+    })
+    .from(ligaSnapshotPreco)
+    .where(eq(ligaSnapshotPreco.rodadaId, rodadaId))
+    .limit(1);
+  if (!l) return null;
+  return {
+    tiradoEm: new Date(l.tiradoEm).toISOString(),
+    somaMedios: Number(l.somaMedios),
+    cartasComPreco: l.cartasComPreco,
+    precoMedioPorCarta: Number(l.precoMedioPorCarta),
+  };
+}
+
 export interface PrecoListado {
   cartaId: string;
   nome: string;

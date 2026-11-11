@@ -26,7 +26,8 @@
     "gerar:seed-dex": "tsx scripts/gerar-seed-dex.ts",
     "dex:estado": "tsx scripts/dex-estado.ts",
     "dex:aplicar": "tsx scripts/dex-aplicar.ts",
-    "senha:gerar": "tsx scripts/gerar-senha.ts"
+    "senha:gerar": "tsx scripts/gerar-senha.ts",
+    "precos:cardmarket": "tsx scripts/precos-cardmarket.ts"
   },
   "dependencies": {
     "@tanstack/react-virtual": "3.14.13",

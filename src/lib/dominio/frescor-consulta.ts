@@ -22,7 +22,9 @@
  *
  * **Isto não é retomada automática.** Não há fila, worker nem job persistente:
  * quem dispara de novo é o usuário, e a rodada nova simplesmente encontra menos
- * trabalho pela frente.
+ * trabalho pela frente. (Só na fonte Cardmarket dos preços, quem dispara pode
+ * ser também um agendador de fora do app, configurado por quem instala, pelo
+ * comando `pnpm precos:cardmarket` — ver AGENTS.md. Na Liga, não.)
  *
  * ## O ponto cego, declarado
  *
