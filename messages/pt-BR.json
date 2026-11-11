@@ -1067,6 +1067,8 @@
       "enviar": "Enviar ao HOME ({quantidade})",
       "escolhaSaida": "Escolha de onde saíram.",
       "tireImpedidos": "{quantidade, plural, =1 {1 item não pode ir: tire-o do lote.} other {# itens não podem ir: tire-os do lote.}}",
+      "teto": "não marcado: até {maximo} por envio",
+      "acimaDoTeto": "Até {maximo} por envio: tire {excesso} do lote.",
       "enviados": "{quantidade, plural, =1 {1 Pokémon enviado} other {# Pokémon enviados}} ao HOME a partir de {jogo}.",
       "movidos": "{quantidade, plural, =1 {1 já estava cadastrado no jogo e foi movido.} other {# já estavam cadastrados no jogo e foram movidos.}}",
       "verRecebidos": "Ver Recebidos",

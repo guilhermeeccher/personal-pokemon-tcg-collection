@@ -24,18 +24,32 @@
  * Sword"); senão, cria um nascido ali. A tela só avisa; quem decide é a
  * rota, que confere tudo de novo, porque a tela não é a única porta.
  *
+ * O lote tem teto (`MAX_ITENS_ENVIO_HOME`, o mesmo da rota): o toque que
+ * passaria dele não marca, e a barra diz por quê. Acima do teto a rota
+ * recusaria com uma frase que não passa pelo catálogo de mensagens.
+ *
+ * ## Identificar uma vaga sem hover
+ *
+ * No desktop, o cartão flutuante das Caixas. No celular e no teclado, a
+ * barra de ação diz o último toque ("Raichu (Alola) · Caixa 52 · 3 —
+ * marcado"): o número da Pokédex sozinho não distingue formas da mesma
+ * espécie. Por isso a vaga no HOME também é um botão, só que informativo:
+ * tocar ou focar nela escreve "— No HOME" na barra e não seleciona nada. O
+ * foco numa vaga marcável escreve o estado dela, para quem anda com Tab.
+ *
  * ## Celular (abaixo de 768px)
  *
  * - Vaga com no mínimo 44 × 44 e 8px entre vagas: 6 × 44 + 5 × 8 = 304px.
  *   Com o painel a 8px de recuo lateral cabe de 354px de largura para cima;
  *   abaixo (320px) a caixa rola na horizontal dentro do próprio painel, e a
- *   página nunca.
- * - Sem hover, a barra de ação diz o último toque ("Raichu (Alola) · Caixa
- *   52 · 3 — marcado"): o número da Pokédex sozinho não distingue formas da
- *   mesma espécie.
+ *   página nunca. A moldura de estado fica no próprio botão: no `li`, a
+ *   borda de 1px comia a célula de 44 e o alvo ficava com 42 (medido a
+ *   320px). Do `md` para cima ela volta ao `li`, como nas Caixas.
  * - A barra de ação desce para a base, fixa, como a do Cadastrar; o `pb` da
- *   `main` reserva a altura dela. No desktop ela fica grudada no topo da
- *   área que rola, perto de onde se marca.
+ *   `main` reserva a altura dela. Abaixo de 640px, duas faixas (o texto em
+ *   cima, os botões embaixo); de 640 a 767 (o celular deitado, ~340px de
+ *   altura) uma faixa só, senão a barra tomava metade da tela. No desktop ela
+ *   fica grudada no topo da área que rola, perto de onde se marca.
  *
  * ~1.300 vagas por trilha: a vaga é memorizada e só redesenha quando muda o
  * que ela mostra — um toque redesenha uma vaga, não a grade.
@@ -79,6 +93,7 @@ import {
   type PosicaoNaCaixa,
 } from "@/lib/dominio/dex-caixas";
 import { catalogoDoJogo, naoTransferiveis } from "@/lib/dominio/dex-disponibilidade";
+import { MAX_ITENS_ENVIO_HOME } from "@/lib/dominio/dex-envio-home";
 import { estadoDaVaga, mapearEstadosDex, type EstadoVagaDex } from "@/lib/dominio/dex-estado";
 import { filtrarFormasDex, type TrilhaDex } from "@/lib/dominio/dex-grade";
 import { jogoDex, ORIGEM_HOME } from "@/lib/dominio/dex-jogos";
@@ -92,6 +107,8 @@ import { SpriteDex } from "../_componentes/sprite-dex";
 import { useNomeCaixa } from "../_componentes/use-nome-caixa";
 import { useRotuloForma } from "../_componentes/use-rotulo-forma";
 
+import { recusasLegiveis } from "./recusas-legiveis";
+
 /* No celular a pílula chega a 44px de altura e largura, com mais respiro
    lateral; o intervalo de 8px vem do `gap-2` do grupo. Mesma classe do
    Cadastrar. */
@@ -100,16 +117,35 @@ const classesOpcao = (ativa: boolean) =>
     ativa ? "border-accent bg-accent text-accent-fg" : "border-line text-muted hover:bg-surface-hover"
   }`;
 
-/* As molduras das Caixas: no HOME, sucesso; no jogo, aviso; em falta, apagado. */
+/* As molduras das Caixas: no HOME, sucesso; no jogo, aviso; em falta, apagado.
+   Inteiras, para a legenda e para o que não é botão (fora da busca). */
 const MOLDURA: Record<EstadoVagaDex, string> = {
   falta: "border-hairline",
   no_jogo: "border-warning/70",
   no_home: "border-success/70 bg-success-soft",
 };
 
-/* Marcada: anel por dentro da borda (`ring-inset`). Por fora ele seria
-   cortado pela rolagem horizontal da caixa no celular. */
-const ANEL_MARCADA = "bg-accent-soft ring-2 ring-inset ring-accent";
+/* A mesma moldura repartida na vaga que é botão: a borda vai no `li` do
+   `md` para cima (o desenho das Caixas) e no próprio botão abaixo dele, para
+   o alvo de toque ter os 44px inteiros da célula. O fundo fica no `li` nas
+   duas larguras: não ocupa espaço. */
+const BORDA_LI: Record<EstadoVagaDex, string> = {
+  falta: "md:border md:border-hairline",
+  no_jogo: "md:border md:border-warning/70",
+  no_home: "md:border md:border-success/70",
+};
+const BORDA_BOTAO: Record<EstadoVagaDex, string> = {
+  falta: "max-md:border max-md:border-hairline",
+  no_jogo: "max-md:border max-md:border-warning/70",
+  no_home: "max-md:border max-md:border-success/70",
+};
+const FUNDO: Record<EstadoVagaDex, string> = { falta: "", no_jogo: "", no_home: "bg-success-soft" };
+
+/* Marcada: anel por dentro da borda (`ring-inset`), no `li` — por fora ele
+   seria cortado pela rolagem horizontal da caixa no celular, e no botão o
+   anel de foco global (`:focus-visible`, que troca o `box-shadow`) o
+   apagaria. No celular a borda do botão cobre 1px do anel, daí os 3px. */
+const ANEL_MARCADA = "bg-accent-soft ring-2 ring-inset ring-accent max-md:ring-[3px]";
 
 const ESTADOS_LEGENDA: readonly EstadoVagaDex[] = ["falta", "no_jogo", "no_home"];
 
@@ -189,7 +225,12 @@ interface AlvoToque {
   posicao: number;
 }
 
-type UltimoToque = AlvoToque & { marcado: boolean };
+/**
+ * O que a barra conta da última vaga tocada: marcou, desmarcou, não marcou
+ * por causa do teto, ou só identificou (foco, ou toque na vaga no HOME) —
+ * nesse caso o fim da linha é o estado de agora, não uma ação.
+ */
+type UltimoToque = AlvoToque & { evento: "marcou" | "desmarcou" | "teto" | "identificou" };
 
 interface ItemLote {
   chave: string;
@@ -222,6 +263,7 @@ const Vaga = memo(function Vaga({
   marcada,
   ehMobile,
   aoAlternar,
+  aoIdentificar,
   abrir,
   fechar,
 }: {
@@ -239,6 +281,8 @@ const Vaga = memo(function Vaga({
   /** Vem de cima (um `useEhMobile()` só, não um por vaga). */
   ehMobile: boolean;
   aoAlternar: (alvo: AlvoToque, marcar: boolean) => void;
+  /** Só põe a vaga na linha do último toque, sem selecionar. */
+  aoIdentificar: (alvo: AlvoToque) => void;
   abrir: (dados: DadosCartaoPokemon) => (e: MouseEvent<HTMLElement>) => void;
   fechar: () => void;
 }) {
@@ -291,14 +335,13 @@ const Vaga = memo(function Vaga({
   const rotulo = `${nome} — ${textoEstado} — ${lugar}`;
   const linhasCartao = marcada ? [textoEstado, lugar, t("novoCadastro.marcada")] : [textoEstado, lugar];
 
-  // No HOME (já não falta) ou fora da busca: aparece, sem botão. Se estava
-  // marcada antes (a vaga chegou ao HOME por outra aba), o anel continua: a
-  // seleção é a mesma, e a etapa 2 diz por que ela não pode ir.
-  if (estado === "no_home" || apagada) {
+  // Fora da busca: aparece apagada, para a caixa não se desmontar, e não é
+  // botão — nem marca nem identifica. Se estava marcada, o anel continua.
+  if (apagada) {
     return (
       <li
         aria-label={rotulo}
-        className={`relative flex aspect-square items-center justify-center rounded-md border ${MOLDURA[estado]} ${marcada ? ANEL_MARCADA : ""} ${apagada ? "opacity-30" : ""}`}
+        className={`relative flex aspect-square items-center justify-center rounded-md border opacity-30 ${MOLDURA[estado]} ${marcada ? ANEL_MARCADA : ""}`}
         onMouseEnter={abrir({ sprite: forma.sprite, shiny, nome, linhas: linhasCartao })}
         onMouseLeave={fechar}
       >
@@ -318,16 +361,25 @@ const Vaga = memo(function Vaga({
     );
   }
 
+  const alvo: AlvoToque = { formaId: forma.id, trilha, nome, caixa, posicao };
+  /* No HOME a vaga não se marca, mas é botão para ser identificável sem
+     mouse: o toque (ou o foco) só escreve "— No HOME" na barra. Sem
+     `aria-pressed`, porque não alterna nada. A exceção é a que já estava
+     marcada (chegou ao HOME por outra aba depois do toque): continua com o
+     anel e o toque a desmarca — senão ela só sairia do lote pela etapa 2. */
+  const soInforma = estado === "no_home" && !marcada;
+
   return (
-    <li className={`aspect-square rounded-md border ${MOLDURA[estado]} ${marcada ? ANEL_MARCADA : ""}`}>
+    <li className={`aspect-square rounded-md ${BORDA_LI[estado]} ${FUNDO[estado]} ${marcada ? ANEL_MARCADA : ""}`}>
       <button
         type="button"
         id={idDaVaga(forma.id, trilha)}
-        aria-pressed={marcada}
+        aria-pressed={soInforma ? undefined : marcada}
         aria-label={rotulo}
         // `scroll-mt`: o foco por Tab não para debaixo da barra grudada no topo (desktop).
-        className="group relative flex h-full w-full items-center justify-center rounded-md md:scroll-mt-24"
-        onClick={() => aoAlternar({ formaId: forma.id, trilha, nome, caixa, posicao }, !marcada)}
+        className={`group relative flex h-full w-full items-center justify-center rounded-md md:scroll-mt-24 ${BORDA_BOTAO[estado]}`}
+        onClick={() => (soInforma ? aoIdentificar(alvo) : aoAlternar(alvo, !marcada))}
+        onFocus={() => aoIdentificar(alvo)}
         onMouseEnter={abrir({ sprite: forma.sprite, shiny, nome, linhas: linhasCartao })}
         onMouseLeave={fechar}
       >
@@ -338,9 +390,13 @@ const Vaga = memo(function Vaga({
           width={56}
           height={56}
           loading="lazy"
-          className={`h-full w-full object-contain [transition:transform_200ms,filter_200ms,opacity_200ms] group-hover:scale-125 ${
-            estado === "falta" && !marcada ? "opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0" : ""
-          }`}
+          className={
+            estado === "no_home"
+              ? "h-full w-full object-contain"
+              : `h-full w-full object-contain [transition:transform_200ms,filter_200ms,opacity_200ms] group-hover:scale-125 ${
+                  estado === "falta" && !marcada ? "opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0" : ""
+                }`
+          }
           style={{ imageRendering: "pixelated" }}
         />
         {visto}
@@ -352,13 +408,16 @@ const Vaga = memo(function Vaga({
 
 /**
  * A barra das ações da etapa. Celular: fixa na base, na zona do polegar, com
- * a área segura do iPhone (a `main` reserva a altura). Desktop: grudada no
- * topo da área que rola, porque a grade tem dezenas de caixas e o botão no
- * começo da página ficaria longe do que se acabou de marcar.
+ * a área segura do iPhone (a `main` reserva a altura). Abaixo de 640px,
+ * texto numa faixa e botões na de baixo (12 + 32 + 8 + 44 + 12 = 108px);
+ * de 640 a 767, uma faixa só e recuo de 8px (8 + 44 + 8 = 60px), porque
+ * deitado o celular tem ~340px de altura. Desktop: grudada no topo da área
+ * que rola, porque a grade tem dezenas de caixas e o botão no começo da
+ * página ficaria longe do que se acabou de marcar.
  */
 function BarraAcao({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 md:sticky md:top-0 md:z-10 md:border-b md:border-hairline md:bg-background md:py-3 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:border-t max-md:border-line max-md:bg-surface max-md:px-4 max-md:pt-3 max-md:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 md:sticky md:top-0 md:z-10 md:border-b md:border-hairline md:bg-background md:py-3 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:border-t max-md:border-line max-md:bg-surface max-md:px-4 max-sm:pt-3 max-sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:max-md:flex-nowrap sm:max-md:pt-2 sm:max-md:pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
       {children}
     </div>
   );
@@ -405,6 +464,11 @@ export function NovoCadastro({
   const buscaAdiada = useDeferredValue(busca);
   const [soFaltantes, setSoFaltantes] = useState(true);
   const [selecao, setSelecao] = useState<Selecao>(() => new Map());
+  /* Espelho da seleção para os handlers: o teto é decidido no toque, e o
+     toque recusado tem de chegar à barra — dentro do `setSelecao(atual => …)`
+     isso seria efeito colateral num atualizador, que tem de ser puro. Toda
+     escrita da seleção passa por `definirSelecao`, que mantém os dois iguais. */
+  const selecaoRef = useRef<Selecao>(selecao);
   const [ultimo, setUltimo] = useState<UltimoToque | null>(null);
   const [saidaEscolhida, setSaidaEscolhida] = useState<string | null>(null);
   const saidaSalva = useSyncExternalStore(assinarArmazenamento, lerSaidaSalva, () => null);
@@ -445,30 +509,46 @@ export function NovoCadastro({
     [caixas, casam, soFaltantes, estados, trilha],
   );
 
-  const aoAlternar = useCallback((alvo: AlvoToque, marcar: boolean) => {
-    const chave = chaveDaVaga(alvo.formaId, alvo.trilha);
-    setSelecao((atual) => {
-      if (atual.has(chave) === marcar) return atual;
-      const proxima = new Map(atual);
-      if (marcar) proxima.set(chave, { formaId: alvo.formaId, shiny: alvo.trilha === "shiny" });
-      else proxima.delete(chave);
-      return proxima;
-    });
-    setUltimo({ ...alvo, marcado: marcar });
-    setSucesso(null);
+  const definirSelecao = useCallback((proxima: Selecao) => {
+    selecaoRef.current = proxima;
+    setSelecao(proxima);
   }, []);
 
-  const tirar = useCallback((chave: string) => {
-    setSelecao((atual) => {
-      if (!atual.has(chave)) return atual;
+  const aoAlternar = useCallback(
+    (alvo: AlvoToque, marcar: boolean) => {
+      setSucesso(null);
+      const atual = selecaoRef.current;
+      const chave = chaveDaVaga(alvo.formaId, alvo.trilha);
+      if (atual.has(chave) !== marcar) {
+        if (marcar && atual.size >= MAX_ITENS_ENVIO_HOME) {
+          setUltimo({ ...alvo, evento: "teto" });
+          return;
+        }
+        const proxima = new Map(atual);
+        if (marcar) proxima.set(chave, { formaId: alvo.formaId, shiny: alvo.trilha === "shiny" });
+        else proxima.delete(chave);
+        definirSelecao(proxima);
+      }
+      setUltimo({ ...alvo, evento: marcar ? "marcou" : "desmarcou" });
+    },
+    [definirSelecao],
+  );
+
+  const aoIdentificar = useCallback((alvo: AlvoToque) => setUltimo({ ...alvo, evento: "identificou" }), []);
+
+  const tirar = useCallback(
+    (chave: string) => {
+      const atual = selecaoRef.current;
+      if (!atual.has(chave)) return;
       const proxima = new Map(atual);
       proxima.delete(chave);
-      return proxima;
-    });
-  }, []);
+      definirSelecao(proxima);
+    },
+    [definirSelecao],
+  );
 
   function limpar() {
-    setSelecao(new Map());
+    definirSelecao(new Map());
     setUltimo(null);
   }
 
@@ -496,6 +576,13 @@ export function NovoCadastro({
   }, [selecao, formaPorId, posicoes]);
   const totalShiny = lote.filter((i) => i.shiny).length;
   const contagem = t("novoCadastro.contagem", { normal: lote.length - totalShiny, shiny: totalShiny });
+  /* O toque já não passa do teto; isto é a defesa para um lote que chegasse
+     acima dele por outro caminho — Continuar e Enviar ficam travados. */
+  const acimaDoTeto = lote.length > MAX_ITENS_ENVIO_HOME;
+  const textoAcimaDoTeto = t("novoCadastro.acimaDoTeto", {
+    maximo: String(MAX_ITENS_ENVIO_HOME),
+    excesso: String(lote.length - MAX_ITENS_ENVIO_HOME),
+  });
 
   const opcoes = useMemo(
     () => [...jogos.map((j) => ({ id: j.jogoId, nome: j.nome })), { id: ORIGEM_HOME, nome: t("cadastrar.home") }],
@@ -589,7 +676,7 @@ export function NovoCadastro({
     return { item, marcas, impede: naoVai || jaNoHome };
   });
   const impedidos = linhasLote.filter((l) => l.impede).length;
-  const podeEnviar = saida !== null && lote.length > 0 && impedidos === 0 && !enviando;
+  const podeEnviar = saida !== null && lote.length > 0 && !acimaDoTeto && impedidos === 0 && !enviando;
 
   /* ---- Envio ----------------------------------------------------------- */
 
@@ -611,7 +698,11 @@ export function NovoCadastro({
       }
       setPendente(null);
       if (!r.ok) {
-        setErros(textosDasRecusas(tr, corpo, t("novoCadastro.erro")));
+        const legivel = recusasLegiveis(corpo, {
+          forma: (id) => nomes.get(id) ?? id,
+          trilha: (x) => t(`trilha.${x}`),
+        });
+        setErros(textosDasRecusas(tr, legivel, t("novoCadastro.erro")));
         return;
       }
       const { criados, movidos } = lerResultado(corpo, pedido.itens.length);
@@ -620,7 +711,7 @@ export function NovoCadastro({
         texto: t("novoCadastro.enviados", { quantidade: criados + movidos, jogo: nomeDoJogo(pedido.jogoOrigem) }),
         movidos: movidos > 0 ? t("novoCadastro.movidos", { quantidade: movidos }) : null,
       });
-      setSelecao(new Map());
+      definirSelecao(new Map());
       setUltimo(null);
       setEtapa(1);
       router.refresh();
@@ -682,28 +773,44 @@ export function NovoCadastro({
 
   /* ---- Tela ------------------------------------------------------------ */
 
+  const fimDoUltimo = (u: UltimoToque): string => {
+    if (u.evento === "marcou") return t("novoCadastro.marcado");
+    if (u.evento === "desmarcou") return t("novoCadastro.desmarcado");
+    if (u.evento === "teto") return t("novoCadastro.teto", { maximo: String(MAX_ITENS_ENVIO_HOME) });
+    // Só identificou: o estado de agora (marcada, ou falta / no jogo / no HOME).
+    return selecao.has(chaveDaVaga(u.formaId, u.trilha))
+      ? t("novoCadastro.marcado")
+      : t(`estado.${estadoDaVaga(estados, u.formaId, u.trilha)}`);
+  };
   const textoUltimo = ultimo
     ? t("novoCadastro.ultimoToque", {
         nome: ultimo.nome,
         caixa: String(ultimo.caixa),
         posicao: String(ultimo.posicao),
-        acao: t(ultimo.marcado ? "novoCadastro.marcado" : "novoCadastro.desmarcado"),
+        acao: fimDoUltimo(ultimo),
       })
     : t("novoCadastro.dica");
+  /* Para leitor de tela, só o que mudou a seleção (ou o toque recusado pelo
+     teto, que o botão não diz). O foco não entra: o próprio botão já fala o
+     nome, e cada Tab seria dito duas vezes. */
+  const anuncio = ultimo && ultimo.evento !== "identificou" ? textoUltimo : "";
 
   const motivoBloqueio =
     lote.length === 0
       ? t("novoCadastro.loteVazio")
-      : saida === null
-        ? t("novoCadastro.escolhaSaida")
-        : impedidos > 0
-          ? t("novoCadastro.tireImpedidos", { quantidade: impedidos })
-          : contagem;
+      : acimaDoTeto
+        ? textoAcimaDoTeto
+        : saida === null
+          ? t("novoCadastro.escolhaSaida")
+          : impedidos > 0
+            ? t("novoCadastro.tireImpedidos", { quantidade: impedidos })
+            : contagem;
 
   return (
     <main
       ref={mainRef}
-      className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 sm:p-8 max-md:pb-[calc(7rem+env(safe-area-inset-bottom))]!"
+      // O `pb` reserva a barra fixa de cada faixa (ver `BarraAcao`): 108px abaixo de 640, 60px de 640 a 767.
+      className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 sm:p-8 max-sm:pb-[calc(7rem+env(safe-area-inset-bottom))]! sm:max-md:pb-[calc(4.5rem+env(safe-area-inset-bottom))]!"
     >
       <CabecalhoPagina titulo={t("novoCadastro.titulo")} />
 
@@ -765,18 +872,25 @@ export function NovoCadastro({
 
       {etapa === 1 ? (
         <BarraAcao>
-          <span className="text-xs tabular-nums text-muted max-md:min-w-0 max-md:flex-1">{contagem}</span>
-          {/* No celular é a única identificação da vaga tocada; dois níveis de
-              linha, para o "marcado/desmarcado" do fim não ser cortado. */}
-          <p aria-live="polite" className="min-w-0 text-xs text-foreground md:flex-1 max-md:order-first max-md:line-clamp-2 max-md:w-full">
-            {textoUltimo}
+          <span className="text-xs tabular-nums text-muted max-sm:min-w-0 max-sm:flex-1 sm:max-md:shrink-0 sm:max-md:whitespace-nowrap">
+            {contagem}
+          </span>
+          {/* No celular é a única identificação da vaga tocada. Até duas
+              linhas, para o "marcado/desmarcado" do fim não ser cortado: em
+              pé, numa faixa própria; deitado, ao lado dos botões, onde duas
+              linhas (32px) ainda cabem na altura deles (44px). */}
+          <p className="min-w-0 text-xs text-foreground sm:flex-1 max-md:line-clamp-2 max-sm:order-first max-sm:w-full">
+            {acimaDoTeto ? textoAcimaDoTeto : textoUltimo}
           </p>
+          <span className="sr-only" aria-live="polite">
+            {anuncio}
+          </span>
           {selecao.size > 0 && (
             <Botao tamanho="sm" onClick={limpar}>
               {t("cadastrar.limpar")}
             </Botao>
           )}
-          <Botao variante="primario" tamanho="sm" onClick={continuar} disabled={lote.length === 0}>
+          <Botao variante="primario" tamanho="sm" onClick={continuar} disabled={lote.length === 0 || acimaDoTeto}>
             {t("novoCadastro.continuar", { quantidade: String(lote.length) })}
           </Botao>
         </BarraAcao>
@@ -785,11 +899,13 @@ export function NovoCadastro({
           <Botao tamanho="sm" onClick={voltar} disabled={enviando}>
             {t("novoCadastro.voltar")}
           </Botao>
-          <p className="min-w-0 text-xs text-muted md:flex-1 max-md:order-first max-md:w-full">{motivoBloqueio}</p>
+          <p className="min-w-0 text-xs text-muted sm:flex-1 max-md:line-clamp-2 max-sm:order-first max-sm:w-full">
+            {motivoBloqueio}
+          </p>
           <Botao
             variante="primario"
             tamanho="sm"
-            className="max-md:flex-1"
+            className="max-sm:flex-1"
             disabled={!podeEnviar}
             onClick={enviarLote}
           >
@@ -798,7 +914,11 @@ export function NovoCadastro({
         </BarraAcao>
       )}
 
-      <div ref={avisoRef} tabIndex={-1} className="flex scroll-mt-4 scroll-mb-32 flex-col gap-3 empty:hidden md:scroll-mt-24 md:scroll-mb-4">
+      <div
+        ref={avisoRef}
+        tabIndex={-1}
+        className="flex scroll-mt-4 scroll-mb-32 flex-col gap-3 empty:hidden sm:max-md:scroll-mb-20 md:scroll-mt-24 md:scroll-mb-4"
+      >
         {erros.length > 0 && (
           <div role="alert">
             <Alerta tom="perigo">
@@ -879,6 +999,7 @@ export function NovoCadastro({
                         marcada={selecao.has(chaveDaVaga(f.id, trilha))}
                         ehMobile={ehMobile}
                         aoAlternar={aoAlternar}
+                        aoIdentificar={aoIdentificar}
                         abrir={abrir}
                         fechar={fechar}
                       />

@@ -278,4 +278,53 @@ describe("planejarEnvioHome", () => {
     expect(p.ok).toBe(false);
     expect("criar" in p).toBe(false);
   });
+
+  it("reenviar o mesmo lote depois de gravado recusa cada item, sem criar nem mover nada", () => {
+    // A resposta do primeiro envio se perdeu e a tela manda de novo, ou a
+    // segunda aba manda o mesmo lote: o estado já é o que o primeiro gravou.
+    const envio = lote("scarlet", [normal("pikachu"), shiny("raichu-alola")]);
+    const candidatos = [cand("r1", "pikachu", "sword", "scarlet")];
+    const primeiro = planejarEnvioHome(envio, candidatos, ctx);
+    if (!primeiro.ok) throw new Error("o primeiro envio devia passar");
+    expect(primeiro).toEqual({ ok: true, criar: [novo("raichu-alola", "scarlet", true)], mover: ["r1"] });
+
+    // Aplica o plano como `enviarAoHome` grava: criados e movidos no HOME.
+    const movidos = new Set(primeiro.mover);
+    const depois = candidatos.map((c) => (movidos.has(c.id) ? { ...c, local: "home" } : c));
+    const ctxDepois: ContextoEnvioHome = {
+      ...ctx,
+      vagasNoHome: new Set([
+        ...ctx.vagasNoHome,
+        ...primeiro.criar.map((c) => chaveVagaTrilha(c.formaId, c.shiny)),
+        ...depois.filter((c) => movidos.has(c.id)).map((c) => chaveVagaTrilha(c.formaId, c.shiny)),
+      ]),
+    };
+
+    expect(planejarEnvioHome(envio, depois, ctxDepois)).toEqual({
+      ok: false,
+      recusas: [
+        { chave: "dexVagaJaNoHome", valores: { forma: "pikachu", trilha: "normal" } },
+        { chave: "dexVagaJaNoHome", valores: { forma: "raichu-alola", trilha: "shiny" } },
+      ],
+    });
+  });
+
+  it.each([
+    { caso: "vaga já no HOME", itens: [shiny("bulbasaur")], esperadas: ["dexVagaJaNoHome"] },
+    { caso: "shiny de forma sem shiny", itens: [shiny("pikachu-cap-original")], esperadas: ["dexSemShiny"] },
+    {
+      caso: "par misto: um válido e um com vaga no HOME",
+      itens: [normal("pikachu"), shiny("bulbasaur")],
+      esperadas: ["dexVagaJaNoHome"],
+    },
+    {
+      caso: "par misto: um válido e um shiny sem shiny",
+      itens: [normal("pikachu"), shiny("pikachu-cap-original")],
+      esperadas: ["dexSemShiny"],
+    },
+  ])("saída só de envio sem confirmação: $caso volta recusa, não o pedido de confirmação", ({ itens, esperadas }) => {
+    const p = planejarEnvioHome(lote("go", itens), [], ctx);
+    expect("confirmacao" in p).toBe(false);
+    expect(chaves(p)).toEqual(esperadas);
+  });
 });
