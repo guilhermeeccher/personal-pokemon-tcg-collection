@@ -160,7 +160,7 @@ export default function VisaoGeralPage() {
 
 /**
  * As cartas que mais valem no inventário, em leque leve: ordem pelo preço
- * guardado na Liga quando existe (`ordenarJoias`), senão pela vitrine
+ * guardado na fonte de preço ativa quando existe (`ordenarJoias`), senão pela vitrine
  * (`destaque-carta.ts`).
  * A inclinação alterna para a faixa não parecer uma tabela de miniaturas;
  * no hover a carta endireita e sobe, como tirada do fichário.
