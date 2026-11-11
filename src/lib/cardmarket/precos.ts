@@ -166,6 +166,12 @@ export interface ResumoRodadaCardmarket {
   achadas: number;
   naoAchadas: number;
   requisicoes: number;
+  /**
+   * O mesmo `erro` gravado na rodada: o do bloqueio, ou o resumo das cartas
+   * que falharam sozinhas. Quem lê o resumo (o comando agendável) decide o
+   * desfecho por ele, e não pode ver "ok" numa rodada que o banco guarda com
+   * erro.
+   */
   erro?: string;
   falhas: Array<{ carta: string; motivo: string }>;
 }
@@ -235,11 +241,12 @@ export async function executarRodadaCardmarket(
       ? undefined
       : `${falhas.length} carta(s) falharam. Primeira: ${falhas[0].carta} — ${falhas[0].motivo}`;
 
+  const erroFinal = erro ?? resumoFalhas;
   await concluirRodadaDePreco(db, rodadaId, {
     cartasConsultadas,
     cartasComFalha: falhas.length,
     requisicoes,
-    erro: erro ?? resumoFalhas,
+    erro: erroFinal,
   });
   // A foto do fim da rodada (também quando abortou por bloqueio), na série
   // da fonte Cardmarket. Uma falha aqui não pode derrubar o resumo de uma
@@ -247,7 +254,15 @@ export async function executarRodadaCardmarket(
   await registrarFotoDaRodada(db, rodadaId, "cardmarket").catch((err) =>
     console.error(`[preços cardmarket ${rodadaId}] falha ao registrar a foto: ${String(err)}`),
   );
-  return { cartasConsultadas, cartasComFalha: falhas.length, achadas, naoAchadas, requisicoes, erro, falhas };
+  return {
+    cartasConsultadas,
+    cartasComFalha: falhas.length,
+    achadas,
+    naoAchadas,
+    requisicoes,
+    erro: erroFinal,
+    falhas,
+  };
 }
 
 /**
