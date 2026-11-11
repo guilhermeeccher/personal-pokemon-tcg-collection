@@ -37,6 +37,15 @@
  * tocar ou focar nela escreve "— No HOME" na barra e não seleciona nada. O
  * foco numa vaga marcável escreve o estado dela, para quem anda com Tab.
  *
+ * ## Par de gênero (decisão de 2026-11-11)
+ *
+ * Espécie com diferença de gênero tem duas vagas em caixas distantes — o
+ * macho no Nacional, a fêmea no Gênero —, e procurar a outra a cada envio
+ * era o atrito. A vaga do par leva ♂/♀ no canto, e a barra do último toque
+ * diz onde está a outra ("♀ Caixa 47 · 12") com um botão que a marca sem
+ * rolar até ela. O par é o de `paresDeGenero`, e só aparece quando as duas
+ * vagas têm lugar nas caixas da trilha (Gênero desligado: nenhum).
+ *
  * ## Celular (abaixo de 768px)
  *
  * - Vaga com no mínimo 44 × 44 e 8px entre vagas: 6 × 44 + 5 × 8 = 304px.
@@ -95,9 +104,9 @@ import {
 import { catalogoDoJogo, naoTransferiveis } from "@/lib/dominio/dex-disponibilidade";
 import { MAX_ITENS_ENVIO_HOME } from "@/lib/dominio/dex-envio-home";
 import { estadoDaVaga, mapearEstadosDex, type EstadoVagaDex } from "@/lib/dominio/dex-estado";
-import { filtrarFormasDex, type TrilhaDex } from "@/lib/dominio/dex-grade";
+import { filtrarFormasDex, paresDeGenero, type LadoGenero, type TrilhaDex } from "@/lib/dominio/dex-grade";
 import { jogoDex, ORIGEM_HOME } from "@/lib/dominio/dex-jogos";
-import type { SecoesContadas } from "@/lib/dominio/dex-secoes";
+import { categoriaConta, type SecoesContadas } from "@/lib/dominio/dex-secoes";
 import { especiesTrancadas, type IdiomaTrofeu } from "@/lib/dominio/dex-trofeus";
 import type { FormaDexDTO, JogoPossuidoDTO, RegistroDexDTO, TrofeuDexDTO } from "@/lib/dominio/tipos-cliente";
 import { urlSpriteDex } from "@/lib/imagens";
@@ -158,6 +167,10 @@ const GRUPO_POR_NUMERO: ReadonlySet<GrupoCaixa> = new Set(["nacional", "genero"]
 const NAO_VAI_AO_HOME = naoTransferiveis();
 
 const CHAVE_SAIDA = "dex:novo-cadastro:saida";
+
+/* O seletor de variação U+FE0E pede o glifo de texto: sem ele o Safari do
+   iPhone pode desenhar ♂/♀ como emoji, grande e colorido demais para o canto. */
+const SIMBOLO_GENERO: Record<LadoGenero, string> = { macho: "♂︎", femea: "♀︎" };
 
 const numero4 = (n: number) => String(n).padStart(4, "0");
 const chaveDaVaga = (formaId: string, trilha: TrilhaDex) => `${formaId}:${trilha}`;
@@ -261,6 +274,7 @@ const Vaga = memo(function Vaga({
   buraco,
   apagada,
   marcada,
+  genero,
   ehMobile,
   aoAlternar,
   aoIdentificar,
@@ -268,7 +282,7 @@ const Vaga = memo(function Vaga({
   fechar,
 }: {
   forma: FormaDexDTO;
-  /** Nome com a forma (`useRotuloForma`), calculado uma vez por catálogo. */
+  /** Nome com a forma (`useRotuloForma`), calculado uma vez por catálogo. Já diz "Macho"/"Fêmea" no par. */
   nome: string;
   caixa: number;
   posicao: number;
@@ -278,6 +292,8 @@ const Vaga = memo(function Vaga({
   /** Fora da busca: aparece, para a caixa não se desmontar, mas não se marca. */
   apagada: boolean;
   marcada: boolean;
+  /** Lado do par de gênero, quando as duas vagas do par estão nas caixas; senão nulo. */
+  genero: LadoGenero | null;
   /** Vem de cima (um `useEhMobile()` só, não um por vaga). */
   ehMobile: boolean;
   aoAlternar: (alvo: AlvoToque, marcar: boolean) => void;
@@ -301,6 +317,17 @@ const Vaga = memo(function Vaga({
       className="pointer-events-none absolute top-0.5 right-0.5 flex size-4 items-center justify-center rounded-full bg-accent text-accent-fg"
     >
       <Icone nome="check" tamanho={12} />
+    </span>
+  );
+  /* ♂/♀ no canto de cima à esquerda: o visto mora no da direita e o número
+     do celular no pé. Fundo da superfície para ler sobre o sprite. Só para o
+     olho — o nome do `aria-label` já diz "Macho"/"Fêmea". */
+  const simboloGenero = genero && (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute top-0.5 left-0.5 rounded-sm bg-surface/85 px-0.5 text-[10px] leading-none font-bold text-strong"
+    >
+      {SIMBOLO_GENERO[genero]}
     </span>
   );
 
@@ -355,6 +382,7 @@ const Vaga = memo(function Vaga({
           className={`h-full w-full object-contain ${estado === "falta" ? "opacity-40 grayscale" : ""}`}
           style={{ imageRendering: "pixelated" }}
         />
+        {simboloGenero}
         {visto}
         {numero}
       </li>
@@ -399,6 +427,7 @@ const Vaga = memo(function Vaga({
           }
           style={{ imageRendering: "pixelated" }}
         />
+        {simboloGenero}
         {visto}
         {numero}
       </button>
@@ -409,9 +438,12 @@ const Vaga = memo(function Vaga({
 /**
  * A barra das ações da etapa. Celular: fixa na base, na zona do polegar, com
  * a área segura do iPhone (a `main` reserva a altura). Abaixo de 640px,
- * texto numa faixa e botões na de baixo (12 + 32 + 8 + 44 + 12 = 108px);
- * de 640 a 767, uma faixa só e recuo de 8px (8 + 44 + 8 = 60px), porque
- * deitado o celular tem ~340px de altura. Desktop: grudada no topo da área
+ * texto numa faixa e botões na de baixo; a de cima chega a 48px quando o
+ * último toque tem par de gênero (duas linhas dele, uma do par, e o botão
+ * do par ao lado): 12 + 48 + 8 + 44 + 12 = 124px. De 640 a 767, uma faixa
+ * só e recuo de 8px (8 + 44 + 8 = 60px), porque deitado o celular tem
+ * ~340px de altura: o texto ali não passa de duas linhas, que cabem nos
+ * 44px dos botões. Desktop: grudada no topo da área
  * que rola, porque a grade tem dezenas de caixas e o botão no começo da
  * página ficaria longe do que se acabou de marcar.
  */
@@ -564,6 +596,32 @@ export function NovoCadastro({
     }),
     [formas, secoes, caixasReservadas],
   );
+
+  /* Par de gênero: o macho mora no Nacional e a fêmea no Gênero (a do Sneasel
+     de Hisui, no bloco de Hisui), em caixas diferentes. A vaga só mostra
+     ♂/♀, e a barra só aponta a outra, quando as duas têm lugar nas caixas
+     daquela trilha: com Gênero desligado a fêmea não tem vaga, e a fêmea de
+     forma regional vira buraco; na shiny, um lado sem shiny também é buraco. */
+  const pares = useMemo(() => paresDeGenero(formas), [formas]);
+  const generoConta = categoriaConta("genero", secoes);
+  const parVisivel = useCallback(
+    (formaId: string, trilhaDaVaga: TrilhaDex) => {
+      if (!generoConta) return null;
+      const p = pares.get(formaId);
+      const lugares = posicoes[trilhaDaVaga];
+      return p && lugares.has(formaId) && lugares.has(p.par) ? p : null;
+    },
+    [generoConta, pares, posicoes],
+  );
+  const ladosNaTrilha = useMemo(() => {
+    const r = new Map<string, LadoGenero>();
+    for (const id of pares.keys()) {
+      const p = parVisivel(id, trilha);
+      if (p) r.set(id, p.lado);
+    }
+    return r;
+  }, [pares, parVisivel, trilha]);
+
   const lote = useMemo(() => {
     const itens: ItemLote[] = [];
     for (const [chave, item] of selecao) {
@@ -795,6 +853,37 @@ export function NovoCadastro({
      nome, e cada Tab seria dito duas vezes. */
   const anuncio = ultimo && ultimo.evento !== "identificou" ? textoUltimo : "";
 
+  /* O par de gênero da última vaga tocada, na trilha dela: a barra diz onde
+     está a outra e a marca sem rolar até lá. Par no HOME só informa; o que
+     já estava marcado antes de chegar lá ainda se desmarca, como na grade.
+     O botão passa por `aoAlternar`, então o teto vale igual e o último toque
+     vira o par — tocar de novo volta para a primeira. */
+  const parDoUltimo = (() => {
+    if (!ultimo || acimaDoTeto) return null;
+    const p = parVisivel(ultimo.formaId, ultimo.trilha);
+    const lugar = p ? posicoes[ultimo.trilha].get(p.par) : undefined;
+    if (!p || !lugar) return null;
+    const lado: LadoGenero = p.lado === "macho" ? "femea" : "macho";
+    const marcada = selecao.has(chaveDaVaga(p.par, ultimo.trilha));
+    const noHome = estadoDaVaga(estados, p.par, ultimo.trilha) === "no_home";
+    const nome = nomes.get(p.par) ?? p.par;
+    const posicaoLonga = t("pokedex.posicaoNaCaixa", { caixa: String(lugar.caixa), posicao: String(lugar.posicao) });
+    const noHomeTexto = noHome ? ` — ${t("estado.no_home")}` : "";
+    const acao = marcada ? "desmarcar" : "marcar";
+    const acaoLonga = t(`novoCadastro.${acao}${lado === "macho" ? "Macho" : "Femea"}`);
+    return {
+      alvo: { formaId: p.par, trilha: ultimo.trilha, nome, caixa: lugar.caixa, posicao: lugar.posicao },
+      marcada,
+      alternavel: !noHome || marcada,
+      // "♀ Caixa 47 · 12" para o olho; o leitor de tela ouve o nome e a posição por extenso.
+      curto: `${t("novoCadastro.parEm", { simbolo: SIMBOLO_GENERO[lado], caixa: String(lugar.caixa), posicao: String(lugar.posicao) })}${noHomeTexto}`,
+      longo: `${nome} — ${posicaoLonga}${noHomeTexto}`,
+      botaoCurto: t(`novoCadastro.${acao}Curto`, { simbolo: SIMBOLO_GENERO[lado] }),
+      botaoLongo: acaoLonga,
+      botaoRotulo: `${acaoLonga} — ${nome}, ${posicaoLonga}`,
+    };
+  })();
+
   const motivoBloqueio =
     lote.length === 0
       ? t("novoCadastro.loteVazio")
@@ -809,8 +898,8 @@ export function NovoCadastro({
   return (
     <main
       ref={mainRef}
-      // O `pb` reserva a barra fixa de cada faixa (ver `BarraAcao`): 108px abaixo de 640, 60px de 640 a 767.
-      className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 sm:p-8 max-sm:pb-[calc(7rem+env(safe-area-inset-bottom))]! sm:max-md:pb-[calc(4.5rem+env(safe-area-inset-bottom))]!"
+      // O `pb` reserva a barra fixa de cada faixa (ver `BarraAcao`): até 124px abaixo de 640, 60px de 640 a 767.
+      className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 sm:p-8 max-sm:pb-[calc(8rem+env(safe-area-inset-bottom))]! sm:max-md:pb-[calc(4.5rem+env(safe-area-inset-bottom))]!"
     >
       <CabecalhoPagina titulo={t("novoCadastro.titulo")} />
 
@@ -872,16 +961,44 @@ export function NovoCadastro({
 
       {etapa === 1 ? (
         <BarraAcao>
-          <span className="text-xs tabular-nums text-muted max-sm:min-w-0 max-sm:flex-1 sm:max-md:shrink-0 sm:max-md:whitespace-nowrap">
+          {/* Deitado, a contagem quebra em duas linhas ("12 normais ·" / "3 shiny")
+              para sobrar largura ao último toque e ao botão do par. */}
+          <span className="text-xs tabular-nums text-muted max-sm:min-w-0 max-sm:flex-1 sm:max-md:max-w-[5.5rem] sm:max-md:shrink-0">
             {contagem}
           </span>
-          {/* No celular é a única identificação da vaga tocada. Até duas
-              linhas, para o "marcado/desmarcado" do fim não ser cortado: em
-              pé, numa faixa própria; deitado, ao lado dos botões, onde duas
-              linhas (32px) ainda cabem na altura deles (44px). */}
-          <p className="min-w-0 text-xs text-foreground sm:flex-1 max-md:line-clamp-2 max-sm:order-first max-sm:w-full">
-            {acimaDoTeto ? textoAcimaDoTeto : textoUltimo}
-          </p>
+          {/* No celular é a única identificação da vaga tocada. Em pé, numa
+              faixa própria: até duas linhas dela (o "marcado/desmarcado" do
+              fim não é cortado), mais uma do par. Deitado, ao lado dos botões,
+              no máximo duas linhas no total (32px), que cabem na altura deles
+              (44px): com par, o último toque perde a segunda. O botão do par
+              diz "Marcar ♀" até o `lg` e "Marcar fêmea" dali para cima; o
+              rótulo acessível é sempre o completo. */}
+          <div className="flex min-w-0 items-center gap-3 sm:flex-1 max-sm:order-first max-sm:w-full">
+            <div className="min-w-0 flex-1 text-xs">
+              <p
+                className={`text-foreground md:inline max-sm:line-clamp-2 ${parDoUltimo ? "sm:max-md:line-clamp-1" : "sm:max-md:line-clamp-2"}`}
+              >
+                {acimaDoTeto ? textoAcimaDoTeto : textoUltimo}
+              </p>
+              {parDoUltimo && (
+                <p className="truncate text-muted md:ml-3 md:inline">
+                  <span aria-hidden>{parDoUltimo.curto}</span>
+                  <span className="sr-only">{parDoUltimo.longo}</span>
+                </p>
+              )}
+            </div>
+            {parDoUltimo?.alternavel && (
+              <Botao
+                tamanho="sm"
+                className="shrink-0"
+                aria-label={parDoUltimo.botaoRotulo}
+                onClick={() => aoAlternar(parDoUltimo.alvo, !parDoUltimo.marcada)}
+              >
+                <span className="lg:hidden">{parDoUltimo.botaoCurto}</span>
+                <span className="max-lg:hidden">{parDoUltimo.botaoLongo}</span>
+              </Botao>
+            )}
+          </div>
           <span className="sr-only" aria-live="polite">
             {anuncio}
           </span>
@@ -997,6 +1114,7 @@ export function NovoCadastro({
                         buraco={buraco}
                         apagada={casam !== null && !casam.has(f.id)}
                         marcada={selecao.has(chaveDaVaga(f.id, trilha))}
+                        genero={ladosNaTrilha.get(f.id) ?? null}
                         ehMobile={ehMobile}
                         aoAlternar={aoAlternar}
                         aoIdentificar={aoIdentificar}
@@ -1051,6 +1169,7 @@ export function NovoCadastro({
                 <ul className="divide-y divide-hairline">
                   {linhasLote.map(({ item, marcas }) => {
                     const nome = nomes.get(item.forma.id) ?? item.forma.especie;
+                    const lado = parVisivel(item.forma.id, item.shiny ? "shiny" : "normal")?.lado;
                     return (
                       <li key={item.chave} className="flex items-center gap-3 py-2 first:pt-0 last:pb-0">
                         <span className="shrink-0">
@@ -1058,7 +1177,15 @@ export function NovoCadastro({
                         </span>
                         <div className="flex min-w-0 flex-1 flex-col gap-1">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <span className="font-semibold text-strong">{nome}</span>
+                            <span className="font-semibold text-strong">
+                              {nome}
+                              {/* O nome já diz "(Macho)"/"(Fêmea)": o símbolo é só para o olho. */}
+                              {lado && (
+                                <span aria-hidden className="ml-1 font-bold text-muted">
+                                  {SIMBOLO_GENERO[lado]}
+                                </span>
+                              )}
+                            </span>
                             {item.shiny && <Distintivo tom="acento">★ {t("trilha.shiny")}</Distintivo>}
                           </div>
                           <span className="font-mono text-xs tabular-nums text-muted">

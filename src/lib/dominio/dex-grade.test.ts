@@ -5,6 +5,7 @@ import {
   contarVagasDex,
   filtrarFormasDex,
   formasComFemea,
+  paresDeGenero,
   rotuloDaForma,
   type FormaParaGrade,
 } from "./dex-grade";
@@ -105,5 +106,49 @@ describe("rótulo de macho e fêmea", () => {
 
   it("espécie sem diferença de gênero fica como está", () => {
     expect(rotulo("bulbasaur")).toBeNull();
+  });
+});
+
+describe("paresDeGenero", () => {
+  const formas = [
+    { id: "venusaur", numero: 3, categoria: "base" as const },
+    { id: "venusaur-femea", numero: 3, categoria: "genero" as const },
+    { id: "bulbasaur", numero: 1, categoria: "base" as const },
+    { id: "sneasel", numero: 215, categoria: "base" as const },
+    { id: "sneasel-femea", numero: 215, categoria: "genero" as const },
+    { id: "sneasel-hisui", numero: 215, categoria: "regional" as const },
+    { id: "sneasel-hisui-femea", numero: 215, categoria: "genero" as const },
+  ];
+  const pares = paresDeGenero(formas);
+
+  it("liga o macho (a base) à fêmea da espécie", () => {
+    expect(pares.get("venusaur")).toEqual({ par: "venusaur-femea", lado: "macho" });
+  });
+
+  it("vale no sentido inverso, da fêmea para o macho", () => {
+    expect(pares.get("venusaur-femea")).toEqual({ par: "venusaur", lado: "femea" });
+  });
+
+  it("a fêmea do Sneasel de Hisui é par da forma regional, e a base fica com a fêmea dela", () => {
+    expect(pares.get("sneasel-hisui")).toEqual({ par: "sneasel-hisui-femea", lado: "macho" });
+    expect(pares.get("sneasel-hisui-femea")).toEqual({ par: "sneasel-hisui", lado: "femea" });
+    expect(pares.get("sneasel")).toEqual({ par: "sneasel-femea", lado: "macho" });
+    expect(pares.get("sneasel-femea")).toEqual({ par: "sneasel", lado: "femea" });
+  });
+
+  it("espécie sem diferença de gênero não tem par", () => {
+    expect(pares.has("bulbasaur")).toBe(false);
+    expect(pares.size).toBe(6);
+  });
+
+  it("sem a outra ponta na lista, não há par", () => {
+    const soFemeas = paresDeGenero(formas.filter((f) => f.id !== "venusaur" && f.id !== "sneasel-hisui"));
+    expect(soFemeas.has("venusaur-femea")).toBe(false);
+    expect(soFemeas.has("sneasel-hisui-femea")).toBe(false);
+  });
+
+  it("os machos do mapa são as formas com fêmea", () => {
+    const machos = [...pares].filter(([, p]) => p.lado === "macho").map(([id]) => id);
+    expect(new Set(machos)).toEqual(formasComFemea(formas));
   });
 });

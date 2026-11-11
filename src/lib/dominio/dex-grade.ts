@@ -89,6 +89,43 @@ export function contarVagasDex(
   return { normal, shiny };
 }
 
+export type LadoGenero = "macho" | "femea";
+
+export interface ParGenero {
+  /** A outra vaga do par. */
+  par: string;
+  /** O lado desta vaga (não o do par). */
+  lado: LadoGenero;
+}
+
+/**
+ * Os pares de gênero: cada fêmea separada (categoria `genero`) com a vaga
+ * macho da espécie, nos dois sentidos — `id → { par, lado }`. O macho é a
+ * base com o mesmo número; a exceção é o Sneasel de Hisui, cuja fêmea é par
+ * da forma regional (`sneasel-hisui`), não da base (que tem a fêmea dela).
+ * Espécie sem diferença de gênero não entra no mapa, e nenhuma das duas
+ * pontas fica de fora: o par só existe se as duas vagas estão na lista.
+ *
+ * É a regra única do par: `formasComFemea` sai daqui, e as telas que
+ * apontam de uma vaga para a outra (o macho no Nacional, a fêmea no Gênero)
+ * leem este mapa.
+ */
+export function paresDeGenero(
+  formas: readonly { id: string; numero: number; categoria: CategoriaFormaDex }[],
+): Map<string, ParGenero> {
+  const ids = new Set(formas.map((f) => f.id));
+  const base = new Map(formas.filter((f) => f.categoria === "base").map((f) => [f.numero, f.id]));
+  const r = new Map<string, ParGenero>();
+  for (const f of formas) {
+    if (f.categoria !== "genero") continue;
+    const macho = f.id === "sneasel-hisui-femea" ? "sneasel-hisui" : base.get(f.numero);
+    if (!macho || !ids.has(macho)) continue;
+    r.set(macho, { par: f.id, lado: "macho" });
+    r.set(f.id, { par: macho, lado: "femea" });
+  }
+  return r;
+}
+
 /**
  * As vagas que têm uma fêmea separada (a base da espécie, ou o Sneasel de
  * Hisui). É a "macho" do par: a tela diz isso, porque a PokeAPI às vezes
@@ -96,13 +133,8 @@ export function contarVagasDex(
  * base parece genérica ao lado da linha "Fêmea".
  */
 export function formasComFemea(formas: readonly { id: string; numero: number; categoria: CategoriaFormaDex }[]): Set<string> {
-  const base = new Map(formas.filter((f) => f.categoria === "base").map((f) => [f.numero, f.id]));
   const r = new Set<string>();
-  for (const f of formas) {
-    if (f.categoria !== "genero") continue;
-    const origem = f.id === "sneasel-hisui-femea" ? "sneasel-hisui" : base.get(f.numero);
-    if (origem) r.add(origem);
-  }
+  for (const [id, { lado }] of paresDeGenero(formas)) if (lado === "macho") r.add(id);
   return r;
 }
 
