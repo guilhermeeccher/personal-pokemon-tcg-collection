@@ -1,7 +1,8 @@
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 
-import { cartaCatalogo, copia } from "./schema";
+import { FONTES_PRECO } from "../dominio/fonte-preco";
+import { cartaCatalogo, copia, fontePrecoEnum } from "./schema";
 
 /**
  * Regra 7 (AGENTS.md): "Idioma da cópia é o idioma da carta física,
@@ -51,5 +52,11 @@ describe("copia — separação entre idioma_catalogo (FK) e idioma físico", ()
     expect(valores.idioma).toBe("pt");
     expect(valores.idiomaCatalogo).toBe("en");
     expect(valores.idioma).not.toBe(valores.idiomaCatalogo);
+  });
+});
+
+describe("fonte_preco", () => {
+  it("o enum do banco espelha as fontes do domínio (`lib/dominio/fonte-preco.ts`)", () => {
+    expect([...fontePrecoEnum.enumValues]).toEqual([...FONTES_PRECO]);
   });
 });

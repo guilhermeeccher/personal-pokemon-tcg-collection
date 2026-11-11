@@ -84,6 +84,14 @@ export const origemImagemLocalEnum = pgEnum("origem_imagem_local", [
   "mypcards",
 ]);
 
+/**
+ * De onde veio um preço de carta especial: a LigaPokemon ou o Cardmarket via
+ * TCGdex — escolha de quem instala (`PRECO_FONTE`, `lib/dominio/fonte-preco.ts`,
+ * que espelha estes valores). Marca a rodada e a foto, para cada fonte ter a
+ * sua série no gráfico: misturar as duas pareceria uma queda que não aconteceu.
+ */
+export const fontePrecoEnum = pgEnum("fonte_preco", ["liga", "cardmarket"]);
+
 // --- 3.1 carta_catalogo ----------------------------------------------------
 
 export const cartaCatalogo = pgTable(
@@ -561,9 +569,20 @@ export const precoCartaLiga = pgTable("preco_carta_liga", {
  *
  * Mesmo contrato da varredura: `atualizado_em` é o batimento que distingue
  * rodada viva de rodada morta por reinício, e a rodada nunca recomeça sozinha.
+ *
+ * Serve as duas fontes de preço (`fonte`). O nome `liga_` ficou por
+ * histórico, de quando a Liga era a única: renomear uma tabela com dado real
+ * não vale o risco.
  */
 export const ligaRodadaPreco = pgTable("liga_rodada_preco", {
   id: uuid("id").primaryKey().defaultRandom(),
+  /**
+   * A fonte que a rodada consultou. As rodadas de antes desta coluna são da
+   * Liga (o default as preenche). "Uma rodada viva por vez" vale por fonte, e
+   * a janela de rodada morta também: a da Liga é de horas, a do Cardmarket,
+   * de minutos.
+   */
+  fonte: fontePrecoEnum("fonte").notNull().default("liga"),
   /** Cartas que esta rodada se propôs a consultar (as não frescas, ao disparar). */
   totalCartas: integer("total_cartas").notNull().default(0),
   cartasConsultadas: integer("cartas_consultadas").notNull().default(0),
@@ -609,6 +628,12 @@ export const precoCartaLigaHistorico = pgTable(
  */
 export const ligaSnapshotPreco = pgTable("liga_snapshot_preco", {
   id: uuid("id").primaryKey().defaultRandom(),
+  /**
+   * A tabela fotografada: `preco_carta_liga` ou `preco_carta_cardmarket`. A
+   * série do gráfico é uma por fonte. Nome `liga_` por histórico, como o da
+   * rodada; as fotos de antes desta coluna (o backfill incluído) são da Liga.
+   */
+  fonte: fontePrecoEnum("fonte").notNull().default("liga"),
   rodadaId: uuid("rodada_id").unique(),
   /** O instante da foto (no backfill, o `consultado_em` mais recente da tabela). */
   tiradoEm: timestamp("tirado_em", { withTimezone: true }).notNull().defaultNow(),
@@ -619,6 +644,71 @@ export const ligaSnapshotPreco = pgTable("liga_snapshot_preco", {
   precoMedioPorCarta: numeric("preco_medio_por_carta", { precision: 12, scale: 2 }).notNull(),
   somaMinimos: numeric("soma_minimos", { precision: 12, scale: 2 }).notNull(),
 });
+
+/**
+ * Preço de referência das cartas especiais pelo Cardmarket, que a TCGdex
+ * entrega no campo `pricing` da ficha — a fonte `cardmarket`
+ * (`lib/cardmarket/precos.ts`). Mesmo contrato de `preco_carta_liga`: uma
+ * linha por `carta_id`, atualizada no lugar (upsert), nunca apagada, e
+ * "não encontrada" nunca sobrescreve um preço já encontrado. Sem FK para o
+ * catálogo, pelo mesmo motivo: a chave do catálogo é composta e a mesma carta
+ * física tem fichas em mais de um idioma.
+ *
+ * Guarda o valor em euro **e** o convertido em reais, com a cotação e a data
+ * da PTAX que converteu: a conversão é a exceção à regra "sem conversão de
+ * moeda" (AGENTS.md), e a tela tem de poder dizer de onde veio o número.
+ * Em linha não encontrada, preço e cotação ficam nulos.
+ */
+export const precoCartaCardmarket = pgTable("preco_carta_cardmarket", {
+  cartaId: text("carta_id").primaryKey(),
+  /** `idProduct` do Cardmarket: o produto que a ficha apontou. */
+  idProduto: integer("id_produto"),
+  /** O idioma da ficha que respondeu (código do nosso enum: `en`, `pt`, `jp`). */
+  idiomaConsulta: text("idioma_consulta"),
+  /** Só havia os campos `-holo` (carta que só existe em foil). */
+  foil: boolean("foil").notNull().default(false),
+  tendenciaEur: numeric("tendencia_eur", { precision: 10, scale: 2 }),
+  mediaEur: numeric("media_eur", { precision: 10, scale: 2 }),
+  minimoEur: numeric("minimo_eur", { precision: 10, scale: 2 }),
+  /** PTAX de fechamento (venda) do euro que converteu esta linha. */
+  cotacao: numeric("cotacao", { precision: 10, scale: 4 }),
+  cotacaoData: date("cotacao_data"),
+  /** Em BRL: o valor em euro × `cotacao`, arredondado a centavos. */
+  tendencia: numeric("tendencia", { precision: 10, scale: 2 }),
+  media: numeric("media", { precision: 10, scale: 2 }),
+  minimo: numeric("minimo", { precision: 10, scale: 2 }),
+  /** `pricing.cardmarket.updated`: quando a TCGdex atualizou o preço. */
+  atualizadoUpstream: timestamp("atualizado_upstream", { withTimezone: true }),
+  encontrada: boolean("encontrada").notNull(),
+  consultadoEm: timestamp("consultado_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Histórico das consultas ao Cardmarket: uma linha por carta a cada vez que
+ * ela é consultada (encontrada ou não). Só acrescenta, como
+ * `preco_carta_liga_historico`, e `rodada_id` também não é FK: a linha
+ * sobrevive à exclusão da rodada, só perde o vínculo.
+ */
+export const precoCartaCardmarketHistorico = pgTable(
+  "preco_carta_cardmarket_historico",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    cartaId: text("carta_id").notNull(),
+    rodadaId: uuid("rodada_id"),
+    foil: boolean("foil").notNull().default(false),
+    tendenciaEur: numeric("tendencia_eur", { precision: 10, scale: 2 }),
+    mediaEur: numeric("media_eur", { precision: 10, scale: 2 }),
+    minimoEur: numeric("minimo_eur", { precision: 10, scale: 2 }),
+    cotacao: numeric("cotacao", { precision: 10, scale: 4 }),
+    cotacaoData: date("cotacao_data"),
+    tendencia: numeric("tendencia", { precision: 10, scale: 2 }),
+    media: numeric("media", { precision: 10, scale: 2 }),
+    minimo: numeric("minimo", { precision: 10, scale: 2 }),
+    encontrada: boolean("encontrada").notNull(),
+    consultadoEm: timestamp("consultado_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("preco_carta_cardmarket_historico_carta_idx").on(t.cartaId, t.consultadoEm)],
+);
 
 /**
  * Uma opção de compra encontrada para uma vaga vazia, com o preço no instante

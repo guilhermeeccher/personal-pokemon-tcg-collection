@@ -218,6 +218,13 @@
       "when": 1792536494536,
       "tag": "0030_living_dex_etapas",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794416654120,
+      "tag": "0031_precos_cardmarket",
+      "breakpoints": true
     }
   ]
 }
