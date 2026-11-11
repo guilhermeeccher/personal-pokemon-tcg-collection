@@ -414,6 +414,10 @@ What it measures, and what it does not:
   Bank's PTAX: the closing selling rate of the most recent bulletin, fetched once per round. The
   screen shows the euro value next to it, and the rate used with its date. If the rate cannot be
   fetched, the round does not start.
+- **A trend far off the month does not count.** When a card's trend is more than 3× its average
+  over the last 30 days, which is usually one isolated sale, its value is the 30-day average
+  instead. The screen tags those cards ("30-day average", with both numbers), and tags the cards
+  valued by their plain average because Cardmarket has no trend for them.
 - **Compare it with LigaPokemon's lowest price, not its average.** In one install's comparison, the
   converted trend landed close to the lowest Liga price and well below the Liga average, which
   expensive listings pull up.
@@ -425,6 +429,44 @@ What it measures, and what it does not:
   minutes, not hours.
 - The overview orders your cards by the active source's price. The buy options for empty slots
   still come from LigaPokemon only.
+
+#### Updating from the command line, or on a schedule
+
+The button on the prices screen has a command-line twin that runs the same round and waits for it
+to finish:
+
+```bash
+docker compose exec app pnpm precos:cardmarket             # one round, with a readable summary
+docker compose exec app pnpm precos:cardmarket --simular   # what it would look up: no network, no writes
+```
+
+`--validade-horas N` changes how recent a lookup has to be for its card to be skipped (24 hours by
+default, like the button). The round shows on the prices screen like any other, and it never runs
+at the same time as one started from the screen.
+
+Because of that, the Cardmarket prices can be refreshed on a schedule, by your own machine calling
+the command inside the container. For another program to read the result, add `--json`: the
+command then prints a single line of JSON at the end (`status`, the lookup counts, the exchange rate,
+the new total and the previous one), and `--silent` keeps pnpm's own messages out of that output.
+The exit code is `0` when the round ran, and also when there was nothing to do (everything already
+looked up, or a round already running); `1` on an error (no exchange rate, TCGdex refusing access, a
+round that finished with errors); `2` on a wrong option, or when the install is not using
+`PRECO_FONTE=cardmarket`.
+
+An example with the host's `cron`, once a week (edit with `crontab -e`; the path and the time are
+placeholders, pick your own):
+
+```cron
+# Every Monday at 06:30, refresh the Cardmarket prices.
+30 6 * * 1  cd /path/to/colecao-pokemon && docker compose exec -T app pnpm --silent precos:cardmarket --json >> "$HOME/precos-cardmarket.log" 2>&1
+```
+
+`-T` matters: `cron` has no terminal, and without it `docker compose exec` refuses to run.
+
+This is allowed for the Cardmarket source only. TCGdex is an open API, the round is one request per
+card, one card at a time, and it stops at the first refusal. LigaPokemon prices are never fetched on
+a schedule: they come from a store's website, at the pace its `robots.txt` asks for, in rounds that
+take hours, and running them unattended is exactly the pressure on their site this project avoids.
 
 ---
 

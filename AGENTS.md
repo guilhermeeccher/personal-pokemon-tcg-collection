@@ -152,6 +152,7 @@ pnpm seed:catalogo              # loads the versioned catalog from seed/
 pnpm sync:catalogo              # syncs the TCGdex catalog (pt, en and jp) — incremental
 pnpm sync:catalogo --profundo   # revisits every set card by card (~2h30)
 pnpm importar:catalogo-repo --idioma pt --simular   # what the data repository has that the API lacks
+pnpm precos:cardmarket --simular   # one Cardmarket price round (PRECO_FONTE=cardmarket); --json for a scheduler
 docker compose up -d --build
 ```
 
@@ -369,7 +370,9 @@ The source is **LigaPokemon**, read through the site's public search (`lib/liga/
   (`lib/dominio/frescor-consulta.ts`), so triggering it again picks up where it stopped. The filter
   lives in `vagasParaVarrer`, not in `listarVagasVazias*`: the screen keeps listing every empty slot.
   **Do not turn this into a queue, a worker or a job that resumes by itself when the container comes
-  up** — it was left out on purpose.
+  up** — it was left out on purpose. Nothing scrapes LigaPokemon on a schedule either: the one
+  scheduled refresh allowed is the Cardmarket source's, from outside the app (section
+  "International price reference" below), and it does not extend to the Liga.
   A known blind spot, declared in the code: a queried slot that found no offer writes no row, so it
   has no age and gets queried again. Closing that would require a migration; the error goes to the
   safe side.
@@ -462,9 +465,9 @@ specifics:
   price table (`fotografarPrecos`, pure, `lib/dominio/historico-precos.ts`). The chart on the screen
   plots it, and it must keep saying that the total also rises when cards enter the sum.
 - The overview's "gems" are ordered by the price stored in the **active** source (cards with a
-  price first), then by the showcase rule: the Liga's average price, or the Cardmarket trend when
-  `PRECO_FONTE=cardmarket`, never the two mixed. Liga prices are BRL as the site gives them; no
-  conversion.
+  price first), then by the showcase rule: the Liga's average price, or the Cardmarket stored value
+  (`valor`) when `PRECO_FONTE=cardmarket`, never the two mixed. Liga prices are BRL as the site
+  gives them; no conversion.
 
 ### Export to LigaPokemon
 
@@ -508,11 +511,12 @@ which expensive listings pull up. TCGplayer was further off and is not used.
    (`lib/dominio/fonte-preco.ts`, like `lib/modulos.ts`), passed through `compose.yaml` with an
    empty default, documented in `.env.example`.
 2. **The card's value is the Cardmarket trend × the euro PTAX**; without a trend, the average
-   (`avg`). The non-foil fields first, the `-holo` ones only when the trend and the average are
-   both missing (the row is then flagged `foil`). Zero, negative or non-finite counts as missing:
-   upstream writes `"trend-holo": 0` when it has no data. The screen shows the euro value and the
-   quote with its date too, and calls the trend comparable to the Liga's **lowest** price, not to
-   its average (`lib/dominio/preco-cardmarket.ts`).
+   (`avg`); and a trend above 3× the card's own 30-day average is capped to that average (below).
+   The non-foil fields first, the `-holo` ones only when the trend and the average are both missing
+   (the row is then flagged `foil`, and the 30-day average is `avg30-holo`). Zero, negative or
+   non-finite counts as missing: upstream writes `"trend-holo": 0` when it has no data. The screen
+   shows the euro value and the quote with its date too, and calls the trend comparable to the
+   Liga's **lowest** price, not to its average (`lib/dominio/preco-cardmarket.ts`).
 3. **Exchange rate:** the PTAX **closing** bulletin, **selling** rate, the most recent one available
    (BCB's Olinda API, `lib/dominio/cotacao-ptax.ts`, `lib/cotacao/ptax.ts`). Fetched **once per
    round, before the round is created**; unavailable means the round does not start (refusal
@@ -545,10 +549,70 @@ which expensive listings pull up. TCGplayer was further off and is not used.
 The prices live in `preco_carta_cardmarket` (one row per `carta_id`, upserted, no FK — same reason
 as `preco_carta_liga`), holding the euro values, the BRL values, the quote and its date, the
 Cardmarket product id, the language of the row that answered and `foil`. In the aggregator
-(`comoPrecoDeCarta`) this source's "average" is the trend and its "minimum" is the Cardmarket `low`,
-so the snapshot's `soma_medios` is the sum of trends on a `cardmarket` snapshot. The GET of
-`/api/inventario/precos` answers with `fonte`, and the Cardmarket shape is the one the screen is
-written against: do not change one without the other.
+(`comoPrecoDeCarta`) this source's "average" is the stored value (`valor`, below) and its "minimum"
+is the Cardmarket `low`, so the snapshot's `soma_medios` is the sum of stored values on a
+`cardmarket` snapshot. The GET of `/api/inventario/precos` answers with `fonte`, and the Cardmarket
+shape is the one the screen is written against: do not change one without the other.
+
+### The trend cap, and the value is stored
+
+On the first real round, one cheap card came back with a Cardmarket trend 10.6× its own average and
+jumped to the top of the overview gems on that alone; it was the only card of the round with a trend
+above 2× its average. A trend that far from the month is one isolated sale, not the card's price.
+Hence the rule (`escolherValorCardmarket`, `LIMITE_TENDENCIA_SOBRE_MEDIA30 = 3`):
+
+- a trend **up to 3× the 30-day average** (`avg30`), inclusive, or with no 30-day average at all, is
+  the value (`criterio_valor = 'tendencia'`);
+- a trend **above** that is replaced by the 30-day average (`'media30'`);
+- no trend, but an average: the average (`'media'`); neither: no value (the 30-day average alone
+  does not count — it is the brake on the trend, not a substitute for it).
+
+The comparison is done in integer cents, the precision stored: in floating point `3 × 2.15` is
+`6.4499…`, and a trend of exactly 3× would be capped by a rounding error. Erring towards the 30-day
+average is the safe side: a card that really jumped shows below its worth until the average catches
+up, and the screen says why; an isolated sale taken at face value reorders the gems and inflates
+the chart with a number nobody would pay.
+
+**The value is decided once, when the price is written, and stored** — `valor` (BRL), `valor_eur`
+and `criterio_valor`, plus `media30_eur`/`media30`, on the table and on the history
+(`converterPrecoCardmarket`, `gravarPrecoCardmarket`). The stored `valor` is the **only** source of
+the screen order, the summary, the snapshot and the overview gems; none of them chooses again from
+the trend and the average. Migration `0032` backfilled the rows written before it with the old rule
+(trend, else average): they have no 30-day average, so the cap applies from each card's next lookup.
+On screen, the column is still headed "Trend" but shows the stored value, with a visible tag and a
+`Dica` when it is not the trend ("30-day average" with both euro numbers, or "average" when
+Cardmarket has no trend).
+
+### Scheduled refresh — `pnpm precos:cardmarket`, this source only
+
+The Cardmarket round may run **on a schedule**, triggered from **outside the app**: a scheduler on
+the host calls the command inside the container,
+
+```bash
+docker compose exec -T app pnpm --silent precos:cardmarket --json
+```
+
+which goes through the same entry point as the button (`iniciarRodadaCardmarket` in
+`lib/cardmarket/precos.ts`: dead rounds closed, the same refusals, the PTAX, the per-source lock)
+and waits for the round to end. The round shows on the screen like any other, and it never runs
+alongside one started by the button. `--json` prints **one line** of JSON at the end (status,
+refusal key, counts, the rate, this round's snapshot total and the previous chart point of this
+source); `--simular` counts what would be looked up and skipped, with no network and no writes;
+`--validade-horas N` sets the freshness window (default the button's). Exit codes: `0` ok, and also
+the refusals that are not failures (`precosJaConsultados`, `precosEmAndamento`,
+`semCartasEspeciais`); `1` error (PTAX unavailable, a block, an exception, a round finished with
+`erro`); `2` wrong usage or an install whose `PRECO_FONTE` is not `cardmarket` — there the command
+refuses before touching the database, since it would fill tables the screen does not show. The
+contract lives in `lib/dominio/comando-precos-cardmarket.ts`, pure and tested. `--silent` keeps
+pnpm's own "command failed" line out of stdout on a non-zero exit, so the JSON stays the only line.
+
+**Why this source may be scheduled and the Liga may not:** TCGdex is an open API meant to be
+queried; the round is one request per card, one card at a time, through the polite client, and
+finishes in minutes; a block aborts it on the first refusal. The Liga is a scrape of a store's site
+under a `Crawl-delay` of minutes, with rounds that take hours: a schedule there is exactly the
+unattended pressure on their site that the rules above exist to prevent. **The ban on automatic jobs
+stands for the Liga**, and the app itself still has no worker, queue or resume on boot for either
+source — the schedule belongs to whoever installs it, outside the app.
 
 ---
 
