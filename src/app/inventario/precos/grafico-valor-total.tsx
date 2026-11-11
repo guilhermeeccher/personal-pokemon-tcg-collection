@@ -2,13 +2,24 @@
 
 /**
  * Gráfico do valor total das cartas precificadas ao longo das rodadas: um
- * ponto por foto (`liga_snapshot_preco`), em reais, SVG inline sem
- * dependência. Uma série só — o título já diz o que é, então não há legenda.
+ * ponto por foto (`liga_snapshot_preco`) da fonte de preço ativa, em reais,
+ * SVG inline sem dependência. Uma série só — o título já diz o que é, então
+ * não há legenda.
  *
  * O total também sobe quando entram cartas na tabela (uma rodada nova pode
  * precificar mais cartas), e não só quando os preços valorizam. Por isso cada
  * ponto mostra quantas cartas tinha e o preço médio por carta, e a tela
  * avisa isso por escrito: comprar não pode ser lido como valorização.
+ *
+ * ## Fonte de preço
+ *
+ * O servidor só manda as fotos da fonte ativa: a série da Liga e a do
+ * Cardmarket nunca se misturam, porque trocar uma pela outra no mesmo
+ * desenho pareceria uma queda (a tendência do Cardmarket fica perto do menor
+ * preço da Liga, bem abaixo do médio) que não aconteceu. A conta dos pontos é
+ * a mesma nas duas; o que muda são os rótulos que dizem o que é o total — na
+ * Liga a soma dos preços médios, no Cardmarket a soma das tendências — e o
+ * aviso, que no Cardmarket acrescenta que a série também acompanha o câmbio.
  *
  * Largura medida (ResizeObserver) e o SVG desenhado nela, em vez de um
  * viewBox esticado: assim o texto dos eixos mantém o tamanho em 400 px.
@@ -62,8 +73,20 @@ function escalaY(maximo: number): { topo: number; ticks: number[] } {
   return { topo: n * passo, ticks: Array.from({ length: n + 1 }, (_, i) => i * passo) };
 }
 
-export function GraficoValorTotal({ serie }: { serie: readonly PontoDaSerie[] }) {
+/** Os rótulos que dizem o que é o total; cada um tem a versão do Cardmarket
+ *  em `precos.grafico.cardmarket`. Os outros servem às duas fontes. */
+type RotuloDaFonte = "titulo" | "aviso" | "rotuloGrafico" | "ponto" | "tooltipMedia" | "colunaTotal" | "colunaMedia";
+
+export function GraficoValorTotal({
+  serie,
+  fonte: fontePreco,
+}: {
+  serie: readonly PontoDaSerie[];
+  fonte: "liga" | "cardmarket";
+}) {
   const t = useTranslations("precos.grafico");
+  // `fonte`, aqui dentro, já é o tamanho do texto do SVG; a de preço é `fontePreco`.
+  const r = (chave: RotuloDaFonte) => (fontePreco === "cardmarket" ? `cardmarket.${chave}` : chave);
   const locale = useLocale();
   const caixa = useRef<HTMLDivElement>(null);
   const [largura, setLargura] = useState(0);
@@ -110,7 +133,7 @@ export function GraficoValorTotal({ serie }: { serie: readonly PontoDaSerie[] })
       minute: "2-digit",
     });
   const descricaoPonto = (p: PontoDaSerie) =>
-    t("ponto", {
+    t(r("ponto"), {
       data: diaHora(p.tiradoEm),
       total: brl(p.somaMedios),
       media: brl(p.precoMedioPorCarta),
@@ -155,8 +178,8 @@ export function GraficoValorTotal({ serie }: { serie: readonly PontoDaSerie[] })
   return (
     <section className="flex flex-col gap-3 rounded-card border border-hairline bg-surface p-4 shadow-1">
       <div className="flex flex-col gap-1">
-        <h2 className="text-base font-semibold text-strong">{t("titulo")}</h2>
-        <p className="text-sm text-muted">{t("aviso")}</p>
+        <h2 className="text-base font-semibold text-strong">{t(r("titulo"))}</h2>
+        <p className="text-sm text-muted">{t(r("aviso"))}</p>
       </div>
 
       {serie.length === 1 && (
@@ -171,7 +194,7 @@ export function GraficoValorTotal({ serie }: { serie: readonly PontoDaSerie[] })
             width={w}
             height={ALTURA}
             role="img"
-            aria-label={t("rotuloGrafico", { pontos: serie.length })}
+            aria-label={t(r("rotuloGrafico"), { pontos: serie.length })}
             onPointerMove={apontar}
             onPointerUp={(e) => {
               if (mobile && e.pointerType === "touch") apontar(e);
@@ -264,7 +287,7 @@ export function GraficoValorTotal({ serie }: { serie: readonly PontoDaSerie[] })
           >
             <div className="font-semibold text-strong">{diaHora(p.tiradoEm)}</div>
             <div className="font-mono tabular-nums text-strong">{brl(p.somaMedios)}</div>
-            <div className="text-muted">{t("tooltipMedia", { media: brl(p.precoMedioPorCarta) })}</div>
+            <div className="text-muted">{t(r("tooltipMedia"), { media: brl(p.precoMedioPorCarta) })}</div>
             <div className="text-muted">{t("tooltipCartas", { cartas: p.cartasComPreco })}</div>
           </div>
         )}
@@ -282,7 +305,7 @@ export function GraficoValorTotal({ serie }: { serie: readonly PontoDaSerie[] })
             <>
               <div className="font-semibold text-strong">{diaHora(p.tiradoEm)}</div>
               <div className="font-mono tabular-nums text-strong">{brl(p.somaMedios)}</div>
-              <div className="text-muted">{t("tooltipMedia", { media: brl(p.precoMedioPorCarta) })}</div>
+              <div className="text-muted">{t(r("tooltipMedia"), { media: brl(p.precoMedioPorCarta) })}</div>
               <div className="text-muted">{t("tooltipCartas", { cartas: p.cartasComPreco })}</div>
             </>
           ) : (
@@ -298,8 +321,8 @@ export function GraficoValorTotal({ serie }: { serie: readonly PontoDaSerie[] })
             <thead>
               <tr className="text-muted">
                 <th className="p-1 font-medium">{t("colunaData")}</th>
-                <th className="p-1 text-right font-medium">{t("colunaTotal")}</th>
-                <th className="p-1 text-right font-medium">{t("colunaMedia")}</th>
+                <th className="p-1 text-right font-medium">{t(r("colunaTotal"))}</th>
+                <th className="p-1 text-right font-medium">{t(r("colunaMedia"))}</th>
                 <th className="p-1 text-right font-medium">{t("colunaCartas")}</th>
               </tr>
             </thead>
