@@ -781,7 +781,11 @@
       "foilExplicacao": "A TCGdex só traz preço do Cardmarket para a versão foil desta carta; os três valores são dessa versão.",
       "cotacaoDaLinha": "câmbio de {data}",
       "semPreco": "Sem preço no Cardmarket",
-      "semPrecoExplicacao": "A TCGdex não traz preço do Cardmarket para esta carta."
+      "semPrecoExplicacao": "A TCGdex não traz preço do Cardmarket para esta carta.",
+      "criterioMedia30": "média 30 dias",
+      "criterioMedia30Explicacao": "A tendência do Cardmarket ({tendencia}) passou de {limite}× a média dos últimos 30 dias ({media30}), então vale a média de 30 dias.",
+      "criterioMedia": "média",
+      "criterioMediaExplicacao": "O Cardmarket não traz tendência para esta carta, então vale a média de preço dela."
     },
     "grafico": {
       "titulo": "Valor total ao longo das consultas",

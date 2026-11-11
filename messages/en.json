@@ -781,7 +781,11 @@
       "foilExplicacao": "TCGdex only has a Cardmarket price for the foil version of this card; all three values are for that version.",
       "cotacaoDaLinha": "rate of {data}",
       "semPreco": "No Cardmarket price",
-      "semPrecoExplicacao": "TCGdex has no Cardmarket price for this card."
+      "semPrecoExplicacao": "TCGdex has no Cardmarket price for this card.",
+      "criterioMedia30": "30-day average",
+      "criterioMedia30Explicacao": "The Cardmarket trend ({tendencia}) is more than {limite}× the average of the last 30 days ({media30}), so the 30-day average is used.",
+      "criterioMedia": "average",
+      "criterioMediaExplicacao": "Cardmarket has no trend for this card, so its average price is used."
     },
     "grafico": {
       "titulo": "Total value over the rounds",

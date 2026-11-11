@@ -11,8 +11,11 @@
  * - **Cardmarket**: a tendência do Cardmarket que a TCGdex entrega, convertida
  *   em reais pela PTAX de fechamento. É referência internacional, comparável ao
  *   **menor** preço da Liga, não ao médio — por isso a descrição diz isso, a
- *   coluna em destaque é a tendência, com o valor em euro embaixo, e a cotação
- *   usada fica escrita com a data.
+ *   coluna em destaque é a da tendência, com o valor em euro embaixo, e a
+ *   cotação usada fica escrita com a data. O número em destaque é o **valor
+ *   guardado** da carta (`valor`): a tendência, salvo quando ela passou da
+ *   trava da média de 30 dias ou não existe — e então a linha diz qual média
+ *   valeu, e por quê.
  *
  * A tela lê **sempre o snapshot** de `GET /api/inventario/precos`; quem fala
  * com o site deles é a rodada que o botão dispara. Na Liga, no ritmo do
@@ -49,6 +52,10 @@ import { formatarDuracao } from "@/lib/dominio/estimativa-varredura";
 import { VALIDADE_CONSULTA_HORAS } from "@/lib/dominio/frescor-consulta";
 import type { FontePreco } from "@/lib/dominio/fonte-preco";
 import type { PontoDaSerie } from "@/lib/dominio/historico-precos";
+import {
+  LIMITE_TENDENCIA_SOBRE_MEDIA30,
+  type CriterioValorCardmarket,
+} from "@/lib/dominio/preco-cardmarket";
 
 import { GraficoValorTotal } from "./grafico-valor-total";
 
@@ -106,8 +113,10 @@ interface CotacaoDTO {
 
 /**
  * Uma carta na fonte Cardmarket. Os valores sem sufixo estão em reais, já
- * convertidos pela `cotacao` da própria linha; `tendenciaEur` é o original.
+ * convertidos pela `cotacao` da própria linha; os `…Eur` são os originais.
  * `foil` diz que só havia os preços da versão foil e os três são dela.
+ * `valor` é o valor guardado da carta, e `criterioValor` diz de onde ele veio:
+ * a tendência, a média de 30 dias (a trava) ou a média (sem tendência).
  */
 interface ItemPrecoCardmarketDTO {
   cartaId: string;
@@ -120,6 +129,10 @@ interface ItemPrecoCardmarketDTO {
   tendencia: number | null;
   media: number | null;
   tendenciaEur: number | null;
+  valor: number | null;
+  valorEur: number | null;
+  criterioValor: CriterioValorCardmarket | null;
+  media30Eur: number | null;
   foil: boolean;
   cotacao: number | null;
   cotacaoData: string | null;
@@ -151,7 +164,7 @@ interface RespostaCardmarketDTO extends RespostaComumDTO {
   ritmo: null;
   /** Da linha encontrada consultada mais recentemente; `null` antes da primeira. */
   cotacao: CotacaoDTO | null;
-  /** Ordenados por valor (tendência, senão média), depois nome e `cartaId`. */
+  /** Ordenados pelo valor guardado (`valor`), depois nome e `cartaId`. */
   itens: ItemPrecoCardmarketDTO[];
 }
 
@@ -199,7 +212,7 @@ const classesDetalhePreco = "block whitespace-nowrap font-sans text-xs font-norm
    fonte Cardmarket mora a única exceção a essa regra: os preços vêm em euro e
    o servidor os converte pela PTAX de fechamento do dia da consulta. Por isso
    a tela os rotula sempre — a fonte na descrição, a cotação e a data embaixo
-   do botão, o original em euro embaixo da tendência — e nunca os soma nem os
+   do botão, o original em euro embaixo do valor da carta — e nunca os soma nem os
    compara com valores da Liga: as duas fontes não aparecem juntas. */
 const moeda = (valor: number, locale: string, codigo: "BRL" | "EUR") =>
   valor.toLocaleString(locale, { style: "currency", currency: codigo });
@@ -471,8 +484,9 @@ export default function PrecosPage({ fonte: fonteDoServidor }: { fonte?: FontePr
 
       {dados && <GraficoValorTotal serie={dados.serie} fonte={fonte} />}
 
-      {/* No Cardmarket o `somaMedios` do servidor é a soma das tendências
-          (`comoPrecoDeCarta`): a conta é a mesma, só o nome muda. */}
+      {/* No Cardmarket o `somaMedios` do servidor é a soma dos valores
+          guardados — as tendências, salvo a trava (`comoPrecoDeCarta`): a
+          conta é a mesma, só o nome muda. */}
       {dados && dados.itens.length > 0 && (
         <p className="text-sm text-muted">
           {t(cardmarket ? "cardmarket.resumo" : "resumo", {
@@ -698,9 +712,17 @@ export default function PrecosPage({ fonte: fonteDoServidor }: { fonte?: FontePr
 /**
  * Uma carta na fonte Cardmarket: a mesma linha da Liga — mesmas classes, o
  * mesmo cartão abaixo de 768px —, com Mínimo | Tendência | Média no lugar de
- * Mínimo | Médio | Máximo. A tendência vem em negrito, porque é o valor da
- * carta nesta fonte (e o que o resumo e o gráfico somam); embaixo dela, o
- * original em euro e, quando só havia a versão foil, a marca "foil".
+ * Mínimo | Médio | Máximo. A coluna da tendência mostra, em negrito, o **valor
+ * guardado** da carta (`valor`), porque é ele que o resumo, o gráfico e a
+ * ordem usam; embaixo, o original em euro e, quando só havia a versão foil, a
+ * marca "foil".
+ *
+ * Quase sempre o valor é a própria tendência. Quando não é, a linha diz, com
+ * uma etiqueta à vista e a explicação na `Dica` (o `title` não existe no
+ * toque): "média 30 dias" quando a tendência passou da trava
+ * (`LIMITE_TENDENCIA_SOBRE_MEDIA30` × a média dos últimos 30 dias), com os
+ * dois números em euro, e "média" quando o Cardmarket não traz tendência —
+ * o que antes aparecia como "—" numa coluna que o resumo somava mesmo assim.
  *
  * A cotação de cada linha é a do dia em que ela foi consultada. Quase sempre é
  * a que a tela anuncia embaixo do botão; quando não é (a carta foi pulada pelo
@@ -725,6 +747,26 @@ function LinhaPrecoCardmarket({
     (cotacaoDaTela === null || i.cotacaoData !== cotacaoDaTela.data || i.cotacao !== cotacaoDaTela.valor)
       ? i.cotacaoData
       : null;
+  const euroOuTraco = (v: number | null) => (v !== null ? eur(v, locale) : "—");
+  const criterio =
+    i.criterioValor === "media30"
+      ? {
+          tom: "aviso" as const,
+          rotulo: t("cardmarket.criterioMedia30"),
+          explicacao: t("cardmarket.criterioMedia30Explicacao", {
+            tendencia: euroOuTraco(i.tendenciaEur),
+            media30: euroOuTraco(i.media30Eur),
+            // Texto, não número: o ICU formataria "3" pela localidade à toa.
+            limite: String(LIMITE_TENDENCIA_SOBRE_MEDIA30),
+          }),
+        }
+      : i.criterioValor === "media"
+        ? {
+            tom: "neutro" as const,
+            rotulo: t("cardmarket.criterioMedia"),
+            explicacao: t("cardmarket.criterioMediaExplicacao"),
+          }
+        : null;
   return (
     <tr className={`${classesLinha} ${classesLinhaCartao}`}>
       <td className={`p-2 font-semibold text-strong ${classesCelulaEmpilhada} max-md:basis-full`}>{i.nome}</td>
@@ -748,17 +790,26 @@ function LinhaPrecoCardmarket({
             className={`p-2 text-right font-mono font-semibold tabular-nums ${classesCelulaEmpilhada} ${classesCampoPreco} max-md:self-start`}
           >
             <span className={`${classesRotuloCampo} font-normal`}>{t("cardmarket.colunaTendencia")}</span>
-            {i.tendencia !== null ? brl(i.tendencia, locale) : "—"}
-            {(i.tendenciaEur !== null || i.foil) && (
+            {i.valor !== null ? brl(i.valor, locale) : "—"}
+            {(i.valorEur !== null || i.foil) && (
               <span className={classesDetalhePreco}>
-                {i.tendenciaEur !== null && eur(i.tendenciaEur, locale)}
-                {i.tendenciaEur !== null && i.foil && " · "}
+                {i.valorEur !== null && eur(i.valorEur, locale)}
+                {i.valorEur !== null && i.foil && " · "}
                 {i.foil && (
                   // No toque o `title` não existe: a explicação vira um toggletip.
                   <Dica texto={t("cardmarket.foilExplicacao")}>
                     <span title={t("cardmarket.foilExplicacao")}>{t("cardmarket.foil")}</span>
                   </Dica>
                 )}
+              </span>
+            )}
+            {/* Linha própria, e não ao lado do euro: com "foil" e a etiqueta, dois
+                botões "i" disputariam a mesma linha de uma coluna estreita a 320px. */}
+            {criterio !== null && (
+              <span className="mt-1 block">
+                <Distintivo tom={criterio.tom} title={criterio.explicacao} dica className="font-sans">
+                  {criterio.rotulo}
+                </Distintivo>
               </span>
             )}
             {cotacaoDaLinha !== null && (
