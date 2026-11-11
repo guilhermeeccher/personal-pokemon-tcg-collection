@@ -274,7 +274,11 @@ export interface CartaVitrineDTO {
   localId: string;
   raridade: string | null;
   imagemUrl: string;
-  /** Preço médio (senão o mínimo) na Liga, em BRL. `null` até a carta ser consultada. */
+  /**
+   * O valor guardado na fonte de preço ativa, em BRL: na Liga, o preço médio
+   * (senão o mínimo); no Cardmarket, a tendência convertida pela PTAX (senão
+   * a média). `null` até a carta ser consultada.
+   */
   preco: number | null;
 }
 
