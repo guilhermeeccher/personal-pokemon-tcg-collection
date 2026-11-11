@@ -21,6 +21,7 @@
 import {
   BookOpen,
   ChartPie,
+  Check,
   ChevronRight,
   Circle,
   CirclePlus,
@@ -39,6 +40,7 @@ import {
   Menu,
   Search,
   Sparkles,
+  SquarePlus,
   Star,
   Tag,
   Trophy,
@@ -49,6 +51,7 @@ import type { LucideIcon } from "lucide-react";
 const ICONES = {
   "book-open": BookOpen,
   "chart-pie": ChartPie,
+  check: Check,
   "chevron-right": ChevronRight,
   circle: Circle,
   "circle-plus": CirclePlus,
@@ -67,6 +70,7 @@ const ICONES = {
   menu: Menu,
   search: Search,
   sparkles: Sparkles,
+  "square-plus": SquarePlus,
   star: Star,
   tag: Tag,
   trophy: Trophy,

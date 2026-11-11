@@ -77,6 +77,7 @@ export const MODULO_VIRTUAL_GAME: ModuloNav = {
         { href: "/dex/caixas", chaveLabel: "itens.caixas", icone: "layout-grid" },
         { href: "/dex/recebidos", chaveLabel: "itens.recebidos", icone: "inbox" },
         { href: "/dex/cadastrar", chaveLabel: "itens.cadastrarDex", icone: "circle-plus" },
+        { href: "/dex/novo-cadastro", chaveLabel: "itens.novoCadastroDex", icone: "square-plus" },
         { href: "/dex/inventario", chaveLabel: "itens.inventarioDex", icone: "library" },
       ],
     },
