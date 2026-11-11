@@ -35,7 +35,8 @@
  * marcado"): o número da Pokédex sozinho não distingue formas da mesma
  * espécie. Por isso a vaga no HOME também é um botão, só que informativo:
  * tocar ou focar nela escreve "— No HOME" na barra e não seleciona nada. O
- * foco numa vaga marcável escreve o estado dela, para quem anda com Tab.
+ * foco de teclado numa vaga marcável escreve o estado dela, para quem anda
+ * com Tab; o foco do clique não escreve nada (ver `focoDeTeclado`).
  *
  * ## Par de gênero (decisão de 2026-11-11)
  *
@@ -58,7 +59,8 @@
  *   `main` reserva a altura dela. Abaixo de 640px, duas faixas (o texto em
  *   cima, os botões embaixo); de 640 a 767 (o celular deitado, ~340px de
  *   altura) uma faixa só, senão a barra tomava metade da tela. No desktop ela
- *   fica grudada no topo da área que rola, perto de onde se marca.
+ *   fica grudada no topo da área que rola, perto de onde se marca, e com
+ *   altura fixa (ver `BarraAcao`).
  *
  * ~1.300 vagas por trilha: a vaga é memorizada e só redesenha quando muda o
  * que ela mostra — um toque redesenha uma vaga, não a grade.
@@ -173,6 +175,25 @@ const CHAVE_SAIDA = "dex:novo-cadastro:saida";
 const SIMBOLO_GENERO: Record<LadoGenero, string> = { macho: "♂︎", femea: "♀︎" };
 
 const numero4 = (n: number) => String(n).padStart(4, "0");
+
+/**
+ * O foco veio do teclado (Tab), e não de um clique ou toque? Só esse
+ * identifica a vaga na barra. O foco do clique chega no `mousedown`, antes
+ * do `click`: se ele mudasse a barra, a barra grudada do desktop mudava de
+ * altura, a grade descia e o `click` caía fora da vaga (medido a 768px: a
+ * vaga ficava só focada, sem marcar). Clique e toque identificam pelo
+ * próprio `onClick`. Quem decide é a heurística do navegador
+ * (`:focus-visible`, a mesma do anel de foco); navegador que não conhece o
+ * seletor lança no `matches`, e aí vale "não": perde-se a linha para quem
+ * usa Tab, nunca o clique.
+ */
+function focoDeTeclado(el: Element): boolean {
+  try {
+    return el.matches(":focus-visible");
+  } catch {
+    return false;
+  }
+}
 const chaveDaVaga = (formaId: string, trilha: TrilhaDex) => `${formaId}:${trilha}`;
 const idDaVaga = (formaId: string, trilha: TrilhaDex) => `vaga-${formaId}-${trilha}`;
 
@@ -407,7 +428,9 @@ const Vaga = memo(function Vaga({
         // `scroll-mt`: o foco por Tab não para debaixo da barra grudada no topo (desktop).
         className={`group relative flex h-full w-full items-center justify-center rounded-md md:scroll-mt-24 ${BORDA_BOTAO[estado]}`}
         onClick={() => (soInforma ? aoIdentificar(alvo) : aoAlternar(alvo, !marcada))}
-        onFocus={() => aoIdentificar(alvo)}
+        onFocus={(e) => {
+          if (focoDeTeclado(e.currentTarget)) aoIdentificar(alvo);
+        }}
         onMouseEnter={abrir({ sprite: forma.sprite, shiny, nome, linhas: linhasCartao })}
         onMouseLeave={fechar}
       >
@@ -443,13 +466,22 @@ const Vaga = memo(function Vaga({
  * do par ao lado): 12 + 48 + 8 + 44 + 12 = 124px. De 640 a 767, uma faixa
  * só e recuo de 8px (8 + 44 + 8 = 60px), porque deitado o celular tem
  * ~340px de altura: o texto ali não passa de duas linhas, que cabem nos
- * 44px dos botões. Desktop: grudada no topo da área
- * que rola, porque a grade tem dezenas de caixas e o botão no começo da
- * página ficaria longe do que se acabou de marcar.
+ * 44px dos botões.
+ *
+ * Desktop: grudada no topo da área que rola, porque a grade tem dezenas de
+ * caixas e o botão no começo da página ficaria longe do que se acabou de
+ * marcar. Grudada, ela está no fluxo da página: se mudasse de altura a cada
+ * toque, a grade inteira pulava junto (a 768px, 48px entre o `mousedown` e o
+ * `click`, que caía fora da vaga). Por isso, do `md` para cima, uma linha só
+ * (`flex-nowrap`) e altura reservada para o estado mais alto da faixa, com o
+ * texto cortado dentro dela: de 768 a 1023, último toque em até duas linhas
+ * mais a linha do par, 48px de texto (12 + 48 + 12 + 1 = 73px de barra); de
+ * 1024 para cima, uma linha de cada, 32px (12 + 32 + 12 + 1 = 57px). O corte
+ * é só visual: o texto inteiro continua no DOM, e o leitor de tela o lê.
  */
 function BarraAcao({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 md:sticky md:top-0 md:z-10 md:border-b md:border-hairline md:bg-background md:py-3 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:border-t max-md:border-line max-md:bg-surface max-md:px-4 max-sm:pt-3 max-sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:max-md:flex-nowrap sm:max-md:pt-2 sm:max-md:pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 md:sticky md:top-0 md:z-10 md:flex-nowrap md:border-b md:border-hairline md:bg-background md:py-3 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:border-t max-md:border-line max-md:bg-surface max-md:px-4 max-sm:pt-3 max-sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:max-md:flex-nowrap sm:max-md:pt-2 sm:max-md:pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
       {children}
     </div>
   );
@@ -961,27 +993,32 @@ export function NovoCadastro({
 
       {etapa === 1 ? (
         <BarraAcao>
-          {/* Deitado, a contagem quebra em duas linhas ("12 normais ·" / "3 shiny")
-              para sobrar largura ao último toque e ao botão do par. */}
-          <span className="text-xs tabular-nums text-muted max-sm:min-w-0 max-sm:flex-1 sm:max-md:max-w-[5.5rem] sm:max-md:shrink-0">
+          {/* Deitado e no desktop até 1023px, a contagem quebra em duas linhas
+              ("12 normais ·" / "3 shiny") para sobrar largura ao último toque e
+              ao botão do par; duas linhas cabem na altura da barra das duas faixas. */}
+          <span className="text-xs tabular-nums text-muted max-sm:min-w-0 max-sm:flex-1 sm:shrink-0 sm:max-lg:max-w-[5.5rem]">
             {contagem}
           </span>
           {/* No celular é a única identificação da vaga tocada. Em pé, numa
               faixa própria: até duas linhas dela (o "marcado/desmarcado" do
               fim não é cortado), mais uma do par. Deitado, ao lado dos botões,
               no máximo duas linhas no total (32px), que cabem na altura deles
-              (44px): com par, o último toque perde a segunda. O botão do par
-              diz "Marcar ♀" até o `lg` e "Marcar fêmea" dali para cima; o
-              rótulo acessível é sempre o completo. */}
+              (44px): com par, o último toque perde a segunda. No desktop, a
+              altura reservada de `BarraAcao` (48px até 1023, 32px dali para
+              cima), com o texto cortado dentro dela. O botão do par diz
+              "Marcar ♀" até o `lg` e "Marcar fêmea" dali para cima; o rótulo
+              acessível é sempre o completo. */}
           <div className="flex min-w-0 items-center gap-3 sm:flex-1 max-sm:order-first max-sm:w-full">
-            <div className="min-w-0 flex-1 text-xs">
+            <div className="min-w-0 flex-1 text-xs md:flex md:flex-col md:justify-center md:max-lg:min-h-12 lg:min-h-8">
               <p
-                className={`text-foreground md:inline max-sm:line-clamp-2 ${parDoUltimo ? "sm:max-md:line-clamp-1" : "sm:max-md:line-clamp-2"}`}
+                className={`text-foreground max-sm:line-clamp-2 md:max-lg:line-clamp-2 ${
+                  parDoUltimo ? "sm:max-md:line-clamp-1 lg:line-clamp-1" : "sm:max-md:line-clamp-2 lg:line-clamp-2"
+                }`}
               >
                 {acimaDoTeto ? textoAcimaDoTeto : textoUltimo}
               </p>
               {parDoUltimo && (
-                <p className="truncate text-muted md:ml-3 md:inline">
+                <p className="truncate text-muted">
                   <span aria-hidden>{parDoUltimo.curto}</span>
                   <span className="sr-only">{parDoUltimo.longo}</span>
                 </p>
@@ -1016,7 +1053,8 @@ export function NovoCadastro({
           <Botao tamanho="sm" onClick={voltar} disabled={enviando}>
             {t("novoCadastro.voltar")}
           </Botao>
-          <p className="min-w-0 text-xs text-muted sm:flex-1 max-md:line-clamp-2 max-sm:order-first max-sm:w-full">
+          {/* Desktop: uma linha (`truncate`), para a barra grudada não mudar de altura. */}
+          <p className="min-w-0 text-xs text-muted sm:flex-1 max-md:line-clamp-2 max-sm:order-first max-sm:w-full md:truncate">
             {motivoBloqueio}
           </p>
           <Botao
