@@ -5,7 +5,8 @@ import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
 import type { CategoriaFormaDex, SecaoLigavel } from "@/lib/dominio/dex-classificacao";
 import { naoTransferiveis } from "@/lib/dominio/dex-disponibilidade";
-import { ehJogoDex, jogoDex, LOCAL_HOME, ordemJogo } from "@/lib/dominio/dex-jogos";
+import { chaveVagaTrilha, planejarEnvioHome, type LoteEnvioHome } from "@/lib/dominio/dex-envio-home";
+import { ehJogoDex, jogoDex, LOCAL_HOME, ORIGEM_HOME, ordemJogo } from "@/lib/dominio/dex-jogos";
 import {
   ehPedidoDeConfirmacao,
   expandirLoteCadastro,
@@ -306,6 +307,95 @@ export async function moverRegistros(
       .where(inArray(dexRegistro.id, mudam));
   }
   return { ok: true, movidos: atuais.length };
+}
+
+/**
+ * Chave do `pg_advisory_xact_lock` do envio ao HOME. Número arbitrário,
+ * único no app: um outro lock consultivo que aparecer usa outro número —
+ * com o mesmo, um esperaria pelo outro sem motivo.
+ */
+const TRAVA_ENVIO_HOME = 7_310_004_001;
+
+/**
+ * Novo cadastro: manda ao HOME as vagas escolhidas nas caixas, saindo de um
+ * jogo do usuário ou nascidas no HOME (`dex-envio-home.ts`). Uma transação:
+ * move o registro que está no jogo de saída ou cria um novo, todos "a
+ * guardar"; qualquer recusa recusa o lote, e nada é gravado.
+ *
+ * O lock consultivo serializa um envio contra o outro. Em READ COMMITTED,
+ * cada leitura depois dele enxerga o que o envio anterior gravou: a segunda
+ * aba encontra a vaga já no HOME e é recusada, em vez de mover o mesmo
+ * registro ou criar a mesma vaga duas vezes. Os candidatos ainda vão com
+ * `FOR UPDATE`: o "Levar ao HOME" e a remoção não passam pelo lock, e o
+ * registro escolhido não pode mudar de lugar entre a leitura e o movimento.
+ *
+ * A recusa sai por `return` porque nada foi gravado até ali: a transação
+ * fecha só com as leituras.
+ */
+export async function enviarAoHome(
+  db: Db,
+  lote: LoteEnvioHome,
+): Promise<
+  | { ok: true; criados: number; movidos: number }
+  | { ok: false; recusas: Recusa[]; status: 400 }
+  | { ok: false; motivo: Recusa; status: 409 }
+> {
+  const formas = [...new Set(lote.itens.map((i) => i.formaId))];
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(${TRAVA_ENVIO_HOME}::bigint)`);
+
+    // Saída pelo HOME sempre cria: não há candidato a mover.
+    const candidatos =
+      lote.jogoOrigem === ORIGEM_HOME
+        ? []
+        : await tx
+            .select({
+              id: dexRegistro.id,
+              formaId: dexRegistro.formaId,
+              shiny: dexRegistro.shiny,
+              jogoOrigem: dexRegistro.jogoOrigem,
+              local: dexRegistro.local,
+            })
+            .from(dexRegistro)
+            .where(and(eq(dexRegistro.local, lote.jogoOrigem), inArray(dexRegistro.formaId, formas)))
+            .orderBy(asc(dexRegistro.criadoEm), asc(dexRegistro.id))
+            .for("update");
+    const noHome = await tx
+      .selectDistinct({ formaId: dexRegistro.formaId, shiny: dexRegistro.shiny })
+      .from(dexRegistro)
+      .where(and(eq(dexRegistro.local, LOCAL_HOME), inArray(dexRegistro.formaId, formas)));
+    // Só as formas do lote: é tudo o que o planejador pergunta.
+    const formasAtivas = await tx
+      .select({ id: dexForma.id, shinyObtenivel: dexForma.shinyObtenivel })
+      .from(dexForma)
+      .where(and(eq(dexForma.ativa, true), inArray(dexForma.id, formas)));
+    const jogos = await tx
+      .select({ jogoId: dexJogoPossuido.jogoId })
+      .from(dexJogoPossuido)
+      .where(eq(dexJogoPossuido.ativo, true));
+
+    const plano = planejarEnvioHome(lote, candidatos, {
+      formasAtivas: new Set(formasAtivas.map((f) => f.id)),
+      jogosAtivos: new Set(jogos.map((j) => j.jogoId)),
+      naoTransferiveis: naoTransferiveis(),
+      formasSemShiny: new Set(formasAtivas.filter((f) => !f.shinyObtenivel).map((f) => f.id)),
+      vagasNoHome: new Set(noHome.map((r) => chaveVagaTrilha(r.formaId, r.shiny))),
+    });
+    if (!plano.ok) {
+      return "confirmacao" in plano
+        ? { ok: false as const, motivo: plano.confirmacao, status: 409 as const }
+        : { ok: false as const, recusas: plano.recusas, status: 400 as const };
+    }
+
+    if (plano.criar.length > 0) await tx.insert(dexRegistro).values(plano.criar.map(comAGuardar));
+    if (plano.mover.length > 0) {
+      await tx
+        .update(dexRegistro)
+        .set({ local: LOCAL_HOME, aGuardar: true, atualizadoEm: new Date() })
+        .where(inArray(dexRegistro.id, plano.mover));
+    }
+    return { ok: true as const, criados: plano.criar.length, movidos: plano.mover.length };
+  });
 }
 
 /**
