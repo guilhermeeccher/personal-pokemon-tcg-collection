@@ -27,7 +27,9 @@ import { converterParaReais, type PrecoCardmarket } from "@/lib/dominio/preco-ca
  * `consultado_em` dela (`gravarPrecoCardmarket`); lido dali, o frescor seria
  * o do preço antigo, e a carta seria perguntada de novo a cada rodada. O
  * histórico guarda toda consulta, e a última é a resposta mais recente. O
- * índice `(carta_id, consultado_em)` serve esta leitura.
+ * filtro é só por data, que o índice `(carta_id, consultado_em)` não torna
+ * seletivo; não precisa: o histórico cresce uma linha por carta consultada,
+ * algumas centenas por rodada.
  */
 export async function consultasCardmarketDesde(
   db: Database,

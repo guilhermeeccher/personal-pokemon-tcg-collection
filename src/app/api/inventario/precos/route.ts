@@ -247,6 +247,21 @@ export const GET = comAcesso(async function GET(req: Request) {
 
 // --- Fonte Cardmarket -------------------------------------------------------
 
+/** A recusa de um disparo sem nada a consultar: sem carta especial, ou tudo fresco. */
+function nadaAConsultar(
+  { puladas, total }: { puladas: readonly unknown[]; total: number },
+  validadeHoras: number,
+) {
+  const nada =
+    total === 0
+      ? recusa("semCartasEspeciais")
+      : recusa("precosJaConsultados", {
+          total: String(puladas.length),
+          horas: String(validadeHoras),
+        });
+  return NextResponse.json({ ...corpoDaRecusa(nada), cartasPuladas: puladas.length }, { status: 400 });
+}
+
 /**
  * `POST` com a fonte Cardmarket. Mesma ordem de recusas da Liga — rodada
  * viva (409), nada a consultar (400) —, mais a cotação: sem a PTAX do euro a
@@ -265,17 +280,8 @@ async function iniciarRodadaCardmarket(validadeHoras: number) {
     );
   }
 
-  const { pendentes, puladas, total } = await cartasParaConsultarCardmarket(db, { validadeHoras });
-  if (pendentes.length === 0) {
-    const nada =
-      total === 0
-        ? recusa("semCartasEspeciais")
-        : recusa("precosJaConsultados", {
-            total: String(puladas.length),
-            horas: String(validadeHoras),
-          });
-    return NextResponse.json({ ...corpoDaRecusa(nada), cartasPuladas: puladas.length }, { status: 400 });
-  }
+  const antes = await cartasParaConsultarCardmarket(db, { validadeHoras });
+  if (antes.pendentes.length === 0) return nadaAConsultar(antes, validadeHoras);
 
   let cotacao: CotacaoPtax;
   try {
@@ -287,9 +293,18 @@ async function iniciarRodadaCardmarket(validadeHoras: number) {
   }
 
   // A busca da cotação pode levar segundos (até duas tentativas com teto de
-  // 20 s): um segundo clique nesse meio passaria pela checagem lá de cima.
-  // A checagem final e a criação vão juntas, serializadas por fonte
-  // (`criarRodadaDePrecoSeLivre`), e o segundo clique recebe 409.
+  // 20 s), e um segundo clique nesse meio passaria pelas checagens lá de
+  // cima. Outra rodada pode ter começado — ou até terminado, consultando as
+  // mesmas cartas. Por isso a lista é refeita depois da cotação (a primeira
+  // só evita buscar a PTAX num clique que não tem o que fazer), e a checagem
+  // final e a criação vão juntas, serializadas por fonte
+  // (`criarRodadaDePrecoSeLivre`): rodada viva dá 409, e o que outra já
+  // consultou sai da lista. Sobra só a janela de milissegundos entre refazer a
+  // lista e pegar a trava, e o pior caso nela é uma carta consultada duas vezes.
+  const depois = await cartasParaConsultarCardmarket(db, { validadeHoras });
+  if (depois.pendentes.length === 0) return nadaAConsultar(depois, validadeHoras);
+  const { pendentes, puladas } = depois;
+
   const criacao = await criarRodadaDePrecoSeLivre(db, pendentes.length, janela, "cardmarket");
   if ("viva" in criacao) {
     return NextResponse.json({ ...corpoRecusa("precosEmAndamento"), rodadaId: criacao.viva }, { status: 409 });
