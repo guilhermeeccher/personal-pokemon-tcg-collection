@@ -768,6 +768,21 @@
     "naoEncontrada": "não encontrada",
     "naoEncontradaTitulo": "A carta não apareceu nas primeiras páginas da busca por nome na Liga.",
     "vazio": "Nenhum preço guardado. Aperte o botão para consultar as cartas especiais.",
+    "cardmarket": {
+      "descricao": "Quanto valem as cartas que você tem, exceto as comuns e incomuns, numa referência internacional: a tendência de preço do Cardmarket, trazida pela TCGdex e convertida em reais pela PTAX de fechamento do Banco Central. Não é preço do mercado brasileiro: compare com o menor preço da LigaPokemon, não com o médio.",
+      "atualizar": "Atualizar preços (Cardmarket)",
+      "cotacaoUsada": "Cotação usada: {euro} = {real} (PTAX de {data})",
+      "explicacaoRitmo": "Uma carta por vez, consultada na TCGdex e nunca em paralelo; a cotação do euro é buscada uma vez, no início. Cartas consultadas nas últimas {horas} h são puladas.",
+      "resumo": "{comPreco} de {selecionadas} cartas com preço · soma das tendências {soma}",
+      "semPrecoResumo": " · {total} sem preço no Cardmarket",
+      "colunaTendencia": "Tendência",
+      "colunaMedia": "Média",
+      "foil": "foil",
+      "foilExplicacao": "A TCGdex só traz preço do Cardmarket para a versão foil desta carta; os três valores são dessa versão.",
+      "cotacaoDaLinha": "câmbio de {data}",
+      "semPreco": "Sem preço no Cardmarket",
+      "semPrecoExplicacao": "A TCGdex não traz preço do Cardmarket para esta carta."
+    },
     "grafico": {
       "titulo": "Valor total ao longo das consultas",
       "aviso": "O total também sobe quando entram cartas na conta (uma consulta nova pode precificar mais cartas), então comprar ou precificar mais cartas não é valorização. Compare o preço médio por carta e olhe quantas cartas cada ponto tem.",
@@ -782,7 +797,16 @@
       "colunaTotal": "Total",
       "colunaMedia": "Média por carta",
       "colunaCartas": "Cartas",
-      "toqueParaVer": "Toque num ponto do gráfico para ver o valor. Toque fora para soltar."
+      "toqueParaVer": "Toque num ponto do gráfico para ver o valor. Toque fora para soltar.",
+      "cardmarket": {
+        "titulo": "Soma das tendências ao longo das consultas",
+        "aviso": "A soma também sobe quando entram cartas na conta (uma consulta nova pode precificar mais cartas), então comprar ou precificar mais cartas não é valorização. Ela também acompanha o câmbio: cada preço é convertido pela PTAX do dia em que foi consultado. Compare a tendência média por carta e olhe quantas cartas cada ponto tem. Os pontos da LigaPokemon ficam à parte e não entram aqui.",
+        "rotuloGrafico": "Gráfico da soma das tendências do Cardmarket em reais, com {pontos} ponto(s). Os dados completos estão na tabela abaixo.",
+        "ponto": "{data}: soma das tendências {total}, {media} por carta, {cartas} cartas com preço",
+        "tooltipMedia": "{media} por carta (tendência média)",
+        "colunaTotal": "Soma das tendências",
+        "colunaMedia": "Tendência média por carta"
+      }
     },
     "rodadas": {
       "titulo": "Pesquisas anteriores",
@@ -885,6 +909,7 @@
     "precosEmAndamento": "Já existe uma consulta de preços em andamento. Espere ela terminar.",
     "precosJaConsultados": "As {total} cartas especiais já foram consultadas nas últimas {horas} h; não há o que atualizar agora.",
     "semCartasEspeciais": "Nenhuma carta especial (todas menos comum e incomum) no inventário para consultar.",
+    "cotacaoIndisponivel": "Não foi possível obter a cotação do euro (PTAX do Banco Central). Tente de novo em alguns minutos.",
     "rodadaDePrecoNaoEncontrada": "Pesquisa de preços não encontrada.",
     "rodadaDePrecoEmAndamento": "Esta pesquisa ainda está em andamento. Espere ela terminar para excluir.",
     "dexFormaDesconhecida": "A forma {forma} não está no catálogo da Living Dex.",

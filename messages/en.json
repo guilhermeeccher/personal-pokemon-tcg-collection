@@ -768,6 +768,21 @@
     "naoEncontrada": "not found",
     "naoEncontradaTitulo": "The card did not show up in the first pages of the name search on Liga.",
     "vazio": "No prices stored. Press the button to look up the special cards.",
+    "cardmarket": {
+      "descricao": "What the cards you own, except plain commons and uncommons, are worth by an international reference: the Cardmarket price trend, delivered by TCGdex and converted to Brazilian reais at the Central Bank of Brazil's PTAX closing rate. It is not a Brazilian market price: compare it with LigaPokemon's lowest price, not with its average.",
+      "atualizar": "Update prices (Cardmarket)",
+      "cotacaoUsada": "Exchange rate used: {euro} = {real} (Central Bank of Brazil PTAX of {data})",
+      "explicacaoRitmo": "One card at a time, looked up on TCGdex and never in parallel; the euro rate is fetched once, at the start. Cards looked up in the last {horas} h are skipped.",
+      "resumo": "{comPreco} of {selecionadas} cards priced · sum of trend prices {soma}",
+      "semPrecoResumo": " · {total} with no Cardmarket price",
+      "colunaTendencia": "Trend",
+      "colunaMedia": "Average",
+      "foil": "foil",
+      "foilExplicacao": "TCGdex only has a Cardmarket price for the foil version of this card; all three values are for that version.",
+      "cotacaoDaLinha": "rate of {data}",
+      "semPreco": "No Cardmarket price",
+      "semPrecoExplicacao": "TCGdex has no Cardmarket price for this card."
+    },
     "grafico": {
       "titulo": "Total value over the rounds",
       "aviso": "The total also goes up when cards enter the sum (a new round may price more cards), so buying or pricing more cards is not appreciation. Compare the average price per card and look at how many cards each point has.",
@@ -782,7 +797,16 @@
       "colunaTotal": "Total",
       "colunaMedia": "Average per card",
       "colunaCartas": "Cards",
-      "toqueParaVer": "Tap a point on the chart to see its value. Tap outside to release it."
+      "toqueParaVer": "Tap a point on the chart to see its value. Tap outside to release it.",
+      "cardmarket": {
+        "titulo": "Sum of trend prices over the rounds",
+        "aviso": "The sum also goes up when cards enter it (a new round may price more cards), so buying or pricing more cards is not appreciation. It also follows the exchange rate: each price is converted at the PTAX of the day it was looked up. Compare the average trend per card and look at how many cards each point has. LigaPokemon's points are kept apart and do not enter here.",
+        "rotuloGrafico": "Chart of the sum of Cardmarket trend prices in reais, with {pontos} point(s). The full data is in the table below.",
+        "ponto": "{data}: sum of trends {total}, {media} per card, {cartas} priced cards",
+        "tooltipMedia": "{media} per card (average trend)",
+        "colunaTotal": "Sum of trends",
+        "colunaMedia": "Average trend per card"
+      }
     },
     "rodadas": {
       "titulo": "Previous lookups",
@@ -885,6 +909,7 @@
     "precosEmAndamento": "A price lookup is already running. Wait for it to finish.",
     "precosJaConsultados": "All {total} special cards were already looked up in the last {horas} h; nothing to update right now.",
     "semCartasEspeciais": "No special card (all but common and uncommon) in the inventory to look up.",
+    "cotacaoIndisponivel": "Could not get the euro exchange rate (Central Bank of Brazil PTAX). Try again in a few minutes.",
     "rodadaDePrecoNaoEncontrada": "Price lookup not found.",
     "rodadaDePrecoEmAndamento": "This lookup is still running. Wait for it to finish before deleting it.",
     "dexFormaDesconhecida": "The form {forma} is not in the Living Dex catalog.",
