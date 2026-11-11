@@ -299,8 +299,11 @@ async function iniciarRodadaCardmarket(validadeHoras: number) {
   // só evita buscar a PTAX num clique que não tem o que fazer), e a checagem
   // final e a criação vão juntas, serializadas por fonte
   // (`criarRodadaDePrecoSeLivre`): rodada viva dá 409, e o que outra já
-  // consultou sai da lista. Sobra só a janela de milissegundos entre refazer a
-  // lista e pegar a trava, e o pior caso nela é uma carta consultada duas vezes.
+  // consultou sai da lista. Sobra a janela entre refazer a lista e pegar a
+  // trava — normalmente milissegundos, mas sem garantia (espera pelo banco,
+  // pausa do processo). Se outra rodada começar e terminar inteira nela, as
+  // cartas dela são consultadas de novo: requisições a mais, nunca dado
+  // errado (o upsert grava o mesmo preço e o histórico só acrescenta).
   const depois = await cartasParaConsultarCardmarket(db, { validadeHoras });
   if (depois.pendentes.length === 0) return nadaAConsultar(depois, validadeHoras);
   const { pendentes, puladas } = depois;
