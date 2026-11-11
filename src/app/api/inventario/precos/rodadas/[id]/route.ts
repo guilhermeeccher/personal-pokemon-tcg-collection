@@ -9,7 +9,9 @@ import { ehUuid } from "@/lib/dominio/uuid";
 /**
  * Exclui uma rodada de preços encerrada e o ponto dela no gráfico — a lista
  * "Pesquisas anteriores" da tela `/inventario/precos`. Os preços que a rodada
- * trouxe ficam; o porquê está em `excluirRodadaDePreco`.
+ * trouxe ficam; o porquê está em `excluirRodadaDePreco`. Serve as duas
+ * fontes de preço: a fonte vem da própria rodada, não do `.env`, então uma
+ * rodada da Liga continua excluível com a instalação no Cardmarket.
  */
 export const DELETE = comAcesso(async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

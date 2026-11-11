@@ -9,7 +9,9 @@ import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or, sql } from "
 import { alias, type AnyPgColumn } from "drizzle-orm/pg-core";
 
 import type { Database, Transacao } from "./client";
+import { valoresPorCartaCardmarket } from "./precos-cardmarket";
 import { valoresPorCarta } from "./precos-liga";
+import { fonteDePreco } from "@/lib/dominio/fonte-preco";
 import { ordenarJoias } from "@/lib/dominio/precos-cartas-especiais";
 import { cartaCatalogo, colecao, copia, imagemLocal, melhoriaDescartada, vaga } from "./schema";
 import type { Condicao, Idioma, VarianteCopia } from "@/lib/dominio/enums";
@@ -2184,7 +2186,11 @@ export interface CartaNaVitrine {
   localId: string;
   raridade: string | null;
   imagemUrl: string;
-  /** Preço médio (senão o mínimo) na Liga, em BRL; `null` quando ainda não consultado. */
+  /**
+   * O valor guardado na fonte de preço ativa, em BRL: na Liga, o preço médio
+   * (senão o mínimo); no Cardmarket, a tendência convertida pela PTAX (senão
+   * a média). `null` quando ainda não consultado.
+   */
   preco: number | null;
 }
 
@@ -2303,11 +2309,17 @@ export async function listarColecoesNaVitrine(db: Database): Promise<ColecaoNaVi
  *
  * **A ordem é o preço guardado, quando existe.** Até 2026-10-05 era só a
  * aparência (`destaque-carta.ts`), mas "mais vistosa" erra o que importa: uma
- * carta clássica vale mais que muita ilustração rara. A consulta de preço
- * (`precos-liga.ts`) só cobre as cartas especiais, então a regra é em dois
- * blocos (`ordenarJoias`): primeiro as com preço, do maior valor (médio,
- * senão mínimo) para o menor; depois as sem preço pela vitrine, em vez de
- * sumirem ou valerem zero. Sem nenhuma consulta feita, a vitrine é a de antes.
+ * carta clássica vale mais que muita ilustração rara. A consulta de preço só
+ * cobre as cartas especiais, então a regra é em dois blocos (`ordenarJoias`):
+ * primeiro as com preço, do maior valor para o menor; depois as sem preço
+ * pela vitrine, em vez de sumirem ou valerem zero. Sem nenhuma consulta
+ * feita, a vitrine é a de antes.
+ *
+ * O preço é o da **fonte ativa** (`fonteDePreco`, lida a cada chamada): na
+ * Liga, o médio, senão o mínimo (`precos-liga.ts`); no Cardmarket, a
+ * tendência convertida, senão a média (`precos-cardmarket.ts`). Nunca as duas
+ * misturadas: um valor de cada fonte na mesma ordem compararia números de
+ * natureza diferente.
  */
 export async function listarJoias(db: Database, limite: number): Promise<CartaNaVitrine[]> {
   const linhas = await db
@@ -2333,10 +2345,11 @@ export async function listarJoias(db: Database, limite: number): Promise<CartaNa
   }
   const distintas = [...porCarta.values()];
 
-  const valores = await valoresPorCarta(
-    db,
-    distintas.map((d) => d.cartaId),
-  );
+  const cartaIds = distintas.map((d) => d.cartaId);
+  const valores =
+    fonteDePreco() === "cardmarket"
+      ? await valoresPorCartaCardmarket(db, cartaIds)
+      : await valoresPorCarta(db, cartaIds);
   const candidatas = ordenarJoias(distintas, valores).slice(0, limite * FOLGA_SEM_FOTO);
   const fotos = await fotosDasCartas(db, candidatas);
   return candidatas
