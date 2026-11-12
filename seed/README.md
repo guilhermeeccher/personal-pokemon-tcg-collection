@@ -62,6 +62,7 @@ COPY (
       AS imagem_cdn_verificado_em,
     ilustrador, set_qtd_oficial, set_qtd_total, ativa
   FROM carta_catalogo
+  WHERE origem <> 'manual'
   ORDER BY idioma, set_id, id
 ) TO STDOUT WITH (FORMAT csv, HEADER);
 SQL
@@ -78,6 +79,13 @@ and a `git diff --stat` that shows only these files.
 
 Every detail of the command above exists for a reason, and changing it breaks the read:
 
+- **`WHERE origem <> 'manual'`.** The seed carries upstream data only: rows from the API (`sync`) and
+  from their data repository (`repo`). A `manual` row is one the user created by hand for a card
+  upstream does not catalog, modelled the way that one installation chose (an id, a set, a name in
+  the user's language), and it exists because somebody has that card at home. Shipped to everyone, it
+  would be one installation's modelling in every catalog and a hint of one collection in the public
+  history. Leaving it out of the file deletes nothing: the seed never deletes, so an installation
+  keeps the manual rows it already has. Decision of 2026-11-12; the earlier files carried one.
 - **A fixed `ORDER BY`.** With no deterministic order, every regeneration would produce a completely
   different file and the diff would say nothing.
 - **`gzip -9 -n`.** The `-n` drops the name and the timestamp from the gzip header — without it,
