@@ -2,7 +2,7 @@
 
 A catalog of your **physical** Pokémon card collection, running on your own machine. You start two
 containers, open the browser and begin typing in what is in the box. The catalog comes with it,
-48,372 card records in Portuguese, English and Japanese, and loads by itself on the first boot.
+48,803 card records in Portuguese, English and Japanese, and loads by itself on the first boot.
 
 The question it exists to answer is **"what is missing"**: which species your Pokédex still lacks,
 which numbers of a set you have not found, which empty slot a card you already own could fill.
@@ -191,7 +191,7 @@ only place that needs to change:
 PORTA_HOST=3011
 ```
 
-On startup the container applies the migrations and, **if the catalog is empty, loads the 48,372
+On startup the container applies the migrations and, **if the catalog is empty, loads the 48,803
 catalog records from the file versioned in `seed/`**, with no network request at all. To follow along:
 
 ```bash
@@ -224,7 +224,7 @@ docker compose up -d     # back up
 ## The catalog comes ready
 
 What makes a fresh install useful from birth is the `seed/` directory: a snapshot of the TCGdex
-catalog, 48,372 rows in Portuguese, English and Japanese (one row per card and language), versioned
+catalog, 48,803 rows in Portuguese, English and Japanese (one row per card and language), versioned
 as a compressed CSV of about 1 MB.
 
 Without it, a fresh install would start with an empty database
