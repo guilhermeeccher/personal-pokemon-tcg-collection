@@ -254,6 +254,10 @@ It is a client that is polite out of obligation: a request-per-second ceiling, l
 an identified User-Agent, and it aborts everything on the spot if it gets blocked. Leave those
 numbers alone unless you know what you are doing; `AGENTS.md` explains each one.
 
+The Japanese part of the shipped catalog came from the TCGdex data repository, not the API, and the
+two do not list the same Japanese sets. To pull only the Portuguese and English releases, and bring
+Japanese through the importer below, add `--idioma pt,en`.
+
 ### TCGdex catalog from a local clone
 
 The commands `pnpm importar:catalogo-repo`, `pnpm importar:tipos-catalogo` and

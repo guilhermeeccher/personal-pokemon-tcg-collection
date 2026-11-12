@@ -150,6 +150,7 @@ pnpm db:generate                # generates a migration from the Drizzle schema
 pnpm db:migrate                 # applies migrations
 pnpm seed:catalogo              # loads the versioned catalog from seed/
 pnpm sync:catalogo              # syncs the TCGdex catalog (pt, en and jp) — incremental
+pnpm sync:catalogo --idioma pt,en   # only these languages — see "Catalog sync contract"
 pnpm sync:catalogo --profundo   # revisits every set card by card (~2h30)
 pnpm importar:catalogo-repo --idioma pt --simular   # what the data repository has that the API lacks
 pnpm precos:cardmarket --simular   # one Cardmarket price round (PRECO_FONTE=cardmarket); --json for a scheduler
@@ -243,6 +244,14 @@ volume, and counting the 48,803 cards in the database — not `docker build` pas
   `pnpm sync:catalogo --profundo` (or `SYNC_PROFUNDO=1`) revisits everything card by card; it is the
   only way to catch a metadata correction on a card that already exists, and it takes ~2h30 across
   the three languages.
+- **`--idioma pt,en` restricts the round to those languages** (`pt`, `en`, `jp`, comma-separated;
+  default all three). It exists for the Japanese catalog: an install born from the seed has it from
+  the data repository (`importar:catalogo-repo`), and the API does not list the same Japanese sets
+  (184 against 117 in the catalog on 2026-09-22), so a three-language round would fetch card by card
+  every Japanese set the catalog lacks. Update pt and en with the sync and Japanese with the
+  importer. **An unknown argument refuses the round** (exit code 2, before any request): a mistyped
+  `--idioma` must not fall back to all three languages. The parsing lives in
+  `lib/dominio/comando-sync-catalogo.ts`.
 - **A skipped set can never be deactivated.** Two independent protections, and both have to keep
   existing: the touch renews the clock on the rows, and `decidirInativacaoCatalogo` excludes the
   skipped sets from the UPDATE. Without that, a normal round would mark the entire catalog inactive

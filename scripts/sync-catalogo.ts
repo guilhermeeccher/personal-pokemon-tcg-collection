@@ -7,36 +7,48 @@
 import "dotenv/config";
 
 import { ErroBloqueioUpstream } from "../src/lib/dominio/bloqueio-upstream";
+import {
+  lerArgumentosSyncCatalogo,
+  SAIDA_USO_SYNC,
+  USO_SYNC_CATALOGO,
+} from "../src/lib/dominio/comando-sync-catalogo";
 import { client, db } from "../src/lib/db/client";
 import { sincronizarCatalogo } from "../src/lib/sync/catalogo";
-import type { Idioma } from "../src/lib/sync/tcgdex";
-
-/**
- * `jp` entrou em 2026-08-26: existem cartas japonesas de sets sem
- * equivalente ocidental. Na URL da TCGdex o código é `ja` — a tradução vive
- * em `codigoIdiomaUpstream`, o enum do banco continua `jp`.
- */
-const IDIOMAS: Idioma[] = ["pt", "en", "jp"];
-
-/**
- * `--profundo` (ou SYNC_PROFUNDO=1) revisita todo set carta a carta. O padrão
- * é incremental: só busca detalhe nos sets cuja lista de cartas mudou.
- */
-const PROFUNDO =
-  process.argv.includes("--profundo") || process.env.SYNC_PROFUNDO === "1";
 
 async function main() {
+  // Lido antes de qualquer rede: argumento errado recusa a rodada inteira
+  // (o porquê está em `lib/dominio/comando-sync-catalogo.ts`).
+  const lidos = lerArgumentosSyncCatalogo(process.argv.slice(2));
+  if (!lidos.ok) {
+    console.error(`sync:catalogo: ${lidos.erro}\n\n${USO_SYNC_CATALOGO}`);
+    process.exitCode = SAIDA_USO_SYNC;
+    return;
+  }
+  if (lidos.args.ajuda) {
+    console.log(USO_SYNC_CATALOGO);
+    return;
+  }
+
+  // `jp` entrou em 2026-08-26: existem cartas japonesas de sets sem
+  // equivalente ocidental. Na URL da TCGdex o código é `ja` — a tradução vive
+  // em `codigoIdiomaUpstream`, o enum do banco continua `jp`.
+  const { idiomas } = lidos.args;
+  // `--profundo` (ou SYNC_PROFUNDO=1) revisita todo set carta a carta. O
+  // padrão é incremental: só busca detalhe nos sets cuja lista de cartas mudou.
+  const profundo = lidos.args.profundo || process.env.SYNC_PROFUNDO === "1";
+
   let houveErroFatal = false;
 
-  if (PROFUNDO) {
+  console.log(`languages: ${idiomas.join(", ")}`);
+  if (profundo) {
     console.log("deep mode: revisiting every set card by card.");
   }
 
-  for (const idioma of IDIOMAS) {
+  for (const idioma of idiomas) {
     console.log(`\n=== sync:${idioma} — start ===`);
     try {
       const resultado = await sincronizarCatalogo(db, idioma, {
-        profundo: PROFUNDO,
+        profundo,
       });
       console.log(`[sync:${idioma}] sets listed: ${resultado.setsListados}`);
       console.log(`[sync:${idioma}] sets that failed to fetch: ${resultado.setsComFalha.length}`);
