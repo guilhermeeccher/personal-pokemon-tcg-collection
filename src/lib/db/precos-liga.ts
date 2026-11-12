@@ -540,7 +540,9 @@ export async function rodadaDePrecoViva(
 /**
  * Chaves do `pg_advisory_xact_lock` da criação de rodada, uma por fonte.
  * Números arbitrários e únicos no app (o envio ao HOME usa outro, em
- * `dex.ts`): com o mesmo número, uma criação esperaria pela outra sem motivo.
+ * `dex.ts`, e a busca das candidatas de compra outro, em
+ * `candidatas-compra.ts`): com o mesmo número, uma criação esperaria pela
+ * outra sem motivo.
  */
 const TRAVA_CRIAR_RODADA: Record<FontePreco, number> = {
   liga: 7_310_004_002,

@@ -8,8 +8,11 @@
  * que não ter arquivo.
  */
 
+import { precosDasCandidatas } from "@/lib/db/candidatas-compra";
+import type { Database } from "@/lib/db/client";
 import type { EscolhaSalva } from "@/lib/db/escolhas";
 import type { Regiao } from "@/lib/dominio/escopo-pokedex";
+import type { FontePreco } from "@/lib/dominio/fonte-preco";
 import {
   dividirListaCompra,
   gerarListaLiga,
@@ -29,8 +32,14 @@ import {
  * `raridade` não vem gravada na escolha: ela é do nosso catálogo e muda com o
  * sync, então é lida na hora (`listarEscolhas`). A escolha guarda o que
  * identifica a carta, não o que a classifica.
+ *
+ * O preço vem de `precosDasEscolhas`, na fonte da instalação; sem ele, é o da
+ * Liga gravado na escolha.
  */
-export function linhaDaEscolha(e: EscolhaSalva): LinhaListaCompra {
+export function linhaDaEscolha(
+  e: EscolhaSalva,
+  preco: PrecoDaEscolha = { preco: e.preco, em: e.precoEm, fonte: "liga" },
+): LinhaListaCompra {
   return {
     chave: e.chave,
     especie: e.especie,
@@ -39,10 +48,48 @@ export function linhaDaEscolha(e: EscolhaSalva): LinhaListaCompra {
     edicaoSigla: e.edicaoSigla,
     numero: e.numero,
     total: e.total,
-    preco: e.preco ?? 0,
+    preco: preco.preco ?? 0,
+    fontePreco: preco.fonte,
     raridade: e.raridade,
     noCatalogo: e.cartaId !== null,
     caminho: e.caminho,
+  };
+}
+
+/** O preço de uma escolha na fonte ativa, e quando ele foi visto. */
+export interface PrecoDaEscolha {
+  preco: number | null;
+  em: Date | null;
+  fonte: FontePreco;
+}
+
+/**
+ * O preço de cada escolha **na fonte de preço da instalação**, e nunca nas
+ * duas ao mesmo tempo.
+ *
+ * - `liga`: o que a escolha guarda — o menor preço da Liga na última
+ *   varredura que a viu.
+ * - `cardmarket`: o valor de referência da candidata, pela carta
+ *   (`carta_id`), em `preco_candidata_cardmarket`. O preço da Liga gravado
+ *   numa escolha antiga fica de fora: somá-lo com valores do Cardmarket
+ *   misturaria duas réguas num total só. Escolha fora do catálogo não tem
+ *   carta para consultar e sai sem preço.
+ *
+ * A tela e a exportação chamam esta mesma função, para não divergirem.
+ */
+export async function precosDasEscolhas(
+  db: Database,
+  escolhas: readonly EscolhaSalva[],
+  fonte: FontePreco,
+): Promise<(e: EscolhaSalva) => PrecoDaEscolha> {
+  if (fonte === "liga") return (e) => ({ preco: e.preco, em: e.precoEm, fonte });
+  const precos = await precosDasCandidatas(
+    db,
+    escolhas.flatMap((e) => (e.cartaId === null ? [] : [e.cartaId])),
+  );
+  return (e) => {
+    const p = e.cartaId === null ? undefined : precos.get(e.cartaId);
+    return { preco: p?.valor ?? null, em: p?.valor == null ? null : p.precoEm, fonte };
   };
 }
 

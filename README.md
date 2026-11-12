@@ -350,8 +350,8 @@ in two separate rounds. Both are optional and only run when you ask for them.
   line does not by itself mean the cards went up in value.
 
 Prices are in Brazilian reais, as the site shows them. Nothing is converted. (The optional
-[Cardmarket source](#optional-special-card-prices-from-cardmarket) for the special card prices is the
-one exception, and the screen says so.)
+[Cardmarket source](#optional-special-card-prices-from-cardmarket) is the one exception, for the
+special card prices and the buy options, and the screen says so.)
 
 ### The default pace obeys their robots.txt
 
@@ -431,8 +431,27 @@ What it measures, and what it does not:
 - **One card at a time.** One request per card to TCGdex, in sequence, through the same polite
   client as the catalog sync, and cards looked up in the last 24 hours are skipped. A round takes
   minutes, not hours.
-- The overview orders your cards by the active source's price. The buy options for empty slots
-  still come from LigaPokemon only.
+- The overview orders your cards by the active source's price.
+
+#### Buy options without LigaPokemon's search
+
+The buy options screen of a collection uses LigaPokemon's search too, and that search is what their
+firewall refuses. With `PRECO_FONTE=cardmarket` the screen works without it:
+
+- **The cards come from the catalog.** For a Pokédex slot, every card in Portuguese or English with
+  that one Pokémon on it (forms included, tag teams out, as in the rest of the program); for a set
+  slot, the card itself. Japanese cards are left out of a Pokédex, because their names are in
+  Japanese and the "Buy by List" is written in English.
+- **"Look up prices (Cardmarket)" fetches a reference value for them**, the same converted
+  Cardmarket value as above, one card at a time, in the background: a Pokédex with a hundred empty
+  slots is a couple of thousand cards and takes about a quarter of an hour. A value is kept for a
+  week, so looking up again only fetches what is missing or old. Only one lookup runs at a time.
+- **The ceiling and the order apply on the spot**, with no new lookup. A card with no price yet
+  stays on the list, after the priced ones, and "mark the best of each slot" only picks a priced card.
+- **The list to paste is the same**: one line per card, `1 Umbreon-GX (20/73)`, with the name and
+  the number written the way LigaPokemon writes them. The total next to it is the Cardmarket
+  reference; what you actually pay shows in their "Buy by List" after you paste, with their store
+  optimization. Choices made earlier from a LigaPokemon scan stay on the list.
 
 #### Updating from the command line, or on a schedule
 

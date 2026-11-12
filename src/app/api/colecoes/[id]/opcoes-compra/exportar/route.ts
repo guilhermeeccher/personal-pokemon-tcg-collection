@@ -15,7 +15,8 @@ import {
   type LinhaListaCompra,
 } from "@/lib/dominio/exportacao-lista-compra";
 import { ehUuid } from "@/lib/dominio/uuid";
-import { linhaDaEscolha } from "@/lib/liga/lista-compra";
+import { fonteDePreco } from "@/lib/dominio/fonte-preco";
+import { linhaDaEscolha, precosDasEscolhas } from "@/lib/liga/lista-compra";
 
 /**
  * GET /api/colecoes/:id/opcoes-compra/exportar?formato=csv|texto|liga[&aba=kanto-1]
@@ -48,9 +49,13 @@ export const GET = comAcesso(async function GET(req: Request, { params }: { para
   // varredura**: a triagem do usuário vive em `escolha_compra` desde
   // 2026-09-17. Só entram as escolhas de vaga ainda vazia; o que ele já
   // cadastrou sai da lista sozinho.
-  const linhas: LinhaListaCompra[] = (await listarEscolhas(db, id))
-    .filter((e) => e.vagaVazia)
-    .map(linhaDaEscolha);
+  //
+  // O preço é o da fonte da instalação, pela mesma função da tela
+  // (`precosDasEscolhas`): com `PRECO_FONTE=cardmarket`, o valor de referência
+  // do Cardmarket, rotulado na coluna "Fonte do preço".
+  const daLista = (await listarEscolhas(db, id)).filter((e) => e.vagaVazia);
+  const precoDe = await precosDasEscolhas(db, daLista, fonteDePreco());
+  const linhas: LinhaListaCompra[] = daLista.map((e) => linhaDaEscolha(e, precoDe(e)));
 
   if (linhas.length === 0) {
     return NextResponse.json(

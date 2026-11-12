@@ -20,6 +20,7 @@ import {
   type Ordenacao,
 } from "@/lib/dominio/liga-opcoes";
 import { formatarDuracao } from "@/lib/dominio/estimativa-varredura";
+import { caminhoBuscaLiga, filtrarCandidatas } from "@/lib/dominio/candidatas-compra";
 import { VALIDADE_CONSULTA_HORAS } from "@/lib/dominio/frescor-consulta";
 import {
   FAIXA_REGIAO,
@@ -61,29 +62,45 @@ import { PainelSemEstoque } from "./painel-sem-estoque";
  * daí o progresso trazer **consultadas, restantes e previsão de término**, e a
  * tela dizer de onde o ritmo saiu. Ela continua se atualizando sozinha e
  * mostrando o que já chegou; ninguém precisa ficar com a aba aberta.
+ *
+ * ## Com `PRECO_FONTE=cardmarket`, a mesma tela sem a busca da Liga
+ *
+ * A busca da Liga barra o coletor desde 2026-11-11. Nessa fonte, as opções de
+ * cada vaga são as cartas do catálogo que a preenchem, já na chegada, e o
+ * botão busca o valor de referência do Cardmarket delas — minutos, não horas.
+ * O teto e a ordenação viram filtro da tela (`filtrarCandidatas`), aplicado
+ * na hora, sem rodada nova. O preço vem sempre rotulado como Cardmarket: é
+ * referência, perto do menor preço da Liga, e o preço real aparece depois da
+ * colagem. Ver `lib/dominio/candidatas-compra.ts`.
  */
 
 const SITE = "https://www.ligapokemon.com.br";
 
 type TipoColecaoComVaga = "pokedex" | "set";
 
+/**
+ * Uma opção da grade. Na fonte Cardmarket o servidor manda só o que a tela lê
+ * (milhares de candidatas numa Pokédex): os campos marcados como opcionais
+ * vêm só da varredura da Liga, e o `caminho` da candidata é montado aqui.
+ */
 interface OpcaoDTO {
   id: string;
   chave: string;
-  dex: number | null;
-  especie: string | null;
+  dex?: number | null;
+  especie?: string | null;
   nome: string;
-  edicaoSigla: string;
+  edicaoSigla?: string;
   edicaoNome: string;
   numero: string;
   total: string | null;
-  preco: number;
-  precoMedio: number | null;
-  precoMaximo: number | null;
+  /** Nulo só na fonte Cardmarket: preço ainda não buscado, ou sem preço lá. */
+  preco: number | null;
+  precoMedio?: number | null;
+  precoMaximo?: number | null;
   raridade: string | null;
-  setNome: string | null;
+  setNome?: string | null;
   cartaId: string | null;
-  caminho: string;
+  caminho?: string;
   selecionada: boolean;
   /**
    * A Liga devolveu esta carta como "sem estoque". Só chega à tela quando está
@@ -93,6 +110,40 @@ interface OpcaoDTO {
   /** `null` na carta fora do nosso catálogo — não fazemos hotlink da foto deles. */
   imagemUrl: string | null;
   imagemOrigem: OrigemImagem | null;
+  /** Fonte Cardmarket: o nome na ficha de exibição, quando difere do da Liga. */
+  nomeExibicao?: string | null;
+  /**
+   * Fonte Cardmarket: a escolha que nenhuma candidata explica (de uma
+   * varredura antiga), que entra na grade só para poder ser desmarcada.
+   */
+  escolhaId?: string | null;
+  /** Fonte Cardmarket: a última pergunta ao Cardmarket; nula = nunca buscada. */
+  consultadaEm?: string | null;
+  cardmarket?: PrecoCardmarketDTO | null;
+}
+
+/** De onde saiu o valor de referência de uma candidata — vai na dica do preço. */
+interface PrecoCardmarketDTO {
+  valorEur: number | null;
+  criterioValor: "tendencia" | "media30" | "media" | null;
+  /** Só quando a tendência foi trocada pela média de 30 dias. */
+  tendenciaEur?: number | null;
+  cotacao: number | null;
+  cotacaoData: string | null;
+}
+
+/** A busca de preços das candidatas desta coleção (fonte Cardmarket). */
+interface RodadaCandidatasDTO {
+  id: string;
+  totalCartas: number;
+  cartasConsultadas: number;
+  cartasComFalha: number;
+  requisicoes: number;
+  concluidaEm: string | null;
+  erro: string | null;
+  criadoEm: string;
+  emAndamento: boolean;
+  segundosRestantes: number | null;
 }
 
 interface VagaDTO {
@@ -144,6 +195,18 @@ interface AbaLigaDTO {
 
 interface RespostaDTO {
   tipo: TipoColecaoComVaga;
+  /** A fonte de preço da instalação (`PRECO_FONTE`). */
+  fonte: "liga" | "cardmarket";
+  /** Só na fonte Cardmarket. */
+  rodada?: RodadaCandidatasDTO | null;
+  /** Só na fonte Cardmarket: quanto das candidatas já tem preço. */
+  precosCandidatas?: {
+    cartas: number;
+    comPreco: number;
+    semPrecoNoCardmarket: number;
+    aBuscar: number;
+    validadeDias: number;
+  };
   ritmo: RitmoDTO;
   varredura: VarreduraDTO | null;
   vagas: VagaDTO[];
@@ -187,8 +250,8 @@ function intervaloLegivel(ritmo: RitmoDTO): string {
 
 /** O menor preço encontrado para a vaga, ou `null` quando ela não tem oferta. */
 function menorPreco(vaga: VagaDTO): number | null {
-  if (vaga.opcoes.length === 0) return null;
-  return Math.min(...vaga.opcoes.map((o) => o.preco));
+  const precos = vaga.opcoes.flatMap((o) => (o.preco === null ? [] : [o.preco]));
+  return precos.length === 0 ? null : Math.min(...precos);
 }
 
 /** Uma região da Pokédex (ou um set) e as vagas dela, na ordem em que a grade as desenha. */
@@ -264,6 +327,39 @@ export default function OpcoesCompraPage() {
   const { id } = useParams<{ id: string }>();
 
   const dinheiro = useCallback((valor: number) => brl(valor, locale), [locale]);
+
+  /** Data de um boletim (`YYYY-MM-DD`), sem a hora — meio-dia evita virar o dia no fuso. */
+  const dataDoDia = (dia: string) => new Date(`${dia}T12:00:00`).toLocaleDateString(locale);
+
+  /**
+   * De onde saiu o valor de referência: o euro, a PTAX e a data, e por que
+   * não é a tendência quando não é. O preço do Cardmarket nunca aparece sem
+   * dizer que é referência convertida.
+   */
+  function dicaDoPreco(opcao: OpcaoDTO): string {
+    const c = opcao.cardmarket;
+    if (!c || c.valorEur === null || c.cotacao === null || c.cotacaoData === null) {
+      return t("seloCardmarket");
+    }
+    const eur = (v: number) => v.toLocaleString(locale, { style: "currency", currency: "EUR" });
+    let texto = t("dicaPrecoCardmarket", {
+      eur: eur(c.valorEur),
+      cotacao: c.cotacao.toLocaleString(locale, { minimumFractionDigits: 4 }),
+      data: dataDoDia(c.cotacaoData),
+    });
+    if (c.criterioValor === "media30" && c.tendenciaEur != null) {
+      texto += t("dicaCriterioMedia30", { tendencia: eur(c.tendenciaEur) });
+    }
+    if (c.criterioValor === "media") texto += t("dicaCriterioMedia");
+    return texto;
+  }
+
+  /** "Ainda não buscado" é diferente de "o Cardmarket não tem". */
+  function textoSemPreco(opcao: OpcaoDTO): string {
+    return opcao.consultadaEm
+      ? t("semPrecoNoCardmarket", { data: new Date(opcao.consultadaEm).toLocaleDateString(locale) })
+      : t("semPrecoNaoBuscado");
+  }
 
   /**
    * Hora do fim, curta. Numa rodada de 16 horas a previsão quase sempre cai em
@@ -390,17 +486,42 @@ export default function OpcoesCompraPage() {
   // ("cada consulta traz novidade, e não vira polling à toa"), só que o ritmo
   // deixou de ser 3 s: com 360 s entre requisições, perguntar de 5 em 5
   // segundos são 70 consultas ao banco para uma vaga de novidade.
-  const periodoAtualizacao = Math.min(
-    60_000,
-    Math.max(5_000, (dados?.ritmo?.intervaloSegundos ?? 3) * 250),
-  );
+  //
+  // Na fonte Cardmarket a busca dura minutos, uma carta por fração de
+  // segundo: 10 s mostra a grade se preenchendo sem pesar.
+  const periodoAtualizacao =
+    dados?.fonte === "cardmarket"
+      ? 10_000
+      : Math.min(60_000, Math.max(5_000, (dados?.ritmo?.intervaloSegundos ?? 3) * 250));
+  const atualizando =
+    (dados?.varredura?.emAndamento ?? false) || (dados?.rodada?.emAndamento ?? false);
   useEffect(() => {
-    if (!dados?.varredura?.emAndamento) return;
+    if (!atualizando) return;
     const timer = setInterval(() => carregar(), periodoAtualizacao);
     return () => clearInterval(timer);
-  }, [dados?.varredura?.emAndamento, carregar, periodoAtualizacao]);
+  }, [atualizando, carregar, periodoAtualizacao]);
 
   const ehSet = dados?.tipo === "set";
+  const ehCardmarket = dados?.fonte === "cardmarket";
+
+  // Na fonte Cardmarket o teto e a ordenação são filtro da tela, aplicado na
+  // hora sobre todas as candidatas que o servidor mandou. Teto inválido vale
+  // como sem teto; o erro aparece só ao disparar a varredura da Liga.
+  const tetoDaTela = useMemo(() => {
+    const n = teto.trim() === "" ? null : Number(teto.replace(",", "."));
+    return n !== null && Number.isFinite(n) && n > 0 ? n : null;
+  }, [teto]);
+  const vagasDaTela = useMemo(() => {
+    const vagas = dados?.vagas ?? [];
+    if (!ehCardmarket) return vagas;
+    return vagas.map((v) => ({
+      ...v,
+      ...filtrarCandidatas(v.opcoes, {
+        tetoPreco: tetoDaTela,
+        ordenacao: ehSet ? "preco" : ordenacao,
+      }),
+    }));
+  }, [dados?.vagas, ehCardmarket, ehSet, tetoDaTela, ordenacao]);
 
   async function dispararVarredura() {
     setDisparando(true);
@@ -448,6 +569,51 @@ export default function OpcoesCompraPage() {
     carregar();
   }
 
+  async function dispararBuscaPrecos() {
+    setDisparando(true);
+    setErro(null);
+    setAviso(null);
+
+    const resposta = await fetch(`/api/colecoes/${id}/opcoes-compra`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // Zero pergunta de novo também o que tem preço da última semana.
+      body: JSON.stringify(reconsultarTudo ? { validadeHoras: 0 } : {}),
+    });
+
+    const corpo = await resposta.json();
+    setDisparando(false);
+
+    if (!resposta.ok) {
+      setErro(textoDaRecusa(tr, corpo, t("erroIniciar")));
+      return;
+    }
+
+    const puladas =
+      corpo.cartasPuladas > 0 ? t("buscaPuladas", { total: corpo.cartasPuladas }) : "";
+    setAviso(
+      t("buscaIniciada", {
+        cartas: corpo.cartasParaConsultar,
+        estimativa: formatarDuracao(corpo.estimativaSegundos),
+        previsao: horaLegivel(corpo.previsaoTermino),
+      }) +
+        puladas +
+        t("varreduraPodeSair"),
+    );
+    carregar();
+  }
+
+  /**
+   * O corpo da marcação. Na fonte Cardmarket a opção é uma carta do catálogo,
+   * identificada pela vaga e pela carta; a escolha avulsa (de uma varredura
+   * antiga) só se desmarca, pelo id dela.
+   */
+  function corpoDaMarcacao(opcao: OpcaoDTO, selecionada: boolean) {
+    if (!ehCardmarket) return { ids: [opcao.id], selecionada };
+    if (opcao.escolhaId) return { ids: [opcao.escolhaId], selecionada: false };
+    return { cartas: [{ chave: opcao.chave, cartaId: opcao.cartaId }], selecionada };
+  }
+
   async function alternar(opcao: OpcaoDTO) {
     // Otimista: marcar carta é gesto de lista, e esperar o servidor a cada
     // clique tornaria a seleção de dezenas de cartas insuportável.
@@ -469,7 +635,7 @@ export default function OpcoesCompraPage() {
     const resposta = await fetch(`/api/colecoes/${id}/opcoes-compra/selecao`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: [opcao.id], selecionada: !opcao.selecionada }),
+      body: JSON.stringify(corpoDaMarcacao(opcao, !opcao.selecionada)),
     });
     if (!resposta.ok) {
       setErro(t("erroMarcacao"));
@@ -494,19 +660,34 @@ export default function OpcoesCompraPage() {
    * são 31 cliques, e a camada 2 fica cara de alcançar.
    */
   async function marcarMelhorDeCadaVaga() {
-    const alvos = (dados?.vagas ?? [])
-      .filter((v) => v.opcoes.length > 0 && !v.opcoes.some((o) => o.selecionada))
-      .map((v) => v.opcoes[0].id);
+    const semEscolha = vagasDaTela.filter(
+      (v) => v.opcoes.length > 0 && !v.opcoes.some((o) => o.selecionada),
+    );
 
-    if (alvos.length === 0) {
-      setAviso(t("todasJaMarcadas"));
+    // Na fonte Cardmarket, só a primeira COM preço: marcar carta sem preço
+    // seria escolher às cegas, que é o que o preço existe para evitar.
+    // `filtrarCandidatas` já põe as sem preço por último.
+    const cartas = ehCardmarket
+      ? semEscolha.flatMap((v) => {
+          const primeira = v.opcoes[0];
+          return primeira.preco !== null && primeira.cartaId !== null && !primeira.escolhaId
+            ? [{ chave: v.chave, cartaId: primeira.cartaId }]
+            : [];
+        })
+      : [];
+    const ids = ehCardmarket ? [] : semEscolha.map((v) => v.opcoes[0].id);
+    const corpo = ehCardmarket ? { cartas, selecionada: true } : { ids, selecionada: true };
+    const quantas = ehCardmarket ? cartas.length : ids.length;
+
+    if (quantas === 0) {
+      setAviso(semEscolha.length === 0 ? t("todasJaMarcadas") : t("nadaComPrecoParaMarcar"));
       return;
     }
 
     const resposta = await fetch(`/api/colecoes/${id}/opcoes-compra/selecao`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: alvos, selecionada: true }),
+      body: JSON.stringify(corpo),
     });
     if (!resposta.ok) setErro(t("erroMarcacao"));
     carregar();
@@ -526,10 +707,11 @@ export default function OpcoesCompraPage() {
   const varredura = dados?.varredura ?? null;
   // Duas rodadas simultâneas dobram o ritmo contra o site deles — o servidor
   // recusa, e a tela não deve nem oferecer.
-  const rodando = varredura?.emAndamento ?? false;
+  const rodando = atualizando;
+  const rodada = dados?.rodada ?? null;
 
   const vagasVisiveis = useMemo(() => {
-    const vagas = dados?.vagas ?? [];
+    const vagas = vagasDaTela;
     const filtradas = soComOpcao ? vagas.filter((v) => v.opcoes.length > 0) : vagas;
     if (!ehSet || ordemVagas === "numero") return filtradas;
 
@@ -543,7 +725,7 @@ export default function OpcoesCompraPage() {
       if (pb === null) return -1;
       return pa - pb;
     });
-  }, [dados?.vagas, soComOpcao, ehSet, ordemVagas]);
+  }, [vagasDaTela, soComOpcao, ehSet, ordemVagas]);
 
   // O total vem do servidor, e não da grade: a triagem existe sem varredura
   // nenhuma, e a grade pode nem estar na tela. A marcação otimista deixa este
@@ -560,7 +742,14 @@ export default function OpcoesCompraPage() {
     return aba.partes > 1 ? `${nome} (${aba.parte}/${aba.partes})` : nome;
   };
 
-  const semOpcao = (dados?.vagas ?? []).filter((v) => v.opcoes.length === 0).length;
+  const semOpcao = vagasDaTela.filter((v) => v.opcoes.length === 0).length;
+  const textoVagaSemOpcao = ehCardmarket
+    ? ehSet
+      ? t("semCandidataSet")
+      : t("semCandidataPokedex")
+    : ehSet
+      ? t("semOfertaSet")
+      : t("semOpcaoPokedex");
   const grupos = agruparPorRegiao(vagasVisiveis, ehSet);
 
   return (
@@ -575,7 +764,15 @@ export default function OpcoesCompraPage() {
 
       <CabecalhoPagina
         titulo={t("titulo")}
-        descricao={ehSet ? t("descricaoSet") : t("descricaoPokedex")}
+        descricao={
+          ehCardmarket
+            ? ehSet
+              ? t("descricaoSetCardmarket")
+              : t("descricaoPokedexCardmarket")
+            : ehSet
+              ? t("descricaoSet")
+              : t("descricaoPokedex")
+        }
       />
 
       {erro && <Alerta tom="perigo">{erro}</Alerta>}
@@ -625,8 +822,9 @@ export default function OpcoesCompraPage() {
           )}
 
           {/* No set toda opção é a carta do próprio set, que está no catálogo
-              por construção — o filtro não teria o que esconder. */}
-          {!ehSet && (
+              por construção — o filtro não teria o que esconder. Na fonte
+              Cardmarket, o mesmo vale para toda opção. */}
+          {!ehSet && !ehCardmarket && (
             <label className="flex items-center gap-2 text-sm text-muted max-md:min-h-11">
               <input
                 type="checkbox"
@@ -643,28 +841,76 @@ export default function OpcoesCompraPage() {
               checked={reconsultarTudo}
               onChange={(e) => setReconsultarTudo(e.target.checked)}
             />
-            {t("reconsultarTudo")}
+            {ehCardmarket ? t("rebuscarTudo") : t("reconsultarTudo")}
           </label>
 
           <Botao
             type="button"
             variante="primario"
             className="max-md:w-full"
-            onClick={dispararVarredura}
+            onClick={ehCardmarket ? dispararBuscaPrecos : dispararVarredura}
             disabled={disparando || rodando}
           >
             {disparando
               ? t("iniciando")
               : rodando
-                ? t("emAndamentoBotao")
-                : t("verificarOpcoes")}
+                ? ehCardmarket
+                  ? t("buscandoPrecos")
+                  : t("emAndamentoBotao")
+                : ehCardmarket
+                  ? t("buscarPrecos")
+                  : t("verificarOpcoes")}
           </Botao>
         </div>
-        <p className="mt-3 text-xs text-muted">
-          {textoDoRitmo(dados?.ritmo)} {t("explicacaoFrescor", { horas: VALIDADE_CONSULTA_HORAS })}
-          {ehSet && t("explicacaoSet")}
-        </p>
+        {ehCardmarket ? (
+          <p className="mt-3 text-xs text-muted">
+            {dados?.precosCandidatas &&
+              t("coberturaPrecos", {
+                comPreco: dados.precosCandidatas.comPreco,
+                cartas: dados.precosCandidatas.cartas,
+                aBuscar: dados.precosCandidatas.aBuscar,
+              }) +
+                (dados.precosCandidatas.semPrecoNoCardmarket > 0
+                  ? t("coberturaSemPrecoNoCardmarket", {
+                      total: dados.precosCandidatas.semPrecoNoCardmarket,
+                    })
+                  : "")}
+            {". "}
+            {t("explicacaoCardmarket", { dias: dados?.precosCandidatas?.validadeDias ?? 7 })}
+          </p>
+        ) : (
+          <p className="mt-3 text-xs text-muted">
+            {textoDoRitmo(dados?.ritmo)} {t("explicacaoFrescor", { horas: VALIDADE_CONSULTA_HORAS })}
+            {ehSet && t("explicacaoSet")}
+          </p>
+        )}
       </section>
+
+      {rodada && (
+        <section className="flex flex-wrap items-center gap-3 rounded-card border border-hairline bg-surface p-3 text-sm shadow-1">
+          <Distintivo tom={rodada.emAndamento ? "aviso" : "neutro"}>
+            {rodada.emAndamento ? t("emAndamento") : t("concluida")}
+          </Distintivo>
+          <span className="text-muted">
+            {t("resumoBuscaPrecos", {
+              consultadas: rodada.cartasConsultadas,
+              total: rodada.totalCartas,
+              requisicoes: rodada.requisicoes,
+            })}{" "}
+            · {new Date(rodada.criadoEm).toLocaleString(locale)}
+          </span>
+          {rodada.emAndamento && rodada.segundosRestantes !== null && (
+            <span className="text-muted">
+              {t("faltaTempo", { tempo: formatarDuracao(rodada.segundosRestantes) })}
+            </span>
+          )}
+          {rodada.emAndamento && <span className="text-muted">{t("telaSeAtualiza")}</span>}
+        </section>
+      )}
+
+      {rodada?.erro && (
+        <Alerta tom="perigo">{t("buscaComErro", { erro: rodada.erro })}</Alerta>
+      )}
 
       {varredura && (
         <section className="flex flex-wrap items-center gap-3 rounded-card border border-hairline bg-surface p-3 text-sm shadow-1">
@@ -716,12 +962,14 @@ export default function OpcoesCompraPage() {
         </Alerta>
       )}
 
-      {dados && dados.vagas.some((v) => v.opcoes.length > 0) && (
+      {dados && vagasDaTela.some((v) => v.opcoes.length > 0) && (
         <div className="flex flex-wrap items-center gap-3">
           <Botao variante="secundario" tamanho="sm" onClick={() => void marcarMelhorDeCadaVaga()}>
             {t("marcarMelhor")}
           </Botao>
-          <span className="text-xs text-muted">{t("marcarMelhorAjuda")}</span>
+          <span className="text-xs text-muted">
+            {ehCardmarket ? t("marcarMelhorAjudaCardmarket") : t("marcarMelhorAjuda")}
+          </span>
         </div>
       )}
 
@@ -737,10 +985,16 @@ export default function OpcoesCompraPage() {
               total: dados?.selecionadas ?? 0,
               valor: dinheiro(totalSelecionado),
             })}
+            {ehCardmarket && (
+              <span className="font-normal text-muted"> · {t("referenciaCardmarket")}</span>
+            )}
           </strong>
           {(dados?.semPreco ?? 0) > 0 && (
-            <Dica texto={t("semPrecoTitulo")}>
-              <span className="text-xs text-muted" title={t("semPrecoTitulo")}>
+            <Dica texto={ehCardmarket ? t("semPrecoTituloCardmarket") : t("semPrecoTitulo")}>
+              <span
+                className="text-xs text-muted"
+                title={ehCardmarket ? t("semPrecoTituloCardmarket") : t("semPrecoTitulo")}
+              >
                 {t("semPrecoConhecido", { total: dados?.semPreco ?? 0 })}
               </span>
             </Dica>
@@ -871,19 +1125,21 @@ export default function OpcoesCompraPage() {
           </p>
 
           <p className="text-xs text-muted">
-            {t("listaGuardada")}
+            {ehCardmarket ? t("listaGuardadaCardmarket") : t("listaGuardada")}
             {dados.precoMaisAntigo &&
               t("precoMaisAntigo", {
                 data: new Date(dados.precoMaisAntigo).toLocaleDateString(locale),
               })}{" "}
-            {t("totalEhPiso", { valor: dinheiro(totalSelecionado) })}
+            {ehCardmarket
+              ? t("totalEhReferencia", { valor: dinheiro(totalSelecionado) })
+              : t("totalEhPiso", { valor: dinheiro(totalSelecionado) })}
           </p>
         </section>
       )}
 
       <PainelSemEstoque colecaoId={id} aoAlterar={carregar} />
 
-      {dados && dados.vagas.length > 0 && (
+      {dados && vagasDaTela.length > 0 && (
         <label className="flex items-center gap-2 text-sm text-muted max-md:min-h-11">
           <input
             type="checkbox"
@@ -896,7 +1152,11 @@ export default function OpcoesCompraPage() {
 
       {carregando && <p className="text-sm text-muted">{t("carregando")}</p>}
 
-      {!carregando && !varredura && (
+      {!carregando && ehCardmarket && vagasDaTela.length === 0 && (
+        <EstadoVazio>{t("vazioSemCandidatas")}</EstadoVazio>
+      )}
+
+      {!carregando && !ehCardmarket && !varredura && (
         <EstadoVazio>
           {(dados?.selecionadas ?? 0) > 0
             ? t("vazioComLista")
@@ -981,7 +1241,11 @@ export default function OpcoesCompraPage() {
                         cada linha seria ruído. O que informa lá é o descarte. */}
                     {!ehSet && t("contagemOpcoes", { total: vaga.opcoes.length })}
                     {vaga.descartadas > 0 &&
-                      `${ehSet ? "" : " · "}${t("foraDosFiltros", { total: vaga.descartadas })}`}
+                      `${ehSet ? "" : " · "}${
+                        ehCardmarket
+                          ? t("acimaDoTeto", { total: vaga.descartadas })
+                          : t("foraDosFiltros", { total: vaga.descartadas })
+                      }`}
                     {vaga.semEstoque > 0 &&
                       ` · ${t("escondidasSemEstoque", { total: vaga.semEstoque })}`}
                   </span>
@@ -995,19 +1259,17 @@ export default function OpcoesCompraPage() {
                       ? marcadas
                           .map(
                             (o) =>
-                              `✓ ${o.nome} (${o.numero}${o.total ? `/${o.total}` : ""}) · ${dinheiro(o.preco)}`,
+                              `✓ ${o.nome} (${o.numero}${o.total ? `/${o.total}` : ""}) · ${
+                                o.preco === null ? t("semPrecoOpcao") : dinheiro(o.preco)
+                              }`,
                           )
                           .join("  ·  ")
                       : vaga.opcoes.length === 0
-                        ? ehSet
-                          ? t("semOfertaSet")
-                          : t("semOpcaoPokedex")
+                        ? textoVagaSemOpcao
                         : t("semSelecao")}
                   </p>
                 ) : vaga.opcoes.length === 0 ? (
-                  <p className="px-3 py-3 text-sm text-muted">
-                    {ehSet ? t("semOfertaSet") : t("semOpcaoPokedex")}
-                  </p>
+                  <p className="px-3 py-3 text-sm text-muted">{textoVagaSemOpcao}</p>
                 ) : (
                   <ul className="divide-y divide-line">
                 {vaga.opcoes.map((opcao) => (
@@ -1051,7 +1313,12 @@ export default function OpcoesCompraPage() {
                       />
                     </div>
                     <div className="md:contents max-md:flex max-md:min-w-0 max-md:flex-1 max-md:flex-col max-md:gap-1 max-md:py-1">
-                      <span className="min-w-40 font-medium text-foreground max-md:min-w-0">{opcao.nome}</span>
+                      <span className="min-w-40 font-medium text-foreground max-md:min-w-0">
+                        {opcao.nome}
+                        {opcao.nomeExibicao && (
+                          <span className="font-normal text-muted"> · {opcao.nomeExibicao}</span>
+                        )}
+                      </span>
                       <span className="text-muted">
                         {opcao.edicaoNome} ({opcao.numero}
                         {opcao.total ? `/${opcao.total}` : ""})
@@ -1068,11 +1335,35 @@ export default function OpcoesCompraPage() {
                             {t("foraDoCatalogo")}
                           </Distintivo>
                         )}
+                        {opcao.escolhaId && (
+                          <Distintivo tom="aviso" title={t("escolhaAvulsaTitulo")} dica>
+                            {t("escolhaAvulsa")}
+                          </Distintivo>
+                        )}
                       </div>
                       <div className="md:contents max-md:flex max-md:items-center max-md:justify-between max-md:gap-2">
-                        <strong className="ml-auto text-foreground max-md:ml-0">{dinheiro(opcao.preco)}</strong>
+                        {ehCardmarket ? (
+                          <span className="ml-auto flex items-center gap-2 max-md:ml-0">
+                            {opcao.preco === null ? (
+                              <Distintivo tom="neutro" title={textoSemPreco(opcao)} dica>
+                                {t("semPrecoOpcao")}
+                              </Distintivo>
+                            ) : (
+                              <>
+                                <Distintivo tom="neutro" title={dicaDoPreco(opcao)} dica>
+                                  {t("seloCardmarket")}
+                                </Distintivo>
+                                <strong className="text-foreground">{dinheiro(opcao.preco)}</strong>
+                              </>
+                            )}
+                          </span>
+                        ) : (
+                          <strong className="ml-auto text-foreground max-md:ml-0">
+                            {dinheiro(opcao.preco ?? 0)}
+                          </strong>
+                        )}
                         <a
-                          href={`${SITE}${opcao.caminho}`}
+                          href={`${SITE}${opcao.caminho ?? caminhoBuscaLiga(opcao.nome)}`}
                           target="_blank"
                           rel="noreferrer noopener"
                           className="text-xs text-accent hover:underline max-md:inline-flex max-md:min-h-11 max-md:min-w-11 max-md:items-center max-md:justify-end"

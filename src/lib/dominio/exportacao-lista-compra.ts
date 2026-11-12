@@ -61,6 +61,7 @@ import {
   type Regiao,
 } from "./escopo-pokedex";
 import { compararChavesVaga, lerChaveVagaSet } from "./chave-vaga-set";
+import type { FontePreco } from "./fonte-preco";
 
 export interface LinhaListaCompra {
   /** Chave da vaga: número da Pokédex ou `set/local_id` (`chave-vaga-set.ts`). */
@@ -73,6 +74,12 @@ export interface LinhaListaCompra {
   numero: string;
   total: string | null;
   preco: number;
+  /**
+   * De onde veio o preço: o menor da Liga, gravado na escolha, ou o valor de
+   * referência do Cardmarket convertido pela PTAX (`PRECO_FONTE=cardmarket`).
+   * Uma lista é sempre de uma fonte só — os dois nunca se somam.
+   */
+  fontePreco: FontePreco;
   raridade: string | null;
   /** `false` quando a carta não existe no nosso catálogo — precisa de cadastro manual depois. */
   noCatalogo: boolean;
@@ -97,6 +104,7 @@ export const adapterListaCompra: AdapterExportacaoCsv<LinhaListaCompra> = {
     "Número",
     "Total",
     "Preço (R$)",
+    "Fonte do preço",
     "Raridade",
     "No catálogo",
     "Link",
@@ -112,6 +120,9 @@ export const adapterListaCompra: AdapterExportacaoCsv<LinhaListaCompra> = {
     // Decimal com vírgula, como o resto das exportações deste repo — o
     // destino é planilha em pt-BR.
     l.preco.toFixed(2).replace(".", ","),
+    // O preço do Cardmarket é referência convertida, não preço de mercado
+    // brasileiro — e a planilha precisa dizer isso, como a tela diz.
+    l.fontePreco === "cardmarket" ? "Cardmarket (referência, PTAX)" : "Liga",
     l.raridade ?? "",
     l.noCatalogo ? "sim" : "não",
     `${SITE}${l.caminho}`,

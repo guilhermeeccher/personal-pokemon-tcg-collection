@@ -390,9 +390,9 @@ The source is **LigaPokemon**, read through the site's public search (`lib/liga/
   of requests per page open.
 - **No currency conversion.** Do not convert an international price and do not expose it as if it
   were a Brazilian market value. There is **one** exception, and it does not touch the Liga: the
-  optional Cardmarket source of the special card prices, converted by the day's PTAX and labelled
-  as such (section "International price reference" below). The buy-options scan and everything
-  else from the Liga stay unconverted.
+  optional Cardmarket source, converted by the day's PTAX and labelled as such — the special card
+  prices and, since 2026-11-12, the buy options built from the catalog (section "International
+  price reference" below). The buy-options scan and everything else from the Liga stay unconverted.
 - **`liga_edicao.set_id` is never filled by guesswork** — an edition linked to the wrong set points
   the price of one set at a card from another.
 - **The set's search term is the ENGLISH name**, taken from the `en` row for the same set and
@@ -531,13 +531,14 @@ which expensive listings pull up. TCGplayer was further off and is not used.
    round, before the round is created**; unavailable means the round does not start (refusal
    `cotacaoIndisponivel`, HTTP 503) — never a price stored unconverted or converted by a guessed
    rate. The quote and its date are stored on every found price row.
-4. **The exception to "No currency conversion" is this source only.** Converted by the day's PTAX,
+4. **The exception to "No currency conversion" is this source only** — the special card prices and
+   the buy options built from the catalog (below). Converted by the day's PTAX,
    labelled with source, quote and date; never summed with, mixed into the same series as, or
    compared with Liga values; never presented as a Brazilian market price. The Liga keeps its own
    chart series: swapping one series for the other would draw a drop that never happened.
 5. **The Liga stays intact**, in code and in the database: its prices, history, rounds and snapshots
-   are never deleted or altered. With `cardmarket`, the prices screen and the overview gems use the
-   Cardmarket source only; with `liga`, everything is as before.
+   are never deleted or altered. With `cardmarket`, the prices screen, the overview gems and the buy
+   options screen use the Cardmarket source only; with `liga`, everything is as before.
 6. **TCGdex client:** the catalog's own (`lib/sync/tcgdex.ts`) — the global limiter, the User-Agent,
    a block aborts. The round asks for **one card at a time, sequentially, never in parallel**
    (`lib/cardmarket/precos.ts`), languages in the order en, pt, jp, only those the card has in the
@@ -591,6 +592,51 @@ the trend and the average. Migration `0032` backfilled the rows written before i
 On screen, the column is still headed "Trend" but shows the stored value, with a visible tag and a
 `Dica` when it is not the trend ("30-day average" with both euro numbers, or "average" when
 Cardmarket has no trend).
+
+### Buy options from the catalog — the same switch
+
+The Liga's block also stopped the buy-options scan: it uses the same `cards/search`. With
+`PRECO_FONTE=cardmarket` (decision of 2026-11-12) the buy options screen of a collection stops
+scanning the Liga and builds the options from what we already have (`lib/dominio/candidatas-compra.ts`,
+`lib/db/candidatas-compra.ts`, `lib/cardmarket/candidatas.ts`):
+
+- **The candidates are the catalog's.** A Pokédex slot gets every active pt/en card with exactly one
+  `dexId`, equal to the slot's (rule 2; forms compete, rule 3); Japanese cards stay out, since their
+  names are in Japanese and the Buy by List is in English. A set slot gets its own card, resolved in
+  the collection's per-card language order. One candidate per physical card (`carta_id`). The
+  system lists, sorts and filters; the user marks (rule 5).
+- **The paste line is written the way the Liga writes it** — the English name through `nomeNaLiga`
+  (mechanic glued by hyphen, `Umbreon-GX`; no `δ`; `Ditto Prism Star`; `Unown E`; `Nidoran Male`)
+  and the label numbering through `numeracaoNoRotuloLiga` (the total zero-padded only when the
+  printed number is: `042/064`, `20/73`). Both rules were measured on 2026-11-12 against the labels
+  the old scans brought back, matched to the catalog: 2,659 of 2,675 names and 3,105 of 3,264
+  numberings come out equal. The rest has no pattern (the Liga writing `28/172` in a set it writes
+  `028/172` elsewhere, open promo totals it writes `∞`) and goes out as the catalog has it — never a
+  guess. Their buy list parser has still not been checked against a line generated this way.
+- **The price is a reference, fetched on demand.** "Look up prices (Cardmarket)" runs a round over
+  the collection's candidates with the same per-card lookup, client, PTAX and refusals as the
+  inventory round, **one card at a time and one candidates round at a time in the whole app**
+  (`rodadaDeCandidatasViva` has no collection filter: two collections would be two cards in
+  flight). It may run alongside an inventory round; both go through the client's global limiter.
+  A card asked within **7 days** is skipped (`VALIDADE_PRECO_CANDIDATA_HORAS`), found or not: a
+  Pokédex has thousands of candidates, and the price only has to tell cheap from expensive.
+- **Its own tables**, `preco_candidata_cardmarket` and `rodada_preco_candidata`. Never write a
+  candidate into `preco_carta_cardmarket`: the prices screen lists that whole table and the chart
+  snapshot sums it, so a candidate there would enter the collection's value without the user owning
+  it. A "not found" never overwrites a found price; `consultado_em` is the last question (the
+  freshness) and `preco_em` is when the stored price was read. No history: nothing plots it.
+- **Ceiling and order are a screen filter** (`filtrarCandidatas`), applied without a new round: the
+  ceiling hides only a known price above it, a card with no price stays and sorts after the priced
+  ones in both orders, and a selected card is never hidden. "Mark the best of each slot" marks only
+  a priced first option.
+- **A choice from the catalog is stored with no price** (`escolha_compra.preco` null), and every
+  price on the list comes from the active source through `precosDasEscolhas`, the same function for
+  the screen and the export: with `cardmarket`, the candidate's value by `carta_id`, never the Liga
+  price an older choice still holds. A choice no candidate explains (an old scan's, outside the
+  catalog) shows in its slot, marked, so it can be unmarked. The CSV says which source each price
+  came from.
+- The "out of stock" paste, the 110-card tabs and the export work as before: the key is name +
+  number/total, and the catalog line carries both.
 
 ### Scheduled refresh — `pnpm precos:cardmarket`, this source only
 

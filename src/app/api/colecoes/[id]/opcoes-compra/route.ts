@@ -42,9 +42,26 @@ import { listarSemEstoqueVigente } from "@/lib/db/sem-estoque";
 import { chaveSemEstoque } from "@/lib/dominio/sem-estoque-liga";
 import { totalDaLista } from "@/lib/dominio/exportacao-lista-compra";
 import { identidadeDaCarta } from "@/lib/dominio/identidade-carta";
-import { abasDaLista, linhaDaEscolha } from "@/lib/liga/lista-compra";
+import { abasDaLista, linhaDaEscolha, precosDasEscolhas } from "@/lib/liga/lista-compra";
 import { ehUuid } from "@/lib/dominio/uuid";
 import { executarVarredura, vagasParaVarrer } from "@/lib/liga/varredura";
+import { fonteDePreco } from "@/lib/dominio/fonte-preco";
+import type { EscolhaSalva } from "@/lib/db/escolhas";
+import {
+  encerrarRodadasDeCandidatasMortas,
+  listarCandidatasDaColecao,
+  precosDasCandidatas,
+  ultimaRodadaDeCandidatas,
+} from "@/lib/db/candidatas-compra";
+import {
+  executarRodadaCandidatas,
+  iniciarRodadaCandidatas,
+} from "@/lib/cardmarket/candidatas";
+import {
+  JANELA_SEM_BATIMENTO_CARDMARKET_SEGUNDOS,
+  segundosDeRodadaCardmarket,
+} from "@/lib/cardmarket/precos";
+import { VALIDADE_PRECO_CANDIDATA_HORAS } from "@/lib/dominio/candidatas-compra";
 
 /**
  * Opções de compra das vagas vazias de uma coleção — a Fase 6 da spec, pela
@@ -59,6 +76,17 @@ import { executarVarredura, vagasParaVarrer } from "@/lib/liga/varredura";
  *
  * Coleção customizada fica de fora: a vaga dela nasce ao alocar, com chave
  * sequencial, e não representa uma carta que falta comprar.
+ *
+ * ## Com `PRECO_FONTE=cardmarket`, as opções saem do catálogo
+ *
+ * Desde 2026-11-11 a busca da Liga barra o coletor, e a varredura não acha
+ * mais nada. Nessa fonte (decisão de 2026-11-12), o `GET` lista as cartas do
+ * catálogo que servem para cada vaga vazia, com o valor de referência do
+ * Cardmarket de cada uma, e o `POST` dispara a busca desse valor na TCGdex —
+ * minutos, não horas. Teto e ordenação não vão para o servidor: a tela recebe
+ * todas as candidatas e filtra na hora (`filtrarCandidatas`), porque mudar o
+ * teto não pede rodada nova. A lista para colar, as abas e o "sem estoque"
+ * seguem iguais. Ver `lib/dominio/candidatas-compra.ts`.
  */
 
 type TipoComVaga = "pokedex" | "set";
@@ -170,6 +198,8 @@ export const POST = comAcesso(async function POST(req: Request, { params }: { pa
   } catch {
     // Corpo vazio é válido: usa os filtros padrão do tipo.
   }
+
+  if (fonteDePreco() === "cardmarket") return dispararBuscaDePrecos(colecao, corpo);
 
   const validacao = validarFiltros(
     corpo,
@@ -322,7 +352,11 @@ export const GET = comAcesso(async function GET(req: Request, { params }: { para
   // usuário cadastra as cartas. A escolha de vaga já preenchida não some
   // do banco — fica guardada, e volta se a cópia sair da vaga.
   const daLista = escolhas.filter((e) => e.vagaVazia);
-  const linhas = daLista.map(linhaDaEscolha);
+  // O preço é o da fonte da instalação, nunca as duas somadas
+  // (`precosDasEscolhas`) — a mesma função da exportação.
+  const fonte = fonteDePreco();
+  const precoDe = await precosDasEscolhas(db, daLista, fonte);
+  const linhas = daLista.map((e) => linhaDaEscolha(e, precoDe(e)));
 
   // Coleção que junta sets: uma aba por set, com o nome dele no rótulo.
   const ordemSets = colecao.tipo === "set" ? ((colecao.parametro as ParametroSet).sets ?? []) : [];
@@ -335,8 +369,9 @@ export const GET = comAcesso(async function GET(req: Request, { params }: { para
         )
       : new Map<string, string>();
 
-  const precos = daLista.map((e) => e.precoEm).filter((d): d is Date => d !== null);
+  const precos = daLista.map((e) => precoDe(e).em).filter((d): d is Date => d !== null);
   const resumoDaLista = {
+    fonte,
     selecionadas: daLista.length,
     guardadas: escolhas.length - daLista.length,
     // Em abas de até 110 cartas, o limite da Compra por Lista deles — por
@@ -349,12 +384,18 @@ export const GET = comAcesso(async function GET(req: Request, { params }: { para
     total: totalDaLista(linhas),
     // Preço sem data é armadilha: a carta que sumiu da varredura seguinte
     // continua aqui com o preço de antes, e a tela precisa poder dizer isso.
-    semPreco: daLista.filter((e) => e.preco === null).length,
+    semPreco: daLista.filter((e) => precoDe(e).preco === null).length,
     precoMaisAntigo:
       precos.length === 0
         ? null
         : new Date(Math.min(...precos.map((d) => d.getTime()))).toISOString(),
   };
+
+  if (fonte === "cardmarket") {
+    return NextResponse.json(
+      await respostaDasCandidatas(req, colecao, escolhas, { ...vazio, ...resumoDaLista }),
+    );
+  }
 
   // Mesma limpeza do POST: quem abre a tela depois de um reinício precisa ver
   // "interrompida", não uma ampulheta eterna. E a mesma janela elástica: no
@@ -488,3 +529,234 @@ export const GET = comAcesso(async function GET(req: Request, { params }: { para
     ...resumoDaLista,
   });
 });
+
+type ColecaoComVaga = { id: string; tipo: string; parametro: unknown };
+
+/**
+ * `POST` na fonte Cardmarket: dispara a busca do valor de referência das
+ * candidatas desta coleção (`iniciarRodadaCandidatas`). Mesmas recusas da
+ * rodada do inventário, e a mesma resposta imediata da varredura: a rodada
+ * segue no processo, e a tela acompanha pelo `GET`.
+ *
+ * `validadeHoras: 0` pergunta tudo de novo, como o "reconsultar tudo" da
+ * varredura; o padrão pula o que foi perguntado na última semana.
+ */
+async function dispararBuscaDePrecos(colecao: ColecaoComVaga, corpo: unknown) {
+  const validadeHoras =
+    typeof corpo === "object" && corpo !== null
+      ? (corpo as Record<string, unknown>).validadeHoras
+      : undefined;
+  if (
+    validadeHoras !== undefined &&
+    (typeof validadeHoras !== "number" || !Number.isFinite(validadeHoras) || validadeHoras < 0)
+  ) {
+    return NextResponse.json(
+      { erro: "validadeHoras deve ser um número de horas não negativo." },
+      { status: 400 },
+    );
+  }
+
+  const inicio = await iniciarRodadaCandidatas(db, colecao, {
+    validadeHoras: validadeHoras as number | undefined,
+  });
+  if (!inicio.iniciada) {
+    return NextResponse.json(
+      {
+        ...corpoDaRecusa(inicio.recusa),
+        rodadaId: inicio.viva?.id ?? null,
+        cartasPuladas: inicio.cartasPuladas ?? 0,
+      },
+      { status: inicio.status },
+    );
+  }
+
+  // Sem `await`, como a varredura: a resposta sai agora e a rodada segue. O
+  // `catch` existe para uma falha aqui não virar rejeição sem dono.
+  void executarRodadaCandidatas(db, inicio.rodadaId, inicio.pendentes, inicio.cotacao).catch(
+    (err) => console.error(`[preços candidatas ${inicio.rodadaId}] ${String(err)}`),
+  );
+
+  const estimativaSegundos = segundosDeRodadaCardmarket(inicio.pendentes.length);
+  return NextResponse.json(
+    {
+      rodadaId: inicio.rodadaId,
+      cartasParaConsultar: inicio.pendentes.length,
+      cartasPuladas: inicio.puladas.length,
+      estimativaSegundos,
+      previsaoTermino: previsaoDeTermino(new Date(), estimativaSegundos).toISOString(),
+      cotacao: inicio.cotacao,
+    },
+    { status: 202 },
+  );
+}
+
+/**
+ * `GET` na fonte Cardmarket: as candidatas de cada vaga vazia, com o valor de
+ * referência de cada uma, sem filtro (a tela filtra), e a busca de preços
+ * desta coleção.
+ *
+ * A marcação é derivada da escolha pela carta (`carta_id`), como na
+ * varredura ela era derivada pela identidade da Liga. A escolha que nenhuma
+ * candidata explica — de uma varredura antiga, fora do catálogo — entra na
+ * grade da vaga dela, marcada: é o único lugar em que dá para desmarcá-la.
+ */
+async function respostaDasCandidatas(
+  req: Request,
+  colecao: ColecaoComVaga,
+  escolhas: readonly EscolhaSalva[],
+  base: Record<string, unknown>,
+) {
+  // Mesma limpeza da varredura, com a mesma condição da senha.
+  if (leituraPodeGravar(req)) {
+    await encerrarRodadasDeCandidatasMortas(db, JANELA_SEM_BATIMENTO_CARDMARKET_SEGUNDOS);
+  }
+
+  const [vagas, rodada] = await Promise.all([
+    listarCandidatasDaColecao(db, colecao, { comImagem: true }),
+    ultimaRodadaDeCandidatas(db, colecao.id),
+  ]);
+
+  const escolhasPorVaga = new Map<string, EscolhaSalva[]>();
+  for (const e of escolhas) {
+    if (!e.vagaVazia) continue;
+    const lista = escolhasPorVaga.get(e.chave);
+    if (lista) lista.push(e);
+    else escolhasPorVaga.set(e.chave, [e]);
+  }
+
+  const cartasCandidatas = new Set(vagas.flatMap((v) => v.candidatas.map((c) => c.cartaId)));
+  const precos = await precosDasCandidatas(db, [
+    ...cartasCandidatas,
+    ...escolhas.flatMap((e) => (e.cartaId === null ? [] : [e.cartaId])),
+  ]);
+
+  // Enxuto de propósito: uma Pokédex manda milhares de candidatas, e a tela
+  // relê tudo a cada 10 s enquanto a busca anda. Vai só o que ela lê — a
+  // data da pergunta só quando não há preço (para dizer "o Cardmarket não
+  // tem"), a tendência só quando ela foi trocada pela média de 30 dias.
+  const precoDaCarta = (cartaId: string | null) => {
+    const p = cartaId === null ? undefined : precos.get(cartaId);
+    if (p === undefined) return { preco: null };
+    if (p.valor === null) return { preco: null, consultadaEm: p.consultadoEm.toISOString() };
+    return {
+      preco: p.valor,
+      cardmarket: {
+        valorEur: p.valorEur,
+        criterioValor: p.criterioValor,
+        ...(p.criterioValor === "media30" ? { tendenciaEur: p.tendenciaEur } : {}),
+        cotacao: p.cotacao,
+        cotacaoData: p.cotacaoData,
+      },
+    };
+  };
+
+  // Mesma regra da varredura: a carta que a Liga devolveu como sem estoque
+  // some da grade, salvo se estiver marcada.
+  const semEstoque = new Set((await listarSemEstoqueVigente(db)).map((r) => r.chave));
+
+  const vagasDaTela = vagas.map((v) => {
+    const daVaga = escolhasPorVaga.get(v.chave) ?? [];
+    const explicadas = new Set<string>();
+    const candidatas = v.candidatas.map((c) => {
+      const marcadas = daVaga.filter((e) => e.cartaId === c.cartaId);
+      for (const e of marcadas) explicadas.add(e.id);
+      // Sem `caminho`: a tela o monta do nome (`caminhoBuscaLiga`).
+      return {
+        id: `${v.chave}|${c.cartaId}`,
+        chave: v.chave,
+        nome: c.nome,
+        ...(c.nomeExibicao === null ? {} : { nomeExibicao: c.nomeExibicao }),
+        edicaoNome: c.edicaoNome,
+        numero: c.numero,
+        total: c.total,
+        raridade: c.raridade,
+        cartaId: c.cartaId,
+        selecionada: marcadas.length > 0,
+        semEstoque: semEstoque.has(chaveSemEstoque(c)),
+        imagemUrl: c.imagemUrl,
+        imagemOrigem: c.imagemOrigem,
+        ...precoDaCarta(c.cartaId),
+      };
+    });
+    const avulsas = daVaga
+      .filter((e) => !explicadas.has(e.id))
+      .map((e) => ({
+        id: `escolha|${e.id}`,
+        escolhaId: e.id,
+        chave: v.chave,
+        nome: e.nome,
+        edicaoNome: e.edicaoNome,
+        numero: e.numero,
+        total: e.total,
+        raridade: e.raridade,
+        cartaId: e.cartaId,
+        caminho: e.caminho,
+        selecionada: true,
+        semEstoque: semEstoque.has(chaveSemEstoque(e)),
+        imagemUrl: null,
+        imagemOrigem: null,
+        ...precoDaCarta(e.cartaId),
+      }));
+
+    let escondidas = 0;
+    const oferecidas = [...avulsas, ...candidatas].filter((o) => {
+      if (!o.semEstoque || o.selecionada) return true;
+      escondidas++;
+      return false;
+    });
+    return {
+      chave: v.chave,
+      rotulo: v.rotulo,
+      setNome: v.setNome,
+      dex: v.dex,
+      opcoes: oferecidas,
+      descartadas: 0,
+      semEstoque: escondidas,
+    };
+  });
+
+  // Quanto do preço já existe — o que a tela diz ao lado do botão. "A buscar"
+  // é exatamente o que uma rodada disparada agora perguntaria.
+  const corte = corteDeFrescor({ agora: new Date(), validadeHoras: VALIDADE_PRECO_CANDIDATA_HORAS });
+  let comPreco = 0;
+  let semPrecoNoCardmarket = 0;
+  let aBuscar = 0;
+  for (const cartaId of cartasCandidatas) {
+    const p = precos.get(cartaId);
+    if (p?.valor != null) comPreco++;
+    else if (p !== undefined) semPrecoNoCardmarket++;
+    if (p === undefined || p.consultadoEm.getTime() <= corte.getTime()) aBuscar++;
+  }
+
+  const emAndamento = rodada !== null && rodada.concluidaEm === null;
+  return {
+    ...base,
+    vagas: vagasDaTela,
+    precosCandidatas: {
+      cartas: cartasCandidatas.size,
+      comPreco,
+      semPrecoNoCardmarket,
+      aBuscar,
+      validadeDias: Math.round(VALIDADE_PRECO_CANDIDATA_HORAS / 24),
+    },
+    rodada:
+      rodada === null
+        ? null
+        : {
+            id: rodada.id,
+            totalCartas: rodada.totalCartas,
+            cartasConsultadas: rodada.cartasConsultadas,
+            cartasComFalha: rodada.cartasComFalha,
+            requisicoes: rodada.requisicoes,
+            concluidaEm: rodada.concluidaEm,
+            erro: rodada.erro,
+            criadoEm: rodada.criadoEm,
+            emAndamento,
+            segundosRestantes: emAndamento
+              ? segundosDeRodadaCardmarket(
+                  Math.max(0, rodada.totalCartas - rodada.cartasConsultadas - rodada.cartasComFalha),
+                )
+              : null,
+          },
+  };
+}

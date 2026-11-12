@@ -232,6 +232,13 @@
       "when": 1794419987758,
       "tag": "0032_precos_cardmarket_valor",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794510877148,
+      "tag": "0033_precos_candidatas",
+      "breakpoints": true
     }
   ]
 }

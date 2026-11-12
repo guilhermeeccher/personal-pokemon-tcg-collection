@@ -10,7 +10,10 @@ import {
   type EscolhaNova,
 } from "@/lib/db/escolhas";
 import { obterUltimaVarredura, opcoesPorId } from "@/lib/db/liga";
+import { listarCandidatasDaColecao } from "@/lib/db/candidatas-compra";
+import { listarEscolhas } from "@/lib/db/escolhas";
 import { identidadeDaCarta } from "@/lib/dominio/identidade-carta";
+import { fonteDePreco } from "@/lib/dominio/fonte-preco";
 import { ehUuid } from "@/lib/dominio/uuid";
 
 /**
@@ -31,6 +34,15 @@ import { ehUuid } from "@/lib/dominio/uuid";
  * **desmarcar**, valem ids de `liga_opcao` ou de `escolha_compra`: a lista de
  * compras existe sem varredura nenhuma, e o usuário precisa poder tirar carta
  * dela sem rodar uma busca antes.
+ *
+ * **Com `PRECO_FONTE=cardmarket` as opções saem do catálogo** (ver a rota de
+ * opções), e a marcação vem como `{ cartas: [{ chave, cartaId }],
+ * selecionada }`. Marcar confere que a carta é candidata de uma vaga vazia
+ * desta coleção — regra 2 na Pokédex, a carta da vaga no set — e grava a
+ * escolha com a linha da Liga tirada do catálogo, sem preço: o preço dela é
+ * lido na hora da fonte ativa, e o da Liga não se mistura. Desmarcar apaga as
+ * escolhas daquela vaga com aquela carta. `ids` de escolha continuam valendo
+ * para desmarcar a escolha avulsa.
  */
 export const PATCH = comAcesso(async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -50,7 +62,10 @@ export const PATCH = comAcesso(async function PATCH(req: Request, { params }: { 
     return NextResponse.json({ erro: "Corpo inválido (JSON esperado)." }, { status: 400 });
   }
 
-  const bruto = corpo as { ids?: unknown; selecionada?: unknown };
+  const bruto = corpo as { ids?: unknown; cartas?: unknown; selecionada?: unknown };
+  if (bruto.cartas !== undefined && fonteDePreco() === "cardmarket") {
+    return marcarCandidatas(colecao, bruto.cartas, bruto.selecionada);
+  }
   if (
     !Array.isArray(bruto.ids) ||
     bruto.ids.some((i) => typeof i !== "string" || !ehUuid(i)) ||
@@ -107,3 +122,60 @@ export const PATCH = comAcesso(async function PATCH(req: Request, { params }: { 
 
   return NextResponse.json({ alteradas: await marcarEscolhas(db, id, novas) });
 });
+
+/** No máximo isto por pedido: "marcar a melhor de cada vaga" de uma Pokédex inteira cabe. */
+const MAXIMO_CARTAS_POR_PEDIDO = 1100;
+
+async function marcarCandidatas(
+  colecao: { id: string; tipo: string; parametro: unknown },
+  cartas: unknown,
+  selecionada: unknown,
+) {
+  if (
+    !Array.isArray(cartas) ||
+    cartas.length > MAXIMO_CARTAS_POR_PEDIDO ||
+    cartas.some(
+      (c) =>
+        typeof c !== "object" ||
+        c === null ||
+        typeof (c as Record<string, unknown>).chave !== "string" ||
+        typeof (c as Record<string, unknown>).cartaId !== "string",
+    ) ||
+    typeof selecionada !== "boolean"
+  ) {
+    return NextResponse.json(
+      { erro: "Esperado { cartas: { chave: string, cartaId: string }[], selecionada: boolean }." },
+      { status: 400 },
+    );
+  }
+  const pares = new Set((cartas as Array<{ chave: string; cartaId: string }>).map((c) => `${c.chave}|${c.cartaId}`));
+
+  if (!selecionada) {
+    const alvos = (await listarEscolhas(db, colecao.id)).filter(
+      (e) => e.cartaId !== null && pares.has(`${e.chave}|${e.cartaId}`),
+    );
+    return NextResponse.json({ alteradas: await desmarcarEscolhas(db, colecao.id, alvos) });
+  }
+
+  // Só o que é candidata de uma vaga vazia: a tela nunca manda outra coisa, e
+  // uma carta de outra espécie na vaga quebraria a regra 2 em silêncio.
+  const novas: EscolhaNova[] = (await listarCandidatasDaColecao(db, colecao)).flatMap((v) =>
+    v.candidatas
+      .filter((c) => pares.has(`${v.chave}|${c.cartaId}`))
+      .map((c) => ({
+        chave: v.chave,
+        especie: v.especie,
+        nome: c.nome,
+        edicaoSigla: c.edicaoSigla,
+        edid: null,
+        edicaoNome: c.edicaoNome,
+        numero: c.numero,
+        total: c.total,
+        caminho: c.caminho,
+        cartaId: c.cartaId,
+        idiomaCatalogo: c.idiomaCatalogo,
+        preco: null,
+      })),
+  );
+  return NextResponse.json({ alteradas: await marcarEscolhas(db, colecao.id, novas) });
+}

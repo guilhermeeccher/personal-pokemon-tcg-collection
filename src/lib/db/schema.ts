@@ -731,6 +731,69 @@ export const precoCartaCardmarketHistorico = pgTable(
 );
 
 /**
+ * Preço de referência do Cardmarket das **candidatas de compra** — as cartas
+ * do catálogo que servem para as vagas vazias das coleções
+ * (`lib/dominio/candidatas-compra.ts`, `lib/cardmarket/candidatas.ts`). Mesma
+ * leitura e mesma conversão de `preco_carta_cardmarket`, com o valor
+ * escolhido na gravação (`converterPrecoCardmarket`).
+ *
+ * **Tabela própria, e não `preco_carta_cardmarket`**, porque aquela é o
+ * inventário: a tela de Preços lista a tabela inteira e a foto do gráfico soma
+ * a tabela inteira. Uma candidata ali entraria no valor da coleção sem o
+ * usuário ter a carta.
+ *
+ * Uma linha por `carta_id`, atualizada no lugar e nunca apagada, sem FK para o
+ * catálogo (a chave dele é composta). Sem histórico: o preço aqui só serve à
+ * escolha do que comprar, e não há gráfico dele.
+ *
+ * Dois instantes, porque "não achou" não sobrescreve um preço achado:
+ * `consultado_em` é a última pergunta (o frescor da busca seguinte sai dele,
+ * achada ou não), e `preco_em` é quando o preço guardado foi lido.
+ */
+export const precoCandidataCardmarket = pgTable("preco_candidata_cardmarket", {
+  cartaId: text("carta_id").primaryKey(),
+  idProduto: integer("id_produto"),
+  idiomaConsulta: text("idioma_consulta"),
+  foil: boolean("foil").notNull().default(false),
+  tendenciaEur: numeric("tendencia_eur", { precision: 10, scale: 2 }),
+  mediaEur: numeric("media_eur", { precision: 10, scale: 2 }),
+  minimoEur: numeric("minimo_eur", { precision: 10, scale: 2 }),
+  media30Eur: numeric("media30_eur", { precision: 10, scale: 2 }),
+  cotacao: numeric("cotacao", { precision: 10, scale: 4 }),
+  cotacaoData: date("cotacao_data"),
+  valorEur: numeric("valor_eur", { precision: 10, scale: 2 }),
+  valor: numeric("valor", { precision: 10, scale: 2 }),
+  criterioValor: text("criterio_valor").$type<CriterioValorCardmarket>(),
+  atualizadoUpstream: timestamp("atualizado_upstream", { withTimezone: true }),
+  encontrada: boolean("encontrada").notNull(),
+  precoEm: timestamp("preco_em", { withTimezone: true }),
+  consultadoEm: timestamp("consultado_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Uma busca de preços das candidatas de uma coleção. Mesmo contrato das
+ * outras rodadas: `atualizado_em` é o batimento que separa a rodada viva da
+ * morta por reinício, e a rodada nunca recomeça sozinha.
+ *
+ * Tabela própria, e não `liga_rodada_preco`: aquela é a do inventário, e a
+ * tela de Preços lista as rodadas dela.
+ */
+export const rodadaPrecoCandidata = pgTable("rodada_preco_candidata", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  colecaoId: uuid("colecao_id")
+    .notNull()
+    .references(() => colecao.id, { onDelete: "cascade" }),
+  totalCartas: integer("total_cartas").notNull().default(0),
+  cartasConsultadas: integer("cartas_consultadas").notNull().default(0),
+  cartasComFalha: integer("cartas_com_falha").notNull().default(0),
+  requisicoes: integer("requisicoes").notNull().default(0),
+  concluidaEm: timestamp("concluida_em", { withTimezone: true }),
+  atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+  erro: text("erro"),
+  criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
  * Uma opção de compra encontrada para uma vaga vazia, com o preço no instante
  * da varredura. Serve os dois tipos de coleção que têm vaga vazia: Pokédex
  * (a vaga é uma espécie, e as opções são as cartas dela) e set (a vaga é uma

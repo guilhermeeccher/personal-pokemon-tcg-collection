@@ -22,6 +22,7 @@ function linha(p: Partial<LinhaListaCompra> = {}): LinhaListaCompra {
     numero: "001",
     total: "165",
     preco: 1.5,
+    fontePreco: "liga",
     raridade: "Comum",
     noCatalogo: true,
     caminho: "/?view=cards/card&card=Bulbasaur (001/165)",
@@ -231,5 +232,18 @@ describe("dividirListaCompra", () => {
     const abas = dividirListaCompra(entrada, "pokedex");
     expect(abas.reduce((soma, a) => soma + a.linhas.length, 0)).toBe(entrada.length);
     expect(abas.every((a) => a.linhas.length <= LIMITE_COMPRA_POR_LISTA)).toBe(true);
+  });
+});
+
+describe("adapterListaCompra — fonte do preço", () => {
+  it("diz de onde veio o preço, e rotula o Cardmarket como referência", () => {
+    const csv = gerarCsv(adapterListaCompra, [
+      linha({ fontePreco: "liga" }),
+      linha({ fontePreco: "cardmarket" }),
+    ]);
+    const linhas = csv.trim().split("\r\n");
+    expect(linhas[0]).toContain("Fonte do preço");
+    expect(linhas[1]).toContain(";Liga;");
+    expect(linhas[2]).toContain(";Cardmarket (referência, PTAX);");
   });
 });
