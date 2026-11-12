@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { identidadeNaLiga, setIdsDaSiglaLiga } from "./numeracao-liga";
+import { identidadeNaLiga, numeracaoNoRotuloLiga, setIdsDaSiglaLiga } from "./numeracao-liga";
 
 const classica = (localId: string) => ({
   setId: "30th-c",
@@ -85,5 +85,40 @@ describe("setIdsDaSiglaLiga", () => {
   it("não inventa set para sigla comum", () => {
     expect(setIdsDaSiglaLiga("30C")).toEqual([]);
     expect(setIdsDaSiglaLiga("PFL")).toEqual([]);
+  });
+});
+
+describe("numeracaoNoRotuloLiga", () => {
+  const carta = (localId: string, setQtdOficial: number | null, setId = "x") => ({
+    setId,
+    localId,
+    setSigla: "X",
+    setQtdOficial,
+  });
+
+  it("preenche o total quando o número impresso tem zeros", () => {
+    expect(numeracaoNoRotuloLiga(carta("042", 64))).toEqual({ numero: "042", total: "064" });
+  });
+
+  it("preenche o total quando o número tem três dígitos (secreta)", () => {
+    expect(numeracaoNoRotuloLiga(carta("103", 88))).toEqual({ numero: "103", total: "088" });
+  });
+
+  it("não preenche quando o número não tem zeros", () => {
+    expect(numeracaoNoRotuloLiga(carta("20", 73))).toEqual({ numero: "20", total: "73" });
+    expect(numeracaoNoRotuloLiga(carta("4", 102))).toEqual({ numero: "4", total: "102" });
+  });
+
+  it("não mexe em número com letra", () => {
+    expect(numeracaoNoRotuloLiga(carta("TG01", 30))).toEqual({ numero: "TG01", total: "30" });
+  });
+
+  it("sai sem total quando o catálogo não tem contagem", () => {
+    expect(numeracaoNoRotuloLiga(carta("037", null))).toEqual({ numero: "037", total: null });
+    expect(numeracaoNoRotuloLiga(carta("037", 0))).toEqual({ numero: "037", total: null });
+  });
+
+  it("escreve a clássica como a Liga: número original e total 30 sem zeros", () => {
+    expect(numeracaoNoRotuloLiga(classica("005"))).toEqual({ numero: "018", total: "30" });
   });
 });

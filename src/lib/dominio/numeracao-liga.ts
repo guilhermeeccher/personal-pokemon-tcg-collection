@@ -115,6 +115,44 @@ export function identidadeNaLiga(carta: CartaParaIdentidadeLiga): IdentidadeLiga
 }
 
 /**
+ * Número e total como a Liga os escreve **no rótulo da carta** — o
+ * `(001/165)` de `Bulbasaur (001/165)`, que é o formato da Compra por Lista.
+ *
+ * Não é o total do arquivo de subir coleção (`exportacao-liga.ts`), que vem
+ * sempre com três dígitos. No rótulo, o total segue o jeito que o número está
+ * impresso: com zeros quando o número tem zeros ou três dígitos
+ * (`042/064`, `103/088`), sem zeros quando não tem (`20/73`, `4/102`). Medido
+ * em 2026-11-12 sobre as opções que as varreduras antigas casaram com o
+ * catálogo: com esta regra, 3.105 de 3.264 rótulos saem iguais aos deles.
+ * O resto é a Liga escrevendo diferente de si mesma (`28/172` num set em que
+ * as outras são `028/172`), promo de total aberto, que eles escrevem `∞` e o
+ * catálogo não sabe, e edição numerada por eles de outro jeito.
+ *
+ * O set de exceção sai como a tabela diz, sem preencher: a Liga escreve
+ * `018/30` na Coleção Clássica.
+ *
+ * `total` nulo quando o catálogo não traz contagem: o rótulo sai só com o
+ * número, sem inventar total.
+ */
+export function numeracaoNoRotuloLiga(carta: CartaParaIdentidadeLiga): {
+  numero: string;
+  total: string | null;
+} {
+  const { numero, total } = identidadeNaLiga(carta);
+  if (total === null || total <= 0) return { numero, total: null };
+  const ehExcecao = EXCECOES[carta.setId.toLowerCase()] !== undefined;
+  const impressoComZeros =
+    /^\d+$/.test(numero) && (numero.startsWith("0") || numero.length >= 3);
+  return {
+    numero,
+    total:
+      !ehExcecao && impressoComZeros
+        ? String(total).padStart(numero.length, "0")
+        : String(total),
+  };
+}
+
+/**
  * Os `set_id` do catálogo que a Liga publica sob esta sigla de exceção — para
  * a busca de candidatas ao casar uma linha da Liga com o catálogo: `30C-C`
  * não é sigla de nenhum set nosso, então só a tabela sabe a que set aponta.
