@@ -51,6 +51,15 @@ describe("montarCandidata", () => {
     expect(c?.nomeExibicao).toBeNull();
   });
 
+  it("usa o nome da tabela por carta, mesmo sem ficha em inglês", () => {
+    const metade = { cartaId: "me06-095", setId: "me06", setSigla: "DRI", setQtdOficial: 103, localId: "095" };
+    const c = montarCandidata(
+      [ficha({ ...metade, idioma: "pt", nome: "Tubo de Lava Lendário" })],
+      ["pt", "en"],
+    );
+    expect(c).toMatchObject({ nome: "Legendary Pyroduct (Right Half)", numero: "095", total: "103" });
+  });
+
   it("escreve o nome e a numeração como a Liga", () => {
     const c = montarCandidata(
       [ficha({ cartaId: "sm3.5-20", nome: "Umbreon GX", localId: "20", setQtdOficial: 73, setSigla: null, setId: "sm3.5" })],

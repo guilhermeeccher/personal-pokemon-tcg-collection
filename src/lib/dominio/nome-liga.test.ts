@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { nomeNaLiga } from "./nome-liga";
+import { nomeFixoNaLiga, nomeNaLiga } from "./nome-liga";
 
 describe("nomeNaLiga", () => {
   it("deixa como está o nome que a Liga escreve igual", () => {
@@ -47,5 +47,19 @@ describe("nomeNaLiga", () => {
 
   it("troca o apóstrofo curvo pelo reto", () => {
     expect(nomeNaLiga("Farfetch’d")).toBe("Farfetch'd");
+  });
+});
+
+describe("nomeFixoNaLiga", () => {
+  it("separa as metades dos Estádios lendários de Delta Reign", () => {
+    expect(nomeFixoNaLiga("me06-094")).toBe("Legendary Pyroduct (Left Half)");
+    expect(nomeFixoNaLiga("me06-095")).toBe("Legendary Pyroduct (Right Half)");
+    expect(nomeFixoNaLiga("me06-098")).toBe("Legendary Trench (Left Half)");
+    expect(nomeFixoNaLiga("me06-099")).toBe("Legendary Trench (Right Half)");
+  });
+
+  it("não conhece as outras cartas", () => {
+    expect(nomeFixoNaLiga("me06-093")).toBeNull();
+    expect(nomeFixoNaLiga("sv01-196")).toBeNull();
   });
 });

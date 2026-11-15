@@ -43,7 +43,7 @@
 import type { Idioma } from "./enums";
 import { faixaDaRaridade, type Ordenacao } from "./liga-opcoes";
 import { urlBuscaLiga } from "./liga-busca";
-import { nomeNaLiga } from "./nome-liga";
+import { nomeFixoNaLiga, nomeNaLiga } from "./nome-liga";
 import { identidadeNaLiga, numeracaoNoRotuloLiga } from "./numeracao-liga";
 import type { OrigemImagem } from "./origem-imagem";
 
@@ -119,7 +119,7 @@ export function montarCandidata(
   const emIngles = fichas.find((f) => f.idioma === "en");
   const daLinha = emIngles ?? exibicao;
 
-  const nome = nomeNaLiga(daLinha.nome);
+  const nome = nomeFixoNaLiga(daLinha.cartaId) ?? nomeNaLiga(daLinha.nome);
   const { numero, total } = numeracaoNoRotuloLiga(daLinha);
   return {
     cartaId: exibicao.cartaId,

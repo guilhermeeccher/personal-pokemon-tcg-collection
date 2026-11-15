@@ -58,3 +58,31 @@ export function nomeNaLiga(nomeCatalogo: string): string {
     .replace(MECANICA_COM_HIFEN, "-$1")
     .replace(/\[([^\]]+)\]/g, "$1");
 }
+
+/**
+ * Cartas que a Liga separa pelo nome e o catálogo não, por `carta_id`.
+ *
+ * As metades dos Estádios lendários de Delta Reign (`me06`, 094 a 099) são
+ * duas cartas com o mesmo nome no catálogo, e a TCGdex não traz campo nenhum
+ * que diga qual é a esquerda e qual é a direita. A Compra por Lista não casou
+ * `Legendary Pyroduct (094/103)`; casou `Legendary Pyroduct (Left Half)
+ * (094/103)`, corrigido à mão na colagem em 2026-11-15 — é dessa colagem que
+ * vem cada linha abaixo, e nenhuma regra a deduz: um par de nomes iguais em
+ * números seguidos não diz qual metade é qual. A colagem foi em minúsculas e
+ * passou; aqui segue a caixa dos outros nomes.
+ *
+ * Uma entrada nova só com a colagem que a confirma.
+ */
+const NOME_NA_LIGA_POR_CARTA: Readonly<Record<string, string>> = {
+  "me06-094": "Legendary Pyroduct (Left Half)",
+  "me06-095": "Legendary Pyroduct (Right Half)",
+  "me06-096": "Legendary Summit (Left Half)",
+  "me06-097": "Legendary Summit (Right Half)",
+  "me06-098": "Legendary Trench (Left Half)",
+  "me06-099": "Legendary Trench (Right Half)",
+};
+
+/** O nome da Liga para a carta que a tabela acima conhece; `null` para as outras. */
+export function nomeFixoNaLiga(cartaId: string): string | null {
+  return NOME_NA_LIGA_POR_CARTA[cartaId] ?? null;
+}

@@ -19,6 +19,7 @@ import {
   totalDaLista,
   type LinhaListaCompra,
 } from "@/lib/dominio/exportacao-lista-compra";
+import { nomeFixoNaLiga } from "@/lib/dominio/nome-liga";
 
 /**
  * Uma escolha do usuário, no formato da lista de compras.
@@ -35,6 +36,11 @@ import {
  *
  * O preço vem de `precosDasEscolhas`, na fonte da instalação; sem ele, é o da
  * Liga gravado na escolha.
+ *
+ * O nome é o gravado, salvo a carta que `nomeFixoNaLiga` conhece: a escolha
+ * marcada antes de a tabela ter a carta guardou o nome do catálogo, que a
+ * Compra por Lista não casa, e corrigir na leitura conserta a lista sem
+ * pedir ao usuário que desmarque e marque de novo.
  */
 export function linhaDaEscolha(
   e: EscolhaSalva,
@@ -43,7 +49,7 @@ export function linhaDaEscolha(
   return {
     chave: e.chave,
     especie: e.especie,
-    nome: e.nome,
+    nome: (e.cartaId === null ? null : nomeFixoNaLiga(e.cartaId)) ?? e.nome,
     edicaoNome: e.edicaoNome,
     edicaoSigla: e.edicaoSigla,
     numero: e.numero,
