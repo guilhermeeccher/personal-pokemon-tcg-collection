@@ -164,3 +164,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+---
+
+## App icons — `src/lib/pwa/icones-genericos/`
+
+The four icons the installed app uses by default (`icone-180.png`, `icone-192.png`, `icone-512.png`
+and `icone-maskable-512.png`) show a Poké Ball. They were drawn for this project from scratch, as
+vector shapes, and copy no official asset. The Poké Ball design belongs to Nintendo, Creatures and
+GAME FREAK, and the trademark disclaimer in the [README](./README.md#disclaimer) applies to it.
+
+Shipping it was a deliberate decision of the project owner, for a personal, non-commercial tool, and
+the owner carries that risk. An installation that wants another icon puts its own files in the
+folder named by `PWA_ICONES_DIR` (see `.env.example`), which always wins over these.
+
+The maskable icon is the same picture: the ball takes up about 59% of the width, inside the 80%
+circle that a launcher may crop to.
