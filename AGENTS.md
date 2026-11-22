@@ -217,6 +217,34 @@ volume, and counting the 48,803 cards in the database — not `docker build` pas
 
 ---
 
+## Design v2 — the interface is being rewritten
+
+Since 2026-11-22 the whole frontend is being redone in a new design (dark only, glass, holographic
+cards). The contract of that transition lives in [`docs/design-v2/`](./docs/design-v2/README.md):
+read its README before touching any screen, layout, component or route under `src/app`.
+
+- **Two versions side by side.** Today's interface is **the v1**: it lives at `/v1`, under its own
+  root layout (`src/app/(v1)/`). **The v2** opens at the root, under another root layout
+  (`src/app/(v2)/`). The API, `/login`, the manifest, `robots.txt` and the PWA icons stay at the
+  root. A root path whose v2 screen does not exist yet is a **bridge page**: it calls
+  `exigirSessao()` and redirects with 307 to `/v1/<same screen>`, query intact. The v1 never links
+  to the root.
+- **New functionality goes only to the v2.** The v1 gets fixes, not features, and leaves when the v2
+  covers everything.
+- **A bridge leaves only when parity is checked**: every action the v1 offers on that screen is
+  marked delivered in [`docs/design-v2/parity.md`](./docs/design-v2/parity.md), with its evidence.
+- **The eight business rules, the API and every domain section of this file hold for both
+  versions, unchanged.** So do the HTTP, password-access and image rules.
+- **What changes for the v2 only**, and holds as written here for the v1 until it leaves: the
+  "Mobile layout" opening and its bullets "Nothing new reaches the desktop by accident" and
+  "Dex → Cadastrar virtualizes its list below 768px, and only that screen does", the layout check
+  at the end of that section, and `viewport-fit=cover` in the PWA bullet. The v2's wording of
+  those, the rules the v2 adds (gestures, composition budget, reduced motion and light mode, view
+  transitions, image sizes, fonts, isolation between the two versions) and the scope of every
+  interface rule are in [`docs/design-v2/rules.md`](./docs/design-v2/rules.md).
+
+---
+
 ## Catalog sync contract
 
 - Base: `https://api.tcgdex.net/v2/<idioma>/` — no key.
@@ -1176,7 +1204,9 @@ goes on the list.
   installation's own from `PWA_ICONES_DIR`, the repository's generic ones otherwise, read with `fs`
   at runtime so they never become a public `/_next/static` file), the Apple metadata,
   `viewport-fit=cover`, `data-pwa` on `<html>` and the safe-area rules under `[data-pwa]`. Off, none
-  of it appears. No service worker.
+  of it appears. No service worker. (This is the v1's rule. The v2 always sets
+  `viewport-fit=cover` and keeps its safe areas out of `[data-pwa]`; the manifest, the icons and the
+  Apple metadata stay conditional in both — see "Design v2".)
 
 ---
 
@@ -1239,6 +1269,11 @@ service workers and the like.
 The app is used on a phone with the card in hand (an iPhone in Safari, over HTTP on the local
 network). Every screen works there, and **the desktop layout (768px and up) does not change because
 of it**. These rules keep both true.
+
+This section is written for the v1. Three of its rules — this opening, "Nothing new reaches the
+desktop by accident" and "Dex → Cadastrar virtualizes its list below 768px" — and the layout check at
+its end have a different wording for the v2, which redoes the desktop too; the rest holds for both.
+See "Design v2" and [`docs/design-v2/rules.md`](./docs/design-v2/rules.md).
 
 - **Mobile means width below 768px** — the same `md` breakpoint where the shell swaps the side rail
   for the top bar. In CSS that is `max-md:`; in code it is `useEhMobile()`

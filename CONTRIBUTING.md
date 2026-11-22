@@ -73,17 +73,22 @@ The glossary below is the key. Read it once and the code reads fine.
 | `sessão` | session | Living Dex: a planning session held outside the app with an assistant, read by `pnpm dex:estado` and written back by `pnpm dex:aplicar`. |
 | `preço` | price | A card's LigaPokemon price in BRL, kept with its date. Table `preco_carta_liga`, history in `preco_carta_liga_historico`. |
 
-Route paths are in Portuguese too:
+Route paths are in Portuguese too. The interface is being rewritten (see
+[`docs/design-v2/`](./docs/design-v2/README.md)), so every screen has two addresses for now: the
+**v1** at `/v1/<path>`, and the root path, which is the **v2** screen once it exists and, until
+then, a bridge that redirects (307) to the same screen in `/v1`, query intact. `/login` and the API
+have no `/v1` copy: they stay at the root.
 
-| Path | What it is |
-|---|---|
-| `/` | the home page: the shortcuts and a summary of each module |
-| `/colecoes` | collections; `/colecoes/nova` creates one, `/colecoes/falta` is the missing list across collections |
-| `/colecoes/[id]/opcoes-compra` | the buy options and the buy list for one collection |
-| `/inventario` | the inventory; `/inventario/repetidas` is duplicates, `/inventario/visao-geral` is the overview, `/inventario/precos` is the prices of your special cards |
-| `/cadastro` | card entry; `/cadastro/set` is the grid for a whole set, `/cadastro/busca` is one card by search |
-| `/dex` | the optional Living Dex module (`MODULO_LIVING_DEX=1`), its overview: `/dex/pokedex` is the slot grid, `/dex/caixas` the HOME boxes, `/dex/recebidos` what is waiting to be put away, `/dex/cadastrar` adds Pokémon by game, `/dex/inventario` lists them, `/dex/jogos` lists the owned games, `/dex/trofeus` the trophies, `/dex/planos` the plans. 404 when the module is off |
-| `/login` | the login of the optional password access (`ACESSO_COM_SENHA=1`). 404 when the module is off |
+| Path at the root | In the v1 | What it is |
+|---|---|---|
+| `/` | `/v1` | the home page: the shortcuts and a summary of each module |
+| `/colecoes` | `/v1/colecoes` | collections; `/colecoes/nova` creates one, `/colecoes/falta` is the missing list across collections |
+| `/colecoes/[id]` | `/v1/colecoes/[id]` | one collection and its slots |
+| `/colecoes/[id]/opcoes-compra` | `/v1/colecoes/[id]/opcoes-compra` | the buy options and the buy list for one collection |
+| `/inventario` | `/v1/inventario` | the inventory; `/inventario/repetidas` is duplicates, `/inventario/visao-geral` is the overview, `/inventario/precos` is the prices of your special cards |
+| `/cadastro/set`, `/cadastro/busca` | `/v1/cadastro/set`, `/v1/cadastro/busca` | card entry: the grid for a whole set, and one card by search |
+| `/dex` | `/v1/dex` | the optional Living Dex module (`MODULO_LIVING_DEX=1`), its overview: `/dex/pokedex` is the slot grid, `/dex/caixas` the HOME boxes, `/dex/recebidos` what is waiting to be put away, `/dex/cadastrar` adds Pokémon by game, `/dex/novo-cadastro` sends a round to HOME, `/dex/inventario` lists them, `/dex/jogos` lists the owned games, `/dex/trofeus` the trophies, `/dex/planos` the plans. 404 when the module is off, at both addresses and with no redirect first |
+| `/login` | — | the login of the optional password access (`ACESSO_COM_SENHA=1`). 404 when the module is off |
 
 ## Environment
 
