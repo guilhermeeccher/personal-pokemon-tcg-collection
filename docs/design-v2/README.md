@@ -79,8 +79,9 @@ Package 0a measured how Next 16.3.2 behaves with no top-level `app/layout.tsx` (
   Before the move it rendered inside the v1 layout, with the menu. No `global-not-found.tsx` is
   needed, and none exists. The password module's "404 while off" still answers exactly like any
   missing path (same status, headers and body hash), by construction. A 404 in the v2's skin would
-  need `experimental.globalNotFound` in `next.config.ts`; for now the default stays, and package 0c
-  evaluates the flag and updates this text if it adopts it.
+  need `experimental.globalNotFound`; package 0c measured it and did not adopt it (`rules.md`,
+  "Open points"), so the password module's 404 while off stays byte-for-byte the 404 of any
+  unknown path.
 - **The favicon is injected by both root layouts**, and so are the Apple icon, the manifest and
   `viewport-fit` when the password module is on.
 - **The language switch works under both layouts.** Both root layouts have the layout route `/`, so

@@ -1,0 +1,65 @@
+/*
+ * Aviso flutuante: a pílula que sobe no pé da tela e some sozinha. Sem
+ * `backdrop-filter` (pode aparecer junto com a barra de abas, o botão de
+ * busca e o véu de uma janela, que já são as três superfícies do orçamento):
+ * fundo quase opaco, que lê bem sobre qualquer coisa.
+ *
+ * Fica acima da barra de abas no celular e no pé da área de conteúdo no
+ * desktop (à direita do trilho). Não é alvo de toque: não tem ação.
+ */
+.regiao {
+  position: fixed;
+  /* z-index acima de toda camada (`Z_AVISO_FLUTUANTE`), no estilo. */
+  left: 0;
+  right: 0;
+  bottom: calc(var(--v2-topo-abas) + 14px);
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--v2-respiro-dir) 0 var(--v2-respiro-esq);
+  pointer-events: none;
+}
+@media (min-width: 48rem) {
+  .regiao {
+    left: calc(var(--v2-largura-trilho) + var(--v2-margem-trilho) + var(--v2-seguro-esq));
+    bottom: max(26px, var(--v2-seguro-base));
+  }
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(520px, 100%);
+  padding: 12px 18px 12px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--v2-tinta);
+  background: linear-gradient(180deg, rgb(38 39 54 / 0.96), rgb(18 19 27 / 0.97));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.28),
+    inset 0 0 0 1px rgb(255 255 255 / 0.1),
+    0 14px 40px rgb(0 0 0 / 0.45);
+  animation: sobe 0.55s var(--v2-curva-mola) both;
+}
+
+.ponto {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--v2-iris);
+}
+.sucesso .ponto {
+  background: var(--v2-livre);
+}
+.erro .ponto {
+  background: var(--v2-perigo);
+}
+
+@keyframes sobe {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+}

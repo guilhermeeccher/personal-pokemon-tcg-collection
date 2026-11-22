@@ -32,7 +32,7 @@ Section "Mobile layout — below 768px, and only there".
 | **One tree, not two** | **both** | The v2 adds a case: **Binder and Whole set are the same list of slots** in two sizes, never two lists. A page-turn animation may build a second, short-lived copy of the two faces only for the duration of the turn, only `aria-hidden`/`inert`, and never with state (refs, marks) inside it. |
 | **Dex → Cadastrar virtualizes its list below 768px, and only that screen does** | **v1 only** | **New wording:** a grid or list of the v2 is virtualized above a **measured** threshold, at every width, with the window as the scroller. Package 1d delivers the reusable virtual grid and fixes the threshold by measuring a full collection and the relevant Dex screens (budget of nodes, images and response time); until it is measured, no number is a rule. A v2 screen that renders more than the threshold without virtualizing says why. The v1 keeps its rule: its desktop scrolls in an inner pane, so its window virtualizer only works on the phone. |
 | **Nothing only on hover or in `title`** | **both** | The v2 adds a corollary: **tilt and holo under the pointer are an enhancement, never information** — the copy's variant also shows as text or a badge. The prototype breaks this rule (slot number only on hover, the fan opening on `:hover`, an explanation in a `title`); the v2 does not copy those. |
-| **Overlays share one stack** (`use-camada.ts`): Esc closes only the top layer, focus containment belongs to the top modal layer, scroll lock reference-counted; the `Modal` is a bottom sheet on mobile with its actions in `rodape`, kept in view at the bottom of the sheet | **both**, with two v2 additions | The whole rule holds for the v2, bottom sheet included. (1) **Scroll lock at every width in the v2.** The v1 locks only below 768 px because its desktop scrolls in an inner pane; the v2's window scrolls at every width, so a dialog without the lock would let the page scroll under it on the desktop. The v1 keeps its behaviour. (2) **Focus and position return to the right cell** when a layer closes, even when the cell that opened it left the DOM through virtualization. The card detail is a layer of this stack and contains focus from the moment it opens. |
+| **Overlays share one stack** (`use-camada.ts`): Esc closes only the top layer, focus containment belongs to the top modal layer, scroll lock reference-counted; the `Modal` is a bottom sheet on mobile with its actions in `rodape`, kept in view at the bottom of the sheet | **both**, with two v2 additions | The whole rule holds for the v2, bottom sheet included. (1) **Scroll lock at every width in the v2.** The v1 locks only below 768 px because its desktop scrolls in an inner pane; the v2's window scrolls at every width, so a dialog without the lock would let the page scroll under it on the desktop. The v1 keeps its behaviour. (2) **Focus and position return to the right cell** when a layer closes, even when the cell that opened it left the DOM through virtualization. The card detail is a layer of this stack and contains focus from the moment it opens. **Delivered by package 0c:** the stack is ported, not imported (`(v2)/_componentes/primitivos/camadas.ts`, pure and tested, and `use-camada.ts`), with the levels `janela` < `detalhe` < `confirmacao` < `balao`, whose z-index comes from the same table (the layer seen on top is the one that gets Esc and Tab); a modal layer locks scroll by default at every width (`scrollbar-gutter: stable` keeps the desktop from shifting), and a dialog over another dialog does not blur again (one veil spends the budget); every layer takes a `devolverFocoPara` resolver, called on close and allowed to be async, so a virtual grid can scroll the cell back in and hand it over. Focus goes to the first of resolver, opener and the main content that is still in the DOM. |
 | **Quantity steppers use `Quantidade`** (controlled, `value` required) | **both** | Whatever the v2 stepper looks like, it stays controlled: crossing 768 px remounts it. |
 | **A fixed bottom action bar reserves its height in the page padding** | **both** | More critical in the v2: the buy bar (total and "copy list") sits above the floating tab bar, so the reserve is the sum of both bars plus `env(safe-area-inset-bottom)`. |
 | Checking: phone widths (320, 393, sideways) in pt and en, desktop compared before and after at 768, 1024 and 1400 px, then a real iPhone | **v1 only** as worded | **New wording:** every v2 screen is seen in both arrangements, in pt and en, at 320, 393, ~734, **768**, 1024 and 1400 px, and on a real iPhone at every phase. The v1 is compared before and after package 0a and must come out identical. Screenshots are taken with the Chromium already on the machine (decision 8); emulation still reproduces neither focus zoom, nor the virtual keyboard over fixed bars, nor `dvh`. |
@@ -67,11 +67,11 @@ unchanged.
 | Layer 1, `src/proxy.ts`: closed list of public method + path pairs, 307 to `/login?volta=...`, 401 JSON otherwise | **both** | `/v1/**` and the bridges are covered by the existing matcher; no public pair is added. |
 | Layer 2, **every `page.tsx`** except `/login` calls `await exigirSessao()` first; a client page lives in `pagina-cliente.tsx` behind a server wrapper; server actions call `exigirSessaoNaAcao()` | **both** | Every v2 page, **bridges included**, starts with `await exigirSessao()`. The login exception stays **exactly one page**: package 0a points it at `(v1)/login/page.tsx`, package 1f moves it to the v2 and points it there — never a looser pattern that would exempt any `login/page.tsx`, and never two pages for `/login`. |
 | Layer 3, every route handler wrapped in `comAcesso` | **both** | No route handler moves. |
-| **`cobertura-estatica.test.ts` enforces all three** | **both** | Since package 0a: the login exception is exactly `(v1)/login/page.tsx` (and a test checks that file exists); the test finds both root layouts, `(v1)/layout.tsx` and `(v2)/layout.tsx`, and fails if a top-level `app/layout.tsx` comes back; neither layout may reach `@/lib/db`. `global-not-found` is already in its list of special files, so if package 0c adds one it may not reach the database either. |
+| **`cobertura-estatica.test.ts` enforces all three** | **both** | Since package 0a: the login exception is exactly `(v1)/login/page.tsx` (and a test checks that file exists); the test finds both root layouts, `(v1)/layout.tsx` and `(v2)/layout.tsx`, and fails if a top-level `app/layout.tsx` comes back; neither layout may reach `@/lib/db`. No `global-not-found.tsx` exists (package 0c did not adopt it, see "Open points"); the test still lists it among the special files, so one added later may not reach the database either. |
 | **Session**, **Origin**, **Two `GET` handlers write**, **Login rate limit** | **both** | Unchanged: cookies are `Path=/`, origins do not change with `/v1`. |
 | **`volta`** accepts only a relative path of the site | **both** | `/v1/...` passes as is; `/login` is still the only path refused by name. |
 | **Headers** (`X-Robots-Tag`, `X-Frame-Options`, `frame-ancestors`, `Referrer-Policy`, `nosniff`, `no-store`) | **both** | Present on `/v1/...` and on every bridge 307. The CSP is only `frame-ancestors`: inline `<svg>`, `data:` mask URIs and `feImage href=data:` keep working. If a `script-src` or `img-src` ever enters, the v2's effects are reviewed. |
-| **The 404 while off** (`x-acesso-desligado` + `beforeFiles` rewrite) | **both** | Holds by construction: the private folder is a path with no route. Measured by package 0a: same status, headers and body hash as any missing path, in GET and POST. That body is now Next's default 404 (no layout of ours), not the v1 layout's; see the README. |
+| **The 404 while off** (`x-acesso-desligado` + `beforeFiles` rewrite) | **both** | Holds by construction: the private folder is a path with no route. With no top-level layout and no `global-not-found.tsx` (package 0c did not adopt it, see "Open points"), that is Next's default 404, and package 0c measured it byte-for-byte equal to the 404 of an unknown path on `/login`, `/api/sessao`, `/robots.txt` and `/manifest.webmanifest`. |
 | **Metadata routes are route handlers** with `force-dynamic` | **both** | They do not move. |
 | **Turning it off on a published install**: public route first, module second | **both** | — |
 
@@ -85,11 +85,12 @@ Bullet **"PWA, only with the module on"** of the same section.
 |---|---|---|
 | Manifest, icons from `/pwa/[arquivo]`, Apple metadata — only with the module on | **both** | Unchanged (decision 9). The v2 root layout carries the same metadata as the v1's, so a v2 page does not lose the manifest. Both layouts render one shared head: the decision is in `lib/pwa/cabeca.ts` (`metadadosPwa`, `viewportPwa`, `atributosHtmlPwa`, `SCRIPT_BFCACHE`, pure and tested), rendered by `src/app/_comum/cabeca.tsx`. Change it there, never in one layout. |
 | `data-pwa` on `<html>` and the bfcache script — only with the module on | **both** | Both root layouts have them. Without the script, "Sign out" followed by "Back" would show a cached v2 page. |
-| `viewport-fit=cover` — only with the module on | **v1 only** | **New wording (decision 9):** the v2 always sets `viewportFit: "cover"`, and its safe areas are its own rules, **not** under `[data-pwa]`: the floating tab bar depends on `env(safe-area-inset-*)` with the module off too. Manifest, icons and Apple metadata stay conditional. Package 0c delivers it; until then the v2 skeleton uses the shared `viewportPwa`, conditional like the v1's. |
-| Safe-area rules under `[data-pwa]` (`(v1)/globals.css`, `body > header|nav|div`) | **v1 only** | They depend on the v1's DOM, which the v1 keeps. The v2 writes its own (above), in package 0c. |
+| `viewport-fit=cover` — only with the module on | **v1 only** | **New wording (decision 9):** the v2 always sets `viewportFit: "cover"`, and its safe areas are its own rules, **not** under `[data-pwa]`: the floating tab bar depends on `env(safe-area-inset-*)` with the module off too. Manifest, icons and Apple metadata stay conditional. **Delivered by package 0c:** `viewportV2()` in `lib/pwa/cabeca.ts`; the insets are `--v2-seguro-*` tokens in `v2.css`, used by the rail, the tab bar, the content padding, the sheet and the floating notice. Checked with the module on and off: off, the v2 head has `viewport-fit=cover` and `theme-color` and nothing of the PWA; on, it adds the manifest, the Apple metadata, `data-pwa` and the bfcache script. |
+| Safe-area rules under `[data-pwa]` (`(v1)/globals.css`, `body > header|nav|div`) | **v1 only** | They depend on the v1's DOM, which the v1 keeps. The v2 writes its own (above). |
 | No service worker | **both** | — |
 | `start_url` and `scope` of the manifest are `/` | **both** | Unchanged: `/` covers `/v1`, and the installed app opens at the root, which today bridges to `/v1` and later is the v2, with no reinstall. |
-| The splash colour (`COR_FUNDO`, cream, `lib/pwa/identidade.ts`) and `statusBarStyle: "default"` (`lib/pwa/cabeca.ts`) | **v1 only** | Package 0c makes them dark. Both are shared by the two layouts, so the change reaches the v1's installed app too. iOS stores the manifest at install time, so the user may have to reinstall to see the new splash. |
+| The installed app's colours: `background_color` and `theme_color` of the manifest (`COR_FUNDO`, `COR_TEMA`) | **both** | **Decided in package 0c (2026-11-22): dark now, for both versions** — the v2's background, `#06070B`, which a test keeps equal to `--v2-fundo`. There is one manifest and its `start_url` is `/`, the v2's root; iOS stores the manifest at install time, so waiting for the v2 home would make everyone who installs during the transition reinstall. The cost: while `/` is still a bridge, the dark launch is followed by the cream v1. Nothing in the v1 changes once a page has loaded. |
+| `statusBarStyle` of the Apple metadata | **v1 only** as `default` | **The v2 uses `black-translucent`**: white text over the page, which runs under the status bar; that is safe only because the v2 always pads the top safe area. Each root layout sends its own (`metadadosPwa(acesso, "v1" \| "v2")`), since iOS reads it from the page that opens. |
 
 ---
 
@@ -165,12 +166,25 @@ rest are the technical foundations of the v2.
    whole declaration); (d) `container-type` never on an ancestor of a fixed bar (containment would
    make the bar fixed to that box, not to the window); (e) a `backdrop-filter` with `url()`
    (refraction) is written only by JavaScript, only on Blink, and only over HTTPS (decision 6) —
-   in CSS, Safari accepts the value, ignores it and drops the blur with it.
+   in CSS, Safari accepts the value, ignores it and drops the blur with it. **Delivered by package
+   0c:** `decidirRefracao` (`casca/refracao.ts`, pure and tested) turns it on only with a secure
+   context, the `Chromium` brand of `navigator.userAgentData` and full effects; plain HTTP on the
+   local network never runs a functional test. Only surfaces marked `data-v2-lente` (the rail, the
+   tab bar, the search button) get it. The shell spends two blur surfaces on the phone (tab bar and
+   search button) and one on the desktop (rail); a dialog's veil is the third. The dialog panel,
+   the floating notice, buttons and segmented controls have no `backdrop-filter`.
 6. **Reduced motion and light mode are reactive.** Both listen for changes at runtime and turn off
    view transitions, springs, the page turn and continuous animation, with **the same final state**
    of the screen. Reduced motion works on its own, regardless of the light-mode heuristic. Light
    mode is automatic by heuristic, with a switch that always wins (decision 7); package 0b
-   specifies the signals, the behaviour without them, the persistence and the precedence.
+   specifies the signals, the behaviour without them, the persistence and the precedence. **The
+   shell reads one attribute only, `html[data-v2-efeitos="leve"]`** (written by
+   `AtributoEfeitos`, `casca/efeitos.tsx`): under it the ambient light stops drifting, the iris
+   stops sliding, the glass sheen under the pointer and the refraction go away. Wiring package
+   0b's decision is `<AtributoEfeitos modo={useMovimento().modo} />` in the shell, and the switch
+   is `InterruptorModoLeve` fed by 0b's `useEscolhaModo()`; until that is wired, there is no
+   attribute and the effects are full. A continuously animated element carries the class
+   `v2-anima`, which both reduced motion and light mode stop.
 7. **One view transition at a time, and only through React.** `<ViewTransition>` from React, which
    Next 16.3.2 ships with no flag; **do not add `experimental.viewTransition`** to `next.config.ts`
    (it no longer exists). No `document.startViewTransition` by hand next to it — React interrupts a
@@ -185,24 +199,30 @@ rest are the technical foundations of the v2.
 
 ### Foundations
 
-10. **Dark only.** The v2 has one theme, `color-scheme: dark` (already set by the skeleton in
-    `(v2)/v2.css`). The v1 is light only and stays so. The shared PWA head avoids `themeColor`
-    because Safari on the Mac would tint the window; whether the v2 sets a dark `theme-color` is
-    decided in package 0c.
+10. **Dark only.** The v2 has one theme, `color-scheme: dark`. The v1 is light only and stays so.
+    The v1 layout avoids `themeColor` because Safari on the Mac would tint the window. **The v2
+    sets it** (package 0c), always, to its background, with `color-scheme: dark` in the viewport:
+    on a dark-only interface, tinting the window and Android's bar with the page's own colour is
+    the point.
 11. **The window is the scroller at every width.** The rail and the tab bar are fixed or sticky
     glass over the document's own scroll. The prototype scrolls inside a box with
     `overflow: hidden` on the body; the v2 does not copy that (on iOS the address bar collapse and
     the safe-area insets follow the document scroll).
 12. **Glass that looks right without refraction.** Two levels: glass (bars and panels, with blur)
     and panel (inner cards, translucent background and edge, no blur). Refraction is an optional
-    enhancement (rule 5e).
+    enhancement (rule 5e). In code: `.v2-vidro` (blur, specular rim, pointer sheen) only for the
+    shell and a dialog's veil; `.v2-painel` for anything that may repeat; `.v2-painel-flutuante`
+    for a surface over the veil (the dialog panel), drawn like glass without the blur.
 13. **A reusable virtual grid**, delivered by package 1d, with a measured threshold (section 1). It
     keeps selection outside the window, keyboard navigation, column changes, anchors and focus, and
     keeps the card that opened the detail mounted while the detail is open.
 14. **New components the v1 does not have.** The **card detail** absorbs the v1's allocate,
     upgrade, edit-copy and destination modals and the zoom, and is born with two modes, slot and
     copy. A glass **confirmation dialog** replaces the twelve `window.confirm` calls of the v1: a
-    destructive or irreversible action asks through it, and cancelling sends nothing.
+    destructive or irreversible action asks through it, and cancelling sends nothing. Package 0c
+    delivers it (`primitivos/dialogo-confirmacao.tsx`): focus opens on "Cancel", Esc cancels, a tap
+    outside does nothing, and `useConfirmacao()` returns a promise of a boolean, so a
+    `window.confirm` becomes `await confirmar({ titulo, rotuloConfirmar })`.
 15. **What stays the same:** plain HTTP (copy by `execCommand`, no Clipboard API), 16 px fields on
     the phone, 44 px touch targets, nothing only on hover, one tree, pt and en.
 
@@ -229,6 +249,27 @@ rest are the technical foundations of the v2.
 
 ---
 
+### Shell and primitives (package 0c)
+
+20. **Where they live.** The shell in `src/app/(v2)/_componentes/casca/`, the primitives (button,
+    field, panel and inline notice, floating notice, segmented control, dialog and bottom sheet,
+    confirmation, the layer stack) in `.../primitivos/`. Tokens and material in `v2.css`; the
+    token names are the interface with the Card (`--v2-tinta`, `--v2-tinta-2`, `--v2-tinta-3`,
+    `--v2-fundo`, `--v2-raio-carta`, `--v2-sombra-carta`, `--v2-curva-mola`, `--v2-curva-suave`,
+    `--v2-iris`) and do not get renamed. The v2's Tailwind entry scans only `src/app/(v2)/` and
+    starts with no colours but the v2's.
+21. **The v2 has its own navigation map** (`casca/mapa-navegacao.ts`), pointing at the root; an
+    item whose v2 screen does not exist yet lands on its bridge. The tab bar has **four
+    positions** — Home, Collections, Inventory and **More**, a sheet with the whole map, the
+    language and "Sign out" — plus the round search button (decision of 2026-11-22: a fifth tab
+    for the Dex does not fit 44 px targets at 320 px; with the Living Dex on, it is in More).
+    Below 360 px the tabs show only their icons, with the name kept for screen readers.
+22. **The laboratory**, `/laboratorio`, shows the shell and every primitive in its states, the
+    light-mode switch wired to local state and the refraction decision. It is development only
+    (`notFound()` when `NODE_ENV` is `production`), it is not a screen of the app and it is not in
+    `parity.md`. A package that adds a shared component shows it there, and checks its layout in
+    the laboratory at the widths of section 1.
+
 ## 8. Other rules, checked for the transition
 
 | Rule | Section of `AGENTS.md` | Scope | Note |
@@ -242,10 +283,10 @@ rest are the technical foundations of the v2.
 
 ## Open points
 
-All owned by package 0c:
-
-- A 404 in the v2's skin: today a path with no route gets Next's default 404; 0c evaluates
-  `experimental.globalNotFound` and, if it adopts it, updates the README and section 3.
-- The dark splash colour and `statusBarStyle` (section 4).
-- The v2's `viewport-fit=cover` and its own safe areas, decision 9 (section 4).
-- A dark `theme-color` in the v2 (section 7, rule 10).
+- The top-level 404 (package 0c, measured on Next 16.3.2): `experimental.globalNotFound` is
+  **not adopted**. It is still experimental, and it turns the 404 of a path with no route from a
+  static page into a render per request whose payload carries the requested path — so the
+  password module's 404 while off would stop being byte-for-byte the 404 of any unknown path.
+  Without it, every path with no route gets Next's default 404, identical for all of them; a v2
+  page that calls `notFound()` (the Dex with the module off, the laboratory in production)
+  already renders inside the v2's root layout.

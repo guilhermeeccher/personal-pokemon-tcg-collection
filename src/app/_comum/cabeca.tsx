@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { getTranslations } from "next-intl/server";
 
 import { moduloAcessoLigado } from "@/lib/dominio/acesso/configuracao";
-import { SCRIPT_BFCACHE, metadadosPwa, viewportPwa } from "@/lib/pwa/cabeca";
+import { SCRIPT_BFCACHE, type VersaoInterface, metadadosPwa, viewportPwa, viewportV2 } from "@/lib/pwa/cabeca";
 
 /**
  * A cabeça comum aos dois layouts raiz (v1 e v2). Mora em `_comum/`, e não em
@@ -14,17 +14,18 @@ import { SCRIPT_BFCACHE, metadadosPwa, viewportPwa } from "@/lib/pwa/cabeca";
  * A flag é lida a cada requisição, como em todo o módulo de acesso: a imagem é
  * construída sem o `.env`.
  */
-export async function metadadosDoApp(): Promise<Metadata> {
+export async function metadadosDoApp(versao: VersaoInterface = "v1"): Promise<Metadata> {
   const t = await getTranslations("metadata");
   return {
     title: t("titulo"),
     description: t("descricao"),
-    ...metadadosPwa(moduloAcessoLigado(process.env)),
+    ...metadadosPwa(moduloAcessoLigado(process.env), versao),
   };
 }
 
-export function viewportDoApp(): Viewport {
-  return viewportPwa(moduloAcessoLigado(process.env));
+/* A v1 cobre a tela só com o PWA ligado; a v2, sempre (decisão 9). */
+export function viewportDoApp(versao: VersaoInterface = "v1"): Viewport {
+  return versao === "v2" ? viewportV2() : viewportPwa(moduloAcessoLigado(process.env));
 }
 
 /* Só renderizado com o módulo ligado (quem chama decide): desligado, nenhum

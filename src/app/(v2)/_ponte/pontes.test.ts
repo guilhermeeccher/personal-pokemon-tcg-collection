@@ -10,7 +10,7 @@
  * erro cujo `digest` diz o tipo, o destino e o código HTTP, e é ele que o
  * teste lê. Simulados são só a sessão e a flag do módulo.
  */
-import { readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -81,10 +81,15 @@ async function executar(arquivo: string, params: Record<string, string | string[
   return null;
 }
 
-const PONTES = paginas(PASTA_V2).map((arquivo) => ({
-  arquivo,
-  rota: rotaDaPagina(path.relative(path.resolve(PASTA_V2, ".."), arquivo).split(path.sep).join("/"))!,
-}));
+/* Ponte é a página que chama `irParaV1` (o mesmo critério do
+   `grep -rl irParaV1` do README da v2). As páginas reais da v2 — o
+   laboratório hoje, as telas depois — ficam fora: não redirecionam. */
+const PONTES = paginas(PASTA_V2)
+  .filter((arquivo) => readFileSync(arquivo, "utf8").includes("irParaV1"))
+  .map((arquivo) => ({
+    arquivo,
+    rota: rotaDaPagina(path.relative(path.resolve(PASTA_V2, ".."), arquivo).split(path.sep).join("/"))!,
+  }));
 
 beforeEach(() => {
   estado.livingDex = true;

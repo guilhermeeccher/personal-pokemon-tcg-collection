@@ -1,0 +1,130 @@
+/*
+ * Botão da v2. Pílula de 44 px de altura em qualquer largura: o alvo de toque
+ * mínimo é o próprio desenho, sem área invisível a calcular. Nenhuma
+ * variante usa `backdrop-filter` — um botão pode repetir numa tela inteira, e
+ * o orçamento de desfoque é de três superfícies (`v2.css`).
+ */
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 14.5px;
+  line-height: 1.1;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--v2-tinta);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    transform 0.35s var(--v2-curva-mola),
+    background-color 0.2s,
+    color 0.2s,
+    box-shadow 0.2s,
+    opacity 0.2s;
+}
+.botao:active:not(:disabled, [aria-disabled="true"]) {
+  transform: scale(0.96);
+}
+.botao:disabled,
+.botao[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: default;
+}
+.botao svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+
+.primario {
+  background: #f6f4fb;
+  color: #0b0b12;
+  box-shadow:
+    0 8px 24px rgb(255 255 255 / 0.12),
+    inset 0 -2px 0 rgb(0 0 0 / 0.08);
+}
+.primario:hover:not(:disabled, [aria-disabled="true"]) {
+  background: #fff;
+}
+
+.secundario {
+  background: var(--v2-superficie-2);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    inset 0 0 0 1px rgb(255 255 255 / 0.1);
+}
+.secundario:hover:not(:disabled, [aria-disabled="true"]) {
+  background: var(--v2-superficie-3);
+}
+
+.fantasma {
+  background: transparent;
+  color: var(--v2-tinta-2);
+}
+.fantasma:hover:not(:disabled, [aria-disabled="true"]) {
+  background: var(--v2-superficie-1);
+  color: var(--v2-tinta);
+}
+
+.perigo {
+  background: rgb(255 138 138 / 0.14);
+  color: #ffd2d2;
+  box-shadow: inset 0 0 0 1px rgb(255 138 138 / 0.4);
+}
+.perigo:hover:not(:disabled, [aria-disabled="true"]) {
+  background: rgb(255 138 138 / 0.22);
+}
+
+/* O íris desliza continuamente: `.v2-anima` faz o movimento reduzido e o modo
+   leve pararem a animação, e o gradiente fica parado no lugar. */
+.iris {
+  color: #0b0b12;
+  background: var(--v2-iris-linear);
+  background-size: 200% 100%;
+  animation: desliza 6s linear infinite;
+}
+@keyframes desliza {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Pequeno encolhe o respiro e a letra, nunca a altura: o alvo de 44 px vale
+   em toda largura (a partir de 768 px pode ser um iPad em pé), e uma área
+   invisível maior que o desenho comeria os 8 px entre alvos vizinhos. */
+.pequeno {
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.icone {
+  padding: 0;
+  width: 44px;
+}
+
+.largo {
+  width: 100%;
+}
+
+.giro {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: gira 0.8s linear infinite;
+}
+@keyframes gira {
+  to {
+    transform: rotate(1turn);
+  }
+}

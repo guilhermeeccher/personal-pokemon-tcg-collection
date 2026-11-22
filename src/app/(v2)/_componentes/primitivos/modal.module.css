@@ -1,0 +1,146 @@
+/*
+ * Janela da v2: diálogo centrado a partir de 768 px, folha que sobe de baixo
+ * (bottom sheet) abaixo disso. Uma árvore só nas duas larguras: o CSS muda o
+ * arranjo, nunca o conteúdo.
+ *
+ * O véu é a superfície de vidro (desfoque literal, sem `var()`); o painel por
+ * cima é `.v2-painel-flutuante`, sem desfoque — o véu já desfocou a página, e
+ * um segundo desfoque por cima custaria uma superfície do orçamento de três
+ * sem mudar nada na tela.
+ */
+.raiz {
+  position: fixed;
+  inset: 0;
+  /* z-index pelo nível e pela ordem de abertura (`zDaCamada`), no estilo. */
+  display: grid;
+  place-items: center;
+  padding: max(28px, var(--v2-seguro-topo)) max(28px, var(--v2-seguro-dir)) max(28px, var(--v2-seguro-base))
+    max(28px, var(--v2-seguro-esq));
+}
+
+.veu {
+  position: absolute;
+  inset: 0;
+  background: rgb(4 5 9 / 0.55);
+  -webkit-backdrop-filter: blur(26px) saturate(1.3);
+  backdrop-filter: blur(26px) saturate(1.3);
+  animation: aparece 0.25s ease both;
+}
+/* Uma janela por cima de outra não desfoca de novo: o véu de baixo já
+   desfocou a página, e dois véus somariam uma superfície ao orçamento de
+   três (no celular: barra de abas, busca e o véu). Basta a segunda janela no
+   `body` perder o desfoque, seja qual for a de cima: um véu desfocado só. */
+.raiz ~ .raiz .veu {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: rgb(4 5 9 / 0.4);
+}
+
+.painel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(var(--largura-janela, 520px), 100%);
+  max-height: 100%;
+  border-radius: 32px;
+  overflow: hidden;
+  outline: none;
+  animation: chega 0.45s var(--v2-curva-mola) both;
+}
+
+.cabecalho {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 22px 16px 6px 24px;
+}
+.titulo {
+  flex: 1;
+  min-width: 0;
+  margin: 10px 0 0;
+  font-size: 22px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+.descricao {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--v2-tinta-2);
+}
+
+.corpo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 10px 24px 22px;
+}
+
+.rodape {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 14px 24px 22px;
+  border-top: 1px solid rgb(255 255 255 / 0.07);
+}
+
+/* Folha (abaixo de 768 px): presa à base, cantos de cima arredondados, o
+   rodapé sempre à vista no fim da folha e acima da área segura de baixo. */
+@media (max-width: 47.99rem) {
+  .raiz {
+    place-items: end stretch;
+    padding: max(12px, var(--v2-seguro-topo)) 0 0;
+  }
+  .painel {
+    width: 100%;
+    max-height: calc(100dvh - max(12px, var(--v2-seguro-topo)) - 12px);
+    border-radius: 30px 30px 0 0;
+    animation-name: sobe;
+  }
+  .painel::after {
+    /* A alça: diz que é uma folha. Decorativa (fechar é pelo botão ou Esc). */
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 40px;
+    height: 5px;
+    translate: -50% 0;
+    border-radius: 3px;
+    background: rgb(255 255 255 / 0.22);
+  }
+  .cabecalho {
+    padding: 22px max(12px, var(--v2-seguro-dir)) 4px max(20px, var(--v2-seguro-esq));
+  }
+  .corpo {
+    padding: 8px max(20px, var(--v2-seguro-dir)) 18px max(20px, var(--v2-seguro-esq));
+  }
+  .corpo:last-child {
+    padding-bottom: max(18px, calc(var(--v2-seguro-base) + 8px));
+  }
+  .rodape {
+    padding: 12px max(20px, var(--v2-seguro-dir)) max(14px, calc(var(--v2-seguro-base) + 6px))
+      max(20px, var(--v2-seguro-esq));
+  }
+  .rodape > * {
+    flex: 1;
+  }
+}
+
+@keyframes aparece {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes chega {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
+@keyframes sobe {
+  from {
+    transform: translateY(100%);
+  }
+}
