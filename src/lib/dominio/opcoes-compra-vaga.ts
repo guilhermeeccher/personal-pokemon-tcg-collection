@@ -24,7 +24,8 @@
  */
 
 import { compararChavesVaga } from "./chave-vaga-set";
-import type { CartaCandidata } from "./candidatas-compra";
+import { VALIDADE_PRECO_CANDIDATA_HORAS, type CartaCandidata } from "./candidatas-compra";
+import { corteDeFrescor } from "./frescor-consulta";
 import type { CriterioValorCardmarket } from "./preco-cardmarket";
 import { identidadeDaCarta } from "./identidade-carta";
 import { chaveSemEstoque } from "./sem-estoque-liga";
@@ -301,4 +302,34 @@ export function ofertarCandidatas(
       semEstoque: escondidas,
     };
   });
+}
+
+/**
+ * Quanto do preço das candidatas já existe — o que a tela diz ao lado do
+ * botão de buscar preços. "A buscar" é exatamente o que uma rodada disparada
+ * agora perguntaria: sem resposta, ou com a última pergunta mais velha que a
+ * validade (`VALIDADE_PRECO_CANDIDATA_HORAS`), achada ou não.
+ */
+export function resumirPrecosDasCandidatas(
+  cartasCandidatas: ReadonlySet<string>,
+  precos: ReadonlyMap<string, Pick<PrecoParaOpcoes, "valor" | "consultadoEm">>,
+  agora: Date,
+): { cartas: number; comPreco: number; semPrecoNoCardmarket: number; aBuscar: number; validadeDias: number } {
+  const corte = corteDeFrescor({ agora, validadeHoras: VALIDADE_PRECO_CANDIDATA_HORAS });
+  let comPreco = 0;
+  let semPrecoNoCardmarket = 0;
+  let aBuscar = 0;
+  for (const cartaId of cartasCandidatas) {
+    const p = precos.get(cartaId);
+    if (p?.valor != null) comPreco++;
+    else if (p !== undefined) semPrecoNoCardmarket++;
+    if (p === undefined || p.consultadoEm.getTime() <= corte.getTime()) aBuscar++;
+  }
+  return {
+    cartas: cartasCandidatas.size,
+    comPreco,
+    semPrecoNoCardmarket,
+    aBuscar,
+    validadeDias: Math.round(VALIDADE_PRECO_CANDIDATA_HORAS / 24),
+  };
 }

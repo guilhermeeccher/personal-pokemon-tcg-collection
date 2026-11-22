@@ -53,7 +53,7 @@ import {
   JANELA_SEM_BATIMENTO_CARDMARKET_SEGUNDOS,
   segundosDeRodadaCardmarket,
 } from "@/lib/cardmarket/precos";
-import { VALIDADE_PRECO_CANDIDATA_HORAS } from "@/lib/dominio/candidatas-compra";
+import { resumirPrecosDasCandidatas } from "@/lib/dominio/opcoes-compra-vaga";
 
 /**
  * Opções de compra das vagas vazias de uma coleção — a Fase 6 da spec, pela
@@ -514,30 +514,13 @@ async function respostaDasCandidatas(
     precos,
   } = await opcoesDasCandidatasPorVaga(db, vagas, escolhas);
 
-  // Quanto do preço já existe — o que a tela diz ao lado do botão. "A buscar"
-  // é exatamente o que uma rodada disparada agora perguntaria.
-  const corte = corteDeFrescor({ agora: new Date(), validadeHoras: VALIDADE_PRECO_CANDIDATA_HORAS });
-  let comPreco = 0;
-  let semPrecoNoCardmarket = 0;
-  let aBuscar = 0;
-  for (const cartaId of cartasCandidatas) {
-    const p = precos.get(cartaId);
-    if (p?.valor != null) comPreco++;
-    else if (p !== undefined) semPrecoNoCardmarket++;
-    if (p === undefined || p.consultadoEm.getTime() <= corte.getTime()) aBuscar++;
-  }
-
   const emAndamento = rodada !== null && rodada.concluidaEm === null;
   return {
     ...base,
     vagas: vagasDaTela,
-    precosCandidatas: {
-      cartas: cartasCandidatas.size,
-      comPreco,
-      semPrecoNoCardmarket,
-      aBuscar,
-      validadeDias: Math.round(VALIDADE_PRECO_CANDIDATA_HORAS / 24),
-    },
+    // Quanto do preço já existe — o que a tela diz ao lado do botão
+    // (`resumirPrecosDasCandidatas`).
+    precosCandidatas: resumirPrecosDasCandidatas(cartasCandidatas, precos, new Date()),
     rodada:
       rodada === null
         ? null
