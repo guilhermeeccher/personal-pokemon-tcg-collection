@@ -128,7 +128,7 @@ consumes the same API, so **all of them hold for both**.
 | The price chart keeps saying the total also rises when cards enter the sum; the Liga keeps its own series | "Special card prices", "International price reference" |
 | A Cardmarket price shows the euro value, the quote and its date, is called comparable to the Liga's **lowest** price, and is never summed with, charted with or compared with Liga values | "International price reference" |
 | The column headed "Trend" shows the stored value, with a visible tag and a `Dica` when it is not the trend | "The trend cap, and the value is stored" |
-| Ceiling and order are a screen filter; a card with no price stays; a selected card is never hidden; "Mark the best of each slot" marks only a priced first option | "Buy options from the catalog — the same switch" |
+| With `PRECO_FONTE=cardmarket`, ceiling and order are a screen filter (with `liga` they stay parameters of the scan, as in the v1); a card with no price stays; a selected card is never hidden; "Mark the best of each slot" marks only a priced first option | "Buy options from the catalog — the same switch" |
 | The screen and the export use the same functions (`lista-compra.ts`, `precosDasEscolhas`, `dividirListaCompra`), so a tab's `id` is the same in both | "Buy triage", "Export to LigaPokemon" |
 | Living Dex off: menu group not rendered, `/dex/...` pages and `/api/dex/...` answer 404; a page calls `connection()` before reading the flag | "Optional module: Living Dex" |
 | Gender pairs are labelled; `forma_pt` in Portuguese; box numbers on screen have gaps on purpose | same |
