@@ -105,6 +105,10 @@
   border-radius: var(--v2-raio-painel);
   color: inherit;
   text-decoration: none;
+  /* Sem o menu de imagem do iOS ao segurar a capa (regra 7.4 de `rules.md`). */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
   transition:
     transform 0.4s var(--v2-curva-mola),
     background-color 0.2s;
