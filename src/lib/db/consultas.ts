@@ -2061,7 +2061,7 @@ export interface ColecaoBasica {
 }
 
 export async function obterColecaoPorId(
-  db: Database,
+  db: Database | Transacao,
   id: string,
 ): Promise<ColecaoBasica | null> {
   const [linha] = await db.select().from(colecao).where(eq(colecao.id, id)).limit(1);
@@ -2155,7 +2155,7 @@ export interface ColecaoComVagas extends ColecaoBasica {
  * catálogo está completo) — mesma regra de `listarColecoes`.
  */
 export async function obterColecaoComVagas(
-  db: Database,
+  db: Database | Transacao,
   id: string,
 ): Promise<ColecaoComVagas | null> {
   const colecaoLinha = await obterColecaoPorId(db, id);
@@ -2336,7 +2336,7 @@ interface SetParaDivisoes {
  * `contagensDoSet`), id da série (o logo no CDN) e o nome em cada idioma.
  */
 async function lerSetsParaDivisoes(
-  db: Database,
+  db: Database | Transacao,
   setIds: readonly string[],
 ): Promise<Map<string, SetParaDivisoes>> {
   const resultado = new Map<string, SetParaDivisoes>();
@@ -3553,8 +3553,8 @@ export async function listarCandidatosDaVaga(
  * Devolve só as vagas com pelo menos uma candidata; quem chama assume
  * zero para o resto. Regra 5 do AGENTS.md: isto só conta — nunca aloca.
  */
-async function contarCandidatosPorVagaVazia(
-  db: Database,
+export async function contarCandidatosPorVagaVazia(
+  db: Database | Transacao,
   colecaoId: string,
   tipo: TipoColecao,
 ): Promise<Map<string, number>> {
@@ -4469,7 +4469,7 @@ export type ResultadoMelhorias =
  * clique do usuário (`trocarCopiaDaVaga`).
  */
 export async function listarMelhoriasDaColecao(
-  db: Database,
+  db: Database | Transacao,
   colecaoId: string,
 ): Promise<ResultadoMelhorias> {
   const colecaoLinha = await obterColecaoPorId(db, colecaoId);

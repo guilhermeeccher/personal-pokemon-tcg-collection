@@ -56,7 +56,7 @@ export interface EscolhaSalva extends Omit<EscolhaNova, "preco"> {
  * que comprar para ela.
  */
 export async function listarEscolhas(
-  db: Database,
+  db: Database | Transacao,
   colecaoId: string,
 ): Promise<EscolhaSalva[]> {
   const linhas = await db

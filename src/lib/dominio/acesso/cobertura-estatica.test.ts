@@ -54,11 +54,15 @@ const sob = (relativoAoApp: string) => `${APP}/${relativoAoApp}`;
  * acrescentar aqui. Dois GETs de hoje fazem uma única escrita de limpeza,
  * idempotente: fecham rodadas de varredura mortas
  * (`opcoes-compra` e `inventario/precos`).
+ *
+ * As leituras da v2 (`grade`, de 2026-11-22) foram conferidas assim: só
+ * `select`, numa transação `read only`.
  */
 const ROTAS_COM_GET = [
   "api/cartas/route.ts",
   "api/colecoes/[id]/cartas-do-tema/route.ts",
   "api/colecoes/[id]/exportar/route.ts",
+  "api/colecoes/[id]/grade/route.ts",
   "api/colecoes/[id]/melhorias/route.ts",
   "api/colecoes/[id]/opcoes-compra/exportar/route.ts",
   "api/colecoes/[id]/opcoes-compra/route.ts",
