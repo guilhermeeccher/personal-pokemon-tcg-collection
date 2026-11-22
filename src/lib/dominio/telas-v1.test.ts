@@ -54,9 +54,9 @@ describe("telas da v1 e pares na raiz", () => {
     expect(ROTAS_V1.length).toBeGreaterThan(20);
   });
 
-  it("toda página da v1 mora em /v1 (nenhuma tela solta no grupo da v1, fora o login)", () => {
+  it("toda página da v1 mora em /v1 (nenhuma tela solta no grupo da v1; o login é da v2)", () => {
     const fora = PAGINAS.filter((a) => a.startsWith(`${APP}/(v1)/`) && !a.startsWith(`${APP}/(v1)/v1/`));
-    expect(fora).toEqual([`${APP}/(v1)/login/page.tsx`]);
+    expect(fora).toEqual([]);
   });
 
   it.each(ROTAS_V1)("%s tem par na raiz (página da v2 ou ponte)", (rota) => {
@@ -132,7 +132,7 @@ describe("rotaDaPagina", () => {
   it("tira os grupos e devolve a URL", () => {
     expect(rotaDaPagina("(v1)/v1/page.tsx")).toBe("/v1");
     expect(rotaDaPagina("(v1)/v1/colecoes/[id]/page.tsx")).toBe("/v1/colecoes/[id]");
-    expect(rotaDaPagina("(v1)/login/page.tsx")).toBe("/login");
+    expect(rotaDaPagina("(v2)/login/page.tsx")).toBe("/login");
     expect(rotaDaPagina("(v2)/page.tsx")).toBe("/");
     expect(rotaDaPagina("(v2)/dex/[[...resto]]/page.tsx")).toBe("/dex/[[...resto]]");
   });

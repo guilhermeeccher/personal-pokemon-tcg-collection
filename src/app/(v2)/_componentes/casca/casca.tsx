@@ -16,8 +16,46 @@ import { ABAS, type GrupoNavV2, ITEM_BUSCA, abaAtiva, gruposDaNav, itemAtivo } f
 import { Sair } from "./sair";
 import { SeletorIdioma } from "./seletor-idioma";
 
+/** O único caminho que fica sem trilho e sem barra de abas. */
+const CAMINHO_SEM_MENU = "/login";
+
 /**
- * A casca da v2: luz ambiente, trilho de vidro (768 px e acima), barra de
+ * A casca da v2. Em todo caminho é a completa, menos em `/login`: quem chega
+ * lá não tem sessão, e cada link do menu cairia de volta no login (o mesmo
+ * motivo de a v1 esconder o dela). O trilho e as abas são `fixed`, então não
+ * dá para escondê-los pelo conteúdo: a escolha é aqui, e os hooks de cada
+ * casca ficam no seu componente.
+ */
+export function Casca(props: { livingDex: boolean; acessoComSenha: boolean; children: ReactNode }) {
+  const pathname = usePathname();
+  return pathname === CAMINHO_SEM_MENU ? <CascaSemMenu>{props.children}</CascaSemMenu> : <CascaCompleta {...props} />;
+}
+
+/**
+ * A casca do login: só a luz ambiente, o brilho do vidro e o aviso flutuante
+ * em volta do conteúdo, centrado. Sem refração: o único vidro da tela é o
+ * cartão, que não é de `data-v2-lente`.
+ */
+function CascaSemMenu({ children }: { children: ReactNode }) {
+  const modoLeve = useModoLeve();
+  useBrilhoVidro(modoLeve);
+  return (
+    <ProvedorAvisos>
+      <div className="v2-ambiente" aria-hidden>
+        <i />
+        <i />
+        <i />
+        <b />
+      </div>
+      <main id={ID_CONTEUDO} className={estilos.soConteudo} tabIndex={-1}>
+        {children}
+      </main>
+    </ProvedorAvisos>
+  );
+}
+
+/**
+ * A casca completa: luz ambiente, trilho de vidro (768 px e acima), barra de
  * abas com o botão de busca e a folha "Mais" (abaixo), o conteúdo e a região
  * do aviso flutuante. Recebe do layout, lidas no servidor a cada requisição,
  * as duas flags que mudam o menu: a Living Dex e o acesso por senha ("Sair").
@@ -25,7 +63,7 @@ import { SeletorIdioma } from "./seletor-idioma";
  * O desenho e o porquê de cada regra estão em `casca.module.css`; o mapa,
  * em `mapa-navegacao.ts`.
  */
-export function Casca({
+function CascaCompleta({
   livingDex,
   acessoComSenha,
   children,

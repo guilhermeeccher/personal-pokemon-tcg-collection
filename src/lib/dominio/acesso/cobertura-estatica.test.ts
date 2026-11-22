@@ -122,11 +122,11 @@ describe("cobertura estática: route handlers", () => {
 });
 
 describe("cobertura estática: páginas", () => {
-  /* A exceção é exatamente a página do login, que mora no grupo da v1 com a
-     URL `/login` (2026-11-22). Um caminho exato, e não "qualquer
-     `login/page.tsx`": um `(v1)/v1/login` ou um `(v2)/login` novo tem de
-     passar pela guarda até alguém decidir mudar esta linha. */
-  const LOGIN = sob("(v1)/login/page.tsx");
+  /* A exceção é exatamente a página do login, que mora no grupo da v2 com a
+     URL `/login` (2026-11-22; antes morava no da v1). Um caminho exato, e não
+     "qualquer `login/page.tsx`": um `(v1)/login` de volta ou um `(v2)/v1/login`
+     tem de passar pela guarda até alguém decidir mudar esta linha. */
+  const LOGIN = sob("(v2)/login/page.tsx");
   const paginas = ARQUIVOS.filter((a) => a.endsWith("/page.tsx") && a !== LOGIN);
 
   it("a página isenta existe (a exceção não ficou apontando para o nada)", () => {

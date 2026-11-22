@@ -1446,18 +1446,6 @@
       "regiaoLinha": "{normal} no HOME · shiny {shiny}"
     }
   },
-  "login": {
-    "titulo": "Entrar",
-    "descricao": "Digite a senha para acessar a coleção.",
-    "campoSenha": "Senha",
-    "entrar": "Entrar",
-    "entrando": "Entrando…",
-    "erros": {
-      "senhaInvalida": "Senha incorreta.",
-      "muitasTentativas": "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
-      "generico": "Não foi possível entrar. Tente de novo."
-    }
-  },
   "tiposPokemon": {
     "Grass": "Planta",
     "Fire": "Fogo",
@@ -1559,6 +1547,18 @@
     "mais": "Mais",
     "menu": "Menu",
     "pularConteudo": "Pular para o conteúdo"
+  },
+  "v2Login": {
+    "titulo": "Entrar",
+    "descricao": "Digite a senha para acessar a coleção.",
+    "campoSenha": "Senha",
+    "entrar": "Entrar",
+    "entrando": "Entrando…",
+    "erros": {
+      "senhaInvalida": "Senha incorreta.",
+      "muitasTentativas": "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
+      "generico": "Não foi possível entrar. Tente de novo."
+    }
   },
   "v2Primitivos": {
     "fechar": "Fechar",

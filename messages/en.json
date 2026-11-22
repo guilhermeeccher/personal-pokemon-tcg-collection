@@ -1446,18 +1446,6 @@
       "regiaoLinha": "{normal} in HOME · shiny {shiny}"
     }
   },
-  "login": {
-    "titulo": "Sign in",
-    "descricao": "Enter the password to open the collection.",
-    "campoSenha": "Password",
-    "entrar": "Sign in",
-    "entrando": "Signing in…",
-    "erros": {
-      "senhaInvalida": "Incorrect password.",
-      "muitasTentativas": "Too many attempts. Wait a few minutes and try again.",
-      "generico": "Could not sign in. Try again."
-    }
-  },
   "tiposPokemon": {
     "Grass": "Grass",
     "Fire": "Fire",
@@ -1567,6 +1555,18 @@
     "mais": "More",
     "menu": "Menu",
     "pularConteudo": "Skip to content"
+  },
+  "v2Login": {
+    "titulo": "Sign in",
+    "descricao": "Enter the password to open the collection.",
+    "campoSenha": "Password",
+    "entrar": "Sign in",
+    "entrando": "Signing in…",
+    "erros": {
+      "senhaInvalida": "Incorrect password.",
+      "muitasTentativas": "Too many attempts. Wait a few minutes and try again.",
+      "generico": "Could not sign in. Try again."
+    }
   },
   "v2Primitivos": {
     "fechar": "Close",

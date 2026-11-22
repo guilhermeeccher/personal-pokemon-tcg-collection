@@ -43,12 +43,12 @@ src/app/
   (v1)/
     layout.tsx            ← the former root layout, same DOM
     globals.css, tokens/  ← moved, content unchanged
-    login/                ← URL /login, in the v1 skin until package 1f
     v1/
       page.tsx, inicio.tsx, cadastro/, colecoes/, inventario/, dex/
   (v2)/
     layout.tsx, v2.css    ← dark skeleton: lang, intl, data-pwa, PWA metadata, bfcache
     _ponte/               ← irParaV1, and the test that runs every bridge
+    login/                ← URL /login, in the v2 look, no rail and no tab bar (package 1f)
     page.tsx, colecoes/…  ← real v2 screens, or bridge pages
     dex/[[...resto]]/page.tsx  ← one bridge for the whole Dex until package 5-0
   _comum/cabeca.tsx       ← the PWA head both root layouts render
@@ -61,7 +61,8 @@ src/app/
   cream stylesheet and ~250 colour classes never meet the v2's dark one, and nothing in the v1 is
   rewritten. A move between v1 and v2 is a full page load; that is accepted for a temporary
   transition.
-- **What stays at the root, unchanged:** the API, `/login`, the manifest, `robots.txt`, the PWA
+- **What stays at the root, unchanged:** the API, `/login` (the URL; since package 1f the page is the
+  v2's), the manifest, `robots.txt`, the PWA
   icons and the favicon. The proxy and the password-access module do not change: a route group
   changes the folder, not the URL.
 - **The v1 keeps its own components** in `src/app/_componentes/`. The v2's live in a folder of its
@@ -188,7 +189,7 @@ and the merge of those three files is always sequential.
 | **1c List and new collection** | `/colecoes` in "view" mode ("Organize" leads to the v1 until 4b) and `/colecoes/nova` | 0c |
 | **1d Collection** | **owner of the page `/colecoes/[id]` and of the tab contract**: Binder 3×3 to 6×6, Whole set, Upgrades, every collection operation (name, notes, secrets, scope, required language, add and remove a single card, add to a custom collection, delete) and the **reusable virtual grid** with its measurement | 1a, 1b, decision 1 |
 | **1e What's missing** | its own components, integrated into 1d's tab structure: mark by tap and by drag, "mark the best of each slot" as an explicit shortcut with the criterion visible, multiple choices kept, manual choice when there is no price (works before the first price round), Liga source preserved (decision 3), copy the list; `/colecoes/falta` | 1a, 1b, 1d's structure, decisions 2 and 3 |
-| **1f Login** | `/login` in the v2 look: moves the page between the groups and updates the exact exception in the coverage test (never two pages for `/login`) | 0c |
+| **1f Login** | `/login` in the v2 look: moves the page between the groups and updates the exact exception in the coverage test (never two pages for `/login`). **Done:** the shell (`Casca`) draws no rail and no tab bar on `/login`, only the ambient light; copy in `v2Login` | 0c |
 
 ### Phase 2 — Home and inventory
 

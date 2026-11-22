@@ -1,0 +1,47 @@
+/*
+ * O cartão do login: um vidro só, centrado na luz ambiente. Conta como uma
+ * das três superfícies com desfoque (regra 5 de `rules.md`); sem trilho nem
+ * barra de abas na tela, o orçamento sobra. Largura de 400 px no máximo, e
+ * no celular o cartão ocupa a largura menos o respiro da casca.
+ */
+.cartao {
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+  padding: 28px 24px;
+  border-radius: var(--v2-raio-vidro);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+@media (min-width: 48rem) {
+  .cartao {
+    padding: 36px 32px;
+  }
+}
+
+.marca {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 4px;
+}
+
+.titulo {
+  margin: 0;
+  font-family: var(--v2-fonte-display);
+  font-size: 28px;
+  line-height: 1.15;
+  color: var(--v2-tinta);
+}
+
+.descricao {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: var(--v2-tinta-2);
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

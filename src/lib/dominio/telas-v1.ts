@@ -122,7 +122,7 @@ export function catchAllsOpcionais(rota: string): Set<string> {
 
 /**
  * Caminhos que ficam na raiz e servem às duas versões: a API, o login (que
- * mora em `(v1)/login` com a URL `/login`), os ícones e o manifesto do PWA e o
+ * mora em `(v2)/login` com a URL `/login`), os ícones e o manifesto do PWA e o
  * favicon. Qualquer outro literal que começa por `/` num arquivo da v1 é um
  * caminho de tela, e tem de começar por `/v1`.
  */

@@ -10,7 +10,7 @@ bridge page is replaced by its v2 screen **only when every row of that screen is
 ## How to read it
 
 **v1 code** is `file:line` in the v1 as package 0a left it: the screens under `src/app/(v1)/v1/`,
-the login under `src/app/(v1)/login/`, and the shared `src/app/_componentes/`, `src/app/_acoes/`
+the login under `src/app/(v1)/login/` (moved to `src/app/(v2)/login/` by package 1f), and the shared `src/app/_componentes/`, `src/app/_acoes/`
 and `src/app/api/`, which did not move. The line is where the action starts (the button, the field,
 or the handler that sends the request). Every reference was checked by script against the code it
 cites; a v1 fix that shifts lines should update the rows it touches.
@@ -296,9 +296,9 @@ Owner: **1f**.
 
 | ID | Action | v1 code | Owner | Reuses | Evidence | Rules | State |
 |---|---|---|---|---|---|---|---|
-| LOG-01 | Type the password and enter; generic errors (wrong password, too many attempts) | `src/app/(v1)/login/formulario-login.tsx:54`, `:32` | 1f | `POST /api/sessao` | `REQ`, `REF` (the same generic messages, same delay) | Access: origin required, rate limit, no global lock | pending |
-| LOG-02 | Land on the page asked for (`volta`), with a full navigation | `src/app/(v1)/login/page.tsx:33`, `src/app/(v1)/login/formulario-login.tsx:41` | 1f | `sanitizarVolta` | `URL` (`volta`), including `/v1/...` paths; anything else becomes `/` | Access: `volta` | pending |
-| LOG-03 | A session already open skips the login | `src/app/(v1)/login/page.tsx:37` | 1f | `sessaoValida`, `sanitizarVolta` | `/login` with a session goes to `volta`; module off → 404 identical to any missing path | Access: the only page without the guard, exactly one page | pending |
+| LOG-01 | Type the password and enter; generic errors (wrong password, too many attempts) | `src/app/(v1)/login/formulario-login.tsx:54`, `:32` | 1f | `POST /api/sessao` | `REQ`, `REF` (the same generic messages, same delay) | Access: origin required, rate limit, no global lock | delivered |
+| LOG-02 | Land on the page asked for (`volta`), with a full navigation | `src/app/(v1)/login/page.tsx:33`, `src/app/(v1)/login/formulario-login.tsx:41` | 1f | `sanitizarVolta` | `URL` (`volta`), including `/v1/...` paths; anything else becomes `/` | Access: `volta` | delivered |
+| LOG-03 | A session already open skips the login | `src/app/(v1)/login/page.tsx:37` | 1f | `sessaoValida`, `sanitizarVolta` | `/login` with a session goes to `volta`; module off → 404 identical to any missing path | Access: the only page without the guard, exactly one page | delivered |
 
 ## 14. `/dex` — Living Dex overview
 

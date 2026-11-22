@@ -237,8 +237,9 @@ read its README before touching any screen, layout, component or route under `sr
   `[data-pwa]` safe-area rules included), and its `PageProps` use the `/v1/...` keys. The screen
   routes this document cites (`/dex/...`, `/inventario/precos`, `/dex/cadastrar?jogo=…`) live at
   `/v1/...` and answer at the root through a bridge until the v2 screen exists. The login is
-  `src/app/(v1)/login/` with the URL `/login`, and it is the coverage test's one exact exception;
-  when the v2 redoes it, the page and the exception move together. A path with no route gets Next's
+  `src/app/(v2)/login/` with the URL `/login` (moved from the v1 by package 1f, in the v2 look, with
+  no rail and no tab bar), and it is the coverage test's one exact exception — that one path, never
+  two pages for `/login`. A path with no route gets Next's
   default 404, with no layout of ours.
 - **The two versions never mix.** The v1 never links to the root: every screen path in `(v1)/**`
   and `_componentes/**` starts with `/v1` (root paths both share — `/api/`, `/login`, `/pwa/`,

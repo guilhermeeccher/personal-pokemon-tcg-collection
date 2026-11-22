@@ -50,6 +50,19 @@
   }
 }
 
+/* O conteúdo da tela sem menu (`/login`): centrado, com os respiros e o recuo
+   seguro dos quatro lados, sem a reserva do trilho nem a das abas. */
+.soConteudo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding: calc(20px + var(--v2-seguro-topo)) var(--v2-respiro-dir) max(20px, var(--v2-seguro-base))
+    var(--v2-respiro-esq);
+  outline: none;
+}
+
 /* ------------------------------------------------------------ Trilho */
 
 .trilho {
