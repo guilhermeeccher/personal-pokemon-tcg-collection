@@ -33,6 +33,7 @@ export type NomeIconeNav =
   | "jogos"
   | "trofeus"
   | "planos"
+  | "aba-dex"
   | "mais";
 
 export interface ItemNavV2 {
@@ -88,20 +89,39 @@ export function gruposDaNav(livingDex: boolean): readonly GrupoNavV2[] {
 }
 
 /*
- * A barra de abas tem quatro posições, decisão de 2026-11-22: Início,
- * Coleções, Inventário e "Mais" (a folha com o mapa inteiro, o idioma e o
- * "Sair"), mais o botão redondo de busca ao lado. Cinco abas — a Dex como
- * quinta, como no protótipo — não cabem a 320 px com 44 px por alvo: sobram
- * ~42 px por aba depois do respiro e do botão de busca. Com a Dex ligada ela
- * fica na folha "Mais", a um toque a mais.
+ * A barra de abas (decisão de 2026-11-22): Início, Coleções, Inventário, a
+ * Dex quando a Living Dex está ligada, e "Mais" (a folha com o mapa inteiro,
+ * o idioma e o "Sair"), com o botão redondo de busca ao lado. Cinco posições
+ * com o módulo ligado, quatro com ele desligado. Para as cinco caberem a
+ * 320 px com 44 px por alvo, abaixo de 360 px a barra encolhe a altura, o
+ * respiro e o botão de busca, e as abas ficam só com o ícone
+ * (`casca.module.css`).
  */
-export type AbaV2 = "inicio" | "colecoes" | "inventario" | "mais";
+export type AbaV2 = "inicio" | "colecoes" | "inventario" | "dex" | "mais";
 
-export const ABAS: readonly { aba: Exclude<AbaV2, "mais">; item: ItemNavV2 }[] = [
-  { aba: "inicio", item: ITEM_INICIO },
-  { aba: "colecoes", item: GRUPO_TCG.itens[0] },
-  { aba: "inventario", item: GRUPO_TCG.itens[1] },
+export interface AbaDaBarra {
+  aba: Exclude<AbaV2, "mais">;
+  /** Para onde a aba leva e a área que ela acende (`abaAtiva`). */
+  item: ItemNavV2;
+  /** Rótulo da aba, no namespace `nav`; o do item é longo demais para ela. */
+  chaveRotulo: string;
+  icone: NomeIconeNav;
+}
+
+const ABAS_TCG: readonly AbaDaBarra[] = [
+  { aba: "inicio", item: ITEM_INICIO, chaveRotulo: ITEM_INICIO.chave, icone: "inicio" },
+  { aba: "colecoes", item: GRUPO_TCG.itens[0], chaveRotulo: "itens.colecoes", icone: "colecoes" },
+  { aba: "inventario", item: GRUPO_TCG.itens[1], chaveRotulo: "itens.inventario", icone: "inventario" },
 ];
+
+/* A aba da Dex leva à visão geral (`/dex`) e acende em toda a área `/dex/...`;
+   o rótulo é o nome do módulo ("Dex"), não o do item ("Visão geral"). */
+const ABA_DEX: AbaDaBarra = { aba: "dex", item: GRUPO_DEX.itens[0], chaveRotulo: "grupos.dex", icone: "aba-dex" };
+
+/** As abas com destino, na ordem; "Mais" vem depois delas, sempre. */
+export function abasDaBarra(livingDex: boolean): readonly AbaDaBarra[] {
+  return livingDex ? [...ABAS_TCG, ABA_DEX] : ABAS_TCG;
+}
 
 function casa(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -130,12 +150,13 @@ export function itemAtivo(pathname: string): ItemNavV2 | null {
 /**
  * A aba acesa na barra de abas. Diferente do item ativo: uma aba representa
  * uma área inteira — "Inventário" acende em `/inventario/precos` também, e
- * tudo o que não tem aba própria (cadastro, Dex) acende "Mais". Um caminho
- * fora do mapa (o laboratório, um 404) não acende nenhuma, e a busca também
- * não: quem acende nela é o próprio botão redondo.
+ * "Dex" em toda `/dex/...`, e tudo o que não tem aba própria (o cadastro, a
+ * Dex com o módulo desligado, que lá dá 404) acende "Mais". Um caminho fora
+ * do mapa (o laboratório, um 404) não acende nenhuma, e a busca também não:
+ * quem acende nela é o próprio botão redondo.
  */
-export function abaAtiva(pathname: string): AbaV2 | null {
-  for (const { aba, item } of ABAS) {
+export function abaAtiva(pathname: string, livingDex: boolean): AbaV2 | null {
+  for (const { aba, item } of abasDaBarra(livingDex)) {
     if (casa(pathname, item.href)) return aba;
   }
   const ativo = itemAtivo(pathname);

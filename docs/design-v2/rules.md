@@ -259,11 +259,14 @@ rest are the technical foundations of the v2.
     `--v2-iris`) and do not get renamed. The v2's Tailwind entry scans only `src/app/(v2)/` and
     starts with no colours but the v2's.
 21. **The v2 has its own navigation map** (`casca/mapa-navegacao.ts`), pointing at the root; an
-    item whose v2 screen does not exist yet lands on its bridge. The tab bar has **four
-    positions** — Home, Collections, Inventory and **More**, a sheet with the whole map, the
-    language and "Sign out" — plus the round search button (decision of 2026-11-22: a fifth tab
-    for the Dex does not fit 44 px targets at 320 px; with the Living Dex on, it is in More).
-    Below 360 px the tabs show only their icons, with the name kept for screen readers.
+    item whose v2 screen does not exist yet lands on its bridge. The tab bar (decision of
+    2026-11-22) has Home, Collections, Inventory, **Dex** when the Living Dex is on, and **More**,
+    a sheet with the whole map, the language and "Sign out" — five positions with the module on,
+    four with it off — plus the round search button. The Dex tab opens `/dex` and lights up on
+    every `/dex/...` path. Below 360 px the tabs show only their icons, with the name kept for
+    screen readers, and the bar shrinks (54 px tall, 12 px side margins, 4 px inside) so that five
+    tabs still get 44 px each at 320 px. The tabs touch each other, with no 8 px gap: the bar is
+    one composite control, like the segmented control and like the iOS tab bar.
 22. **The laboratory**, `/laboratorio`, shows the shell and every primitive in its states, the
     light-mode switch wired to local state and the refraction decision. It is development only
     (`notFound()` when `NODE_ENV` is `production`), it is not a screen of the app and it is not in

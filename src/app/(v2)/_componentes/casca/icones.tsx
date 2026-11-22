@@ -23,7 +23,7 @@ import type { NomeIconeNav } from "./mapa-navegacao";
 
 /* Os mesmos glifos da v1 para os mesmos lugares: quem já usa o app reconhece
    o item pelo desenho. Traço de 1,8, como no protótipo. */
-const ICONES: Record<NomeIconeNav, LucideIcon> = {
+const ICONES: Record<Exclude<NomeIconeNav, "aba-dex">, LucideIcon> = {
   inicio: House,
   busca: Search,
   colecoes: Layers,
@@ -45,7 +45,20 @@ const ICONES: Record<NomeIconeNav, LucideIcon> = {
   mais: Ellipsis,
 };
 
+/* O glifo da aba da Dex: uma Poké Ball de traço, o mesmo desenho do protótipo
+   (o Lucide não tem uma). Mesmo traço e mesma caixa dos outros ícones. */
+function IconeAbaDex({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.5 12h17" />
+      <circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function IconeNav({ nome, className }: { nome: NomeIconeNav; className?: string }) {
+  if (nome === "aba-dex") return <IconeAbaDex className={className} />;
   const Icone = ICONES[nome];
   return <Icone className={className} strokeWidth={1.8} aria-hidden />;
 }

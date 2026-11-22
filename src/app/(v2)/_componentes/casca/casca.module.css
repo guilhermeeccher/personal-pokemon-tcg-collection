@@ -179,20 +179,20 @@
     display: flex;
     position: fixed;
     z-index: 40;
-    left: var(--v2-respiro-esq);
-    right: calc(var(--v2-respiro-dir) + var(--v2-altura-abas) + 8px);
+    left: max(var(--v2-respiro-abas), var(--v2-seguro-esq));
+    right: calc(max(var(--v2-respiro-abas), var(--v2-seguro-dir)) + var(--v2-altura-abas) + 8px);
     bottom: var(--v2-base-abas);
     height: var(--v2-altura-abas);
     box-sizing: border-box;
-    padding: 5px;
-    border-radius: 31px;
+    padding: var(--v2-respiro-interno-abas);
+    border-radius: calc(var(--v2-altura-abas) / 2);
   }
   .busca {
     display: grid;
     place-items: center;
     position: fixed;
     z-index: 40;
-    right: var(--v2-respiro-dir);
+    right: max(var(--v2-respiro-abas), var(--v2-seguro-dir));
     bottom: var(--v2-base-abas);
     width: var(--v2-altura-abas);
     height: var(--v2-altura-abas);
@@ -214,8 +214,8 @@
 .polegarAbas {
   position: absolute;
   z-index: 0;
-  top: 5px;
-  bottom: 5px;
+  top: var(--v2-respiro-interno-abas);
+  bottom: var(--v2-respiro-interno-abas);
   left: 0;
   border-radius: 26px;
   background: rgb(255 255 255 / 0.14);
@@ -258,9 +258,18 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* Abaixo de 360 px (iPhone SE de primeira geração) sobram ~52 px por aba, e
-   "Collections" não cabe: a aba fica só com o ícone, e o nome continua lá
-   para o leitor de tela, como texto recortado (não `display: none`). */
+/* Com cinco abas num iPhone comum (~56 px cada), "Collections" encosta no
+   vizinho a 10,5 px: um pouco menor e mais fechado, o rótulo respira. */
+@media (max-width: 429.98px) {
+  .rotuloAba {
+    font-size: 10px;
+    letter-spacing: -0.01em;
+  }
+}
+/* Abaixo de 360 px (iPhone SE de primeira geração) sobram ~45 px por aba com
+   a Dex e ~56 sem ela, e "Collections" não cabe em nenhum dos dois: a aba fica
+   só com o ícone, e o nome continua lá para o leitor de tela, como texto
+   recortado (não `display: none`). */
 @media (max-width: 359.98px) {
   .rotuloAba {
     position: absolute;
