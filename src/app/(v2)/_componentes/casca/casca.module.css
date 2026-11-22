@@ -1,0 +1,331 @@
+/*
+ * A casca da v2: o trilho de vidro (768 px e acima) e a barra de abas
+ * flutuante com o botão de busca (abaixo), sobre a rolagem da própria janela.
+ *
+ * - **Quem rola é a janela, em toda largura** (regra 11 de `rules.md`). O
+ *   protótipo rolava dentro de uma caixa com `overflow: hidden` no `body`; no
+ *   iOS isso prende a barra de endereço aberta e desliga as áreas seguras
+ *   que acompanham a rolagem do documento.
+ * - **As duas navegações estão sempre no DOM e o CSS mostra uma**: uma media
+ *   query, não `useEhMobile()`, para o HTML do servidor já sair certo na
+ *   primeira pintura, sem salto. `display: none` tira a escondida da árvore
+ *   de acessibilidade e da ordem do Tab.
+ * - **Nada aqui tem `container-type`**: contenção num ancestral de uma barra
+ *   fixa a prenderia à caixa, não à janela.
+ * - **Áreas seguras sempre** (decisão 9): a v2 liga `viewport-fit=cover` com
+ *   ou sem o acesso por senha, então cada borda soma o seu
+ *   `env(safe-area-inset-*)` aqui, fora de `[data-pwa]`.
+ */
+
+.pular {
+  position: fixed;
+  z-index: 100;
+  top: calc(8px + var(--v2-seguro-topo));
+  left: var(--v2-respiro-esq);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #f6f4fb;
+  color: #0b0b12;
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+.pular:focus-visible {
+  transform: none;
+}
+
+/* ---------------------------------------------------------- Conteúdo */
+
+.conteudo {
+  display: block;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding: calc(20px + var(--v2-seguro-topo)) var(--v2-respiro-dir) var(--v2-reserva-base) var(--v2-respiro-esq);
+  outline: none;
+}
+@media (min-width: 48rem) {
+  .conteudo {
+    padding: calc(26px + var(--v2-seguro-topo)) max(34px, var(--v2-seguro-dir)) var(--v2-reserva-base)
+      calc(var(--v2-margem-trilho) + var(--v2-largura-trilho) + 36px + var(--v2-seguro-esq));
+  }
+}
+
+/* ------------------------------------------------------------ Trilho */
+
+.trilho {
+  display: none;
+}
+@media (min-width: 48rem) {
+  .trilho {
+    display: block;
+    position: fixed;
+    z-index: 30;
+    top: calc(var(--v2-margem-trilho) + var(--v2-seguro-topo));
+    bottom: calc(var(--v2-margem-trilho) + var(--v2-seguro-base));
+    left: calc(var(--v2-margem-trilho) + var(--v2-seguro-esq));
+    width: var(--v2-largura-trilho);
+    border-radius: var(--v2-raio-vidro);
+    overflow: hidden;
+  }
+}
+
+/* A rolagem do trilho é interna (com a Dex ligada ele passa da altura de
+   uma tela baixa), num filho: rolando o próprio vidro, o aro e o brilho
+   rolariam junto com os itens. */
+.trilhoInterno {
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px 12px 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.trilhoInterno::-webkit-scrollbar {
+  display: none;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  color: var(--v2-tinta);
+  text-decoration: none;
+}
+.marca svg {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  filter: drop-shadow(0 3px 6px rgb(0 0 0 / 0.45));
+}
+.marca b {
+  font-family: var(--v2-fonte-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tituloGrupo {
+  margin: 0 0 4px;
+  padding: 0 10px;
+  font-family: var(--v2-fonte-ui);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--v2-tinta-3);
+}
+
+/* 44 px por item também no trilho: a partir de 768 px pode ser um iPad em
+   pé, e o alvo de toque vale para ele. */
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: 14px;
+  color: var(--v2-tinta-2);
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    color 0.2s,
+    background-color 0.2s;
+}
+.item svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.item:hover {
+  color: var(--v2-tinta);
+  background: rgb(255 255 255 / 0.05);
+}
+.item[aria-current="page"] {
+  color: var(--v2-tinta);
+  background: rgb(255 255 255 / 0.12);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18);
+}
+
+.rodapeTrilho {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+/* ------------------------------------------------------ Barra de abas */
+
+.abas,
+.busca {
+  display: none;
+}
+@media (max-width: 47.99rem) {
+  .abas {
+    display: flex;
+    position: fixed;
+    z-index: 40;
+    left: var(--v2-respiro-esq);
+    right: calc(var(--v2-respiro-dir) + var(--v2-altura-abas) + 8px);
+    bottom: var(--v2-base-abas);
+    height: var(--v2-altura-abas);
+    box-sizing: border-box;
+    padding: 5px;
+    border-radius: 31px;
+  }
+  .busca {
+    display: grid;
+    place-items: center;
+    position: fixed;
+    z-index: 40;
+    right: var(--v2-respiro-dir);
+    bottom: var(--v2-base-abas);
+    width: var(--v2-altura-abas);
+    height: var(--v2-altura-abas);
+    border-radius: 50%;
+    color: var(--v2-tinta);
+  }
+  .busca svg {
+    width: 22px;
+    height: 22px;
+  }
+  .busca[aria-current="page"] {
+    color: #fff;
+    box-shadow:
+      inset 0 0 0 2px rgb(255 255 255 / 0.3),
+      var(--v2-sombra-vidro);
+  }
+}
+
+.polegarAbas {
+  position: absolute;
+  z-index: 0;
+  top: 5px;
+  bottom: 5px;
+  left: 0;
+  border-radius: 26px;
+  background: rgb(255 255 255 / 0.14);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.aba {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 0;
+  border-radius: 26px;
+  background: none;
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+  text-decoration: none;
+  cursor: pointer;
+}
+.aba svg {
+  width: 22px;
+  height: 22px;
+}
+.aba[aria-current="page"],
+.aba[aria-expanded="true"] {
+  color: #fff;
+}
+.rotuloAba {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Abaixo de 360 px (iPhone SE de primeira geração) sobram ~52 px por aba, e
+   "Collections" não cabe: a aba fica só com o ícone, e o nome continua lá
+   para o leitor de tela, como texto recortado (não `display: none`). */
+@media (max-width: 359.98px) {
+  .rotuloAba {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* --------------------------------------------------------- Folha "Mais" */
+
+.mapa {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.gradeMapa {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gradeMapa .item {
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+.gradeMapa .item[aria-current="page"] {
+  background: rgb(255 255 255 / 0.12);
+}
+
+/* -------------------------------------------------- Idioma e sair */
+
+.idiomas {
+  display: flex;
+  gap: 8px;
+}
+.idioma {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--v2-tinta-3);
+  cursor: pointer;
+}
+.idioma:hover {
+  color: var(--v2-tinta);
+}
+.idioma[aria-pressed="true"] {
+  background: rgb(255 255 255 / 0.1);
+  color: var(--v2-tinta);
+}
+.idioma:disabled {
+  cursor: progress;
+}
+
+.erroSair {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--v2-perigo);
+}
