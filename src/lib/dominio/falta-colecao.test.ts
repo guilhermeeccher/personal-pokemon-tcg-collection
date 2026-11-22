@@ -128,6 +128,11 @@ describe("propostaDaVaga — o atalho 'marcar a melhor de cada vaga'", () => {
     expect(r).toEqual({ semProposta: "jaTemEscolha" });
   });
 
+  it("vaga com escolha que nenhuma opção explica também não recebe proposta (Liga com escolha do catálogo)", () => {
+    const r = propostaDaVaga([opcaoDaVarredura(liga({ id: "x" }), null)], 1);
+    expect(r).toEqual({ semProposta: "jaTemEscolha" });
+  });
+
   it("Cardmarket antes da busca de preços: sem proposta, marcável à mão", () => {
     const r = propostaDaVaga([conv(candidata({ id: "a", cartaId: "a" }))]);
     expect(r).toEqual({ semProposta: "semPreco" });
@@ -200,7 +205,28 @@ describe("montarVagasDaFalta", () => {
       expect.objectContaining({ vagaId: "v3", rotulo: null, opcoes: 0, semProposta: "semOpcao" }),
     ]);
     expect(vagas[1].escolhas.map((e) => e.escolhaId)).toEqual(["e1"]);
+    // A escolha da vaga 2 travaria a proposta mesmo que houvesse opção.
     expect(vagas[0]).not.toHaveProperty("semProposta");
+  });
+});
+
+describe("montarVagasDaFalta — escolha atual trava a proposta", () => {
+  it("opção sem marca, mas a vaga já tem escolha: sem proposta, e a escolha vem identificável", () => {
+    const [v] = montarVagasDaFalta(
+      [{ vagaId: "v1", chave: "4", livres: 0 }],
+      new Map([
+        ["4", { rotulo: "Brasinha", dex: 4, setNome: null, opcoes: [opcaoDaVarredura(liga({ id: "o" }), null)], descartadas: 0, semEstoque: 0 }],
+      ]),
+      new Map(),
+      new Map([
+        [
+          "4",
+          [{ escolhaId: "e1", cartaId: "xx-004", nome: "Brasinha", edicaoNome: "X", numero: "4", total: "9", raridade: null, preco: null }],
+        ],
+      ]),
+    );
+    expect(v).toMatchObject({ proposta: null, semProposta: "jaTemEscolha", opcoes: 1 });
+    expect(v.escolhas[0].escolhaId).toBe("e1");
   });
 });
 

@@ -7,8 +7,8 @@
  *
  * - **A proposta do atalho e o critério.** "Marcar a melhor de cada vaga" é a
  *   primeira opção da vaga na ordem do critério (teto e ordenação), e só para
- *   a vaga sem nada marcado — o mesmo cálculo da tela de opções da v1, que é
- *   o atalho oficial. Na fonte Cardmarket, **só se ela tiver preço**: marcar
+ *   a vaga sem escolha nenhuma — o cálculo da tela de opções da v1, com uma
+ *   trava a mais (`propostaDaVaga`). Na fonte Cardmarket, **só se ela tiver preço**: marcar
  *   carta sem preço seria escolher às cegas, que é o que o preço existe para
  *   evitar; `filtrarCandidatas` já põe as sem preço por último, então se a
  *   primeira não tem, nenhuma tem. Continua sendo clique do usuário (regra 5):
@@ -191,13 +191,23 @@ export type MotivoSemProposta = "semOpcao" | "jaTemEscolha" | "semPreco";
 
 /**
  * A opção que "marcar a melhor de cada vaga" marcaria nesta vaga, ou o motivo
- * de não haver. `opcoes` já vem na ordem do critério, sem as escondidas.
+ * de não haver. `opcoes` já vem na ordem do critério, sem as escondidas;
+ * `escolhasDaVaga` é quantas escolhas a vaga tem hoje.
+ *
+ * **Vaga com qualquer escolha não recebe proposta**, mesmo que nenhuma opção
+ * apareça marcada. A v1 olhava só as opções marcadas, e na fonte Liga uma
+ * escolha feita pelo catálogo (identidade pela sigla) não casa com a opção da
+ * varredura (identidade pelo `edid`): o atalho marcaria uma segunda carta
+ * numa vaga que já tinha a sua. Na fonte Cardmarket as duas regras dão o
+ * mesmo resultado, porque toda escolha de vaga vazia aparece como opção
+ * marcada (`ofertarCandidatas`). Decisão de 2026-11-22.
  */
 export function propostaDaVaga(
   opcoes: readonly OpcaoFalta[],
+  escolhasDaVaga = 0,
 ): { proposta: OpcaoFalta } | { semProposta: MotivoSemProposta } {
   if (opcoes.length === 0) return { semProposta: "semOpcao" };
-  if (opcoes.some((o) => o.selecionada)) return { semProposta: "jaTemEscolha" };
+  if (escolhasDaVaga > 0 || opcoes.some((o) => o.selecionada)) return { semProposta: "jaTemEscolha" };
   const primeira = opcoes[0];
   // A escolha avulsa é sempre marcada, então não chega aqui; a Liga sempre
   // tem preço (a varredura só grava o que tem estoque). Sobra o Cardmarket
@@ -289,7 +299,8 @@ export function montarVagasDaFalta(
     const o = opcoesPorChave.get(v.chave);
     const r = o ?? rotulos.get(v.chave);
     const opcoes = o?.opcoes ?? [];
-    const decisao = propostaDaVaga(opcoes);
+    const escolhas = escolhasPorChave.get(v.chave) ?? [];
+    const decisao = propostaDaVaga(opcoes, escolhas.length);
     return {
       vagaId: v.vagaId,
       chave: v.chave,
@@ -303,7 +314,7 @@ export function montarVagasDaFalta(
       semEstoque: o?.semEstoque ?? 0,
       proposta: "proposta" in decisao ? decisao.proposta : null,
       ...("semProposta" in decisao ? { semProposta: decisao.semProposta } : {}),
-      escolhas: [...(escolhasPorChave.get(v.chave) ?? [])],
+      escolhas: [...escolhas],
     };
   });
 }

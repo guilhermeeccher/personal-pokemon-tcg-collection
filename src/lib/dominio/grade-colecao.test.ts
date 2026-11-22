@@ -168,7 +168,7 @@ describe("montarVagasDaGrade", () => {
  * O peso da grade, com dados de exemplo inventados no formato real: uma
  * Pokédex nacional (1.025 vagas, um terço preenchido, com escolhas e
  * upgrades salpicados) e um set grande (250 vagas). O número fica registrado
- * no comentário de `grade-colecao.ts`; o teto aqui é o que pegaria um campo
+ * no cabeçalho de `grade-colecao.ts`; o teto aqui é o que pegaria um campo
  * novo que multiplica o payload sem ninguém perceber.
  */
 describe("tamanho do payload", () => {

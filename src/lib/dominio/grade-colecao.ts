@@ -20,6 +20,10 @@
  * mil: a vaga não repete o que a tela deriva (o sprite da vaga vazia de
  * Pokédex sai de `urlSpritePokemon(chave)`, o progresso de `copia !== null`),
  * e a cópia traz só o que a grade desenha — o resto está no detalhe da carta.
+ * Campo vazio não viaja (ver `VagaDaGrade`). Medido com dados inventados no
+ * formato real (o teste de tamanho, que falha se um campo novo inchar o
+ * payload): ~270 KB numa Pokédex nacional e ~100 KB num set de 250 vagas, sem
+ * compressão; antes de omitir os vazios, a Pokédex dava ~400 KB.
  *
  * ## As regras que passam por aqui
  *

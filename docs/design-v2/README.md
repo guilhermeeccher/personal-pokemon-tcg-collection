@@ -6,13 +6,14 @@ you touched. It redoes all 23 screens of today's interface, login and Living Dex
 not touch the domain: **the eight business rules in [`AGENTS.md`](../../AGENTS.md) do not change**,
 the 66 API routes are reused as they are, and no database migration is planned.
 
-This folder is the contract of the transition. Three documents, read in this order:
+This folder is the contract of the transition. Four documents, read in this order:
 
 | Document | What it holds |
 |---|---|
 | this README | what the v2 is, how the two versions live side by side, the phases and packages, and the nine product decisions |
 | [`rules.md`](./rules.md) | every interface, mobile, HTTP, access, PWA and image rule of `AGENTS.md`, marked **v1 only**, **v2 only** or **both**, with the new wording of those that change, plus the technical foundations of the v2 |
 | [`parity.md`](./parity.md) | every action a user can take on each of the 23 v1 screens, the v2 package that owns it, the operation it reuses, the evidence that accepts it, and its state |
+| [`data-contract.md`](./data-contract.md) | the read routes the v2 collection screens, the "What's missing" tab and the card detail are built on (package 1a): what each field means and which existing route writes |
 
 Where this folder and `AGENTS.md` disagree about the v1, `AGENTS.md` wins: it is the v1's contract
 and stays in force until the v1 is removed. Where they disagree about the v2, this folder wins, and
