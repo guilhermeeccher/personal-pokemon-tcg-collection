@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
 import { REGIOES, type Regiao } from "@/lib/dominio/escopo-pokedex";
@@ -13,7 +13,7 @@ import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
 import { Campo, classesEntrada } from "@/app/_componentes/campo";
 import { GradeEscopo } from "@/app/_componentes/ds/grade-escopo";
 import { SeletorExpansao } from "@/app/_componentes/seletor-expansao";
-import type { SetParaCadastroDTO } from "@/lib/dominio/tipos-cliente";
+import type { GrupoColecaoDTO, ListaColecoesDTO, SetParaCadastroDTO } from "@/lib/dominio/tipos-cliente";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
 
 /* Nome de região é nome próprio do universo Pokémon: igual nos dois
@@ -56,9 +56,21 @@ export default function NovaColecaoPage() {
   const [idiomaCatalogo, setIdiomaCatalogo] = useState<IdiomaCatalogo>("pt");
   const [incluirSecretas, setIncluirSecretas] = useState(false);
 
+  // O grupo é opcional (a coleção nasce no fim dele); sem grupo cadastrado o
+  // campo nem aparece, para quem não usa grupos não ver nada novo.
+  const [grupos, setGrupos] = useState<GrupoColecaoDTO[]>([]);
+  const [grupoId, setGrupoId] = useState("");
+
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [detalhesErro, setDetalhesErro] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/colecoes")
+      .then((r) => r.json())
+      .then((d: Partial<ListaColecoesDTO>) => setGrupos(d.grupos ?? []))
+      .catch(() => {});
+  }, []);
 
   function adicionarSet(set: SetParaCadastroDTO | null) {
     if (!set) return;
@@ -115,6 +127,7 @@ export default function NovaColecaoPage() {
           parametro,
           idiomaExigido: idiomaExigido || undefined,
           notas: notas || undefined,
+          grupoId: grupoId || null,
         }),
       });
       const dados = await resp.json();
@@ -279,6 +292,19 @@ export default function NovaColecaoPage() {
             ))}
           </select>
         </Campo>
+
+        {grupos.length > 0 && (
+          <Campo rotulo={t("campoGrupo")}>
+            <select value={grupoId} onChange={(e) => setGrupoId(e.target.value)} className={`max-w-xs ${classesEntrada}`}>
+              <option value="">{t("semGrupo")}</option>
+              {grupos.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.nome}
+                </option>
+              ))}
+            </select>
+          </Campo>
+        )}
 
         <Campo rotulo={t("campoNotas")}>
           <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} className={classesEntrada} />
