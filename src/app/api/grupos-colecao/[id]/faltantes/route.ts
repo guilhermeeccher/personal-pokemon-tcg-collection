@@ -28,9 +28,11 @@ export const GET = comAcesso(async function GET(
 });
 
 /**
- * POST /api/grupos-colecao/:id/faltantes — `{ sets: [{ setId, nome }] }` (1 a
- * 50): cria todas as coleções numa transação só, ou nenhuma, no fim do grupo
- * e em ordem de lançamento, pelo mesmo caminho de `POST /api/colecoes`.
+ * POST /api/grupos-colecao/:id/faltantes — `{ serieId, sets: [{ setId, nome }] }`
+ * (`CriarFaltantesDTO`, 1 a 50 sets): cria todas as coleções numa transação só,
+ * ou nenhuma, no fim do grupo e em ordem de lançamento, pelo mesmo caminho de
+ * `POST /api/colecoes`. A série do grupo que não é mais `serieId` (outra aba a
+ * trocou ou desligou) recusa com 409.
  * 201 `{ criadas: [{ id, nome }] }`.
  */
 export const POST = comAcesso(async function POST(

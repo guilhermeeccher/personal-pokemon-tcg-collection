@@ -206,8 +206,13 @@ export interface FaltantesDoGrupoDTO {
   sets: SetFaltanteDTO[];
 }
 
-/** `POST /api/grupos-colecao/:id/faltantes` — corpo; `nome` é o editado na prévia. */
+/**
+ * `POST /api/grupos-colecao/:id/faltantes` — corpo. `serieId` é a série que a
+ * prévia mostrava (`FaltantesDoGrupoDTO.serieId`): se o grupo mudou de série
+ * desde então, o lote volta 409. `nome` é o editado na prévia.
+ */
 export interface CriarFaltantesDTO {
+  serieId: string;
   sets: { setId: string; nome: string }[];
 }
 
@@ -219,9 +224,25 @@ export interface FaltantesCriadasDTO {
 /** Uma coleção na prévia de "Trazer as que já existem" (`selecionarExistentes`). */
 export type ColecaoExistenteParaGrupoDTO = ColecaoExistenteParaGrupo;
 
-/** `GET /api/grupos-colecao/:id/existentes`, na ordem da lista. */
+/**
+ * `GET /api/grupos-colecao/:id/existentes`, na ordem da lista. `serieId` é a
+ * série em que a prévia se baseou — volta no corpo do POST (`TrazerExistentesDTO`).
+ */
 export interface ExistentesDoGrupoDTO {
+  serieId: string;
   colecoes: ColecaoExistenteParaGrupoDTO[];
+}
+
+/**
+ * `POST /api/grupos-colecao/:id/existentes` — corpo (1 a 200 itens).
+ * `serieId` é a série do grupo quando a prévia abriu; `grupoOrigemId` é o
+ * grupo em que a prévia mostrou cada coleção (`grupoAtual?.id ?? null`). Se a
+ * série mudou ou uma coleção já não está nesse grupo, o lote inteiro volta 409
+ * `ordemDeColecoesDesatualizada`, e nada é movido.
+ */
+export interface TrazerExistentesDTO {
+  serieId: string;
+  itens: { id: string; grupoOrigemId: string | null }[];
 }
 
 export interface VagaDaColecaoDTO {

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
 import { REGIOES, type Regiao } from "@/lib/dominio/escopo-pokedex";
@@ -65,12 +65,25 @@ export default function NovaColecaoPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [detalhesErro, setDetalhesErro] = useState<string[]>([]);
 
+  // Relê os grupos. Se o escolhido já não existe (outra aba o excluiu), a
+  // escolha volta a "sem grupo", e o resto do formulário fica como está.
+  const lerGrupos = useCallback(
+    () =>
+      fetch("/api/colecoes")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d: Partial<ListaColecoesDTO> | null) => {
+          if (!d || !Array.isArray(d.grupos)) return;
+          const lidos = d.grupos;
+          setGrupos(lidos);
+          setGrupoId((atual) => (lidos.some((g) => g.id === atual) ? atual : ""));
+        })
+        .catch(() => {}),
+    [],
+  );
+
   useEffect(() => {
-    fetch("/api/colecoes")
-      .then((r) => r.json())
-      .then((d: Partial<ListaColecoesDTO>) => setGrupos(d.grupos ?? []))
-      .catch(() => {});
-  }, []);
+    void lerGrupos();
+  }, [lerGrupos]);
 
   function adicionarSet(set: SetParaCadastroDTO | null) {
     if (!set) return;
@@ -134,6 +147,8 @@ export default function NovaColecaoPage() {
       if (!resp.ok) {
         setErro(textoDaRecusa(tr, dados, t("erroCriar")));
         setDetalhesErro(dados.detalhes ?? []);
+        // A recusa pode ser do grupo (excluído em outra aba): relê a lista.
+        if (grupoId) await lerGrupos();
         return;
       }
       router.push(`/colecoes/${dados.id}`);

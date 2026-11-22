@@ -45,6 +45,8 @@ import { canonizarUuid, ehUuid } from "./uuid";
 export const TAMANHO_MAXIMO_NOME_GRUPO = 80;
 /** Teto de coleções criadas por vez — folgado para uma série inteira (a maior tem ~20 sets). */
 export const MAXIMO_SETS_POR_CRIACAO = 50;
+/** Teto de coleções trazidas por vez — folgado: são as coleções de set de uma série só. */
+export const MAXIMO_COLECOES_POR_TRAZER = 200;
 /** As duas grafias da categoria Energia no catálogo ocidental (pt e en). */
 export const CATEGORIAS_ENERGIA: readonly string[] = ["Energia", "Energy"];
 
@@ -128,17 +130,22 @@ export function lerEdicaoGrupo(corpo: unknown): Leitura<EdicaoGrupo> {
 }
 
 /**
- * `{ ids: string[] }` — os ids de "trazer as que já existem". Pelo menos um,
- * sem repetição, canonizados (`canonizarUuid`) antes de comparar com os do banco.
+ * A série que a prévia mostrava, no corpo das duas ações em lote. Texto não
+ * vazio, na caixa em que veio: é comparado com `grupo_colecao.serie_id`, que é
+ * sensível a caixa.
  */
-export function lerIds(corpo: unknown): Leitura<string[]> {
-  const ids = (typeof corpo === "object" && corpo !== null ? (corpo as Record<string, unknown>).ids : undefined);
-  if (!Array.isArray(ids) || ids.length === 0 || !ids.every((x) => typeof x === "string")) {
-    return { ok: false, erro: "ids ausente ou vazio (lista de UUIDs)." };
-  }
-  const canonicos = (ids as string[]).map(canonizarUuid);
-  if (new Set(canonicos).size !== canonicos.length) return { ok: false, erro: "ids repetidos." };
-  return { ok: true, valor: canonicos };
+function lerSerieDoPedido(v: unknown): Leitura<string> {
+  if (typeof v !== "string" || v === "") return { ok: false, erro: "serieId ausente (a série da prévia)." };
+  return { ok: true, valor: v };
+}
+
+/**
+ * Confere, sob a trava, que o grupo ainda está ligado à série que a prévia
+ * mostrava. Outra aba pode tê-lo desligado ou ligado a outra série depois de a
+ * prévia abrir: o lote inteiro é velho (409), e nada é gravado.
+ */
+export function conferirSerieDoPedido(serieAtual: string | null, serieDoPedido: string): Recusa | null {
+  return serieAtual === serieDoPedido ? null : recusa("ordemDeColecoesDesatualizada");
 }
 
 // --- Séries ------------------------------------------------------------------
@@ -328,9 +335,21 @@ export interface PedidoFaltante {
   nome: string;
 }
 
-/** `{ sets: [{ setId, nome }] }`, de 1 a `MAXIMO_SETS_POR_CRIACAO`, sem set repetido e sem nome vazio. */
-export function lerPedidoFaltantes(corpo: unknown): Leitura<PedidoFaltante[]> {
-  const sets = typeof corpo === "object" && corpo !== null ? (corpo as Record<string, unknown>).sets : undefined;
+/** O corpo de "criar as que faltam": a série que a prévia mostrava e os sets escolhidos. */
+export interface PedidoFaltantes {
+  serieId: string;
+  sets: PedidoFaltante[];
+}
+
+/**
+ * `{ serieId, sets: [{ setId, nome }] }`: a série da prévia (`conferirSerieDoPedido`)
+ * e de 1 a `MAXIMO_SETS_POR_CRIACAO` sets, sem set repetido e sem nome vazio.
+ */
+export function lerPedidoFaltantes(corpo: unknown): Leitura<PedidoFaltantes> {
+  const corpoObj = (typeof corpo === "object" && corpo !== null ? corpo : {}) as Record<string, unknown>;
+  const serieId = lerSerieDoPedido(corpoObj.serieId);
+  if (!serieId.ok) return serieId;
+  const sets = corpoObj.sets;
   if (!Array.isArray(sets)) return { ok: false, erro: "sets ausente (lista de { setId, nome })." };
   if (sets.length === 0 || sets.length > MAXIMO_SETS_POR_CRIACAO) {
     return {
@@ -353,7 +372,7 @@ export function lerPedidoFaltantes(corpo: unknown): Leitura<PedidoFaltante[]> {
     if (nome === "") return { ok: false, recusa: recusa("nomeDaColecaoVazio", { setId: obj.setId }) };
     pedido.push({ setId: obj.setId, nome });
   }
-  return { ok: true, valor: pedido };
+  return { ok: true, valor: { serieId: serieId.valor, sets: pedido } };
 }
 
 /**
@@ -412,18 +431,77 @@ export function selecionarExistentes(
     });
 }
 
+/** Um item de "trazer": a coleção e o grupo em que a prévia a mostrou (`null` = sem grupo). */
+export interface ItemTrazer {
+  id: string;
+  grupoOrigemId: string | null;
+}
+
+/** O corpo de "trazer as que já existem": a série que a prévia mostrava e as coleções marcadas. */
+export interface PedidoExistentes {
+  serieId: string;
+  itens: ItemTrazer[];
+}
+
 /**
- * Os ids pedidos, todos entre os candidatos, na ordem dos candidatos (a da
- * lista) — é nela que entram no fim do grupo. Um id fora recusa o pedido
- * inteiro: a tela estava velha, e trazer só uma parte seria adivinhar.
+ * `{ serieId, itens: [{ id, grupoOrigemId }] }`, de 1 a
+ * `MAXIMO_COLECOES_POR_TRAZER` itens, sem coleção repetida. Os ids — da
+ * coleção e do grupo de origem — saem canonizados (`canonizarUuid`), para
+ * comparar com os do banco.
+ *
+ * O grupo de origem vai no corpo porque é o que o usuário viu ao marcar: a
+ * prévia só marca sozinha a coleção sem grupo, e tirar uma de outro grupo é
+ * escolha dele. Sem esse dado, uma coleção que outra aba pôs num grupo depois
+ * da prévia seria tirada de lá sem a escolha ter aparecido na tela.
+ */
+export function lerPedidoExistentes(corpo: unknown): Leitura<PedidoExistentes> {
+  const obj = (typeof corpo === "object" && corpo !== null ? corpo : {}) as Record<string, unknown>;
+  const serieId = lerSerieDoPedido(obj.serieId);
+  if (!serieId.ok) return serieId;
+  const brutos = obj.itens;
+  if (!Array.isArray(brutos) || brutos.length === 0 || brutos.length > MAXIMO_COLECOES_POR_TRAZER) {
+    return { ok: false, erro: `itens ausente, vazio ou acima de ${MAXIMO_COLECOES_POR_TRAZER}.` };
+  }
+  const itens: ItemTrazer[] = [];
+  const vistos = new Set<string>();
+  for (const bruto of brutos) {
+    const item = (typeof bruto === "object" && bruto !== null ? bruto : {}) as Record<string, unknown>;
+    if (typeof item.id !== "string" || !ehUuid(item.id)) return { ok: false, erro: "id inválido num item (UUID)." };
+    const origem = lerGrupoId(item.grupoOrigemId, false);
+    if (!origem.ok) return { ok: false, erro: "grupoOrigemId inválido num item (UUID ou null)." };
+    const id = canonizarUuid(item.id);
+    if (vistos.has(id)) return { ok: false, erro: "coleção repetida em itens." };
+    vistos.add(id);
+    itens.push({ id, grupoOrigemId: origem.valor });
+  }
+  return { ok: true, valor: { serieId: serieId.valor, itens } };
+}
+
+/**
+ * Confere o pedido contra o estado lido sob a trava e devolve os ids na ordem
+ * dos candidatos (a da lista) — é nela que entram no fim do grupo. Recusa o
+ * pedido inteiro, sem trazer só uma parte:
+ *
+ *  - com `ordemDeColecoesDesatualizada` (409) quando uma coleção não está mais
+ *    no grupo em que a prévia a mostrou (`grupoAtualDe`, de todas as coleções;
+ *    uma excluída não está em grupo nenhum que a prévia conheça);
+ *  - com `colecaoForaDasExistentesDoGrupo` (409) quando, no mesmo grupo, ela
+ *    deixou de ser candidata.
  */
 export function conferirPedidoExistentes(
-  ids: readonly string[],
+  itens: readonly ItemTrazer[],
   candidatos: readonly { id: string }[],
+  grupoAtualDe: ReadonlyMap<string, string | null>,
 ): { ok: true; ids: string[] } | { ok: false; recusa: Recusa } {
-  const pedidos = new Set(ids);
+  for (const item of itens) {
+    const atual = grupoAtualDe.get(item.id);
+    if (atual === undefined || atual !== item.grupoOrigemId) {
+      return { ok: false, recusa: recusa("ordemDeColecoesDesatualizada") };
+    }
+  }
+  const pedidos = new Set(itens.map((i) => i.id));
   const conhecidos = new Set(candidatos.map((c) => c.id));
-  if (ids.some((id) => !conhecidos.has(id))) {
+  if (itens.some((i) => !conhecidos.has(i.id))) {
     return { ok: false, recusa: recusa("colecaoForaDasExistentesDoGrupo") };
   }
   return { ok: true, ids: candidatos.filter((c) => pedidos.has(c.id)).map((c) => c.id) };

@@ -38,7 +38,9 @@ import {
   type ColecaoExistenteParaGrupo,
   type CriacaoGrupo,
   type EdicaoGrupo,
-  type PedidoFaltante,
+  conferirSerieDoPedido,
+  type PedidoExistentes,
+  type PedidoFaltantes,
   type SetFaltante,
 } from "@/lib/dominio/grupos-colecao";
 import {
@@ -403,18 +405,21 @@ export async function obterFaltantesDoGrupo(
 export async function criarFaltantesDoGrupo(
   db: Database,
   grupoId: string,
-  pedido: readonly PedidoFaltante[],
+  pedido: PedidoFaltantes,
 ): Promise<{ ok: true; criadas: { id: string; nome: string }[] } | Falha> {
   return db.transaction(async (tx) => {
     await travarOrganizacaoColecoes(tx);
     const grupos = await lerGrupos(tx);
     const grupo = grupos.find((g) => g.id === grupoId);
     if (!grupo) return grupoNaoEncontrado();
-    if (grupo.serieId === null) return grupoSemSerie();
+    // A série que a prévia mostrava, lida de novo sob a trava: desligada ou
+    // trocada por outra aba, o lote inteiro é velho (409).
+    const serieMudou = conferirSerieDoPedido(grupo.serieId, pedido.serieId);
+    if (serieMudou) return { ok: false as const, motivo: serieMudou, status: 409 as const };
     const colecoes = await lerColecoesNaOrdem(tx, grupos);
-    const { sets } = await lerFaltantes(tx, grupo.serieId, colecoes);
+    const { sets } = await lerFaltantes(tx, pedido.serieId, colecoes);
 
-    const conferido = conferirPedidoFaltantes(pedido, sets);
+    const conferido = conferirPedidoFaltantes(pedido.sets, sets);
     if (!conferido.ok) {
       const status = conferido.recusa.chave === "setJaTemColecao" ? 409 : 400;
       return { ok: false as const, motivo: conferido.recusa, status: status as 400 | 409 };
@@ -464,34 +469,45 @@ async function lerExistentes(
 export async function obterExistentesParaGrupo(
   db: Database,
   grupoId: string,
-): Promise<{ ok: true; colecoes: ColecaoExistenteParaGrupo[] } | Falha> {
+): Promise<{ ok: true; serieId: string; colecoes: ColecaoExistenteParaGrupo[] } | Falha> {
   const grupos = await lerGrupos(db);
   const grupo = grupos.find((g) => g.id === grupoId);
   if (!grupo) return grupoNaoEncontrado();
   if (grupo.serieId === null) return grupoSemSerie();
   const colecoes = await lerColecoesNaOrdem(db, grupos);
-  return { ok: true, colecoes: await lerExistentes(db, { ...grupo, serieId: grupo.serieId }, grupos, colecoes) };
+  return {
+    ok: true,
+    serieId: grupo.serieId,
+    colecoes: await lerExistentes(db, { ...grupo, serieId: grupo.serieId }, grupos, colecoes),
+  };
 }
 
 /**
  * Traz as coleções pedidas para o fim do grupo, na ordem da lista, e renumera
- * as seções que elas deixaram. Um id fora dos candidatos recusa tudo (409):
- * a tela estava velha.
+ * as seções que elas deixaram. Recusa tudo (409), sem trazer parte, quando a
+ * tela estava velha: a série do grupo mudou, uma coleção não está mais no
+ * grupo em que a prévia a mostrou (outra aba a moveu — tirá-la de lá seria uma
+ * escolha que o usuário não viu), ou deixou de ser candidata.
  */
 export async function trazerExistentesParaGrupo(
   db: Database,
   grupoId: string,
-  ids: readonly string[],
+  pedido: PedidoExistentes,
 ): Promise<{ ok: true; movidas: number } | Falha> {
   return db.transaction(async (tx) => {
     await travarOrganizacaoColecoes(tx);
     const grupos = await lerGrupos(tx);
     const grupo = grupos.find((g) => g.id === grupoId);
     if (!grupo) return grupoNaoEncontrado();
-    if (grupo.serieId === null) return grupoSemSerie();
+    const serieMudou = conferirSerieDoPedido(grupo.serieId, pedido.serieId);
+    if (serieMudou) return { ok: false as const, motivo: serieMudou, status: 409 as const };
     const colecoes = await lerColecoesNaOrdem(tx, grupos);
-    const candidatas = await lerExistentes(tx, { ...grupo, serieId: grupo.serieId }, grupos, colecoes);
-    const conferido = conferirPedidoExistentes(ids, candidatas);
+    const candidatas = await lerExistentes(tx, { ...grupo, serieId: pedido.serieId }, grupos, colecoes);
+    const conferido = conferirPedidoExistentes(
+      pedido.itens,
+      candidatas,
+      new Map(colecoes.map((c) => [c.id, c.grupoId])),
+    );
     if (!conferido.ok) return { ok: false as const, motivo: conferido.recusa, status: 409 as const };
 
     const porId = new Map(colecoes.map((c) => [c.id, c]));

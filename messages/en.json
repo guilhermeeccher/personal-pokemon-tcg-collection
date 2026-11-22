@@ -161,8 +161,8 @@
       "criando": "Creating…",
       "cancelar": "Cancel",
       "erroCarregar": "Failed to load the preview.",
-      "erroCriar": "Failed to create the collections. Nothing was created.",
-      "erroRede": "Network failure. Nothing was created."
+      "erroCriar": "Failed to create the collections.",
+      "erroRede": "No response from the server: it is unknown whether the collections were created. The list and the preview were reloaded; check them before trying again."
     },
     "existentes": {
       "titulo": "Bring collections into {grupo}",
@@ -175,9 +175,10 @@
       "trazendo": "Bringing…",
       "cancelar": "Cancel",
       "erroCarregar": "Failed to load the preview.",
-      "erroTrazer": "Failed to bring the collections. Nothing was moved.",
-      "erroRede": "Network failure. Nothing was moved."
-    }
+      "erroTrazer": "Failed to bring the collections.",
+      "erroRede": "No response from the server: it is unknown whether the collections were moved. The list and the preview were reloaded; check them before trying again."
+    },
+    "tentarDeNovo": "Try again"
   },
   "cadastroBusca": {
     "titulo": "Add by search",

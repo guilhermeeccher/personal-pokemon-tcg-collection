@@ -7,8 +7,10 @@ import {
   lerCriacaoGrupo,
   lerEdicaoGrupo,
   lerGrupoId,
-  lerIds,
+  conferirSerieDoPedido,
+  lerPedidoExistentes,
   lerPedidoFaltantes,
+  MAXIMO_COLECOES_POR_TRAZER,
   MAXIMO_SETS_POR_CRIACAO,
   montarFaltantes,
   motivoDesmarcado,
@@ -111,17 +113,70 @@ describe("lerGrupoId", () => {
   });
 });
 
-describe("lerIds", () => {
-  it("lista não vazia de textos, sem repetição", () => {
-    expect(lerIds({ ids: ["a", "b"] })).toEqual({ ok: true, valor: ["a", "b"] });
-    expect(lerIds({ ids: [] }).ok).toBe(false);
-    expect(lerIds({ ids: ["a", "a"] }).ok).toBe(false);
+const UUID_B = "1c8e5d2f-3e4b-4d6c-9f80-2b3c4d5e6f70";
+
+describe("lerPedidoExistentes", () => {
+  it("série da prévia e itens com o grupo de origem, ids canonizados", () => {
+    const r = lerPedidoExistentes({
+      serieId: "me",
+      itens: [
+        { id: UUID.toUpperCase(), grupoOrigemId: null },
+        { id: UUID_B, grupoOrigemId: UUID.toUpperCase() },
+      ],
+    });
+    expect(r).toEqual({
+      ok: true,
+      valor: {
+        serieId: "me",
+        itens: [
+          { id: UUID, grupoOrigemId: null },
+          { id: UUID_B, grupoOrigemId: UUID },
+        ],
+      },
+    });
   });
 
-  it("canoniza os ids, e a mesma id em duas caixas é repetição", () => {
-    expect(lerIds({ ids: [UUID.toUpperCase()] })).toEqual({ ok: true, valor: [UUID] });
-    expect(lerIds({ ids: [UUID, UUID.toUpperCase()] }).ok).toBe(false);
-    expect(lerIds({}).ok).toBe(false);
+  it("série fica na caixa em que veio (SM não é sm)", () => {
+    const r = lerPedidoExistentes({ serieId: "SM", itens: [{ id: UUID, grupoOrigemId: null }] });
+    expect(r.ok && r.valor.serieId).toBe("SM");
+  });
+
+  it("sem série, sem itens, acima do teto, id ou origem inválidos, ou origem ausente: corpo malformado", () => {
+    const item = { id: UUID, grupoOrigemId: null };
+    const muitos = Array.from({ length: MAXIMO_COLECOES_POR_TRAZER + 1 }, () => item);
+    for (const corpo of [
+      { itens: [item] },
+      { serieId: "", itens: [item] },
+      { serieId: "me", itens: [] },
+      { serieId: "me", itens: muitos },
+      { serieId: "me", itens: [{ id: "x", grupoOrigemId: null }] },
+      { serieId: "me", itens: [{ id: UUID, grupoOrigemId: "x" }] },
+      { serieId: "me", itens: [{ id: UUID }] },
+      { serieId: "me", ids: [UUID] },
+    ]) {
+      const r = lerPedidoExistentes(corpo);
+      expect(!r.ok && "erro" in r, JSON.stringify(corpo).slice(0, 80)).toBe(true);
+    }
+  });
+
+  it("a mesma coleção em duas caixas é repetição", () => {
+    const r = lerPedidoExistentes({
+      serieId: "me",
+      itens: [
+        { id: UUID, grupoOrigemId: null },
+        { id: UUID.toUpperCase(), grupoOrigemId: null },
+      ],
+    });
+    expect(r.ok).toBe(false);
+  });
+});
+
+describe("conferirSerieDoPedido", () => {
+  it("a mesma série passa; trocada, desligada ou em outra caixa é lote velho (409)", () => {
+    expect(conferirSerieDoPedido("me", "me")).toBeNull();
+    expect(conferirSerieDoPedido("sv", "me")?.chave).toBe("ordemDeColecoesDesatualizada");
+    expect(conferirSerieDoPedido(null, "me")?.chave).toBe("ordemDeColecoesDesatualizada");
+    expect(conferirSerieDoPedido("SM", "sm")?.chave).toBe("ordemDeColecoesDesatualizada");
   });
 });
 
@@ -260,27 +315,38 @@ describe("montarFaltantes", () => {
 });
 
 describe("lerPedidoFaltantes", () => {
-  it("apara os nomes", () => {
-    expect(lerPedidoFaltantes({ sets: [{ setId: "a", nome: " A " }] })).toEqual({
+  it("guarda a série da prévia e apara os nomes", () => {
+    expect(lerPedidoFaltantes({ serieId: "me", sets: [{ setId: "a", nome: " A " }] })).toEqual({
       ok: true,
-      valor: [{ setId: "a", nome: "A" }],
+      valor: { serieId: "me", sets: [{ setId: "a", nome: "A" }] },
     });
   });
 
+  it("sem a série da prévia é corpo malformado", () => {
+    const r = lerPedidoFaltantes({ sets: [{ setId: "a", nome: "A" }] });
+    expect(!r.ok && "erro" in r).toBe(true);
+  });
+
   it("vazio ou acima do teto é recusa com chave", () => {
-    const vazio = lerPedidoFaltantes({ sets: [] });
+    const vazio = lerPedidoFaltantes({ serieId: "me", sets: [] });
     expect(!vazio.ok && "recusa" in vazio && vazio.recusa.chave).toBe("quantidadeDeSetsParaCriarInvalida");
     const muitos = Array.from({ length: MAXIMO_SETS_POR_CRIACAO + 1 }, (_, i) => ({ setId: `s${i}`, nome: "n" }));
-    expect(lerPedidoFaltantes({ sets: muitos }).ok).toBe(false);
+    expect(lerPedidoFaltantes({ serieId: "me", sets: muitos }).ok).toBe(false);
   });
 
   it("set repetido e nome vazio são recusas com chave", () => {
-    const repetido = lerPedidoFaltantes({ sets: [{ setId: "a", nome: "A" }, { setId: "a", nome: "B" }] });
+    const repetido = lerPedidoFaltantes({
+      serieId: "me",
+      sets: [
+        { setId: "a", nome: "A" },
+        { setId: "a", nome: "B" },
+      ],
+    });
     expect(!repetido.ok && "recusa" in repetido && repetido.recusa).toEqual({
       chave: "setRepetidoNoPedido",
       valores: { setId: "a" },
     });
-    const semNome = lerPedidoFaltantes({ sets: [{ setId: "a", nome: "  " }] });
+    const semNome = lerPedidoFaltantes({ serieId: "me", sets: [{ setId: "a", nome: "  " }] });
     expect(!semNome.ok && "recusa" in semNome && semNome.recusa.chave).toBe("nomeDaColecaoVazio");
   });
 });
@@ -358,13 +424,43 @@ describe("selecionarExistentes — só receita ocidental", () => {
 
 describe("conferirPedidoExistentes", () => {
   const candidatas = [{ id: "a" }, { id: "b" }, { id: "c" }];
+  const grupoAtual = new Map<string, string | null>([
+    ["a", null],
+    ["b", "g-outro"],
+    ["c", null],
+    ["no-alvo", "g-alvo"],
+  ]);
+  const item = (id: string, grupoOrigemId: string | null = null) => ({ id, grupoOrigemId });
 
   it("devolve os pedidos na ordem dos candidatos (a da lista)", () => {
-    expect(conferirPedidoExistentes(["c", "a"], candidatas)).toEqual({ ok: true, ids: ["a", "c"] });
+    expect(conferirPedidoExistentes([item("c"), item("a")], candidatas, grupoAtual)).toEqual({
+      ok: true,
+      ids: ["a", "c"],
+    });
   });
 
-  it("um id fora dos candidatos recusa tudo", () => {
-    const r = conferirPedidoExistentes(["a", "z"], candidatas);
+  it("tirar de outro grupo passa quando a prévia mostrou esse grupo", () => {
+    expect(conferirPedidoExistentes([item("b", "g-outro")], candidatas, grupoAtual)).toEqual({ ok: true, ids: ["b"] });
+  });
+
+  it("coleção que outra aba pôs num grupo depois da prévia recusa o lote inteiro (409)", () => {
+    // A prévia mostrou "b" sem grupo; hoje ela está em g-outro: tirá-la de lá
+    // seria uma escolha que o usuário não viu.
+    const r = conferirPedidoExistentes([item("a"), item("b", null)], candidatas, grupoAtual);
+    expect(!r.ok && r.recusa.chave).toBe("ordemDeColecoesDesatualizada");
+  });
+
+  it("coleção excluída depois da prévia recusa o lote inteiro (409)", () => {
+    const r = conferirPedidoExistentes([item("sumiu")], candidatas, grupoAtual);
+    expect(!r.ok && r.recusa.chave).toBe("ordemDeColecoesDesatualizada");
+  });
+
+  it("no mesmo grupo, mas fora dos candidatos, recusa tudo", () => {
+    const r = conferirPedidoExistentes(
+      [item("a"), item("z")],
+      candidatas,
+      new Map([...grupoAtual, ["z", null]]),
+    );
     expect(!r.ok && r.recusa.chave).toBe("colecaoForaDasExistentesDoGrupo");
   });
 });

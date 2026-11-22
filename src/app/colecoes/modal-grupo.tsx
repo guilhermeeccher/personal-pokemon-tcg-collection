@@ -8,6 +8,9 @@
  *   `GET /api/grupos-colecao/series`, na ordem do seletor de expansão. Sem
  *   série o grupo é livre (um tema); com série ele oferece "Criar coleções
  *   que faltam" e "Trazer as que já existem".
+ * - **Editar manda só o que mudou**, com o nome aparado. Reenviar a série
+ *   que a janela leu ao abrir restauraria, em silêncio, uma ligação que outra
+ *   aba acabou de desfazer; e "Salvar" só liga com uma mudança válida.
  * - **Excluir um grupo nunca exclui coleção**: as dele voltam para "sem
  *   grupo". A janela diz isso antes do botão.
  * - O erro fica dentro da janela, perto do botão que o causou.
@@ -60,12 +63,25 @@ export function ModalGrupo({
   const serieAtualForaDaLista =
     grupo?.serieId && series !== null && !series.some((s) => s.serieId === grupo.serieId);
 
+  const nomeAparado = nome.trim();
+  const serieEscolhida = serieId || null;
+  const mudouNome = grupo ? nomeAparado !== grupo.nome : true;
+  const mudouSerie = grupo ? serieEscolhida !== grupo.serieId : serieEscolhida !== null;
+  const podeSalvar =
+    !enviando &&
+    nomeAparado !== "" &&
+    nomeAparado.length <= TAMANHO_MAXIMO_NOME_GRUPO &&
+    (grupo === null || mudouNome || mudouSerie);
+
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
+    if (!podeSalvar) return;
     setErro(null);
     setEnviando(true);
     try {
-      const corpo = { nome, serieId: serieId || null };
+      const corpo: { nome?: string; serieId?: string | null } = {};
+      if (mudouNome) corpo.nome = nomeAparado;
+      if (mudouSerie) corpo.serieId = serieEscolhida;
       const r = grupo
         ? await chamarApi(`/api/grupos-colecao/${grupo.id}`, "PATCH", corpo)
         : await chamarApi("/api/grupos-colecao", "POST", corpo);
@@ -91,7 +107,7 @@ export function ModalGrupo({
           <Botao type="button" onClick={onFechar} disabled={enviando}>
             {t("cancelar")}
           </Botao>
-          <Botao type="submit" variante="primario" disabled={enviando || !nome.trim()}>
+          <Botao type="submit" variante="primario" disabled={!podeSalvar}>
             {grupo ? t("salvar") : t("criar")}
           </Botao>
         </div>
@@ -175,7 +191,7 @@ export function ModalExcluirGrupo({
         </div>
       }
     >
-      <h2 className="font-medium text-foreground">{t("tituloExcluir", { grupo: grupo.nome })}</h2>
+      <h2 className="font-medium break-words text-foreground">{t("tituloExcluir", { grupo: grupo.nome })}</h2>
       <p className="text-muted">{t("textoExcluir")}</p>
       {erro && <p className="text-sm text-danger">{erro}</p>}
     </Modal>

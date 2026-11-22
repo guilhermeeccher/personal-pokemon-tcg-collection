@@ -3,9 +3,10 @@
 /**
  * A lista de coleções, em seções por grupo (decisão de 2026-11-22).
  *
- * - **A ordem vem pronta do servidor** (`listarColecoes`); aqui as seções saem
- *   de `secoesDeColecoes`, sem ordenar de novo. Sem nenhum grupo, a lista é a
- *   de sempre, sem cabeçalho.
+ * - **A ordem vem pronta do servidor** (`listarColecoes`); as seções saem dela
+ *   na ordem em que a API devolve (`secoesNaOrdemDaApi`), sem ordenar de novo
+ *   nem inventar data de desempate. Sem nenhum grupo, a lista é a de sempre,
+ *   sem cabeçalho.
  * - **Ver e organizar são modos separados.** Fechado, cada linha é um link para
  *   a coleção, como era. "Organizar" troca os links por controles — subir,
  *   descer, mudar de grupo — e mostra os do grupo (renomear, ligar série,
@@ -17,12 +18,17 @@
  *   seção na ordem nova (`moverNaOrdem`); uma lista velha (outra aba mexeu)
  *   volta como recusa, e a tela recarrega.
  * - Toda escrita recarrega a lista depois, dê certo ou não: a tela nunca
- *   fica com uma ordem que o servidor não tem.
+ *   fica com uma ordem que o servidor não tem. Os controles ficam ocupados
+ *   até chegar a **última** lista válida: cada leitura leva um número de
+ *   sequência, e a resposta de uma leitura já superada é descartada (uma
+ *   leitura lenta não pode desfazer a que veio depois). Uma leitura recusada
+ *   é erro na tela, nunca lista vazia, e os controles seguem travados até
+ *   "Tentar de novo" trazer uma lista boa.
  */
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Alerta } from "@/app/_componentes/alerta";
 import { Botao, classesBotao } from "@/app/_componentes/botao";
@@ -31,7 +37,7 @@ import { classesEntrada } from "@/app/_componentes/campo";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
-import { moverNaOrdem, secoesDeColecoes } from "@/lib/dominio/ordem-colecoes";
+import { moverNaOrdem, type SecaoDeColecoes } from "@/lib/dominio/ordem-colecoes";
 import type { ColecaoListaDTO, GrupoColecaoDTO, ListaColecoesDTO } from "@/lib/dominio/tipos-cliente";
 
 import { chamarApi } from "./chamar-api";
@@ -44,11 +50,38 @@ interface ContagemElegiveis {
   foraDePadrao: number;
 }
 
+/* A janela guarda só o id do grupo: o grupo que ela mostra é sempre o da
+   última lista lida (`grupos`), para uma série trocada em outra aba chegar
+   à janela aberta em vez de ela confirmar com o que viu ao abrir. */
 type JanelaAberta =
-  | { tipo: "grupo"; grupo: GrupoColecaoDTO | null }
-  | { tipo: "excluir"; grupo: GrupoColecaoDTO }
-  | { tipo: "faltantes"; grupo: GrupoColecaoDTO }
-  | { tipo: "existentes"; grupo: GrupoColecaoDTO };
+  | { tipo: "grupo"; grupoId: string | null }
+  | { tipo: "excluir"; grupoId: string }
+  | { tipo: "faltantes"; grupoId: string }
+  | { tipo: "existentes"; grupoId: string };
+
+/**
+ * As seções na ordem em que a API devolve: os grupos como vieram, as
+ * coleções de cada um como vieram, "sem grupo" por último e só quando tem
+ * coleção. Coleção com grupo que não está na lista cai em "sem grupo" em vez
+ * de sumir. Não ordena: `ordenarColecoes` já rodou no servidor, e ordenar de
+ * novo aqui exigiria inventar o `criadoEm` que a DTO do grupo não traz.
+ */
+function secoesNaOrdemDaApi(
+  itens: readonly ColecaoListaDTO[],
+  grupos: readonly GrupoColecaoDTO[],
+): SecaoDeColecoes<ColecaoListaDTO, GrupoColecaoDTO>[] {
+  const conhecidos = new Set(grupos.map((g) => g.id));
+  const porGrupo = new Map<string | null, ColecaoListaDTO[]>();
+  for (const c of itens) {
+    const chave = c.grupoId !== null && conhecidos.has(c.grupoId) ? c.grupoId : null;
+    const lista = porGrupo.get(chave);
+    if (lista) lista.push(c);
+    else porGrupo.set(chave, [c]);
+  }
+  const secoes = grupos.map((g) => ({ grupo: g, colecoes: porGrupo.get(g.id) ?? [] }));
+  const semGrupo = porGrupo.get(null) ?? [];
+  return semGrupo.length > 0 ? [...secoes, { grupo: null, colecoes: semGrupo }] : secoes;
+}
 
 /* Botões de linha: o desenho `xs` de sempre, e no celular a área de 44px que
    a tela precisa para os botões não se tocarem (`gap-2` entre eles). */
@@ -61,25 +94,42 @@ export default function ColecoesPage() {
   const [grupos, setGrupos] = useState<GrupoColecaoDTO[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  // O erro da leitura da lista fica à parte do da escrita: ler de novo com
+  // sucesso apaga este, mas não a recusa da escrita que acabou de acontecer.
+  const [erroLista, setErroLista] = useState<string | null>(null);
   const [elegiveis, setElegiveis] = useState<ContagemElegiveis | null>(null);
   const [organizando, setOrganizando] = useState(false);
+  // Ocupado: uma escrita em andamento OU a lista ainda não releu depois dela.
+  // Só a última leitura válida o desliga.
   const [ocupado, setOcupado] = useState(false);
   const [janela, setJanela] = useState<JanelaAberta | null>(null);
+  const sequencia = useRef(0);
 
   // Em promessas encadeadas, não `async`: o `setState` fica no `then`, e o
   // efeito abaixo não o chama de forma síncrona.
-  const carregar = useCallback(
-    () =>
-      fetch("/api/colecoes")
-        .then((r) => r.json() as Promise<Partial<ListaColecoesDTO>>)
-        .then((d) => {
-          setItens(d.itens ?? []);
-          setGrupos(d.grupos ?? []);
-        })
-        .catch(() => setErro(t("erroCarregar")))
-        .finally(() => setCarregando(false)),
-    [t],
-  );
+  const carregar = useCallback(() => {
+    const minha = ++sequencia.current;
+    return fetch("/api/colecoes")
+      .then(async (r) => ({ ok: r.ok, corpo: (await r.json().catch(() => null)) as unknown }))
+      .then(({ ok, corpo }) => {
+        if (minha !== sequencia.current) return; // superada por uma leitura mais nova
+        const d = (corpo ?? {}) as Partial<ListaColecoesDTO>;
+        if (!ok || !Array.isArray(d.itens) || !Array.isArray(d.grupos)) {
+          setErroLista(ok ? t("erroCarregar") : textoDaRecusa(tr, corpo, t("erroCarregar")));
+          return;
+        }
+        setItens(d.itens);
+        setGrupos(d.grupos);
+        setErroLista(null);
+        setOcupado(false);
+      })
+      .catch(() => {
+        if (minha === sequencia.current) setErroLista(t("erroCarregar"));
+      })
+      .finally(() => {
+        if (minha === sequencia.current) setCarregando(false);
+      });
+  }, [t, tr]);
 
   useEffect(() => {
     carregar();
@@ -95,18 +145,7 @@ export default function ColecoesPage() {
       .catch(() => {});
   }, []);
 
-  // A lista dos grupos já chega na ordem, mas a DTO não leva `criadoEm`, e
-  // `secoesDeColecoes` desempata por ele: a posição na lista faz esse papel
-  // (quem veio antes é "mais novo"), então um empate de `ordem` nunca
-  // reembaralha o que o servidor mandou.
-  const secoes = useMemo(
-    () =>
-      secoesDeColecoes(
-        itens,
-        grupos.map((g, i) => ({ ...g, criadoEm: new Date(grupos.length - i) })),
-      ),
-    [itens, grupos],
-  );
+  const secoes = useMemo(() => secoesNaOrdemDaApi(itens, grupos), [itens, grupos]);
   const comGrupos = grupos.length > 0;
 
   async function escrever(url: string, method: string, corpo: unknown) {
@@ -118,11 +157,10 @@ export default function ColecoesPage() {
       if (!r.ok) setErro(textoDaRecusa(tr, r.corpo, t("erroOperacao")));
     } catch {
       setErro(t("erroRede"));
-    } finally {
-      // Dê certo ou não, recarrega: uma lista velha tem de sumir antes do próximo clique.
-      await carregar();
-      setOcupado(false);
     }
+    // Dê certo ou não, relê: uma lista velha tem de sumir antes do próximo
+    // clique, e o `ocupado` só cai quando a leitura nova chega.
+    await carregar();
   }
 
   function moverGrupo(g: GrupoColecaoDTO, direcao: -1 | 1) {
@@ -143,10 +181,19 @@ export default function ColecoesPage() {
     void escrever(`/api/colecoes/${c.id}/grupo`, "PATCH", { grupoId: grupoId || null });
   }
 
-  function fecharEAtualizar() {
-    setJanela(null);
+  /** A lista pode ter mudado por baixo (uma escrita de resultado incerto, uma recusa por lista velha): relê e trava até chegar. */
+  function recarregar() {
+    setOcupado(true);
     void carregar();
   }
+
+  function fecharEAtualizar() {
+    setJanela(null);
+    recarregar();
+  }
+
+  const grupoDaJanela =
+    janela && janela.grupoId !== null ? grupos.find((g) => g.id === janela.grupoId) : undefined;
 
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-4 p-4 sm:p-8">
@@ -197,7 +244,7 @@ export default function ColecoesPage() {
         <div className="flex flex-col gap-2">
           <Alerta>{t("ajudaOrganizar")}</Alerta>
           <div>
-            <Botao disabled={ocupado} onClick={() => setJanela({ tipo: "grupo", grupo: null })}>
+            <Botao disabled={ocupado} onClick={() => setJanela({ tipo: "grupo", grupoId: null })}>
               {t("novoGrupo")}
             </Botao>
           </div>
@@ -205,6 +252,14 @@ export default function ColecoesPage() {
       )}
 
       {erro && <p className="text-sm text-danger">{erro}</p>}
+      {erroLista && (
+        <div className="flex flex-wrap items-center gap-2 text-sm text-danger">
+          <p>{erroLista}</p>
+          <Botao tamanho="sm" onClick={recarregar}>
+            {t("tentarDeNovo")}
+          </Botao>
+        </div>
+      )}
       {carregando && <p className="text-sm text-muted">{t("carregando")}</p>}
 
       {secoes.map((secao) => {
@@ -217,11 +272,16 @@ export default function ColecoesPage() {
             {comGrupos && (
               <div className="flex flex-col gap-2">
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                  <h2 id={`grupo-${chave}`} className="text-[length:var(--fs-title-2)] text-strong">
+                  <h2
+                    id={`grupo-${chave}`}
+                    className="max-w-full text-[length:var(--fs-title-2)] break-words text-strong"
+                  >
                     {grupo ? grupo.nome : t("semGrupo")}
                   </h2>
-                  {grupo?.serieRotulo && (
-                    <span className="text-sm text-muted">{t("serie", { serie: grupo.serieRotulo })}</span>
+                  {grupo?.serieRotulo && grupo.serieRotulo.trim().toLowerCase() !== grupo.nome.trim().toLowerCase() && (
+                    <span className="max-w-full text-sm break-words text-muted">
+                      {t("serie", { serie: grupo.serieRotulo })}
+                    </span>
                   )}
                 </div>
                 {organizando && grupo && (
@@ -248,7 +308,7 @@ export default function ColecoesPage() {
                       tamanho="xs"
                       className={classesBotaoLinha}
                       disabled={ocupado}
-                      onClick={() => setJanela({ tipo: "grupo", grupo })}
+                      onClick={() => setJanela({ tipo: "grupo", grupoId: grupo.id })}
                     >
                       {t("editarGrupo")}
                     </Botao>
@@ -257,7 +317,7 @@ export default function ColecoesPage() {
                       variante="perigo"
                       className={classesBotaoLinha}
                       disabled={ocupado}
-                      onClick={() => setJanela({ tipo: "excluir", grupo })}
+                      onClick={() => setJanela({ tipo: "excluir", grupoId: grupo.id })}
                     >
                       {t("excluirGrupo")}
                     </Botao>
@@ -267,7 +327,7 @@ export default function ColecoesPage() {
                           tamanho="xs"
                           className={classesBotaoLinha}
                           disabled={ocupado}
-                          onClick={() => setJanela({ tipo: "faltantes", grupo })}
+                          onClick={() => setJanela({ tipo: "faltantes", grupoId: grupo.id })}
                         >
                           {t("criarFaltantes")}
                         </Botao>
@@ -275,7 +335,7 @@ export default function ColecoesPage() {
                           tamanho="xs"
                           className={classesBotaoLinha}
                           disabled={ocupado}
-                          onClick={() => setJanela({ tipo: "existentes", grupo })}
+                          onClick={() => setJanela({ tipo: "existentes", grupoId: grupo.id })}
                         >
                           {t("trazerExistentes")}
                         </Botao>
@@ -290,8 +350,8 @@ export default function ColecoesPage() {
               {secao.colecoes.map((c, i) => {
                 const customizada = c.tipo === "customizada";
                 const descricao = (
-                  <div className="min-w-0">
-                    <div className="font-medium break-words">{c.nome}</div>
+                  <div className="max-md:min-w-0">
+                    <div className="font-medium max-md:break-words">{c.nome}</div>
                     <div className="text-sm text-muted">
                       {t.has(`tipo.${c.tipo}`) ? t(`tipo.${c.tipo}`) : c.tipo}
                       {c.idiomaExigido ? t("idiomaExigido", { idioma: c.idiomaExigido }) : ""}
@@ -346,10 +406,10 @@ export default function ColecoesPage() {
                         ↓
                       </Botao>
                       {comGrupos && (
-                        <label className="flex items-center gap-2 text-sm text-muted">
-                          <span>{t("campoGrupo")}</span>
+                        <label className="flex max-w-full min-w-0 items-center gap-2 text-sm text-muted">
+                          <span className="shrink-0">{t("campoGrupo")}</span>
                           <select
-                            className={`${classesEntrada} max-w-full md:w-56`}
+                            className={`${classesEntrada} min-w-0 max-w-full flex-1 md:w-56 md:flex-none`}
                             value={c.grupoId ?? ""}
                             disabled={ocupado}
                             onChange={(e) => mudarDeGrupo(c, e.target.value)}
@@ -376,7 +436,7 @@ export default function ColecoesPage() {
           </section>
         );
       })}
-      {itens.length === 0 && !comGrupos && !carregando && (
+      {itens.length === 0 && !comGrupos && !carregando && !erroLista && (
         <ul>
           <EstadoVazio as="li" className="py-6">
             {t("vazio")}
@@ -384,17 +444,32 @@ export default function ColecoesPage() {
         </ul>
       )}
 
-      {janela?.tipo === "grupo" && (
-        <ModalGrupo grupo={janela.grupo} onFechar={() => setJanela(null)} onSalvo={fecharEAtualizar} />
+      {janela?.tipo === "grupo" && (janela.grupoId === null || grupoDaJanela) && (
+        <ModalGrupo
+          key={janela.grupoId ?? "novo"}
+          grupo={grupoDaJanela ?? null}
+          onFechar={() => setJanela(null)}
+          onSalvo={fecharEAtualizar}
+        />
       )}
-      {janela?.tipo === "excluir" && (
-        <ModalExcluirGrupo grupo={janela.grupo} onFechar={() => setJanela(null)} onExcluido={fecharEAtualizar} />
+      {janela?.tipo === "excluir" && grupoDaJanela && (
+        <ModalExcluirGrupo grupo={grupoDaJanela} onFechar={() => setJanela(null)} onExcluido={fecharEAtualizar} />
       )}
-      {janela?.tipo === "faltantes" && (
-        <ModalFaltantes grupo={janela.grupo} onFechar={() => setJanela(null)} onCriadas={fecharEAtualizar} />
+      {janela?.tipo === "faltantes" && grupoDaJanela && (
+        <ModalFaltantes
+          grupo={grupoDaJanela}
+          onFechar={() => setJanela(null)}
+          onCriadas={fecharEAtualizar}
+          onAtualizar={recarregar}
+        />
       )}
-      {janela?.tipo === "existentes" && (
-        <ModalExistentes grupo={janela.grupo} onFechar={() => setJanela(null)} onTrazidas={fecharEAtualizar} />
+      {janela?.tipo === "existentes" && grupoDaJanela && (
+        <ModalExistentes
+          grupo={grupoDaJanela}
+          onFechar={() => setJanela(null)}
+          onTrazidas={fecharEAtualizar}
+          onAtualizar={recarregar}
+        />
       )}
     </main>
   );

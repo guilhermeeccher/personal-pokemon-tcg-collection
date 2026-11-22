@@ -161,8 +161,8 @@
       "criando": "Criando…",
       "cancelar": "Cancelar",
       "erroCarregar": "Falha ao carregar a prévia.",
-      "erroCriar": "Falha ao criar as coleções. Nada foi criado.",
-      "erroRede": "Falha de rede. Nada foi criado."
+      "erroCriar": "Falha ao criar as coleções.",
+      "erroRede": "Sem resposta do servidor: não dá para saber se as coleções foram criadas. A lista e a prévia foram relidas; confira antes de tentar de novo."
     },
     "existentes": {
       "titulo": "Trazer coleções para {grupo}",
@@ -175,9 +175,10 @@
       "trazendo": "Trazendo…",
       "cancelar": "Cancelar",
       "erroCarregar": "Falha ao carregar a prévia.",
-      "erroTrazer": "Falha ao trazer as coleções. Nada foi movido.",
-      "erroRede": "Falha de rede. Nada foi movido."
-    }
+      "erroTrazer": "Falha ao trazer as coleções.",
+      "erroRede": "Sem resposta do servidor: não dá para saber se as coleções foram movidas. A lista e a prévia foram relidas; confira antes de tentar de novo."
+    },
+    "tentarDeNovo": "Tentar de novo"
   },
   "cadastroBusca": {
     "titulo": "Cadastro por busca",

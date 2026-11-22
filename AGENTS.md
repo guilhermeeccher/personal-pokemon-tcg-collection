@@ -399,6 +399,13 @@ at most one group or in none. Every collection type can be grouped.
 - **"Bring the existing ones"** offers the Set collections with at least one set of the series in
   the recipe that are not in this group; only those in no group come checked — taking one out of
   another group is the user's choice. An id outside that list refuses the whole request.
+- **A batch carries what its preview showed, and is refused whole (409
+  `ordemDeColecoesDesatualizada`) when that changed.** Both batch bodies carry the `serieId` of the
+  preview, re-checked against the group under the lock (another tab may have unlinked or relinked
+  it). "Bring the existing ones" also sends, per collection, the group the preview showed it in
+  (`{ id, grupoOrigemId }`): a collection that another tab moved into some group after the preview
+  would otherwise be pulled out of it without that choice ever being on screen
+  (`lerPedidoExistentes`, `conferirSerieDoPedido`, `conferirPedidoExistentes`).
 
 ---
 
