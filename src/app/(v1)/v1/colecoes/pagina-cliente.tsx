@@ -36,7 +36,7 @@ import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
 import { classesEntrada } from "@/app/_componentes/campo";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import { moverNaOrdem, type SecaoDeColecoes } from "@/lib/dominio/ordem-colecoes";
 import { temaDaColecao } from "@/lib/dominio/tema-colecao";
 import type {

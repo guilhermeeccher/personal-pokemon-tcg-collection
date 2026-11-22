@@ -105,7 +105,7 @@ import { Botao, classesBotao } from "@/app/_componentes/botao";
 import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
 import { classesEntrada } from "@/app/_componentes/campo";
 import { Distintivo } from "@/app/_componentes/distintivo";
-import { textosDasRecusas } from "@/app/_componentes/recusa";
+import { textosDasRecusas } from "@/app/_comum/recusa";
 import { Quantidade } from "@/app/_componentes/quantidade";
 import {
   classesCabecalhoEmpilhado,

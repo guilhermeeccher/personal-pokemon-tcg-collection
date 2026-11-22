@@ -33,7 +33,7 @@ import { Botao } from "@/app/_componentes/botao";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { ImagemCartaComZoom } from "@/app/_componentes/imagem-carta-zoom";
 import { Modal } from "@/app/_componentes/modal";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import { MAXIMO_COPIAS_POR_LOTE_TEMA } from "@/lib/dominio/cartas-do-tema";
 import type {
   AlocarCartasDoTemaDTO,

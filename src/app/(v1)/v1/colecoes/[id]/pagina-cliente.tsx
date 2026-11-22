@@ -44,7 +44,7 @@ import type {
   MelhoriaDaVagaDTO,
   VagaDaColecaoDTO,
 } from "@/lib/dominio/tipos-cliente";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import { temaDaColecao } from "@/lib/dominio/tema-colecao";
 
 import { BlocoTema } from "./bloco-tema";

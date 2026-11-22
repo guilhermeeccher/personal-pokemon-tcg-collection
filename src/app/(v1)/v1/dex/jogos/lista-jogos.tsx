@@ -21,7 +21,7 @@ import { Campo, classesEntrada } from "@/app/_componentes/campo";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { Painel } from "@/app/_componentes/painel";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import { JOGOS_DEX } from "@/lib/dominio/dex-jogos";
 import type { JogoPossuidoDTO } from "@/lib/dominio/tipos-cliente";
 

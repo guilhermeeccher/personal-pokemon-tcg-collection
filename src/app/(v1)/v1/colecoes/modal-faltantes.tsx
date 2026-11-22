@@ -30,7 +30,7 @@ import { Botao } from "@/app/_componentes/botao";
 import { classesEntrada } from "@/app/_componentes/campo";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { Modal } from "@/app/_componentes/modal";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import { MAXIMO_SETS_POR_CRIACAO } from "@/lib/dominio/grupos-colecao";
 import type { CriarFaltantesDTO, FaltantesDoGrupoDTO, GrupoColecaoDTO } from "@/lib/dominio/tipos-cliente";
 

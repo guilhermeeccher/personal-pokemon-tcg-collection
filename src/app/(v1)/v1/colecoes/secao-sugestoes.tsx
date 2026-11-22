@@ -35,7 +35,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 
 import { Botao, classesBotao } from "@/app/_componentes/botao";
 import { Distintivo } from "@/app/_componentes/distintivo";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 import { MAXIMO_SUGESTOES_VISIVEIS } from "@/lib/dominio/sugestoes-colecao";
 import type {

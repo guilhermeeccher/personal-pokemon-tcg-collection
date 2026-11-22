@@ -20,7 +20,7 @@ import { BarraProgresso } from "@/app/_componentes/ds/barra-progresso";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { Icone } from "@/app/_componentes/icone";
 import { Painel } from "@/app/_componentes/painel";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import { progressoTrofeus, type IdiomaTrofeu, type NivelTrofeu } from "@/lib/dominio/dex-trofeus";
 import type { TrofeuDexDTO } from "@/lib/dominio/tipos-cliente";
 

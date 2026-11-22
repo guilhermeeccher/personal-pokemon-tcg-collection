@@ -32,7 +32,7 @@ import {
 import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 import type { CartaParaGradeDTO, GradeDoSetDTO } from "@/lib/dominio/tipos-cliente";
 import { NomeCarta } from "@/app/_componentes/nome-carta";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 
 /* Linha da grade no celular (< 768px): um cartão em vez de 7 colunas.
 
