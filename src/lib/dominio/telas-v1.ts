@@ -145,8 +145,10 @@ export function ehCaminhoDeTelaSemV1(texto: string): boolean {
  * - literais de tipo (`PageProps<"/v1/colecoes/nova">`): a rota tipada é
  *   conferida pelo `typecheck`, que falha se ela não existir;
  * - o template que começa por `/` seguido direto de uma substituição
- *   (`` `/${total}` ``): é a numeração "n/total" das cartas, não um caminho.
- *   Um link escreve o primeiro segmento por extenso.
+ *   (`` `/${total}` ``) **fora de posição de navegação**: é a numeração
+ *   "n/total" das cartas, num texto de tela. Em posição de navegação (ver
+ *   `emPosicaoDeNavegacao`) ele conta, porque `` `/${secao}/planos` `` sai da
+ *   v1 tanto quanto `"/dex/planos"`.
  */
 export function literaisDeTelaSemV1(fonte: string): { linha: number; texto: string }[] {
   const sf = ts.createSourceFile("arquivo.tsx", fonte, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
@@ -159,9 +161,55 @@ export function literaisDeTelaSemV1(fonte: string): { linha: number; texto: stri
   const visitar = (no: ts.Node): void => {
     if (ts.isImportDeclaration(no) || ts.isExportDeclaration(no) || ts.isLiteralTypeNode(no)) return;
     if (ts.isStringLiteral(no) || ts.isNoSubstitutionTemplateLiteral(no)) conferir(no, no.text);
-    else if (ts.isTemplateExpression(no) && no.head.text !== "/") conferir(no, no.head.text);
+    else if (ts.isTemplateExpression(no) && (no.head.text !== "/" || emPosicaoDeNavegacao(no))) {
+      conferir(no, no.head.text);
+    }
     ts.forEachChild(no, visitar);
   };
   visitar(sf);
   return achados;
+}
+
+/* Atributos, propriedades e chamadas cujo valor é para onde a tela vai. */
+const ATRIBUTOS_DE_NAVEGACAO = new Set(["href", "action", "formAction"]);
+const PROPRIEDADES_DE_NAVEGACAO = new Set(["href", "pathname", "url", "volta"]);
+const CHAMADAS_DE_NAVEGACAO = new Set(["push", "replace", "prefetch", "assign", "redirect", "permanentRedirect"]);
+
+/**
+ * Se o valor de `no` acaba sendo um destino de navegação: o `href` de um
+ * elemento ou do `Link`, o `pathname`/`href` de um objeto (o `Link` aceita
+ * `{ pathname }`), ou o argumento de `router.push`/`replace`/`prefetch`,
+ * `redirect`, `location.assign`/`replace`. Sobe por parênteses, ternário,
+ * `+`, `??`, `||` e `as`, que não mudam para onde o valor vai.
+ */
+export function emPosicaoDeNavegacao(no: ts.Node): boolean {
+  let atual = no;
+  let pai = no.parent;
+  while (
+    pai &&
+    (ts.isParenthesizedExpression(pai) ||
+      ts.isAsExpression(pai) ||
+      ts.isSatisfiesExpression(pai) ||
+      ts.isNonNullExpression(pai) ||
+      (ts.isConditionalExpression(pai) && pai.condition !== atual) ||
+      (ts.isBinaryExpression(pai) &&
+        [ts.SyntaxKind.PlusToken, ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken].includes(
+          pai.operatorToken.kind,
+        )) ||
+      ts.isJsxExpression(pai))
+  ) {
+    atual = pai;
+    pai = pai.parent;
+  }
+  if (!pai) return false;
+  if (ts.isJsxAttribute(pai)) return ATRIBUTOS_DE_NAVEGACAO.has(pai.name.getText());
+  if (ts.isPropertyAssignment(pai) && pai.initializer === atual) {
+    return PROPRIEDADES_DE_NAVEGACAO.has(pai.name.getText().replace(/^["']|["']$/g, ""));
+  }
+  if (ts.isCallExpression(pai) && pai.arguments[0] === atual) {
+    const f = pai.expression;
+    const nome = ts.isIdentifier(f) ? f.text : ts.isPropertyAccessExpression(f) ? f.name.text : null;
+    return nome !== null && CHAMADAS_DE_NAVEGACAO.has(nome);
+  }
+  return false;
 }

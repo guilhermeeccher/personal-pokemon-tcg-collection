@@ -234,6 +234,29 @@ describe("literais de caminho de tela", () => {
     ]);
   });
 
+  it("o template que começa por /${...} conta em posição de navegação", () => {
+    const fonte = [
+      `router.replace(\`/\${secao}/planos\`);`,
+      `router.push(x ? \`/\${a}\` : "/v1");`,
+      `const l = <Link href={\`/\${secao}\`}>x</Link>;`,
+      `const o = <Link href={{ pathname: \`/\${secao}/planos\`, query: { a: 1 } }}>x</Link>;`,
+      `const p = { href: \`/\${secao}\` + "?a=1" };`,
+      `redirect(\`/\${s}\`);`,
+      `location.assign(\`/\${s}\` as string);`,
+    ].join("\n");
+    expect(literaisDeTelaSemV1(fonte).map((l) => l.linha)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it("e não conta na numeração n/total de um texto de tela", () => {
+    const fonte = [
+      `const a = <span>{o.total ? \`/\${o.total}\` : ""}</span>;`,
+      `const b = \`(\${o.numero}\${o.total ? \`/\${o.total}\` : ""})\`;`,
+      `const c = rotulo(\`/\${total}\`);`,
+      `const d = <a title={\`/\${total}\`} href="/v1">x</a>;`,
+    ].join("\n");
+    expect(literaisDeTelaSemV1(fonte)).toEqual([]);
+  });
+
   it("ignora comentário, import, tipo de rota e a numeração n/total", () => {
     const fonte = [
       `// a tela /colecoes mostra "/colecoes"`,
