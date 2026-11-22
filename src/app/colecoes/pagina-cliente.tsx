@@ -38,12 +38,22 @@ import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
 import { moverNaOrdem, type SecaoDeColecoes } from "@/lib/dominio/ordem-colecoes";
-import type { ColecaoListaDTO, GrupoColecaoDTO, ListaColecoesDTO } from "@/lib/dominio/tipos-cliente";
+import { temaDaColecao } from "@/lib/dominio/tema-colecao";
+import type {
+  ColecaoListaDTO,
+  GrupoColecaoDTO,
+  ListaColecoesDTO,
+  SugestaoDeTemaDTO,
+} from "@/lib/dominio/tipos-cliente";
 
 import { chamarApi } from "./chamar-api";
 import { ModalExcluirGrupo, ModalGrupo } from "./modal-grupo";
 import { ModalExistentes } from "./modal-existentes";
 import { ModalFaltantes } from "./modal-faltantes";
+import { ModalCartasDoTema } from "./modal-cartas-do-tema";
+import { ModalTema } from "./modal-tema";
+import { useRotuloTema } from "./rotulo-tema";
+import { SecaoSugestoes } from "./secao-sugestoes";
 
 interface ContagemElegiveis {
   prontas: number;
@@ -58,6 +68,13 @@ type JanelaAberta =
   | { tipo: "excluir"; grupoId: string }
   | { tipo: "faltantes"; grupoId: string }
   | { tipo: "existentes"; grupoId: string };
+
+/* As janelas das sugestões de tema, à parte das de grupo: não dependem de um
+   grupo da lista. Primeiro a janela que confirma o nome, depois a que lista as
+   cartas que cabem na coleção recém-criada (que nasce vazia). */
+type JanelaTema =
+  | { tipo: "criar"; sugestao: SugestaoDeTemaDTO }
+  | { tipo: "cartas"; colecaoId: string; nome: string };
 
 /**
  * As seções na ordem em que a API devolve: os grupos como vieram, as
@@ -90,6 +107,7 @@ const classesBotaoLinha = "max-md:h-11 max-md:min-w-11";
 export default function ColecoesPage() {
   const t = useTranslations("colecoes");
   const tr = useTranslations("recusas");
+  const { rotuloDoTema } = useRotuloTema();
   const [itens, setItens] = useState<ColecaoListaDTO[]>([]);
   const [grupos, setGrupos] = useState<GrupoColecaoDTO[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -103,6 +121,12 @@ export default function ColecoesPage() {
   // Só a última leitura válida o desliga.
   const [ocupado, setOcupado] = useState(false);
   const [janela, setJanela] = useState<JanelaAberta | null>(null);
+  const [janelaTema, setJanelaTema] = useState<JanelaTema | null>(null);
+  // Sobe a cada coleção criada ou alocada pelas sugestões: a seção relê.
+  const [versaoSugestoes, setVersaoSugestoes] = useState(0);
+  // Os sets criados em lote (ações do grupo) nesta vida da página.
+  const [setsCriados, setSetsCriados] = useState<string[]>([]);
+  const [mensagem, setMensagem] = useState<string | null>(null);
   const sequencia = useRef(0);
   // O aviso de uma janela que fechou sozinha (o grupo dela foi excluído em
   // outra aba) e a janela aberta, lida de dentro da leitura da lista.
@@ -201,14 +225,40 @@ export default function ColecoesPage() {
     setJanela(j);
   }
 
-  /** A lista pode ter mudado por baixo (uma escrita de resultado incerto, uma recusa por lista velha): relê e trava até chegar. */
+  /**
+   * A lista pode ter mudado por baixo (uma escrita de resultado incerto, uma
+   * recusa por lista velha): relê e trava até chegar. Relê as sugestões
+   * junto: uma coleção criada ou trazida aqui (inclusive pelas ações em lote
+   * de um grupo) cobre uma sugestão de set, e a que ficasse na tela deixaria
+   * criar a mesma coleção de novo.
+   */
   function recarregar() {
     setOcupado(true);
     void carregar();
+    setVersaoSugestoes((v) => v + 1);
+  }
+
+  /** O lote criou coleções de set: a sugestão de cada um sai já (e fica fora, mesmo se a releitura falhar). */
+  function setsCriadosEmLote(setIds: string[]) {
+    setSetsCriados((atuais) => [...new Set([...atuais, ...setIds])]);
+    fecharEAtualizar();
   }
 
   function fecharEAtualizar() {
     setJanela(null);
+    recarregar();
+  }
+
+  function temaCriado(colecao: { id: string; nome: string }) {
+    // A coleção já existe, vazia: a lista e as sugestões (que a cobrem agora)
+    // recarregam já, e a janela seguinte oferece as cartas que cabem.
+    recarregar();
+    setJanelaTema({ tipo: "cartas", colecaoId: colecao.id, nome: colecao.nome });
+  }
+
+  function cartasAlocadas(total: number) {
+    setJanelaTema(null);
+    setMensagem(t("sugestoes.cartasAlocadas", { total }));
     recarregar();
   }
 
@@ -259,6 +309,17 @@ export default function ColecoesPage() {
           {t("verOQueFalta")}
         </Link>
       )}
+
+      <SecaoSugestoes
+        versao={versaoSugestoes}
+        setsCriados={setsCriados}
+        onCriarTema={(sugestao) => {
+          setMensagem(null);
+          setJanelaTema({ tipo: "criar", sugestao });
+        }}
+      />
+
+      {mensagem && <Alerta tom="sucesso">{mensagem}</Alerta>}
 
       {organizando && (
         <div className="flex flex-col gap-2">
@@ -370,11 +431,13 @@ export default function ColecoesPage() {
             <ul className="flex flex-col divide-y divide-hairline">
               {secao.colecoes.map((c, i) => {
                 const customizada = c.tipo === "customizada";
+                const tema = temaDaColecao(c);
                 const descricao = (
                   <div className="min-w-0">
                     <div className="font-medium break-words">{c.nome}</div>
                     <div className="text-sm text-muted">
                       {t.has(`tipo.${c.tipo}`) ? t(`tipo.${c.tipo}`) : c.tipo}
+                      {tema ? t("temaDaColecao", { tema: rotuloDoTema(tema.tipo, tema.valor, c.temaRotulo) }) : ""}
                       {c.idiomaExigido ? t("idiomaExigido", { idioma: c.idiomaExigido }) : ""}
                     </div>
                   </div>
@@ -465,6 +528,24 @@ export default function ColecoesPage() {
         </ul>
       )}
 
+      {janelaTema?.tipo === "criar" && (
+        <ModalTema
+          sugestao={janelaTema.sugestao}
+          grupos={grupos}
+          onFechar={() => setJanelaTema(null)}
+          onCriada={temaCriado}
+          onAtualizar={recarregar}
+        />
+      )}
+      {janelaTema?.tipo === "cartas" && (
+        <ModalCartasDoTema
+          colecaoId={janelaTema.colecaoId}
+          nomeColecao={janelaTema.nome}
+          onFechar={() => setJanelaTema(null)}
+          onAlocadas={cartasAlocadas}
+        />
+      )}
+
       {janela?.tipo === "grupo" && (janela.grupoId === null || grupoDaJanela) && (
         <ModalGrupo
           key={janela.grupoId ?? "novo"}
@@ -480,7 +561,7 @@ export default function ColecoesPage() {
         <ModalFaltantes
           grupo={grupoDaJanela}
           onFechar={() => setJanela(null)}
-          onCriadas={fecharEAtualizar}
+          onCriadas={setsCriadosEmLote}
           onAtualizar={recarregar}
         />
       )}

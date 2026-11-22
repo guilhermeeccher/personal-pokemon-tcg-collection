@@ -246,6 +246,13 @@
       "when": 1795368943012,
       "tag": "0034_grupos_e_ordem_de_colecoes",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1795372845694,
+      "tag": "0035_sugestoes_dispensadas",
+      "breakpoints": true
     }
   ]
 }

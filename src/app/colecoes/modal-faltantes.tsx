@@ -44,7 +44,8 @@ export function ModalFaltantes({
 }: {
   grupo: GrupoColecaoDTO;
   onFechar: () => void;
-  onCriadas: () => void;
+  /** As coleções nasceram: os `setId` dos sets criados, para a página tirar as sugestões deles na hora. */
+  onCriadas: (setIds: string[]) => void;
   /** A lista da página pode ter mudado (recusa, ou falha sem resposta): relê. */
   onAtualizar: () => void;
 }) {
@@ -151,7 +152,7 @@ export function ModalFaltantes({
       };
       const r = await chamarApi(`/api/grupos-colecao/${grupo.id}/faltantes`, "POST", corpo);
       if (r.ok) {
-        onCriadas();
+        onCriadas(escolhidos.map((s) => s.setId));
         return;
       }
       setErro(textoDaRecusa(tr, r.corpo, t("erroCriar")));

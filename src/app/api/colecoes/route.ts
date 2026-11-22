@@ -40,6 +40,10 @@ export const GET = comAcesso(async function GET() {
  * ou nada é gravado. A resolução das vagas é `resolverCriacaoColecao`, o
  * mesmo caminho da criação em lote de um grupo. `grupoId` opcional: a
  * coleção entra no fim do grupo (ou de "sem grupo").
+ *
+ * Coleção temática (customizada com `parametro.tema`): uma por tema. Já
+ * existindo uma com o mesmo tipo e valor, 409 `temaJaTemColecao` com
+ * `{ colecaoId, colecao }` (o id e o nome da existente) nos valores.
  */
 export const POST = comAcesso(async function POST(req: Request) {
   let corpo: unknown;
@@ -74,6 +78,12 @@ export const POST = comAcesso(async function POST(req: Request) {
   try {
     const criada = await criarColecaoComVagas(db, { ...colecao, chaves }, grupo.valor);
     if (!criada.ok) {
+      if (criada.motivo === "temaJaTemColecao") {
+        return NextResponse.json(
+          corpoRecusa("temaJaTemColecao", { colecaoId: criada.colecao.id, colecao: criada.colecao.nome }),
+          { status: 409 },
+        );
+      }
       return NextResponse.json(corpoRecusa("grupoColecaoNaoEncontrado"), { status: 404 });
     }
     return NextResponse.json(

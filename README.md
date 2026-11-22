@@ -68,6 +68,11 @@ It is not meant for a public, multi-user site, or for sales and trading control.
 - **Groups and order** for your collections: put them in groups ("Mega Evolution", say) and order
   groups and collections with up/down buttons; the same order shows everywhere. A group linked to a
   series can create, in one go, a collection for every set of the series you do not have yet.
+- **Collection suggestions** at the top of the collections screen: the sets, Pokémon, types,
+  illustrators, rarities and regional forms you already own enough cards of, with the reason ("you
+  have 12 of 100 cards of this set") and one button. A theme becomes a custom collection that lists
+  your free cards that fit it, with one copy of each card it does not have yet ticked; you untick or
+  tick more and confirm. "Not interested" hides one for good.
 - **Duplicates**: what is left over for trading, with total, allocated and free per card.
 - **Overview**: a showcase of your cards, ordered by the price stored for them (the LigaPokemon
   average, or the Cardmarket trend if you chose [that source](#optional-special-card-prices-from-cardmarket);

@@ -57,6 +57,7 @@ const sob = (relativoAoApp: string) => `${APP}/${relativoAoApp}`;
  */
 const ROTAS_COM_GET = [
   "api/cartas/route.ts",
+  "api/colecoes/[id]/cartas-do-tema/route.ts",
   "api/colecoes/[id]/exportar/route.ts",
   "api/colecoes/[id]/melhorias/route.ts",
   "api/colecoes/[id]/opcoes-compra/exportar/route.ts",
@@ -81,6 +82,7 @@ const ROTAS_COM_GET = [
   "api/sets-mypcards/route.ts",
   "api/sets/[setId]/cartas/route.ts",
   "api/sets/route.ts",
+  "api/sugestoes/route.ts",
   "api/vagas/[id]/candidatos/route.ts",
   "manifest.webmanifest/route.ts",
   "pwa/[arquivo]/route.ts",

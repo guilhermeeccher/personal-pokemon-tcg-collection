@@ -8,6 +8,7 @@ import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
 import { REGIOES, type Regiao } from "@/lib/dominio/escopo-pokedex";
 import type { IdiomaCatalogo } from "@/lib/dominio/idioma-catalogo";
 import type { TipoColecao } from "@/lib/dominio/parametro-colecao";
+import { Alerta } from "@/app/_componentes/alerta";
 import { Botao } from "@/app/_componentes/botao";
 import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
 import { Campo, classesEntrada } from "@/app/_componentes/campo";
@@ -15,6 +16,7 @@ import { GradeEscopo } from "@/app/_componentes/ds/grade-escopo";
 import { SeletorExpansao } from "@/app/_componentes/seletor-expansao";
 import type { GrupoColecaoDTO, ListaColecoesDTO, SetParaCadastroDTO } from "@/lib/dominio/tipos-cliente";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { nomeSugeridoDoSet } from "@/lib/dominio/grupos-colecao";
 
 /* Nome de região é nome próprio do universo Pokémon: igual nos dois
    idiomas, e por isso fica no código, não no catálogo de mensagens. A
@@ -35,7 +37,7 @@ const OPCOES_REGIAO = REGIOES.map((regiao) => ({ id: regiao, ...REGIAO_LABEL[reg
 
 const TIPOS: readonly TipoColecao[] = ["pokedex", "set", "customizada"] as const;
 
-export default function NovaColecaoPage() {
+export default function NovaColecaoPage({ setInicial = "" }: { setInicial?: string }) {
   const t = useTranslations("colecaoNova");
   const tr = useTranslations("recusas");
   const router = useRouter();
@@ -61,6 +63,17 @@ export default function NovaColecaoPage() {
   const [grupos, setGrupos] = useState<GrupoColecaoDTO[]>([]);
   const [grupoId, setGrupoId] = useState("");
 
+  // O set que a sugestão pediu (`?set=`) e não está no catálogo ocidental. Guarda o
+  // fato, não o texto: a frase sai da língua de agora, na renderização.
+  const [setNaoEncontrado, setSetNaoEncontrado] = useState(false);
+  // Vindo de uma sugestão, o formulário fica desligado até o set resolver:
+  // `carregando` (lendo o catálogo), `falhou` (a leitura caiu: tentar de novo
+  // ou seguir sem a sugestão) e `livre` (resolvido, ou sem `?set=`). Sem isso,
+  // a pessoa começava a digitar e a resposta lenta trocava tipo e receita por
+  // baixo dela, ou era descartada e deixava a Pokédex marcada.
+  const [prefill, setPrefill] = useState<"carregando" | "falhou" | "livre">(setInicial === "" ? "livre" : "carregando");
+  const [tentativaPrefill, setTentativaPrefill] = useState(0);
+
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [detalhesErro, setDetalhesErro] = useState<string[]>([]);
@@ -84,6 +97,49 @@ export default function NovaColecaoPage() {
   useEffect(() => {
     void lerGrupos();
   }, [lerGrupos]);
+
+  // Vindo de uma sugestão de set: o formulário nasce como a sugestão promete
+  // — tipo set, esse set, catálogo pt, sem secretas, nome `AAAA - SIGLA - Nome`.
+  // O parâmetro da URL não é confiável: só vale se for o id de um set da lista
+  // do catálogo (pt ou en; o japonês é outro catálogo). Um set que não está lá
+  // é uma resposta (aviso e formulário normal); uma leitura que cai não é, e
+  // fica `falhou`. A resposta só vale se ainda é a do `?set=` atual (`ativo`,
+  // que o cleanup apaga). Roda uma vez por valor de `?set=` (e a cada "Tentar
+  // de novo"): nada aqui depende da língua — o nome padrão é o do catálogo e o
+  // aviso é texto de renderização —, então trocar PT/EN depois de editar não
+  // refaz o prefill nem toca num campo que a pessoa mexeu.
+  useEffect(() => {
+    if (setInicial === "") return;
+    let ativo = true;
+    fetch("/api/sets")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("sets"))))
+      .then((d: { sets?: SetParaCadastroDTO[] } | null) => {
+        if (!ativo) return;
+        const achado = (d?.sets ?? []).find((s) => s.setId === setInicial && s.idiomaCatalogo !== "jp");
+        if (!achado) {
+          setSetNaoEncontrado(true);
+        } else {
+          setSetNaoEncontrado(false);
+          setTipo("set");
+          setSetsEscolhidos([achado]);
+          setIdiomaCatalogo("pt");
+          setIncluirSecretas(false);
+          setNome(nomeSugeridoDoSet({ lancamento: achado.setLancamento, sigla: achado.setSigla, nome: achado.setNome }));
+        }
+        setPrefill("livre");
+      })
+      .catch(() => {
+        if (ativo) setPrefill("falhou");
+      });
+    return () => {
+      ativo = false;
+    };
+  }, [setInicial, tentativaPrefill]);
+
+  function tentarPrefillDeNovo() {
+    setPrefill("carregando");
+    setTentativaPrefill((n) => n + 1);
+  }
 
   function adicionarSet(set: SetParaCadastroDTO | null) {
     if (!set) return;
@@ -166,7 +222,24 @@ export default function NovaColecaoPage() {
         descricao={t("descricao")}
       />
 
+      {setNaoEncontrado && <Alerta tom="aviso">{t("setDaSugestaoNaoEncontrado")}</Alerta>}
+
+      {prefill === "carregando" && <p className="text-sm text-muted">{t("carregandoSugestao")}</p>}
+      {prefill === "falhou" && (
+        <div className="flex flex-wrap items-center gap-2 text-sm text-danger">
+          <p>{t("erroSugestao")}</p>
+          <Botao type="button" tamanho="sm" onClick={tentarPrefillDeNovo}>
+            {t("tentarDeNovo")}
+          </Botao>
+          <Botao type="button" tamanho="sm" onClick={() => setPrefill("livre")}>
+            {t("continuarSemSugestao")}
+          </Botao>
+        </div>
+      )}
+
       <form onSubmit={enviar} className="flex flex-col gap-4">
+        {/* Desligado enquanto o set da sugestão não resolve (ver `prefill`). */}
+        <fieldset disabled={prefill !== "livre"} className="flex min-w-0 flex-col gap-4 border-0 p-0">
         <Campo rotulo={t("campoNome")}>
           <input value={nome} onChange={(e) => setNome(e.target.value)} required className={classesEntrada} />
         </Campo>
@@ -343,6 +416,7 @@ export default function NovaColecaoPage() {
             {enviando ? t("criando") : t("criar")}
           </Botao>
         </div>
+        </fieldset>
       </form>
     </main>
   );

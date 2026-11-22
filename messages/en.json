@@ -180,7 +180,36 @@
       "demais": "Check at most {maximo} collections at a time."
     },
     "tentarDeNovo": "Try again",
-    "grupoExcluido": "This group was deleted in another tab."
+    "grupoExcluido": "This group was deleted in another tab.",
+    "temaDaColecao": " · theme: {tema}",
+    "sugestoes": {
+      "titulo": "Suggestions",
+      "descricao": "Collections you are already close to having. Nothing is created without your click.",
+      "mostrar": "Show",
+      "recolher": "Hide",
+      "erroCarregar": "Failed to load the suggestions.",
+      "tentarDeNovo": "Try again",
+      "erroDispensar": "Could not dismiss the suggestion.",
+      "erroRede": "Network failure. The suggestion list was refreshed.",
+      "razao": {
+        "set": "You have {quantidade} of the {total} official cards of the <forte>{rotulo}</forte> set.",
+        "especie": "You have {quantidade, plural, =1 {# card} other {# cards}} of <forte>{rotulo}</forte>.",
+        "tipo": "You have {quantidade, plural, =1 {# card} other {# cards}} of the <forte>{rotulo}</forte> type.",
+        "ilustrador": "You have {quantidade, plural, =1 {# card} other {# cards}} illustrated by <forte>{rotulo}</forte>.",
+        "raridade": "You have {quantidade, plural, =1 {# card} other {# cards}} of rarity <forte>{rotulo}</forte>.",
+        "forma": "You have {quantidade, plural, =1 {# card} other {# cards}} in the <forte>{rotulo}</forte> form.",
+        "setSemOficial": "You have {quantidade} of the {total} cards in the <forte>{rotulo}</forte> set."
+      },
+      "criarColecao": "Create collection",
+      "criarTema": "Create themed collection",
+      "semInteresse": "Not interested",
+      "confirmarDispensa": "This suggestion will not come back. Dismiss it?",
+      "confirmarDispensaBotao": "Yes, dismiss",
+      "cancelar": "Cancel",
+      "verTodas": "See all ({total} more)",
+      "verMenos": "See fewer",
+      "cartasAlocadas": "{total, plural, =1 {1 card allocated} other {# cards allocated}} to the themed collection."
+    }
   },
   "cadastroBusca": {
     "titulo": "Add by search",
@@ -344,7 +373,12 @@
     "remover": "remove",
     "ajudaVariosSets": "The collection joins the chosen sets, in the order of the list. Once created, single cards can be added and removed.",
     "campoGrupo": "Group (optional)",
-    "semGrupo": "No group"
+    "semGrupo": "No group",
+    "setDaSugestaoNaoEncontrado": "The suggested set is not in the catalog (pt or en). Pick the expansion below.",
+    "carregandoSugestao": "Loading the suggested set…",
+    "erroSugestao": "Could not load the suggested set.",
+    "tentarDeNovo": "Try again",
+    "continuarSemSugestao": "Continue without the suggestion"
   },
   "colecoesFalta": {
     "voltar": "← Collections",
@@ -690,7 +724,8 @@
     "concluirEdicaoCartas": "Done",
     "tirarDaColecaoAlvo": "Remove {alvo} from the collection",
     "avisoSemNumeracaoOficialDoSet": "{sets} has no separate official numbering upstream; in this collection it comes in with its {total} known cards, with no secrets distinction.",
-    "semCopiaLivre": "No free copy"
+    "semCopiaLivre": "No free copy",
+    "temaCartasAlocadas": "{total, plural, =1 {1 card allocated} other {# cards allocated}} to this theme."
   },
   "opcoesCompra": {
     "voltar": "← Back to the collection",
@@ -1059,7 +1094,16 @@
     "nomeDaColecaoVazio": "Give the collection for set {setId} a name.",
     "setForaDaSerieDoGrupo": "Set {setId} is not in this group's series.",
     "setJaTemColecao": "Set {setId} already has the collection \"{colecao}\". Reload the preview; nothing was created.",
-    "colecaoForaDasExistentesDoGrupo": "The collection list changed in another tab. Reload the preview; nothing was moved."
+    "colecaoForaDasExistentesDoGrupo": "The collection list changed in another tab. Reload the preview; nothing was moved.",
+    "sugestaoInvalida": "That suggestion no longer exists. Reload the page.",
+    "colecaoSemTema": "This collection has no theme.",
+    "copiaForaDoTema": "One of the cards does not fit this collection's theme. Reload the list; nothing was allocated.",
+    "quantidadeDeCartasDoTemaInvalida": "Choose 1 to {maximo} cards to add.",
+    "corpoInvalido": "Invalid request. Reload the page and try again.",
+    "pedidoDeCartasDoTemaInvalido": "The card list sent is incomplete. Reload the list and try again; nothing was allocated.",
+    "copiaRepetidaNoPedido": "The same card was sent twice. Reload the list; nothing was allocated.",
+    "cartasDoTemaDesatualizadas": "Your cards changed since the list opened (in another tab, perhaps). Reload the list; nothing was allocated.",
+    "temaJaTemColecao": "The collection \"{colecao}\" already has this theme. Open that one; nothing was created."
   },
   "dex": {
     "categoria": {
@@ -1413,5 +1457,107 @@
       "muitasTentativas": "Too many attempts. Wait a few minutes and try again.",
       "generico": "Could not sign in. Try again."
     }
+  },
+  "tiposPokemon": {
+    "Grass": "Grass",
+    "Fire": "Fire",
+    "Water": "Water",
+    "Lightning": "Lightning",
+    "Psychic": "Psychic",
+    "Fighting": "Fighting",
+    "Darkness": "Darkness",
+    "Metal": "Metal",
+    "Fairy": "Fairy",
+    "Dragon": "Dragon",
+    "Colorless": "Colorless"
+  },
+  "temaColecao": {
+    "especieSemNome": "Pokémon no. {numero}",
+    "formas": {
+      "alola": "Alola",
+      "galar": "Galar",
+      "hisui": "Hisui",
+      "paldea": "Paldea",
+      "mega": "Mega",
+      "gigantamax": "Gigantamax"
+    },
+    "nomePadrao": "Theme — {rotulo}",
+    "nomePadraoIlustrador": "Theme — Illustrations by {rotulo}",
+    "criar": {
+      "titulo": "New themed collection: {tema}",
+      "descricao": "The collection starts empty. In the next step you choose which of your free cards go into it.",
+      "campoNome": "Name",
+      "campoGrupo": "Group (optional)",
+      "semGrupo": "No group",
+      "cancelar": "Cancel",
+      "criar": "Create collection",
+      "criando": "Creating…",
+      "erroCriar": "Failed to create the collection.",
+      "erroRede": "No response from the server: it is not possible to tell whether the collection was created. You can try again — if it already exists, the server says so and you can open it.",
+      "abrirExistente": "Open “{colecao}”"
+    },
+    "cartas": {
+      "titulo": "Your cards that fit {colecao}",
+      "descricao": "Free cards in your inventory that fit the {tema} theme. Uncheck what you do not want: only what you confirm goes in.",
+      "descricaoSemTema": "Free cards in your inventory that fit this collection's theme.",
+      "carregando": "Loading…",
+      "nenhuma": "No free card fits this theme right now.",
+      "marcarTodas": "Check all",
+      "desmarcarTodas": "Uncheck all",
+      "marcadas": "{marcadas} of {total} checked",
+      "qtd": "{total} pcs",
+      "jaNaColecao": "Already has this card",
+      "foraDePadrao": "Outside the required language ({idioma})",
+      "demais": "Check at most {maximo} cards at a time.",
+      "agoraNao": "Not now",
+      "alocar": "{total, plural, =0 {Allocate} =1 {Allocate 1 card} other {Allocate # cards}}",
+      "alocando": "Allocating…",
+      "erroCarregar": "Failed to load the cards.",
+      "erroAlocar": "Could not allocate the cards. Nothing was written; the list was refreshed.",
+      "erroRede": "No response from the server: it is not possible to tell whether the cards were allocated. We are re-reading the list; check it before trying again."
+    },
+    "bloco": {
+      "tema": "Theme: {tipo} — {tema}",
+      "tipos": {
+        "especie": "species",
+        "tipo": "type",
+        "ilustrador": "illustrator",
+        "raridade": "rarity",
+        "forma": "form"
+      },
+      "cartasNovas": "{total, plural, =1 {1 new card fits} other {# new cards fit}} this theme.",
+      "ver": "See cards"
+    }
+  },
+  "raridadesCarta": {
+    "ACE SPEC Rare": "ACE SPEC Rare",
+    "Amazing Rare": "Amazing Rare",
+    "Black White Rare": "Black White Rare",
+    "Classic Collection": "Classic Collection",
+    "Double rare": "Double rare",
+    "Full Art Trainer": "Full Art Trainer",
+    "Futuristic Rare": "Futuristic Rare",
+    "Holo Rare": "Holo Rare",
+    "Holo Rare V": "Holo Rare V",
+    "Holo Rare VMAX": "Holo Rare VMAX",
+    "Holo Rare VSTAR": "Holo Rare VSTAR",
+    "Hyper rare": "Hyper rare",
+    "Illustration rare": "Illustration rare",
+    "LEGEND": "LEGEND",
+    "Mega Attack Rare": "Mega Attack Rare",
+    "Mega Hyper Rare": "Mega Hyper Rare",
+    "Pikachu Rare": "Pikachu Rare",
+    "RGB Rare": "RGB Rare",
+    "Radiant Rare": "Radiant Rare",
+    "Rare": "Rare",
+    "Rare Holo": "Rare Holo",
+    "Rare PRIME": "Rare PRIME",
+    "Secret Rare": "Secret Rare",
+    "Shiny Ultra Rare": "Shiny Ultra Rare",
+    "Shiny rare": "Shiny rare",
+    "Shiny rare V": "Shiny rare V",
+    "Shiny rare VMAX": "Shiny rare VMAX",
+    "Special illustration rare": "Special illustration rare",
+    "Ultra Rare": "Ultra Rare"
   }
 }

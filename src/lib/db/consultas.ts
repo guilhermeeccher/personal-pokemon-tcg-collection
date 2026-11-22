@@ -245,6 +245,19 @@ export function imagemDaCarta(t: ColunasImagem) {
   )`;
 }
 
+/**
+ * A raridade da linha `en` do mesmo `carta_id` (nula sem linha en) — a base da
+ * raridade canônica de um tema (`raridadeCanonica`, `tema-colecao.ts`): as
+ * linhas pt e en da mesma carta escrevem a raridade em línguas diferentes.
+ * Alias escrito à mão pelo mesmo motivo de `degrausImagem`.
+ */
+export function raridadeEnDaCarta(cartaId: AnyPgColumn) {
+  return sql<string | null>`(
+    select raridade_en.raridade from ${cartaCatalogo} as raridade_en
+    where raridade_en.id = ${cartaId} and raridade_en.idioma = 'en'
+  )`;
+}
+
 /** De onde veio a foto exibida — o rótulo do MESMO degrau escolhido acima. */
 export function origemDaImagem(t: ColunasImagem) {
   return sql<OrigemImagem | null>`(
@@ -266,6 +279,8 @@ import {
 } from "@/lib/dominio/elegibilidade-vaga";
 import { planejarAlocacaoDeLote } from "@/lib/dominio/divisao-lote";
 import { proximaChaveSequencial } from "@/lib/dominio/chave-sequencial";
+import { restricaoUnicaViolada } from "@/lib/dominio/erro-postgres";
+import { colecaoDoMesmoTema, temaDaColecao } from "@/lib/dominio/tema-colecao";
 import {
   agruparChavesPorRegiao,
   calcularDiffEscopoPokedex,
@@ -1710,7 +1725,7 @@ export async function nomesDosSets(
  * número no SQL contra um array — quem chama agrupa por número em JS.
  */
 async function obterLinhasElegiveisParaNomeEspecie(
-  db: Database,
+  db: Database | Transacao,
 ): Promise<LinhaCatalogoParaNome[]> {
   const linhas = await db
     .select({
@@ -1730,7 +1745,7 @@ async function obterLinhasElegiveisParaNomeEspecie(
  * catálogo local (spec: vaga vazia de Pokédex mostra "25 — Pikachu").
  */
 export async function obterNomesEspeciePorNumero(
-  db: Database,
+  db: Database | Transacao,
   numeros: readonly number[],
 ): Promise<Map<number, string | null>> {
   const resultado = new Map<number, string | null>();
@@ -1754,6 +1769,30 @@ export async function obterNomesEspeciePorNumero(
   return resultado;
 }
 
+/**
+ * O rótulo do tema de cada coleção temática de espécie: o nome da espécie, para
+ * a tela não cair em "Pokémon nº N" (os outros temas a tela rotula pelo valor
+ * canônico, que já é a chave de tradução). Uma leitura só para a lista inteira,
+ * e nenhuma quando não há tema de espécie.
+ */
+export async function rotulosDosTemas(
+  db: Database | Transacao,
+  colecoes: readonly { id: string; tipo: TipoColecao; parametro: unknown }[],
+): Promise<Map<string, string>> {
+  const especies = colecoes.flatMap((c) => {
+    const tema = temaDaColecao(c);
+    return tema?.tipo === "especie" ? [{ id: c.id, numero: Number(tema.valor) }] : [];
+  });
+  if (especies.length === 0) return new Map();
+  const nomes = await obterNomesEspeciePorNumero(db, [...new Set(especies.map((e) => e.numero))]);
+  return new Map(
+    especies.flatMap((e) => {
+      const nome = nomes.get(e.numero);
+      return nome ? [[e.id, nome] as const] : [];
+    }),
+  );
+}
+
 // --- Coleções (Fase 2) ------------------------------------------------------
 
 export interface ColecaoComProgresso {
@@ -1775,6 +1814,8 @@ export interface ColecaoComProgresso {
   grupoId: string | null;
   /** Posição dentro do grupo (ou de "sem grupo"). */
   ordem: number;
+  /** Só coleção temática de espécie: o nome da espécie (`rotulosDosTemas`). */
+  temaRotulo?: string;
 }
 
 /**
@@ -1814,14 +1855,18 @@ export async function listarColecoes(db: Database | Transacao): Promise<ColecaoC
       .from(grupoColecao),
   ]);
 
+  const rotulos = await rotulosDosTemas(db, linhas);
+
   // As duas leituras podem ver estados diferentes (um grupo excluído entre
   // elas): a coleção de um grupo que não veio cai em "sem grupo" — com o
   // `grupoId` zerado, para a tela, que procura o grupo pelo id, não a perder.
   return Promise.all(
     ordenarColecoes(soltarDeGruposAusentes(linhas, grupos), grupos).map(async (linha) => {
       const avisos = await obterAvisosDeSet(db, linha.tipo, linha.parametro);
+      const temaRotulo = rotulos.get(linha.id);
       return {
         ...linha,
+        ...(temaRotulo !== undefined ? { temaRotulo } : {}),
         ...(avisos.avisoCatalogoIncompleto
           ? { avisoCatalogoIncompleto: avisos.avisoCatalogoIncompleto }
           : {}),
@@ -1964,21 +2009,39 @@ export async function inserirColecaoComVagas(
  * aceite da Fase 2): ou a coleção nasce com todas as vagas, ou nada é
  * gravado. Entra no fim do grupo pedido (ou de "sem grupo"); um grupo que
  * não existe recusa antes de gravar.
+ *
+ * Coleção temática: uma por tema (`colecaoDoMesmoTema`). A conferência roda
+ * sob a mesma trava da criação, então duas abas (ou um clique repetido depois
+ * de uma resposta perdida) não criam duas coleções do mesmo tema: a segunda
+ * recebe a que já existe.
  */
 export async function criarColecaoComVagas(
   db: Database,
   dados: DadosCriacaoColecao,
   grupoId: string | null = null,
-): Promise<{ ok: true; id: string } | { ok: false; motivo: "grupoNaoEncontrado" }> {
+): Promise<
+  | { ok: true; id: string }
+  | { ok: false; motivo: "grupoNaoEncontrado" }
+  | { ok: false; motivo: "temaJaTemColecao"; colecao: { id: string; nome: string } }
+> {
   return db.transaction(async (tx) => {
     await travarOrganizacaoColecoes(tx);
+    // Nada foi gravado até a inserção: as recusas saem por `return`.
     if (grupoId !== null) {
       const [grupo] = await tx
         .select({ id: grupoColecao.id })
         .from(grupoColecao)
         .where(eq(grupoColecao.id, grupoId));
-      // Nada foi gravado até aqui: a recusa sai por `return`.
       if (!grupo) return { ok: false as const, motivo: "grupoNaoEncontrado" as const };
+    }
+    const tema = temaDaColecao(dados);
+    if (tema !== null) {
+      const customizadas = await tx
+        .select({ id: colecao.id, nome: colecao.nome, tipo: colecao.tipo, parametro: colecao.parametro })
+        .from(colecao)
+        .where(eq(colecao.tipo, "customizada"));
+      const existente = colecaoDoMesmoTema(customizadas, tema);
+      if (existente) return { ok: false as const, motivo: "temaJaTemColecao" as const, colecao: existente };
     }
     const ordem = await proximaOrdemNaSecao(tx, grupoId);
     const { id } = await inserirColecaoComVagas(tx, dados, { grupoId, ordem });
@@ -2073,6 +2136,8 @@ export interface ColecaoComVagas extends ColecaoBasica {
    * carta avulsa) — a tela passa a mostrar o set de cada vaga.
    */
   multiplosSets: boolean;
+  /** Só coleção temática de espécie: o nome da espécie (`rotulosDosTemas`). */
+  temaRotulo?: string;
 }
 
 /**
@@ -2187,6 +2252,7 @@ export async function obterColecaoComVagas(
   }
 
   const avisos = await obterAvisosDeSet(db, colecaoLinha.tipo, colecaoLinha.parametro);
+  const temaRotulo = (await rotulosDosTemas(db, [colecaoLinha])).get(colecaoLinha.id);
 
   // Progresso por região (item 2) — cálculo puro sobre as vagas já
   // carregadas acima, sem consulta própria (evita duplicar o LEFT JOIN
@@ -2252,6 +2318,7 @@ export async function obterColecaoComVagas(
     ...(progressoPorRegiao ? { progressoPorRegiao } : {}),
     divisoes,
     multiplosSets: setsDasVagas.length > 1,
+    ...(temaRotulo !== undefined ? { temaRotulo } : {}),
   };
 }
 
@@ -2948,12 +3015,10 @@ export async function alterarEscopoDaColecaoPokedex(
 
 // --- Alocação de cópia a vaga (Fase 2, parte B) -----------------------
 
+// As duas leem a violação pela cadeia de `cause` (`restricaoUnicaViolada`): o
+// Drizzle embrulha o erro do driver, e o `code` do erro de fora não diz nada.
 function violaUnicidadeVagaCopiaId(err: unknown): boolean {
-  const e = err as { code?: string; constraint_name?: string; constraint?: string } | undefined;
-  return (
-    e?.code === "23505" &&
-    (e.constraint_name === "vaga_copia_id_unique" || e.constraint === "vaga_copia_id_unique")
-  );
+  return restricaoUnicaViolada(err) === "vaga_copia_id_unique";
 }
 
 export type ResultadoAlocacao =
@@ -3173,11 +3238,7 @@ export async function desalocarVaga(db: Database, vagaId: string): Promise<Resul
 }
 
 function violaUnicidadeVagaChave(err: unknown): boolean {
-  const e = err as { code?: string; constraint_name?: string; constraint?: string } | undefined;
-  return (
-    e?.code === "23505" &&
-    (e.constraint_name === "vaga_colecao_chave_unique" || e.constraint === "vaga_colecao_chave_unique")
-  );
+  return restricaoUnicaViolada(err) === "vaga_colecao_chave_unique";
 }
 
 export type ResultadoAdicionarCopiaCustomizada =
@@ -3219,108 +3280,151 @@ export async function adicionarCopiaEmColecaoCustomizada(
 ): Promise<ResultadoAdicionarCopiaCustomizada> {
   try {
     return await db.transaction(async (tx) => {
-      const [colecaoLinha] = await tx
-        .select()
-        .from(colecao)
-        .where(eq(colecao.id, colecaoId))
-        .for("update")
-        .limit(1);
-      if (!colecaoLinha) return { ok: false, motivo: recusa("colecaoNaoEncontrada") };
-      if (colecaoLinha.tipo !== "customizada") {
-        return { ok: false, motivo: recusa("fluxoSoParaCustomizada") };
-      }
-
-      const [copiaLinha] = await tx
-        .select()
-        .from(copia)
-        .where(eq(copia.id, copiaId))
-        .for("update")
-        .limit(1);
-      if (!copiaLinha) return { ok: false, motivo: recusa("copiaNaoEncontrada") };
-
-      const jaAlocada = await tx
-        .select({ id: vaga.id })
-        .from(vaga)
-        .where(eq(vaga.copiaId, copiaId))
-        .limit(1);
-      if (jaAlocada.length > 0) {
-        return { ok: false, motivo: recusa("copiaJaAlocada") };
-      }
-
-      // Coleção customizada não tem universo fixo (qualquer cópia serve) —
-      // só resta checar o idiomaExigido, igual à alocação normal.
-      const foraDePadrao = ehForaDePadrao(colecaoLinha.idiomaExigido, copiaLinha.idioma);
-      if (foraDePadrao && !opcoes.permitirForaDePadrao) {
-        return {
-          ok: false,
-          // Mesmo raciocínio de `avaliarElegibilidade`: `foraDePadrao`
-          // só é true com `idiomaExigido` preenchido.
-          motivo: recusa("idiomaExigido", {
-            exigido: colecaoLinha.idiomaExigido!,
-            copia: copiaLinha.idioma,
-          }),
-        };
-      }
-
-      const existentes = await tx
-        .select({ chave: vaga.chave })
-        .from(vaga)
-        .where(eq(vaga.colecaoId, colecaoId));
-      const chave = proximaChaveSequencial(existentes.map((e) => e.chave));
-
-      const plano = planejarAlocacaoDeLote(copiaLinha.quantidade);
-      let copiaAlocadaId = copiaLinha.id;
-      if (plano.dividir) {
-        await tx
-          .update(copia)
-          .set({ quantidade: plano.quantidadeRestanteNaOriginal, atualizadoEm: new Date() })
-          .where(eq(copia.id, copiaLinha.id));
-
-        const [nova] = await tx
-          .insert(copia)
-          .values({
-            cartaId: copiaLinha.cartaId,
-            idiomaCatalogo: copiaLinha.idiomaCatalogo,
-            idioma: copiaLinha.idioma,
-            variante: copiaLinha.variante,
-            quantidade: 1,
-            condicao: copiaLinha.condicao,
-            gradedEmpresa: copiaLinha.gradedEmpresa,
-            gradedNota: copiaLinha.gradedNota,
-            gradedCertificado: copiaLinha.gradedCertificado,
-            localizacao: copiaLinha.localizacao,
-            aquisicaoData: copiaLinha.aquisicaoData,
-            aquisicaoOrigem: copiaLinha.aquisicaoOrigem,
-            aquisicaoPreco: copiaLinha.aquisicaoPreco,
-            notas: copiaLinha.notas,
-          })
-          .returning({ id: copia.id });
-        copiaAlocadaId = nova.id;
-      }
-
-      const [novaVaga] = await tx
-        .insert(vaga)
-        .values({ colecaoId, chave, copiaId: copiaAlocadaId })
-        .returning({ id: vaga.id });
-
-      return {
-        ok: true,
-        vagaId: novaVaga.id,
-        chave,
-        copiaAlocadaId,
-        dividida: plano.dividir,
-        foraDePadrao,
-      };
+      const travada = await travarColecaoCustomizada(tx, colecaoId);
+      if (!travada.ok) return travada;
+      return adicionarCopiaCustomizadaNaTransacao(tx, travada.colecao, copiaId, opcoes);
     });
   } catch (err) {
-    if (violaUnicidadeVagaCopiaId(err)) {
-      return { ok: false, motivo: recusa("copiaJaAlocada") };
-    }
-    if (violaUnicidadeVagaChave(err)) {
-      return { ok: false, motivo: recusa("conflitoAoGerarProximaVaga") };
-    }
+    const motivo = recusaDeUnicidadeDaCustomizada(err);
+    if (motivo) return { ok: false, motivo };
     throw err;
   }
+}
+
+/** A violação de unicidade que uma adição à customizada pode levantar, como recusa; `null` se for outra coisa. */
+export function recusaDeUnicidadeDaCustomizada(err: unknown): Recusa | null {
+  if (violaUnicidadeVagaCopiaId(err)) return recusa("copiaJaAlocada");
+  if (violaUnicidadeVagaChave(err)) return recusa("conflitoAoGerarProximaVaga");
+  return null;
+}
+
+type LinhaColecao = typeof colecao.$inferSelect;
+
+/**
+ * Lê a coleção com `FOR UPDATE` e confere que ela é customizada — a seção
+ * crítica de `adicionarCopiaEmColecaoCustomizada` (ver lá). Exportada para o
+ * lote das cartas do tema (`lib/db/cartas-do-tema.ts`), que trava uma vez e
+ * adiciona várias.
+ */
+export async function travarColecaoCustomizada(
+  tx: Transacao,
+  colecaoId: string,
+): Promise<{ ok: true; colecao: LinhaColecao } | { ok: false; motivo: Recusa }> {
+  const [colecaoLinha] = await tx
+    .select()
+    .from(colecao)
+    .where(eq(colecao.id, colecaoId))
+    .for("update")
+    .limit(1);
+  if (!colecaoLinha) return { ok: false, motivo: recusa("colecaoNaoEncontrada") };
+  if (colecaoLinha.tipo !== "customizada") {
+    return { ok: false, motivo: recusa("fluxoSoParaCustomizada") };
+  }
+  return { ok: true, colecao: colecaoLinha };
+}
+
+/**
+ * O corpo da adição, dentro de uma transação que já travou a coleção
+ * (`travarColecaoCustomizada`). Extraído quando entrou o lote das cartas do
+ * tema (2026-11-22): alocar várias cópias numa transação é chamar isto várias
+ * vezes, e reimplementar a divisão de lote e a chave sequencial lá seria
+ * manter duas cópias da mesma regra.
+ *
+ * Recusa por `return`, sem ter escrito nada: quem chama dentro de um lote tem
+ * de transformar a recusa em exceção para desfazer o que as cópias anteriores
+ * já gravaram (o mesmo cuidado de `trocarCopiaDaVaga`). Não captura a
+ * violação de unicidade — quem abre a transação traduz
+ * (`recusaDeUnicidadeDaCustomizada`).
+ */
+export async function adicionarCopiaCustomizadaNaTransacao(
+  tx: Transacao,
+  colecaoLinha: LinhaColecao,
+  copiaId: string,
+  opcoes: { permitirForaDePadrao?: boolean } = {},
+): Promise<ResultadoAdicionarCopiaCustomizada> {
+  const colecaoId = colecaoLinha.id;
+  const [copiaLinha] = await tx
+    .select()
+    .from(copia)
+    .where(eq(copia.id, copiaId))
+    .for("update")
+    .limit(1);
+  if (!copiaLinha) return { ok: false, motivo: recusa("copiaNaoEncontrada") };
+
+  const jaAlocada = await tx
+    .select({ id: vaga.id })
+    .from(vaga)
+    .where(eq(vaga.copiaId, copiaId))
+    .limit(1);
+  if (jaAlocada.length > 0) {
+    return { ok: false, motivo: recusa("copiaJaAlocada") };
+  }
+
+  // Coleção customizada não tem universo fixo (qualquer cópia serve) —
+  // só resta checar o idiomaExigido, igual à alocação normal. O tema de
+  // uma temática é conferido por quem chama, antes.
+  const foraDePadrao = ehForaDePadrao(colecaoLinha.idiomaExigido, copiaLinha.idioma);
+  if (foraDePadrao && !opcoes.permitirForaDePadrao) {
+    return {
+      ok: false,
+      // Mesmo raciocínio de `avaliarElegibilidade`: `foraDePadrao`
+      // só é true com `idiomaExigido` preenchido.
+      motivo: recusa("idiomaExigido", {
+        exigido: colecaoLinha.idiomaExigido!,
+        copia: copiaLinha.idioma,
+      }),
+    };
+  }
+
+  const existentes = await tx
+    .select({ chave: vaga.chave })
+    .from(vaga)
+    .where(eq(vaga.colecaoId, colecaoId));
+  const chave = proximaChaveSequencial(existentes.map((e) => e.chave));
+
+  const plano = planejarAlocacaoDeLote(copiaLinha.quantidade);
+  let copiaAlocadaId = copiaLinha.id;
+  if (plano.dividir) {
+    await tx
+      .update(copia)
+      .set({ quantidade: plano.quantidadeRestanteNaOriginal, atualizadoEm: new Date() })
+      .where(eq(copia.id, copiaLinha.id));
+
+    const [nova] = await tx
+      .insert(copia)
+      .values({
+        cartaId: copiaLinha.cartaId,
+        idiomaCatalogo: copiaLinha.idiomaCatalogo,
+        idioma: copiaLinha.idioma,
+        variante: copiaLinha.variante,
+        quantidade: 1,
+        condicao: copiaLinha.condicao,
+        gradedEmpresa: copiaLinha.gradedEmpresa,
+        gradedNota: copiaLinha.gradedNota,
+        gradedCertificado: copiaLinha.gradedCertificado,
+        localizacao: copiaLinha.localizacao,
+        aquisicaoData: copiaLinha.aquisicaoData,
+        aquisicaoOrigem: copiaLinha.aquisicaoOrigem,
+        aquisicaoPreco: copiaLinha.aquisicaoPreco,
+        notas: copiaLinha.notas,
+      })
+      .returning({ id: copia.id });
+    copiaAlocadaId = nova.id;
+  }
+
+  const [novaVaga] = await tx
+    .insert(vaga)
+    .values({ colecaoId, chave, copiaId: copiaAlocadaId })
+    .returning({ id: vaga.id });
+
+  return {
+    ok: true,
+    vagaId: novaVaga.id,
+    chave,
+    copiaAlocadaId,
+    dividida: plano.dividir,
+    foraDePadrao,
+  };
 }
 
 // --- Sugestão de candidatos para uma vaga -------------------------------

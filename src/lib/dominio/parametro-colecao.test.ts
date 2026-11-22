@@ -149,6 +149,16 @@ describe("validarParametroColecao — customizada", () => {
     const r = validarParametroColecao("customizada", { escopo: "nacional" });
     expect(r.ok).toBe(false);
   });
+
+  it("aceita o tema da coleção temática, e só ele", () => {
+    const r = validarParametroColecao("customizada", { tema: { tipo: "tipo", valor: "Psychic" } });
+    expect(r).toEqual({
+      ok: true,
+      resultado: { tipo: "customizada", parametro: { tema: { tipo: "tipo", valor: "Psychic" } } },
+    });
+    expect(validarParametroColecao("customizada", { tema: { tipo: "tipo", valor: "Psychic" }, extra: 1 }).ok).toBe(false);
+    expect(validarParametroColecao("customizada", { tema: { tipo: "cor", valor: "azul" } }).ok).toBe(false);
+  });
 });
 
 describe("validarParametroColecao — tipo inválido", () => {

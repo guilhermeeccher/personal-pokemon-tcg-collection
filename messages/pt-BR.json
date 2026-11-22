@@ -180,7 +180,36 @@
       "demais": "Marque no máximo {maximo} coleções por vez."
     },
     "tentarDeNovo": "Tentar de novo",
-    "grupoExcluido": "Este grupo foi excluído em outra aba."
+    "grupoExcluido": "Este grupo foi excluído em outra aba.",
+    "temaDaColecao": " · tema: {tema}",
+    "sugestoes": {
+      "titulo": "Sugestões",
+      "descricao": "Coleções que você já está perto de ter. Nada é criado sem o seu clique.",
+      "mostrar": "Mostrar",
+      "recolher": "Recolher",
+      "erroCarregar": "Falha ao carregar as sugestões.",
+      "tentarDeNovo": "Tentar de novo",
+      "erroDispensar": "Não foi possível dispensar a sugestão.",
+      "erroRede": "Falha de rede. A lista de sugestões foi atualizada.",
+      "razao": {
+        "set": "Você tem {quantidade} das {total} cartas oficiais do set <forte>{rotulo}</forte>.",
+        "especie": "Você tem {quantidade, plural, =1 {# carta} other {# cartas}} de <forte>{rotulo}</forte>.",
+        "tipo": "Você tem {quantidade, plural, =1 {# carta} other {# cartas}} do tipo <forte>{rotulo}</forte>.",
+        "ilustrador": "Você tem {quantidade, plural, =1 {# carta ilustrada} other {# cartas ilustradas}} por <forte>{rotulo}</forte>.",
+        "raridade": "Você tem {quantidade, plural, =1 {# carta} other {# cartas}} de raridade <forte>{rotulo}</forte>.",
+        "forma": "Você tem {quantidade, plural, =1 {# carta} other {# cartas}} na forma <forte>{rotulo}</forte>.",
+        "setSemOficial": "Você tem {quantidade} das {total} cartas do set <forte>{rotulo}</forte>."
+      },
+      "criarColecao": "Criar coleção",
+      "criarTema": "Criar coleção temática",
+      "semInteresse": "Não tenho interesse",
+      "confirmarDispensa": "Esta sugestão não volta a aparecer. Dispensar?",
+      "confirmarDispensaBotao": "Sim, dispensar",
+      "cancelar": "Cancelar",
+      "verTodas": "Ver todas (mais {total})",
+      "verMenos": "Ver menos",
+      "cartasAlocadas": "{total, plural, =1 {1 carta alocada} other {# cartas alocadas}} na coleção temática."
+    }
   },
   "cadastroBusca": {
     "titulo": "Cadastro por busca",
@@ -344,7 +373,12 @@
     "remover": "remover",
     "ajudaVariosSets": "A coleção junta os sets escolhidos, na ordem da lista. Depois de criada, dá para incluir e excluir cartas avulsas.",
     "campoGrupo": "Grupo (opcional)",
-    "semGrupo": "Sem grupo"
+    "semGrupo": "Sem grupo",
+    "setDaSugestaoNaoEncontrado": "O set da sugestão não está no catálogo (pt ou en). Escolha a expansão abaixo.",
+    "carregandoSugestao": "Carregando o set da sugestão…",
+    "erroSugestao": "Não foi possível carregar o set da sugestão.",
+    "tentarDeNovo": "Tentar de novo",
+    "continuarSemSugestao": "Continuar sem a sugestão"
   },
   "colecoesFalta": {
     "voltar": "← Coleções",
@@ -690,7 +724,8 @@
     "concluirEdicaoCartas": "Concluir",
     "tirarDaColecaoAlvo": "Tirar {alvo} da coleção",
     "avisoSemNumeracaoOficialDoSet": "{sets} não tem numeração oficial separada no upstream; nesta coleção entra com as {total} cartas conhecidas, sem distinção de secretas.",
-    "semCopiaLivre": "Sem cópia livre"
+    "semCopiaLivre": "Sem cópia livre",
+    "temaCartasAlocadas": "{total, plural, =1 {1 carta alocada} other {# cartas alocadas}} neste tema."
   },
   "opcoesCompra": {
     "voltar": "← Voltar para a coleção",
@@ -1059,7 +1094,16 @@
     "nomeDaColecaoVazio": "Dê um nome à coleção do set {setId}.",
     "setForaDaSerieDoGrupo": "O set {setId} não é da série deste grupo.",
     "setJaTemColecao": "O set {setId} já tem a coleção \"{colecao}\". Recarregue a prévia; nada foi criado.",
-    "colecaoForaDasExistentesDoGrupo": "A lista de coleções mudou em outra aba. Recarregue a prévia; nada foi movido."
+    "colecaoForaDasExistentesDoGrupo": "A lista de coleções mudou em outra aba. Recarregue a prévia; nada foi movido.",
+    "sugestaoInvalida": "Essa sugestão não existe mais. Recarregue a página.",
+    "colecaoSemTema": "Esta coleção não tem tema.",
+    "copiaForaDoTema": "Uma das cartas não cabe no tema desta coleção. Recarregue a lista; nada foi alocado.",
+    "quantidadeDeCartasDoTemaInvalida": "Escolha de 1 a {maximo} cartas para adicionar.",
+    "corpoInvalido": "Pedido inválido. Recarregue a página e tente de novo.",
+    "pedidoDeCartasDoTemaInvalido": "A lista de cartas enviada está incompleta. Recarregue a lista e tente de novo; nada foi alocado.",
+    "copiaRepetidaNoPedido": "A mesma carta veio duas vezes no pedido. Recarregue a lista; nada foi alocado.",
+    "cartasDoTemaDesatualizadas": "Suas cartas mudaram desde que a lista abriu (em outra aba, talvez). Recarregue a lista; nada foi alocado.",
+    "temaJaTemColecao": "Já existe a coleção \"{colecao}\" com este tema. Abra essa; nada foi criado."
   },
   "dex": {
     "categoria": {
@@ -1413,5 +1457,99 @@
       "muitasTentativas": "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
       "generico": "Não foi possível entrar. Tente de novo."
     }
+  },
+  "tiposPokemon": {
+    "Grass": "Planta",
+    "Fire": "Fogo",
+    "Water": "Água",
+    "Lightning": "Elétrico",
+    "Psychic": "Psíquico",
+    "Fighting": "Luta",
+    "Darkness": "Escuridão",
+    "Metal": "Metal",
+    "Fairy": "Fada",
+    "Dragon": "Dragão",
+    "Colorless": "Incolor"
+  },
+  "temaColecao": {
+    "especieSemNome": "Pokémon nº {numero}",
+    "formas": {
+      "alola": "Alola",
+      "galar": "Galar",
+      "hisui": "Hisui",
+      "paldea": "Paldea",
+      "mega": "Mega",
+      "gigantamax": "Gigantamax"
+    },
+    "nomePadrao": "Tema — {rotulo}",
+    "nomePadraoIlustrador": "Tema — Ilustrações de {rotulo}",
+    "criar": {
+      "titulo": "Nova coleção temática: {tema}",
+      "descricao": "A coleção nasce vazia. No passo seguinte você escolhe quais das suas cartas livres entram nela.",
+      "campoNome": "Nome",
+      "campoGrupo": "Grupo (opcional)",
+      "semGrupo": "Sem grupo",
+      "cancelar": "Cancelar",
+      "criar": "Criar coleção",
+      "criando": "Criando…",
+      "erroCriar": "Falha ao criar a coleção.",
+      "erroRede": "Sem resposta do servidor: não dá para saber se a coleção foi criada. Pode tentar de novo — se ela já existir, o servidor avisa e você a abre.",
+      "abrirExistente": "Abrir “{colecao}”"
+    },
+    "cartas": {
+      "titulo": "Suas cartas que cabem em {colecao}",
+      "descricao": "Cartas livres do seu inventário que cabem no tema {tema}. Desmarque o que não quiser: só entra o que você confirmar.",
+      "descricaoSemTema": "Cartas livres do seu inventário que cabem no tema desta coleção.",
+      "carregando": "Carregando…",
+      "nenhuma": "Nenhuma carta livre cabe neste tema agora.",
+      "marcarTodas": "Marcar todas",
+      "desmarcarTodas": "Desmarcar todas",
+      "marcadas": "{marcadas} de {total} marcadas",
+      "qtd": "{total} un.",
+      "jaNaColecao": "Já tem esta carta",
+      "foraDePadrao": "Fora do idioma exigido ({idioma})",
+      "demais": "Marque no máximo {maximo} cartas por vez.",
+      "agoraNao": "Agora não",
+      "alocar": "{total, plural, =0 {Alocar} =1 {Alocar 1 carta} other {Alocar # cartas}}",
+      "alocando": "Alocando…",
+      "erroCarregar": "Falha ao carregar as cartas.",
+      "erroAlocar": "Não foi possível alocar as cartas. Nada foi gravado; a lista foi atualizada.",
+      "erroRede": "Sem resposta do servidor: não dá para saber se as cartas foram alocadas. Estamos relendo a lista; confira antes de tentar de novo."
+    },
+    "bloco": {
+      "tema": "Tema: {tipo} — {tema}",
+      "tipos": {
+        "especie": "espécie",
+        "tipo": "tipo",
+        "ilustrador": "ilustrador",
+        "raridade": "raridade",
+        "forma": "forma"
+      },
+      "cartasNovas": "{total, plural, =1 {1 carta nova cabe} other {# cartas novas cabem}} neste tema.",
+      "ver": "Ver cartas"
+    }
+  },
+  "raridadesCarta": {
+    "ACE SPEC Rare": "ACE SPEC Raro",
+    "Amazing Rare": "Raras Incríveis",
+    "Black White Rare": "Rara Preto e Branco",
+    "Double rare": "Rara Dupla",
+    "Full Art Trainer": "Arte Completa de Treinador",
+    "Holo Rare": "Rara Holo",
+    "Holo Rare V": "Rara Holo V",
+    "Holo Rare VMAX": "Rara Holo VMAX",
+    "Holo Rare VSTAR": "Rara Holo VSTAR",
+    "Hyper rare": "Hiper rara",
+    "Illustration rare": "Ilustração Rara",
+    "Mega Hyper Rare": "Mega Hiper Raro",
+    "Radiant Rare": "Rara Radiante",
+    "Rare": "Rara",
+    "Secret Rare": "Rare Secreta",
+    "Shiny Ultra Rare": "Brilhante Ultra Rara",
+    "Shiny rare": "Shiny rara",
+    "Shiny rare V": "Shiny rara V",
+    "Shiny rare VMAX": "Shiny rara VMAX",
+    "Special illustration rare": "Ilustração Rara Especial",
+    "Ultra Rare": "Ultra Rara"
   }
 }

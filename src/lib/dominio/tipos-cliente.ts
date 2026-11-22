@@ -20,6 +20,8 @@ import type {
   SerieParaGrupo,
   SetFaltante,
 } from "./grupos-colecao";
+import type { ParametroCustomizadaTema, TemaColecao } from "./tema-colecao";
+import type { Sugestao, SugestaoDeSet, SugestaoDeTema, TipoSugestao } from "./sugestoes-colecao";
 
 export interface FlagsVarianteDTO {
   varianteNormalDisponivel: boolean;
@@ -150,7 +152,8 @@ export interface ColecaoListaDTO {
   id: string;
   nome: string;
   tipo: TipoColecao;
-  parametro: ParametroPokedex | ParametroSet | null;
+  /** Na customizada: `null`, ou `{ tema }` na coleção temática (`tema-colecao.ts`). */
+  parametro: ParametroPokedex | ParametroSet | ParametroCustomizadaTema | null;
   idiomaExigido: Idioma | null;
   notas: string | null;
   criadoEm: string;
@@ -165,6 +168,8 @@ export interface ColecaoListaDTO {
   grupoId: string | null;
   /** Posição dentro do grupo (ou de "sem grupo"). A lista já chega ordenada (`ordem-colecoes.ts`). */
   ordem: number;
+  /** Só coleção temática de espécie: o nome da espécie, para rotular o tema. */
+  temaRotulo?: string;
 }
 
 /**
@@ -245,6 +250,103 @@ export interface TrazerExistentesDTO {
   itens: { id: string; grupoOrigemId: string | null }[];
 }
 
+// --- Sugestões de coleção e coleção temática (2026-11-22) -------------------
+
+/**
+ * Uma sugestão de coleção (`montarSugestoes`), discriminada por `tipo`.
+ * `chave` é `tipo:valor`.
+ *
+ * - **set** (`SugestaoDeSet`): `valor`/`setId` é o `set_id`; `rotulo` o nome
+ *   do set; `quantidade` de `total` — `total` é a numeração OFICIAL (regra 4),
+ *   salvo no set sem numeração oficial (`mep`), em que é o total que a criação
+ *   usa no lugar dela e `totalOficial` vem `false` (não chame de "oficial");
+ *   só é sugerido set com linha pt/en ativa, o mesmo filtro de `/api/sets`;
+ *   `vagasMaterializaveis` só aparece quando o catálogo local tem menos vagas
+ *   que isso; `nomeSugerido` é o nome da criação (`AAAA - SIGLA - Nome`).
+ * - **tema** (`SugestaoDeTema`): `valor` é a chave canônica — rótulo pela tela:
+ *   espécie → `rotulo` (nome do catálogo; ausente, mostre `#valor`); tipo →
+ *   `tiposPokemon.<valor>`; raridade → `raridadesCarta.<valor>` (a raridade da
+ *   linha en); forma → `temaColecao.formas.<valor>`; ilustrador como está.
+ *   Sem entrada no catálogo de mensagens, o valor como está. **Tema não traz
+ *   `nomeSugerido`** (o tipo o declara `never`): o nome padrão de uma coleção
+ *   temática a tela monta no idioma da interface.
+ */
+export type SugestaoDTO = Sugestao;
+export type SugestaoDeSetDTO = SugestaoDeSet;
+export type SugestaoDeTemaDTO = SugestaoDeTema;
+
+/**
+ * `GET /api/sugestoes` — todas, já na ordem; a tela mostra as
+ * `MAXIMO_SUGESTOES_VISIVEIS` primeiras e "Ver todas" o resto.
+ */
+export interface ListaSugestoesDTO {
+  sugestoes: SugestaoDTO[];
+}
+
+/** `POST /api/sugestoes/dispensar` — corpo. 200 `{ ok: true }`, também quando já estava dispensada. */
+export interface DispensarSugestaoDTO {
+  tipo: TipoSugestao;
+  valor: string;
+}
+
+/** Uma cópia livre que cabe no tema (`lib/db/cartas-do-tema.ts`). */
+export interface CartaDoTemaDTO {
+  copiaId: string;
+  cartaId: string;
+  idiomaCatalogo: Idioma;
+  /** Idioma FÍSICO da cópia. */
+  idioma: Idioma;
+  variante: VarianteCopia;
+  condicao: Condicao;
+  /** Unidades no lote; alocar tira uma. */
+  quantidade: number;
+  cartaNome: string;
+  cartaLocalId: string;
+  setId: string;
+  setNome: string;
+  imagemUrl: string | null;
+  imagemOrigem: OrigemImagem | null;
+  /** Fora do `idiomaExigido` da coleção: só aloca com `permitirForaDePadrao`. Nunca vem marcada. */
+  foraDePadrao: boolean;
+  /** A coleção já tem esta carta (outra cópia). Nunca vem marcada. */
+  jaNaColecao: boolean;
+  /** Uma por carta física — a lista vem com estas marcadas (`marcarUmaPorCarta`). */
+  marcadaPorPadrao: boolean;
+}
+
+/**
+ * `GET /api/colecoes/:id/cartas-do-tema` — só lê. `cartasNovas` é o "N cartas
+ * novas cabem neste tema": cartas físicas distintas que a coleção ainda não
+ * tem. 400 `colecaoSemTema` em coleção que não é temática.
+ */
+export interface CartasDoTemaDTO {
+  tema: TemaColecao;
+  /** Só tema de espécie: o nome da espécie. */
+  temaRotulo?: string;
+  cartasNovas: number;
+  cartas: CartaDoTemaDTO[];
+}
+
+/**
+ * `POST /api/colecoes/:id/cartas-do-tema` — corpo: 1 a 500 itens, sem cópia
+ * repetida. **Cada item devolve o que a prévia mostrou** da cópia
+ * (`CartaDoTemaDTO.quantidade` e `.jaNaColecao`): sob a trava, um lote com
+ * outra quantidade (outra aba alocou dele) ou uma carta que entrou na coleção
+ * desde a prévia recusa o pedido inteiro com 409 `cartasDoTemaDesatualizadas`
+ * — releia a lista. Cópia alocada em outra aba é 409 `copiaJaAlocada`. Tudo ou
+ * nada. O formato antigo (`copiaIds`) é recusado: 400
+ * `pedidoDeCartasDoTemaInvalido`.
+ */
+export interface AlocarCartasDoTemaDTO {
+  itens: { copiaId: string; quantidade: number; jaNaColecao: boolean }[];
+  permitirForaDePadrao?: boolean;
+}
+
+/** `POST /api/colecoes/:id/cartas-do-tema` — 201, uma vaga por cópia, na ordem do pedido. */
+export interface CartasDoTemaAlocadasDTO {
+  vagas: { copiaId: string; vagaId: string; chave: string }[];
+}
+
 export interface VagaDaColecaoDTO {
   id: string;
   chave: string;
@@ -292,7 +394,8 @@ export interface ColecaoComVagasDTO {
   id: string;
   nome: string;
   tipo: TipoColecao;
-  parametro: ParametroPokedex | ParametroSet | null;
+  /** Na customizada: `null`, ou `{ tema }` na coleção temática (`tema-colecao.ts`). */
+  parametro: ParametroPokedex | ParametroSet | ParametroCustomizadaTema | null;
   idiomaExigido: Idioma | null;
   notas: string | null;
   criadoEm: string;
@@ -308,6 +411,8 @@ export interface ColecaoComVagasDTO {
   divisoes: Divisao[];
   /** As vagas pedem cartas de mais de um set — a tela mostra o set de cada uma. */
   multiplosSets: boolean;
+  /** Só coleção temática de espécie: o nome da espécie, para rotular o tema. */
+  temaRotulo?: string;
 }
 
 // --- Visão geral do inventário (item 1) -----------------------------------

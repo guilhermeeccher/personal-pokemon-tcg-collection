@@ -45,6 +45,9 @@ import type {
   VagaDaColecaoDTO,
 } from "@/lib/dominio/tipos-cliente";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { temaDaColecao } from "@/lib/dominio/tema-colecao";
+
+import { BlocoTema } from "./bloco-tema";
 
 /* As regiões no formato que a GradeEscopo desenha — nome e faixa em
    campos separados, para a faixa sair na face mono. */
@@ -206,6 +209,7 @@ export default function ColecaoPage() {
   }
 
   const customizada = colecao.tipo === "customizada";
+  const tema = temaDaColecao(colecao);
   const parametroSet = colecao.parametro as
     | { incluirSecretas?: boolean; idiomaCatalogo?: Idioma }
     | null;
@@ -421,6 +425,20 @@ export default function ColecaoPage() {
               </select>
             </label>
         </div>
+      )}
+
+      {tema && (
+        <BlocoTema
+          colecaoId={id}
+          nomeColecao={colecao.nome}
+          tema={tema}
+          temaRotulo={colecao.temaRotulo}
+          alocadas={colecao.vagas.map((v) => v.copiaId ?? "").join(",")}
+          onAlocadas={(total) => {
+            setMensagem(t("temaCartasAlocadas", { total }));
+            carregar();
+          }}
+        />
       )}
 
       {customizada && (

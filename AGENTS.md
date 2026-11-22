@@ -433,6 +433,86 @@ at most one group or in none. Every collection type can be grouped.
 
 ---
 
+## Collection suggestions
+
+Since 2026-11-22 the collections screen opens with suggestions: a set or a theme the user already
+owns enough cards of, with the reason and one button. **Nothing is created or allocated without the
+click** (rule 5). The rules live in pure modules (`lib/dominio/sugestoes-colecao.ts`,
+`tema-colecao.ts`, `cartas-do-tema.ts`); the SQL only fetches.
+
+- **The count is distinct physical cards**: distinct `copia.carta_id`, allocated or free — the pt and
+  en rows of one card are one card. **Western rows only**: a copy identified by a Japanese row
+  (`idioma_catalogo = jp`) counts for nothing in this first cut.
+- **A set reads "N of its official count"**: `total` is the set's official numbering (rule 4; the
+  set with none, like `mep`, uses its total), not what the local catalog materializes — a set with
+  34 rows of 48 official reads "x of 48", and `vagasMaterializaveis` says 34. For the set with no
+  official numbering the total is the fallback the creation uses, and `totalOficial` is `false` so
+  the screen never calls it official. Only a set with at least one **active** pt/en row is
+  suggested — the filter `/api/sets` uses, which the prefilled new-collection screen resolves against. `quantidade`, and the
+  threshold, are the owned cards, by `carta_id`, among the set's own cards that fall in the slots its
+  collection would get (read card by card pt→en, cut by rule 4): a secret rare never counts, so the
+  percentage never passes 100%.
+- **Thresholds live in one place** (`LIMIARES_SUGESTAO`): set 5, species 5, type 20, illustrator 8,
+  rarity 10, form 5. Species follows rules 2 and 3 (exactly one `dexId`, forms count for the
+  species); a type is `carta_catalogo.tipos` as stored, in English, and a card with no type counts
+  for none; the illustrator is the exact string, never merged.
+- **A rarity theme is canonical** (`raridadeCanonica`): the rarity of the card's **en** row (same
+  `carta_id`) when it has one, else the stored string. The pt and en rows of one card spell it in
+  two languages ("Rara Dupla", "Double rare"); comparing the copy's own row would split one theme in
+  two and miss cards. Counting, matching, the theme value and the dismissal all use the canonical
+  value; the screen labels it through `raridadesCarta` in `messages/*.json` (keyed by the en string;
+  pt labels are the pt catalog's own spelling of the same cards; a key with a `.` cannot exist in
+  next-intl, so `Rare Holo LV.X` shows as stored, like anything without an entry). Common,
+  uncommon and Promo are never a rarity theme, and neither is the literal "None"/"Sem raridade" —
+  that is upstream saying the card has no rarity, not a rarity.
+- **A suggestion disappears when a collection covers it**: a set by the groups' "already exists"
+  rule (a Western Set collection with the set in its recipe, `colecoesPorSet`); a theme by a
+  thematic collection with the same kind and value.
+- **"Not interested" is forever, and stored** (`sugestao_dispensada`, unique `(tipo, valor)`): it
+  never expires and does not come back when the count grows. Dismissing again changes nothing.
+- **Order** (`ordenarSugestoes`): inside a kind, set by percentage owned then count, theme by count;
+  across kinds, rounds — the best of each kind first, then the second of each — so six suggestions
+  of one kind never push the others out of the six the screen shows. Inside a round, strength
+  relative to the threshold (`quantidade / limiar`), ties in `ORDEM_TIPOS_SUGESTAO`.
+- **A thematic collection is a `customizada` with `parametro.tema`** (`{ tema: { tipo, valor } }`).
+  The validator accepts exactly that shape or null, nothing else; a plain custom collection is
+  unchanged. It is created through `POST /api/colecoes`, the single creation path, and is born
+  empty: its slots are born when a copy is allocated, like any custom one. **No denominator** — its
+  progress is "N cards". The theme guides the list below; it does not restrict a manual addition
+  through the usual custom-collection flow.
+- **One thematic collection per theme.** Creating a second one with the same kind and value (the
+  rarity value is the canonical one the suggestion carries) is refused with 409 `temaJaTemColecao`,
+  whose values carry the existing collection (`colecaoId`, `colecao`). The check runs inside the
+  creation transaction, under the same `travarOrganizacaoColecoes` lock, so it is atomic with the
+  insert: a lost response that makes the user click again, or a second tab, must never produce two
+  collections of one theme — the second request gets the one that exists. A plain custom collection
+  (no theme) is unaffected.
+- **"Your cards that fit this theme" only lists** (`GET /api/colecoes/:id/cartas-do-tema`): free
+  copies (in no slot anywhere, rule 1) whose Western row fits the theme. **One copy per physical
+  card comes ticked** — not the one of a card the collection already holds, never one outside the
+  required language; a second copy of the same card is the user's tick, never the system's.
+- **The confirm allocates all or nothing** (`POST .../cartas-do-tema`, 1 to 500 copies) in one
+  transaction, through the custom collection's own allocation (`adicionarCopiaCustomizadaNaTransacao`:
+  sequential key, lot split, required language). **Each item carries what the preview showed** — the
+  lot's quantity and whether the card was already in the collection — and the batch checks it under
+  the lock (`conferirPedidoComEstado`). The id alone is not enough: the lot split leaves the original
+  id free, so two tabs confirming the same 2-unit copy would both succeed and put the card in twice
+  without the user ever ticking a second copy. A changed quantity, a card that entered the
+  collection since the preview, or a copy taken or deleted meanwhile refuses the whole batch with
+  409 and nothing is written; a refusal after the first write leaves by exception, never by
+  `return` (the same care as rule 8). Copies are locked in UUID order, so two batches of different
+  collections sharing copies cannot deadlock. A unique violation is read through Drizzle's `cause`
+  chain (`restricaoUnicaViolada`) before it becomes a 409.
+- **The API is language-neutral.** The screen labels a theme by its canonical value: type through
+  `tiposPokemon`, rarity through `raridadesCarta`, form through `temaColecao.formas`, illustrator as
+  stored; an entry that does not exist shows the value as stored. A species theme carries the
+  species name (`rotulo` on the suggestion, `temaRotulo` on the thematic collection and on its card
+  list), never guessed on screen. A set suggestion carries its default name (`AAAA - SIGLA - Nome`,
+  the groups' `nomeSugeridoDoSet`); a theme suggestion has none, by type, and its default name is
+  composed on screen in the interface language.
+
+---
+
 ## LigaPokemon price collector — hard rules
 
 The source is **LigaPokemon**, read through the site's public search (`lib/liga/cliente.ts`).

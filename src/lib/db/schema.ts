@@ -362,7 +362,9 @@ export const colecao = pgTable("colecao", {
 
   /**
    * Parâmetro conforme o tipo: escopo (nacional/região) para pokedex,
-   * { setId, incluirSecretas } para set. Ausente/nulo para customizada.
+   * { setId, incluirSecretas } para set. Nulo para customizada, ou
+   * `{ tema: { tipo, valor } }` na customizada temática (2026-11-22,
+   * `lib/dominio/tema-colecao.ts`) — jsonb, sem migração.
    */
   parametro: jsonb("parametro"),
 
@@ -1054,6 +1056,29 @@ export const semEstoqueLiga = pgTable(
     registradoEm: timestamp("registrado_em", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique("sem_estoque_liga_unica").on(t.chave, t.qualidade)],
+);
+
+// --- sugestao_dispensada — "Não tenho interesse" numa sugestão de coleção ---
+
+/**
+ * Uma sugestão de coleção que o usuário dispensou (decisão de 2026-11-22,
+ * `lib/dominio/sugestoes-colecao.ts`). **Para sempre**: não vence e não volta
+ * sozinha, nem quando a contagem cresce — "não tenho interesse" é sobre o
+ * tema, não sobre o número.
+ *
+ * A chave é a da sugestão (`tipo`, `valor`): `set` + `set_id`, ou o tipo e o
+ * valor do tema. Texto, sem enum nem FK: o set é chave de catálogo composta,
+ * e um tipo novo de sugestão não pede migração. Dispensar de novo não faz
+ * nada (`on conflict do nothing` contra a unicidade).
+ */
+export const sugestaoDispensada = pgTable(
+  "sugestao_dispensada",
+  {
+    tipo: text("tipo").notNull(),
+    valor: text("valor").notNull(),
+    dispensadaEm: timestamp("dispensada_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique("sugestao_dispensada_unica").on(t.tipo, t.valor)],
 );
 
 // --- Living Dex (módulo opcional, `MODULO_LIVING_DEX=1`) ------------------

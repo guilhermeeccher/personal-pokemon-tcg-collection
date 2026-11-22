@@ -11,7 +11,9 @@
  *   volta. `idiomaCatalogo` é o idioma PREFERIDO da ficha, carta a carta
  *   (`escolherLinhaPorCarta`) — independente do `idiomaExigido` da
  *   coleção, que é o idioma da carta FÍSICA (AGENTS.md regra 7).
- * - `customizada`: sem parâmetro (null).
+ * - `customizada`: sem parâmetro (null) ou, na coleção temática (decisão de
+ *   2026-11-22), `{ tema: { tipo, valor } }` — validado por
+ *   `tema-colecao.ts`. Nada além dessas duas formas.
  *
  * Parâmetro inválido para o tipo é rejeitado com erro claro — nunca
  * normalizado no silêncio (decisão explícita da tarefa).
@@ -21,6 +23,7 @@
 
 import { type Regiao, ehRegiao } from "./escopo-pokedex";
 import type { IdiomaCatalogo } from "./idioma-catalogo";
+import { type ParametroCustomizadaTema, validarParametroCustomizada } from "./tema-colecao";
 
 export const TIPOS_COLECAO = ["pokedex", "set", "customizada"] as const;
 export type TipoColecao = (typeof TIPOS_COLECAO)[number];
@@ -49,8 +52,12 @@ export interface ParametroSet {
 /** Limite de sets numa receita — folgado para o caso real (2), e um teto contra erro de digitação na API. */
 export const MAXIMO_SETS_POR_COLECAO = 10;
 
-/** `customizada` não tem parâmetro estrutural. */
-export type ParametroCustomizada = null;
+/**
+ * `customizada` não tem parâmetro estrutural: `null` na simples, o tema na
+ * temática. O tema não cria vaga — a vaga da customizada continua nascendo
+ * ao alocar.
+ */
+export type ParametroCustomizada = ParametroCustomizadaTema | null;
 
 export type ParametroColecao =
   | { tipo: "pokedex"; parametro: ParametroPokedex }
@@ -153,8 +160,9 @@ function validarParametroSet(bruto: unknown): { ok: true; parametro: ParametroSe
 
 /**
  * Valida o parâmetro bruto (vindo do corpo JSON) contra o tipo de
- * coleção. `customizada` rejeita qualquer parâmetro não-nulo/não-vazio —
- * ela não tem parâmetro estrutural (spec §3.3).
+ * coleção. `customizada` aceita só nulo/vazio (a simples) ou exatamente
+ * `{ tema: { tipo, valor } }` (a temática, `validarParametroCustomizada`)
+ * — qualquer outra coisa é recusada (spec §3.3).
  */
 export function validarParametroColecao(
   tipo: unknown,
@@ -165,16 +173,9 @@ export function validarParametroColecao(
   }
 
   if (tipo === "customizada") {
-    const vazio =
-      parametroBruto === undefined ||
-      parametroBruto === null ||
-      (typeof parametroBruto === "object" &&
-        parametroBruto !== null &&
-        Object.keys(parametroBruto).length === 0);
-    if (!vazio) {
-      return { ok: false, erros: ["coleção customizada não aceita parâmetro"] };
-    }
-    return { ok: true, resultado: { tipo: "customizada", parametro: null } };
+    const r = validarParametroCustomizada(parametroBruto);
+    if (!r.ok) return r;
+    return { ok: true, resultado: { tipo: "customizada", parametro: r.parametro } };
   }
 
   if (tipo === "pokedex") {

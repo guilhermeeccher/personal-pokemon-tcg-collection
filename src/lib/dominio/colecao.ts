@@ -15,6 +15,7 @@
 
 import { type Idioma, ehIdioma } from "./enums";
 import {
+  type ParametroCustomizada,
   type ParametroPokedex,
   type ParametroSet,
   type TipoColecao,
@@ -38,7 +39,7 @@ export interface CriacaoColecaoBruta {
 export interface ColecaoCriadaValida {
   nome: string;
   tipo: TipoColecao;
-  parametro: ParametroPokedex | ParametroSet | null;
+  parametro: ParametroPokedex | ParametroSet | ParametroCustomizada;
   idiomaExigido: Idioma | null;
   notas: string | null;
 }
