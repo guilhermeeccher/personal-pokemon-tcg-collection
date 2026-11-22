@@ -1766,7 +1766,13 @@
           "en": "English",
           "jp": "Japanese"
         }
-      }
+      },
+      "catalogoJapones": "Japanese",
+      "catalogoOcidental": "pt/en",
+      "catalogoJaponesAutomatico": "Every set in this collection is from the Japanese catalog: it uses the Japanese entries, with no language to pick.",
+      "incluirSecretasSemTotais": "Include secrets",
+      "misturaTitulo": "Japanese cannot be mixed with pt/en",
+      "misturaTexto": "The recipe has sets from the Japanese catalog and from the Western one (pt/en). Japanese never fills in for pt/en, nor the other way round: neo1 to neo4, for example, share a code in English and Japanese but are different cards. Keep only one side in the recipe; to have both, create two collections."
     }
   }
 }

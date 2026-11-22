@@ -4,7 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { textoDaRecusa } from "@/app/_comum/recusa";
 import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
@@ -13,13 +13,17 @@ import { nomeSugeridoDoSet } from "@/lib/dominio/grupos-colecao";
 import type { IdiomaCatalogo } from "@/lib/dominio/idioma-catalogo";
 import {
   type EscopoPokedex,
+  type SetNaReceita,
   adicionarSetNaReceita,
   alternarRegiao,
+  catalogoDoSetEscolhido,
   montarCorpoCriacao,
   removerSetDaReceita,
   resolverSetInicial,
+  tipoDaReceita,
   totaisDeSecretas,
 } from "@/lib/dominio/nova-colecao-v2";
+import type { FiltroIdiomaSet } from "@/lib/dominio/filtro-idioma-set";
 import type { TipoColecao } from "@/lib/dominio/parametro-colecao";
 import type { GrupoColecaoDTO, ListaColecoesDTO, SetParaCadastroDTO } from "@/lib/dominio/tipos-cliente";
 
@@ -69,7 +73,7 @@ export function NovaColecao({ setInicial = "" }: { setInicial?: string }) {
   const [escopo, setEscopo] = useState<EscopoPokedex>("nacional");
   const [regioes, setRegioes] = useState<Regiao[]>([]);
 
-  const [sets, setSets] = useState<SetParaCadastroDTO[]>([]);
+  const [sets, setSets] = useState<SetNaReceita[]>([]);
   const [idiomaCatalogo, setIdiomaCatalogo] = useState<IdiomaCatalogo>("pt");
   const [incluirSecretas, setIncluirSecretas] = useState(false);
 
@@ -81,6 +85,7 @@ export function NovaColecao({ setInicial = "" }: { setInicial?: string }) {
   const [prefill, setPrefill] = useState<EstadoPrefill>(setInicial === "" ? "livre" : "carregando");
   const [tentativaPrefill, setTentativaPrefill] = useState(0);
 
+  const avisoMistura = useRef<HTMLDivElement>(null);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [detalhesErro, setDetalhesErro] = useState<string[]>([]);
@@ -123,7 +128,7 @@ export function NovaColecao({ setInicial = "" }: { setInicial?: string }) {
         } else {
           setSetNaoEncontrado(false);
           setTipo("set");
-          setSets([achado]);
+          setSets([{ set: achado, catalogo: "ocidental" }]);
           setIdiomaCatalogo("pt");
           setIncluirSecretas(false);
           setNome(nomeSugeridoDoSet({ lancamento: achado.setLancamento, sigla: achado.setSigla, nome: achado.setNome }));
@@ -143,13 +148,15 @@ export function NovaColecao({ setInicial = "" }: { setInicial?: string }) {
     setTentativaPrefill((n) => n + 1);
   }
 
-  function escolherSet(set: SetParaCadastroDTO) {
-    setSets((atuais) => adicionarSetNaReceita(atuais, set));
-    // O idioma é a PREFERÊNCIA da coleção: a ficha é escolhida carta a carta, e
-    // pt completa com en onde falta. Por isso pt é o padrão mesmo sem nenhuma
-    // carta em pt hoje — quando o upstream traduzir, a coleção passa a mostrar os
-    // nomes em português sem ser recriada.
-    setIdiomaCatalogo("pt");
+  function escolherSet(set: SetParaCadastroDTO, filtro: FiltroIdiomaSet) {
+    const catalogo = catalogoDoSetEscolhido(set, filtro);
+    setSets((atuais) => adicionarSetNaReceita(atuais, { set, catalogo }));
+    // O idioma é a PREFERÊNCIA da coleção ocidental: a ficha é escolhida carta a
+    // carta, e pt completa com en onde falta. Por isso pt é o padrão mesmo sem
+    // nenhuma carta em pt hoje — quando o upstream traduzir, a coleção passa a
+    // mostrar os nomes em português sem ser recriada. Numa receita só japonesa
+    // nada se pergunta: `montarCorpoCriacao` manda `jp`.
+    if (catalogo === "ocidental") setIdiomaCatalogo("pt");
   }
 
   async function enviar(e: FormEvent) {
@@ -170,6 +177,13 @@ export function NovaColecao({ setInicial = "" }: { setInicial?: string }) {
       incluirSecretas,
     });
     if (!montado.ok) {
+      if (montado.erro === "mistura") {
+        // O aviso da mistura já está na tela, na receita; repetir o texto num
+        // segundo alerta só faria barulho. Leva o foco e o olhar até ele.
+        avisoMistura.current?.focus();
+        avisoMistura.current?.scrollIntoView({ block: "center" });
+        return;
+      }
       setErro(t(montado.erro === "regiao" ? "erroRegiao" : "erroExpansao"));
       return;
     }
@@ -201,6 +215,7 @@ export function NovaColecao({ setInicial = "" }: { setInicial?: string }) {
   }
 
   const secretas = totaisDeSecretas(sets);
+  const receita = tipoDaReceita(sets);
 
   return (
     <div className={estilos.pagina}>
@@ -310,16 +325,19 @@ export function NovaColecao({ setInicial = "" }: { setInicial?: string }) {
               <legend className={estilos.legenda}>{t("receita")}</legend>
               {sets.length > 0 && (
                 <ul className={estilos.receita}>
-                  {sets.map((set) => (
-                    <li key={set.setId} className={estilos.itemReceita}>
+                  {sets.map(({ set, catalogo }) => (
+                    <li key={`${catalogo}:${set.setId}`} className={estilos.itemReceita}>
                       <span className={estilos.nomeSet}>
-                        {set.setNome} <span className={estilos.idSet}>· {set.setId}</span>
+                        {set.setNome} <span className={estilos.idSet}>· {set.setId}</span>{" "}
+                        <span className={estilos.catalogo} data-catalogo={catalogo}>
+                          {t(catalogo === "jp" ? "catalogoJapones" : "catalogoOcidental")}
+                        </span>
                       </span>
                       <Botao
                         pequeno
                         variante="fantasma"
                         aria-label={t("removerSet", { set: set.setNome })}
-                        onClick={() => setSets((atuais) => removerSetDaReceita(atuais, set.setId))}
+                        onClick={() => setSets((atuais) => removerSetDaReceita(atuais, set.setId, catalogo))}
                       >
                         {t("remover")}
                       </Botao>
@@ -328,26 +346,42 @@ export function NovaColecao({ setInicial = "" }: { setInicial?: string }) {
                 </ul>
               )}
               <SeletorDeSet aoEscolher={escolherSet} />
-              {sets.length > 1 && <p className={estilos.ajuda}>{t("ajudaVariosSets")}</p>}
-              {sets.length > 0 && (
+              {receita === "mista" ? (
+                // A mistura não vai ao servidor: o japonês nunca completa o pt/en, nem o contrário.
+                <div ref={avisoMistura} tabIndex={-1} className={estilos.avisoMistura}>
+                  <AvisoEmLinha tom="alerta" papel="alert" titulo={t("misturaTitulo")}>
+                    {t("misturaTexto")}
+                  </AvisoEmLinha>
+                </div>
+              ) : (
                 <>
-                  <Selecao
-                    rotulo={t("campoIdiomaCatalogo")}
-                    dica={sets.some((s) => !s.temPt) ? `${t("ajudaIdiomaCatalogo")} ${t("semPt")}` : t("ajudaIdiomaCatalogo")}
-                    value={idiomaCatalogo}
-                    onChange={(e) => setIdiomaCatalogo(e.target.value as IdiomaCatalogo)}
-                  >
-                    <option value="pt">pt</option>
-                    <option value="en">en</option>
-                  </Selecao>
-                  <label className={estilos.marcar}>
-                    <input
-                      type="checkbox"
-                      checked={incluirSecretas}
-                      onChange={(e) => setIncluirSecretas(e.target.checked)}
-                    />
-                    {t("incluirSecretas", secretas)}
-                  </label>
+                  {sets.length > 1 && <p className={estilos.ajuda}>{t("ajudaVariosSets")}</p>}
+                  {receita === "ocidental" && (
+                    <Selecao
+                      rotulo={t("campoIdiomaCatalogo")}
+                      dica={
+                        sets.some((r) => !r.set.temPt)
+                          ? `${t("ajudaIdiomaCatalogo")} ${t("semPt")}`
+                          : t("ajudaIdiomaCatalogo")
+                      }
+                      value={idiomaCatalogo}
+                      onChange={(e) => setIdiomaCatalogo(e.target.value as IdiomaCatalogo)}
+                    >
+                      <option value="pt">pt</option>
+                      <option value="en">en</option>
+                    </Selecao>
+                  )}
+                  {receita === "japonesa" && <p className={estilos.ajuda}>{t("catalogoJaponesAutomatico")}</p>}
+                  {receita !== "vazia" && (
+                    <label className={estilos.marcar}>
+                      <input
+                        type="checkbox"
+                        checked={incluirSecretas}
+                        onChange={(e) => setIncluirSecretas(e.target.checked)}
+                      />
+                      {secretas ? t("incluirSecretas", secretas) : t("incluirSecretasSemTotais")}
+                    </label>
+                  )}
                 </>
               )}
             </Painel>

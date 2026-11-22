@@ -4,6 +4,8 @@ import {
   adicionarSetNaReceita,
   alternarRegiao,
   buscarSets,
+  catalogoDoSetEscolhido,
+  tipoDaReceita,
   type EstadoFormularioNova,
   montarCorpoCriacao,
   removerSetDaReceita,
@@ -23,6 +25,9 @@ const base: EstadoFormularioNova = {
   idiomaCatalogo: "pt",
   incluirSecretas: false,
 };
+
+const oc = (setId: string) => ({ set: { setId }, catalogo: "ocidental" as const });
+const jp = (setId: string) => ({ set: { setId }, catalogo: "jp" as const });
 
 describe("montarCorpoCriacao", () => {
   it("pokédex nacional: o mesmo corpo que a v1 manda, com os opcionais vazios fora", () => {
@@ -57,7 +62,7 @@ describe("montarCorpoCriacao", () => {
     const r = montarCorpoCriacao({
       ...base,
       tipo: "set",
-      sets: [{ setId: "30th" }, { setId: "30th-c" }],
+      sets: [oc("30th"), oc("30th-c")],
       idiomaCatalogo: "en",
       incluirSecretas: true,
       idiomaExigido: "pt",
@@ -82,26 +87,99 @@ describe("montarCorpoCriacao", () => {
   });
 
   it("customizada não leva parâmetro, e o escopo e a receita que sobraram no estado não vazam", () => {
-    const r = montarCorpoCriacao({ ...base, tipo: "customizada", escopo: "regioes", sets: [{ setId: "x" }] });
+    const r = montarCorpoCriacao({ ...base, tipo: "customizada", escopo: "regioes", sets: [oc("x")] });
     expect(r).toMatchObject({ ok: true, corpo: { tipo: "customizada", parametro: null } });
   });
 
   it("pokédex ignora a receita de set que ficou no estado", () => {
-    const r = montarCorpoCriacao({ ...base, sets: [{ setId: "x" }] });
+    const r = montarCorpoCriacao({ ...base, sets: [oc("x")] });
     expect(r).toMatchObject({ ok: true, corpo: { parametro: { escopo: "nacional" } } });
   });
 });
 
 describe("receita de sets", () => {
-  it("acrescenta ao fim e não repete", () => {
-    const a = adicionarSetNaReceita([], { setId: "a" });
-    const b = adicionarSetNaReceita(a, { setId: "b" });
-    expect(adicionarSetNaReceita(b, { setId: "a" }).map((s) => s.setId)).toEqual(["a", "b"]);
+  it("acrescenta ao fim e não repete o mesmo set do mesmo catálogo", () => {
+    const a = adicionarSetNaReceita([], oc("a"));
+    const b = adicionarSetNaReceita(a, oc("b"));
+    expect(adicionarSetNaReceita(b, oc("a")).map((r) => r.set.setId)).toEqual(["a", "b"]);
   });
 
-  it("remove só o pedido e mantém a ordem dos outros", () => {
-    const r = removerSetDaReceita([{ setId: "a" }, { setId: "b" }, { setId: "c" }], "b");
-    expect(r.map((s) => s.setId)).toEqual(["a", "c"]);
+  it("o mesmo set_id de outro catálogo entra: é outro conjunto de cartas", () => {
+    const r = adicionarSetNaReceita(adicionarSetNaReceita([], oc("neo1")), jp("neo1"));
+    expect(r.map((x) => x.catalogo)).toEqual(["ocidental", "jp"]);
+  });
+
+  it("remove só o set do catálogo pedido e mantém a ordem dos outros", () => {
+    const r = removerSetDaReceita([oc("a"), oc("neo1"), jp("neo1"), oc("c")], "neo1", "jp");
+    expect(r.map((x) => `${x.set.setId}:${x.catalogo}`)).toEqual(["a:ocidental", "neo1:ocidental", "c:ocidental"]);
+  });
+});
+
+describe("catalogoDoSetEscolhido", () => {
+  const soJp = { idiomaCatalogo: "jp" as const, idiomasDisponiveis: ["jp" as const] };
+  const soOcidental = { idiomaCatalogo: "pt" as const, idiomasDisponiveis: ["pt" as const, "en" as const] };
+  // neo1: dois catálogos com o mesmo set_id; a linha vem pela prioridade pt > en > jp.
+  const neo1 = { idiomaCatalogo: "en" as const, idiomasDisponiveis: ["en" as const, "jp" as const] };
+
+  it("set só japonês é japonês em qualquer filtro", () => {
+    for (const f of ["todos", "pt", "en", "jp"] as const) expect(catalogoDoSetEscolhido(soJp, f)).toBe("jp");
+  });
+
+  it("set ocidental é ocidental em qualquer filtro, inclusive Japonês", () => {
+    for (const f of ["todos", "pt", "en", "jp"] as const) expect(catalogoDoSetEscolhido(soOcidental, f)).toBe("ocidental");
+  });
+
+  it("neo1 escolhido com o filtro Japonês é japonês", () => {
+    expect(catalogoDoSetEscolhido(neo1, "jp")).toBe("jp");
+  });
+
+  it("neo1 escolhido com Todos, pt ou en é ocidental: decide o catálogo, não o id", () => {
+    for (const f of ["todos", "pt", "en"] as const) expect(catalogoDoSetEscolhido(neo1, f)).toBe("ocidental");
+  });
+});
+
+describe("tipoDaReceita", () => {
+  it("vazia, só ocidental, só japonesa e mistura", () => {
+    expect(tipoDaReceita([])).toBe("vazia");
+    expect(tipoDaReceita([oc("a"), oc("b")])).toBe("ocidental");
+    expect(tipoDaReceita([jp("a"), jp("b")])).toBe("japonesa");
+    expect(tipoDaReceita([oc("a"), jp("b")])).toBe("mista");
+  });
+
+  it("neo1 em jp e neo1 em en juntos são mistura, mesmo com o mesmo id", () => {
+    expect(tipoDaReceita([oc("neo1"), jp("neo1")])).toBe("mista");
+  });
+});
+
+describe("montarCorpoCriacao com catálogo japonês", () => {
+  const set = { ...base, tipo: "set" as const };
+
+  it("receita só japonesa manda idiomaCatalogo jp sem perguntar, mesmo com pt no estado", () => {
+    const r = montarCorpoCriacao({ ...set, sets: [jp("sv2a"), jp("neo1")], idiomaCatalogo: "pt" });
+    expect(r).toMatchObject({
+      ok: true,
+      corpo: { parametro: { sets: ["sv2a", "neo1"], idiomaCatalogo: "jp", incluirSecretas: false } },
+    });
+  });
+
+  it("neo1 escolhido em jp vai como jp; escolhido em en vai com a preferência ocidental", () => {
+    expect(montarCorpoCriacao({ ...set, sets: [jp("neo1")] })).toMatchObject({
+      corpo: { parametro: { sets: ["neo1"], idiomaCatalogo: "jp" } },
+    });
+    expect(montarCorpoCriacao({ ...set, sets: [oc("neo1")], idiomaCatalogo: "en" })).toMatchObject({
+      corpo: { parametro: { sets: ["neo1"], idiomaCatalogo: "en" } },
+    });
+  });
+
+  it("receita só ocidental continua com a preferência pt/en", () => {
+    expect(montarCorpoCriacao({ ...set, sets: [oc("a")], idiomaCatalogo: "en" })).toMatchObject({
+      corpo: { parametro: { idiomaCatalogo: "en" } },
+    });
+  });
+
+  it("a mistura não vai ao servidor", () => {
+    expect(montarCorpoCriacao({ ...set, sets: [oc("a"), jp("b")] })).toEqual({ ok: false, erro: "mistura" });
+    expect(montarCorpoCriacao({ ...set, sets: [oc("neo1"), jp("neo1")] })).toEqual({ ok: false, erro: "mistura" });
   });
 });
 
@@ -127,17 +205,25 @@ describe("resolverSetInicial", () => {
 });
 
 describe("totaisDeSecretas", () => {
+  const r = (qtdOficial: number, qtdTotal: number, idiomaCatalogo: "pt" | "jp" = "pt", catalogo: "ocidental" | "jp" = "ocidental") => ({
+    set: { qtdOficial, qtdTotal, idiomaCatalogo },
+    catalogo,
+  });
+
   it("soma o total e as oficiais", () => {
-    expect(
-      totaisDeSecretas([
-        { qtdOficial: 165, qtdTotal: 207 },
-        { qtdOficial: 100, qtdTotal: 110 },
-      ]),
-    ).toEqual({ total: 317, oficiais: 265 });
+    expect(totaisDeSecretas([r(165, 207), r(100, 110)])).toEqual({ total: 317, oficiais: 265 });
   });
 
   it("set sem numeração oficial conta o total dos dois lados", () => {
-    expect(totaisDeSecretas([{ qtdOficial: 0, qtdTotal: 104 }])).toEqual({ total: 104, oficiais: 104 });
+    expect(totaisDeSecretas([r(0, 104)])).toEqual({ total: 104, oficiais: 104 });
+  });
+
+  it("set só japonês usa a própria linha", () => {
+    expect(totaisDeSecretas([r(165, 190, "jp", "jp")])).toEqual({ total: 190, oficiais: 165 });
+  });
+
+  it("neo1 escolhido em jp, com a linha ocidental na tela, não mostra números de outro catálogo", () => {
+    expect(totaisDeSecretas([r(111, 111, "pt", "jp")])).toBeNull();
   });
 });
 

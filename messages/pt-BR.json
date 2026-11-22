@@ -1758,7 +1758,13 @@
           "en": "Inglês",
           "jp": "Japonês"
         }
-      }
+      },
+      "catalogoJapones": "Japonês",
+      "catalogoOcidental": "pt/en",
+      "catalogoJaponesAutomatico": "Todos os sets desta coleção são do catálogo japonês: ela usa as fichas em japonês, sem escolha de idioma.",
+      "incluirSecretasSemTotais": "Incluir secretas",
+      "misturaTitulo": "Não dá para misturar japonês com pt/en",
+      "misturaTexto": "A receita tem sets do catálogo japonês e do ocidental (pt/en). O japonês nunca completa o pt/en, nem o contrário: neo1 a neo4, por exemplo, têm o mesmo código no inglês e no japonês, mas são outras cartas. Deixe só um dos lados na receita; para ter os dois, crie duas coleções."
     }
   }
 }

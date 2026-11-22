@@ -11,11 +11,55 @@
 
 import type { Idioma } from "./enums";
 import type { Regiao } from "./escopo-pokedex";
+import type { FiltroIdiomaSet } from "./filtro-idioma-set";
 import type { IdiomaCatalogo } from "./idioma-catalogo";
 import type { TipoColecao } from "./parametro-colecao";
 import type { SetParaCadastroDTO } from "./tipos-cliente";
 
 export type EscopoPokedex = "nacional" | "regioes";
+
+/**
+ * De qual catálogo vem um set da receita: o japonês ou o ocidental (pt/en).
+ * É uma escolha **do catálogo do set escolhido, nunca do id**: `neo1` a
+ * `neo4` têm o mesmo `set_id` no inglês e no japonês e são cartas diferentes
+ * (`neo1` tem 111 cartas `1..111` em en e 96 `001..096` em jp, sem número em
+ * comum). O japonês nunca é fallback de pt/en, nem o contrário
+ * (`AGENTS.md`, "Catalog language is decided card by card").
+ */
+export type CatalogoDoSet = "jp" | "ocidental";
+
+/** Um set na receita, com o catálogo de que foi escolhido. */
+export interface SetNaReceita<T extends { setId: string } = SetParaCadastroDTO> {
+  set: T;
+  catalogo: CatalogoDoSet;
+}
+
+/**
+ * O catálogo do set que a pessoa acabou de escolher. `/api/sets` traz uma
+ * linha por `set_id`, com o idioma resolvido pela prioridade pt > en > jp: um
+ * set só japonês vem `jp`; um set nos dois (`neo1`) vem ocidental. Quem
+ * escolheu um set dos dois com o filtro de idioma em "Japonês" quis o japonês;
+ * em qualquer outro filtro, o ocidental. Um set que não existe no catálogo
+ * japonês nunca vira japonês, qualquer que seja o filtro.
+ */
+export function catalogoDoSetEscolhido(
+  set: { idiomaCatalogo: Idioma; idiomasDisponiveis: readonly Idioma[] },
+  filtro: FiltroIdiomaSet,
+): CatalogoDoSet {
+  if (set.idiomaCatalogo === "jp") return "jp";
+  return filtro === "jp" && set.idiomasDisponiveis.includes("jp") ? "jp" : "ocidental";
+}
+
+export type TipoDaReceita = "vazia" | "ocidental" | "japonesa" | "mista";
+
+/** Só japonesa, só ocidental, ou a mistura que a criação não aceita. */
+export function tipoDaReceita(receita: readonly { catalogo: CatalogoDoSet }[]): TipoDaReceita {
+  const jp = receita.some((r) => r.catalogo === "jp");
+  const ocidental = receita.some((r) => r.catalogo === "ocidental");
+  if (jp && ocidental) return "mista";
+  if (jp) return "japonesa";
+  return ocidental ? "ocidental" : "vazia";
+}
 
 export interface EstadoFormularioNova {
   tipo: TipoColecao;
@@ -25,8 +69,9 @@ export interface EstadoFormularioNova {
   grupoId: string;
   escopo: EscopoPokedex;
   regioes: readonly Regiao[];
-  /** A receita: os sets na ordem em que foram escolhidos. */
-  sets: readonly Pick<SetParaCadastroDTO, "setId">[];
+  /** A receita: os sets na ordem em que foram escolhidos, cada um com o catálogo de que veio. */
+  sets: readonly { set: { setId: string }; catalogo: CatalogoDoSet }[];
+  /** A preferência pt/en da receita ocidental; numa receita só japonesa não é perguntada. */
   idiomaCatalogo: IdiomaCatalogo;
   incluirSecretas: boolean;
 }
@@ -42,13 +87,16 @@ export interface CorpoCriacaoColecao {
 
 export type ResultadoCorpo =
   | { ok: true; corpo: CorpoCriacaoColecao }
-  /** A chave do que falta, que a tela traduz: `regiao` ou `expansao`. */
-  | { ok: false; erro: "regiao" | "expansao" };
+  /** A chave do que falta, que a tela traduz: `regiao`, `expansao` ou `mistura`. */
+  | { ok: false; erro: "regiao" | "expansao" | "mistura" };
 
 /**
  * O corpo do `POST /api/colecoes`. As duas conferências daqui só evitam uma
  * ida ao servidor com o que a tela já sabe estar incompleto: pokédex por
- * regiões sem nenhuma região, set sem nenhum set na receita. O resto (nome,
+ * regiões sem nenhuma região, set sem nenhum set na receita, e a receita que
+ * mistura o catálogo japonês com o ocidental (nunca vai ao servidor). Numa
+ * receita só japonesa o idioma do catálogo é `jp`, sem perguntar; numa só
+ * ocidental, a preferência pt/en que a pessoa escolheu. O resto (nome,
  * limites, ids) é validado pelo servidor, que responde com a lista de erros.
  */
 export function montarCorpoCriacao(e: EstadoFormularioNova): ResultadoCorpo {
@@ -57,10 +105,12 @@ export function montarCorpoCriacao(e: EstadoFormularioNova): ResultadoCorpo {
     if (e.escopo === "regioes" && e.regioes.length === 0) return { ok: false, erro: "regiao" };
     parametro = e.escopo === "nacional" ? { escopo: "nacional" } : { escopo: "regioes", regioes: [...e.regioes] };
   } else if (e.tipo === "set") {
-    if (e.sets.length === 0) return { ok: false, erro: "expansao" };
+    const receita = tipoDaReceita(e.sets);
+    if (receita === "vazia") return { ok: false, erro: "expansao" };
+    if (receita === "mista") return { ok: false, erro: "mistura" };
     parametro = {
-      sets: e.sets.map((s) => s.setId),
-      idiomaCatalogo: e.idiomaCatalogo,
+      sets: e.sets.map((s) => s.set.setId),
+      idiomaCatalogo: receita === "japonesa" ? "jp" : e.idiomaCatalogo,
       incluirSecretas: e.incluirSecretas,
     };
   } else {
@@ -84,13 +134,26 @@ export function alternarRegiao(atuais: readonly Regiao[], regiao: Regiao): Regia
   return atuais.includes(regiao) ? atuais.filter((r) => r !== regiao) : [...atuais, regiao];
 }
 
-/** Acrescenta um set ao fim da receita; um set que já está nela não entra duas vezes. */
-export function adicionarSetNaReceita<T extends { setId: string }>(atuais: readonly T[], set: T): T[] {
-  return atuais.some((s) => s.setId === set.setId) ? [...atuais] : [...atuais, set];
+/**
+ * Acrescenta um set ao fim da receita. O mesmo set do mesmo catálogo não entra
+ * duas vezes; o mesmo `set_id` de outro catálogo entra (é outro conjunto de
+ * cartas, e juntá-los é a mistura que `tipoDaReceita` aponta).
+ */
+export function adicionarSetNaReceita<T extends { setId: string }>(
+  atuais: readonly SetNaReceita<T>[],
+  novo: SetNaReceita<T>,
+): SetNaReceita<T>[] {
+  return atuais.some((r) => r.set.setId === novo.set.setId && r.catalogo === novo.catalogo)
+    ? [...atuais]
+    : [...atuais, novo];
 }
 
-export function removerSetDaReceita<T extends { setId: string }>(atuais: readonly T[], setId: string): T[] {
-  return atuais.filter((s) => s.setId !== setId);
+export function removerSetDaReceita<T extends { setId: string }>(
+  atuais: readonly SetNaReceita<T>[],
+  setId: string,
+  catalogo: CatalogoDoSet,
+): SetNaReceita<T>[] {
+  return atuais.filter((r) => !(r.set.setId === setId && r.catalogo === catalogo));
 }
 
 /**
@@ -110,14 +173,21 @@ export function resolverSetInicial<T extends { setId: string; idiomaCatalogo: Id
  * O total da opção "incluir secretas": `total` é a numeração inteira e
  * `oficiais` a oficial (regra 4). Set sem numeração oficial (a Clássica do
  * 30th) conta o total dos dois lados: não tem secretas a ligar.
+ *
+ * `null` quando algum set da receita foi escolhido no catálogo japonês mas a
+ * linha que `/api/sets` trouxe é a ocidental (`neo1`): os números dela são
+ * de outro catálogo, e mostrá-los diria uma contagem errada.
  */
-export function totaisDeSecretas(sets: readonly Pick<SetParaCadastroDTO, "qtdOficial" | "qtdTotal">[]): {
-  total: number;
-  oficiais: number;
-} {
+export function totaisDeSecretas(
+  receita: readonly {
+    set: Pick<SetParaCadastroDTO, "qtdOficial" | "qtdTotal" | "idiomaCatalogo">;
+    catalogo: CatalogoDoSet;
+  }[],
+): { total: number; oficiais: number } | null {
+  if (receita.some((r) => r.catalogo === "jp" && r.set.idiomaCatalogo !== "jp")) return null;
   return {
-    total: sets.reduce((soma, s) => soma + s.qtdTotal, 0),
-    oficiais: sets.reduce((soma, s) => soma + (s.qtdOficial > 0 ? s.qtdOficial : s.qtdTotal), 0),
+    total: receita.reduce((soma, r) => soma + r.set.qtdTotal, 0),
+    oficiais: receita.reduce((soma, r) => soma + (r.set.qtdOficial > 0 ? r.set.qtdOficial : r.set.qtdTotal), 0),
   };
 }
 

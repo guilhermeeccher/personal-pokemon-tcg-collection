@@ -34,10 +34,19 @@ import estilos from "./nova.module.css";
  * nunca começa filtrado, e a contagem de cada opção é sempre sobre o conjunto
  * inteiro, senão o número dança enquanto a pessoa digita.
  *
+ * O filtro "Japonês" é também como se escolhe o catálogo japonês de um set
+ * que existe nos dois (`neo1` a `neo4`): quem a lista mostra sob "Japonês" e
+ * escolhe ali quis o japonês. Quem decide é `catalogoDoSetEscolhido`.
+ *
  * Escolher um set o entrega a quem chamou e o select volta a "" (a receita
  * guarda o escolhido, o seletor fica livre para o próximo).
  */
-export function SeletorDeSet({ aoEscolher }: { aoEscolher: (set: SetParaCadastroDTO) => void }) {
+export function SeletorDeSet({
+  aoEscolher,
+}: {
+  /** O set e o filtro de idioma do catálogo ativo no momento (decide o catálogo de um set nos dois: `catalogoDoSetEscolhido`). */
+  aoEscolher: (set: SetParaCadastroDTO, filtro: FiltroIdiomaSet) => void;
+}) {
   const t = useTranslations("v2Colecoes.formulario.seletor");
   const formatador = useFormatter();
   const [sets, setSets] = useState<SetParaCadastroDTO[] | null>(null);
@@ -117,7 +126,7 @@ export function SeletorDeSet({ aoEscolher }: { aoEscolher: (set: SetParaCadastro
         erro={erro ? t("erroCarregar") : undefined}
         onChange={(e) => {
           const escolhido = (sets ?? []).find((s) => s.setId === e.target.value);
-          if (escolhido) aoEscolher(escolhido);
+          if (escolhido) aoEscolher(escolhido, filtroIdioma);
         }}
       >
         <option value="">{visiveis.length === 0 && sets !== null ? t("nenhumSet") : t("selecione")}</option>

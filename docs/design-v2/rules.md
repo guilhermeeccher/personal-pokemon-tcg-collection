@@ -118,6 +118,7 @@ consumes the same API, so **all of them hold for both**.
 | A slot key is never parsed by hand and never shown raw (`lerChaveVagaSet`, `rotuloChaveVaga`) | "Set collections: a recipe, then a list of slots you edit" |
 | Removing a filled slot frees the copy, with a confirmation on screen | same |
 | The catalog language is decided card by card; no single-language query on any screen | "Catalog language is decided card by card" |
+| A new Set collection's recipe is Japanese-only or Western-only, decided by the chosen set's catalog and never by its `set_id` (`neo1` to `neo4` share it with English and are other cards); a Japanese-only recipe sends `idiomaCatalogo: jp` on its own, a mixed one is refused on screen. **v2 only** (decision of 2026-11-22): the v1 sends pt for any set | same |
 | The collection list comes in display order; **do not sort it again on a screen** | "Collection groups and order" |
 | Order changes by up/down buttons, never drag (drag fights page scroll on a phone) | same, and Living Dex task steps |
 | A batch carries what its preview showed and is refused whole (409) when that changed; the screen closes the preview on a 404 | same |
