@@ -66,10 +66,10 @@ src/app/
 Three behaviours of Next 16.3 depend on having no top-level `app/layout.tsx`, and package 0a confirms
 them before any v2 screen exists:
 
-- `TODO(0a)`: the 404 of a path that matches nothing — whether Next requires a
-  `global-not-found.tsx` (and its flag) without a top-level layout, and what its body looks like.
-  The password module's "404 while off" contract keeps holding by construction (its paths are
-  rewritten to a folder with no route), but the body of the 404 page changes from today's build.
+- The 404 of a path that matches nothing: Next does not require a `global-not-found.tsx` without a
+  top-level layout, and serves its default 404. Package 0c measured the experimental
+  `globalNotFound` flag and did not adopt it (`rules.md`, "Open points"): the password module's
+  "404 while off" stays byte-for-byte the 404 of any unknown path.
 - `TODO(0a)`: whether `src/app/favicon.ico` is still injected in the `<head>` of both root layouts.
 - `TODO(0a)`: whether the language switch's `revalidatePath("/", "layout")`
   (`src/app/_acoes/definir-locale.ts`) refreshes pages under both root layouts.

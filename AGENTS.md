@@ -244,6 +244,13 @@ read its README before touching any screen, layout, component or route under `sr
   those, the rules the v2 adds (gestures, composition budget, reduced motion and light mode, view
   transitions, image sizes, fonts, isolation between the two versions) and the scope of every
   interface rule are in [`docs/design-v2/rules.md`](./docs/design-v2/rules.md).
+- **A v2 screen is built from the v2's shell and primitives**, never from `src/app/_componentes/`:
+  `src/app/(v2)/_componentes/casca/` (rail, tab bar, the "More" sheet, the navigation map) and
+  `.../primitivos/` (button, field, panel, floating notice, segmented control, dialog and bottom
+  sheet, **confirmation dialog instead of `window.confirm`**, and the layer stack, which locks
+  scroll at every width). Tokens and the glass are in `src/app/(v2)/v2.css`, and the blur budget
+  there (three `backdrop-filter` surfaces at most, never `var()` inside one) is a rule, not a
+  style. `/laboratorio` shows all of it, in development only.
 
 ---
 
@@ -1207,8 +1214,10 @@ goes on the list.
   at runtime so they never become a public `/_next/static` file), the Apple metadata,
   `viewport-fit=cover`, `data-pwa` on `<html>` and the safe-area rules under `[data-pwa]`. Off, none
   of it appears. No service worker. (This is the v1's rule. The v2 always sets
-  `viewport-fit=cover` and keeps its safe areas out of `[data-pwa]`; the manifest, the icons and the
-  Apple metadata stay conditional in both — see "Design v2".)
+  `viewport-fit=cover`, a dark `theme-color` and `color-scheme: dark`, and keeps its safe areas out
+  of `[data-pwa]`; with the module on, its Apple status bar is `black-translucent` where the v1's is
+  `default`. The manifest, the icons and the Apple metadata stay conditional in both, and the
+  manifest's colours are the v2's dark background for both — see "Design v2".)
 
 ---
 
