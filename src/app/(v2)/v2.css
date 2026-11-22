@@ -1,0 +1,22 @@
+/*
+ * Folha da v2 — só o esqueleto (2026-11-22). Fica no layout raiz da v2 e
+ * nunca está no mesmo documento que a da v1: trocar de layout raiz recarrega a
+ * página. Por isso nada aqui precisa de escopo, e nada da v1 (`globals.css`,
+ * `tokens/`, as classes de `_componentes/`) vale do lado de cá.
+ *
+ * A v2 é só escura: `color-scheme: dark` faz o navegador desenhar barra de
+ * rolagem, campos e o fundo da carga no escuro, sem esperar o CSS das telas.
+ * Tokens, vidro, trilho e componentes chegam com a casca da v2; até lá esta
+ * folha só garante que uma página da v2 (o 404, ou o instante antes de uma
+ * ponte redirecionar) não pisque branco.
+ */
+:root {
+  color-scheme: dark;
+  background: #030406;
+  color: #f2f1f7;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+}

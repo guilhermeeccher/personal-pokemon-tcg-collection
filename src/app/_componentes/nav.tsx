@@ -88,7 +88,7 @@ function Marca({ onNavegar }: { onNavegar?: () => void }) {
   const t = useTranslations("nav");
   return (
     <Link
-      href="/"
+      href="/v1"
       onClick={onNavegar}
       className="flex items-center gap-2.5 text-invert [transition:var(--transition-control)] hover:opacity-80 max-md:min-h-11"
     >

@@ -1,0 +1,1281 @@
+"use client";
+
+/**
+ * Novo cadastro — o que está indo ao HOME, escolhido na grade das caixas.
+ *
+ * O Cadastrar grava no jogo, linha a linha e com quantidade; para chegar ao
+ * HOME é um segundo passo. O uso real é o contrário: mandar um lote do GO e
+ * registrar o que chegou. Aqui a grade é a das Caixas (mesmos números,
+ * grupos e molduras), o que falta já aparece apagado e um toque marca. Cada
+ * vaga já diz o destino, então quem escolhe por ela já sabe onde guardar.
+ *
+ * Duas etapas na mesma rota, com o estado no cliente:
+ *
+ * 1. **Grade.** Marca vagas em falta ou no jogo, nas duas trilhas. A seleção
+ *    é um conjunto de vaga + trilha e não depende do que está na tela: busca,
+ *    "só caixas com faltantes" e trilha só mudam a vista, e a contagem separa
+ *    normal de shiny para o que ficou na outra trilha não passar batido.
+ * 2. **Saída e envio.** O jogo de onde saíram (ou o próprio HOME), a lista do
+ *    lote na ordem das caixas, com o destino e as marcas do Cadastrar, e o
+ *    envio. "Voltar" mantém a seleção.
+ *
+ * O jogo escolhido é o **local de onde sai**, não a origem histórica: se já
+ * há registro daquela vaga nesse jogo, a rota o move (e ele continua "do
+ * Sword"); senão, cria um nascido ali. A tela só avisa; quem decide é a
+ * rota, que confere tudo de novo, porque a tela não é a única porta.
+ *
+ * O lote tem teto (`MAX_ITENS_ENVIO_HOME`, o mesmo da rota): o toque que
+ * passaria dele não marca, e a barra diz por quê. Acima do teto a rota
+ * recusaria com uma frase que não passa pelo catálogo de mensagens.
+ *
+ * ## Identificar uma vaga sem hover
+ *
+ * No desktop, o cartão flutuante das Caixas. No celular e no teclado, a
+ * barra de ação diz o último toque ("Raichu (Alola) · Caixa 52 · 3 —
+ * marcado"): o número da Pokédex sozinho não distingue formas da mesma
+ * espécie. Por isso a vaga no HOME também é um botão, só que informativo:
+ * tocar ou focar nela escreve "— No HOME" na barra e não seleciona nada. O
+ * foco de teclado numa vaga marcável escreve o estado dela, para quem anda
+ * com Tab; o foco do clique não escreve nada (ver `focoDeTeclado`).
+ *
+ * ## Par de gênero (decisão de 2026-11-11)
+ *
+ * Espécie com diferença de gênero tem duas vagas em caixas distantes — o
+ * macho no Nacional, a fêmea no Gênero —, e procurar a outra a cada envio
+ * era o atrito. A vaga do par leva ♂/♀ no canto, e a barra do último toque
+ * diz onde está a outra ("♀ Caixa 47 · 12") com um botão que a marca sem
+ * rolar até ela. O par é o de `paresDeGenero`, e só aparece quando as duas
+ * vagas têm lugar nas caixas da trilha (Gênero desligado: nenhum).
+ *
+ * ## Celular (abaixo de 768px)
+ *
+ * - Vaga com no mínimo 44 × 44 e 8px entre vagas: 6 × 44 + 5 × 8 = 304px.
+ *   Com o painel a 8px de recuo lateral cabe de 354px de largura para cima;
+ *   abaixo (320px) a caixa rola na horizontal dentro do próprio painel, e a
+ *   página nunca. A moldura de estado fica no próprio botão: no `li`, a
+ *   borda de 1px comia a célula de 44 e o alvo ficava com 42 (medido a
+ *   320px). Do `md` para cima ela volta ao `li`, como nas Caixas.
+ * - A barra de ação desce para a base, fixa, como a do Cadastrar; o `pb` da
+ *   `main` reserva a altura dela. Abaixo de 640px, duas faixas (o texto em
+ *   cima, os botões embaixo); de 640 a 767 (o celular deitado, ~340px de
+ *   altura) uma faixa só, senão a barra tomava metade da tela. No desktop ela
+ *   fica grudada no topo da área que rola, perto de onde se marca, e com
+ *   altura fixa (ver `BarraAcao`).
+ *
+ * ~1.300 vagas por trilha: a vaga é memorizada e só redesenha quando muda o
+ * que ela mostra — um toque redesenha uma vaga, não a grade.
+ */
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import {
+  memo,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
+
+import { Alerta } from "@/app/_componentes/alerta";
+import { Botao, classesBotao } from "@/app/_componentes/botao";
+import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
+import { classesEntrada } from "@/app/_componentes/campo";
+import { Distintivo } from "@/app/_componentes/distintivo";
+import { EstadoVazio } from "@/app/_componentes/estado-vazio";
+import { Icone } from "@/app/_componentes/icone";
+import { Modal } from "@/app/_componentes/modal";
+import { Painel } from "@/app/_componentes/painel";
+import { textoDaRecusa, textosDasRecusas } from "@/app/_componentes/recusa";
+import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
+import {
+  GRUPOS_CAIXA,
+  montarCaixasDex,
+  posicoesNasCaixas,
+  VAGAS_POR_CAIXA,
+  type GrupoCaixa,
+  type MotivoBuraco,
+  type PosicaoNaCaixa,
+} from "@/lib/dominio/dex-caixas";
+import { catalogoDoJogo, naoTransferiveis } from "@/lib/dominio/dex-disponibilidade";
+import { MAX_ITENS_ENVIO_HOME } from "@/lib/dominio/dex-envio-home";
+import { estadoDaVaga, mapearEstadosDex, type EstadoVagaDex } from "@/lib/dominio/dex-estado";
+import { filtrarFormasDex, paresDeGenero, type LadoGenero, type TrilhaDex } from "@/lib/dominio/dex-grade";
+import { jogoDex, ORIGEM_HOME } from "@/lib/dominio/dex-jogos";
+import { categoriaConta, type SecoesContadas } from "@/lib/dominio/dex-secoes";
+import { especiesTrancadas, type IdiomaTrofeu } from "@/lib/dominio/dex-trofeus";
+import type { FormaDexDTO, JogoPossuidoDTO, RegistroDexDTO, TrofeuDexDTO } from "@/lib/dominio/tipos-cliente";
+import { urlSpriteDex } from "@/lib/imagens";
+
+import { useCartaoPokemon, type DadosCartaoPokemon } from "../_componentes/cartao-pokemon";
+import { SpriteDex } from "../_componentes/sprite-dex";
+import { useNomeCaixa } from "../_componentes/use-nome-caixa";
+import { useRotuloForma } from "../_componentes/use-rotulo-forma";
+
+import { recusasLegiveis } from "./recusas-legiveis";
+
+/* No celular a pílula chega a 44px de altura e largura, com mais respiro
+   lateral; o intervalo de 8px vem do `gap-2` do grupo. Mesma classe do
+   Cadastrar. */
+const classesOpcao = (ativa: boolean) =>
+  `rounded-pill border px-3 py-1 text-xs font-semibold [transition:var(--transition-control)] max-md:inline-flex max-md:min-h-11 max-md:min-w-11 max-md:items-center max-md:justify-center max-md:px-4 max-md:text-sm ${
+    ativa ? "border-accent bg-accent text-accent-fg" : "border-line text-muted hover:bg-surface-hover"
+  }`;
+
+/* As molduras das Caixas: no HOME, sucesso; no jogo, aviso; em falta, apagado.
+   Inteiras, para a legenda e para o que não é botão (fora da busca). */
+const MOLDURA: Record<EstadoVagaDex, string> = {
+  falta: "border-hairline",
+  no_jogo: "border-warning/70",
+  no_home: "border-success/70 bg-success-soft",
+};
+
+/* A mesma moldura repartida na vaga que é botão: a borda vai no `li` do
+   `md` para cima (o desenho das Caixas) e no próprio botão abaixo dele, para
+   o alvo de toque ter os 44px inteiros da célula. O fundo fica no `li` nas
+   duas larguras: não ocupa espaço. */
+const BORDA_LI: Record<EstadoVagaDex, string> = {
+  falta: "md:border md:border-hairline",
+  no_jogo: "md:border md:border-warning/70",
+  no_home: "md:border md:border-success/70",
+};
+const BORDA_BOTAO: Record<EstadoVagaDex, string> = {
+  falta: "max-md:border max-md:border-hairline",
+  no_jogo: "max-md:border max-md:border-warning/70",
+  no_home: "max-md:border max-md:border-success/70",
+};
+const FUNDO: Record<EstadoVagaDex, string> = { falta: "", no_jogo: "", no_home: "bg-success-soft" };
+
+/* Marcada: anel por dentro da borda (`ring-inset`), no `li` — por fora ele
+   seria cortado pela rolagem horizontal da caixa no celular, e no botão o
+   anel de foco global (`:focus-visible`, que troca o `box-shadow`) o
+   apagaria. No celular a borda do botão cobre 1px do anel, daí os 3px. */
+const ANEL_MARCADA = "bg-accent-soft ring-2 ring-inset ring-accent max-md:ring-[3px]";
+
+const ESTADOS_LEGENDA: readonly EstadoVagaDex[] = ["falta", "no_jogo", "no_home"];
+
+/* A faixa "#0001–#0030" só diz algo nos grupos ordenados pelo número; os outros vão por lançamento. */
+const GRUPO_POR_NUMERO: ReadonlySet<GrupoCaixa> = new Set(["nacional", "genero"]);
+
+/* `jogo:forma` que o HOME não recebe daquele jogo. É a lista que a rota
+   confere, e não o `transferivel` do catálogo do jogo: aquele só existe para
+   a forma que o catálogo diz que sai do jogo. */
+const NAO_VAI_AO_HOME = naoTransferiveis();
+
+const CHAVE_SAIDA = "dex:novo-cadastro:saida";
+
+/* O seletor de variação U+FE0E pede o glifo de texto: sem ele o Safari do
+   iPhone pode desenhar ♂/♀ como emoji, grande e colorido demais para o canto. */
+const SIMBOLO_GENERO: Record<LadoGenero, string> = { macho: "♂︎", femea: "♀︎" };
+
+const numero4 = (n: number) => String(n).padStart(4, "0");
+
+/**
+ * O foco veio do teclado (Tab), e não de um clique ou toque? Só esse
+ * identifica a vaga na barra. O foco do clique chega no `mousedown`, antes
+ * do `click`: se ele mudasse a barra, a barra grudada do desktop mudava de
+ * altura, a grade descia e o `click` caía fora da vaga (medido a 768px: a
+ * vaga ficava só focada, sem marcar). Clique e toque identificam pelo
+ * próprio `onClick`. Quem decide é a heurística do navegador
+ * (`:focus-visible`, a mesma do anel de foco); navegador que não conhece o
+ * seletor lança no `matches`, e aí vale "não": perde-se a linha para quem
+ * usa Tab, nunca o clique.
+ */
+function focoDeTeclado(el: Element): boolean {
+  try {
+    return el.matches(":focus-visible");
+  } catch {
+    return false;
+  }
+}
+const chaveDaVaga = (formaId: string, trilha: TrilhaDex) => `${formaId}:${trilha}`;
+const idDaVaga = (formaId: string, trilha: TrilhaDex) => `vaga-${formaId}-${trilha}`;
+
+/*
+ * A última saída usada, lembrada neste navegador. É conveniência: o
+ * armazenamento pode vir vazio ou recusar (janela anônima), e a tela
+ * funciona igual, só sem a pílula pré-marcada. Lida por
+ * `useSyncExternalStore` para o servidor e a hidratação verem `null` e o
+ * valor só entrar depois — o mesmo HTML dos dois lados.
+ */
+function assinarArmazenamento(aviso: () => void) {
+  window.addEventListener("storage", aviso);
+  return () => window.removeEventListener("storage", aviso);
+}
+
+function lerSaidaSalva(): string | null {
+  try {
+    return window.localStorage.getItem(CHAVE_SAIDA);
+  } catch {
+    return null;
+  }
+}
+
+function salvarSaida(id: string) {
+  try {
+    window.localStorage.setItem(CHAVE_SAIDA, id);
+  } catch {
+    // Sem armazenamento a próxima visita só não vem com a pílula marcada.
+  }
+}
+
+/** A chave da recusa única de uma resposta (`{ recusa: { chave } }`), ou nulo. */
+function chaveDaRecusa(corpo: unknown): string | null {
+  if (typeof corpo !== "object" || corpo === null) return null;
+  const recusa = (corpo as { recusa?: unknown }).recusa;
+  if (typeof recusa !== "object" || recusa === null) return null;
+  const chave = (recusa as { chave?: unknown }).chave;
+  return typeof chave === "string" ? chave : null;
+}
+
+/** `{ criados, movidos }` do 201; sem eles, conta o lote inteiro como criado. */
+function lerResultado(corpo: unknown, total: number): { criados: number; movidos: number } {
+  if (typeof corpo === "object" && corpo !== null) {
+    const { criados, movidos } = corpo as { criados?: unknown; movidos?: unknown };
+    if (typeof criados === "number" && typeof movidos === "number") return { criados, movidos };
+  }
+  return { criados: total, movidos: 0 };
+}
+
+interface ItemSelecao {
+  formaId: string;
+  shiny: boolean;
+}
+
+/** Vaga + trilha → item. Um Pokémon por vaga e trilha, como a rota pede. */
+type Selecao = ReadonlyMap<string, ItemSelecao>;
+
+interface AlvoToque {
+  formaId: string;
+  trilha: TrilhaDex;
+  nome: string;
+  caixa: number;
+  posicao: number;
+}
+
+/**
+ * O que a barra conta da última vaga tocada: marcou, desmarcou, não marcou
+ * por causa do teto, ou só identificou (foco, ou toque na vaga no HOME) —
+ * nesse caso o fim da linha é o estado de agora, não uma ação.
+ */
+type UltimoToque = AlvoToque & { evento: "marcou" | "desmarcou" | "teto" | "identificou" };
+
+interface ItemLote {
+  chave: string;
+  forma: FormaDexDTO;
+  shiny: boolean;
+  /** Caixa e posição com as reservadas de agora; nulo se a vaga saiu das caixas (seção desligada em outra aba). */
+  destino: PosicaoNaCaixa | null;
+}
+
+interface PedidoEnvio {
+  jogoOrigem: string;
+  itens: ItemSelecao[];
+}
+
+/** Na ordem das caixas do HOME; o que ficou sem lugar vai para o fim. */
+function compararDestino(a: ItemLote, b: ItemLote): number {
+  if (!a.destino || !b.destino) return (a.destino ? 0 : 1) - (b.destino ? 0 : 1);
+  return a.destino.caixa - b.destino.caixa || a.destino.posicao - b.destino.posicao || Number(a.shiny) - Number(b.shiny);
+}
+
+const Vaga = memo(function Vaga({
+  forma,
+  nome,
+  caixa,
+  posicao,
+  trilha,
+  estado,
+  buraco,
+  apagada,
+  marcada,
+  genero,
+  ehMobile,
+  aoAlternar,
+  aoIdentificar,
+  abrir,
+  fechar,
+}: {
+  forma: FormaDexDTO;
+  /** Nome com a forma (`useRotuloForma`), calculado uma vez por catálogo. Já diz "Macho"/"Fêmea" no par. */
+  nome: string;
+  caixa: number;
+  posicao: number;
+  trilha: TrilhaDex;
+  estado: EstadoVagaDex;
+  buraco: MotivoBuraco | null;
+  /** Fora da busca: aparece, para a caixa não se desmontar, mas não se marca. */
+  apagada: boolean;
+  marcada: boolean;
+  /** Lado do par de gênero, quando as duas vagas do par estão nas caixas; senão nulo. */
+  genero: LadoGenero | null;
+  /** Vem de cima (um `useEhMobile()` só, não um por vaga). */
+  ehMobile: boolean;
+  aoAlternar: (alvo: AlvoToque, marcar: boolean) => void;
+  /** Só põe a vaga na linha do último toque, sem selecionar. */
+  aoIdentificar: (alvo: AlvoToque) => void;
+  abrir: (dados: DadosCartaoPokemon) => (e: MouseEvent<HTMLElement>) => void;
+  fechar: () => void;
+}) {
+  const t = useTranslations("dex");
+  const shiny = trilha === "shiny";
+  const lugar = t("pokedex.posicaoNaCaixa", { caixa: String(caixa), posicao: String(posicao) });
+  // O número da Pokédex no pé da vaga, só no celular, como nas Caixas.
+  const numero = ehMobile && (
+    <span className="pointer-events-none absolute inset-x-0.5 bottom-0 rounded-sm bg-surface/80 text-center font-mono text-[9px] leading-tight font-semibold tabular-nums text-muted">
+      {numero4(forma.numero)}
+    </span>
+  );
+  const visto = marcada && (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute top-0.5 right-0.5 flex size-4 items-center justify-center rounded-full bg-accent text-accent-fg"
+    >
+      <Icone nome="check" tamanho={12} />
+    </span>
+  );
+  /* ♂/♀ no canto de cima à esquerda: o visto mora no da direita e o número
+     do celular no pé. Fundo da superfície para ler sobre o sprite. Só para o
+     olho — o nome do `aria-label` já diz "Macho"/"Fêmea". */
+  const simboloGenero = genero && (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute top-0.5 left-0.5 rounded-sm bg-surface/85 px-0.5 text-[10px] leading-none font-bold text-strong"
+    >
+      {SIMBOLO_GENERO[genero]}
+    </span>
+  );
+
+  if (buraco) {
+    // Buraco das Caixas: a posição é da forma, mas nada entra nela nesta trilha.
+    const motivo = t(`caixas.buraco.${buraco}`);
+    return (
+      <li
+        aria-label={`${nome} — ${motivo} — ${lugar}`}
+        className={`relative flex aspect-square items-center justify-center rounded-md border border-dashed border-line ${apagada ? "opacity-30" : ""}`}
+        onMouseEnter={abrir({ sprite: forma.sprite, shiny: false, nome, linhas: [motivo, lugar] })}
+        onMouseLeave={fechar}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- sprite externo pequeno (PokeAPI, ~0,6 KB); mesma convenção das Caixas. */}
+        <img
+          src={urlSpriteDex(forma.sprite, false)}
+          alt=""
+          width={56}
+          height={56}
+          loading="lazy"
+          className="h-full w-full object-contain opacity-15 grayscale"
+          style={{ imageRendering: "pixelated" }}
+        />
+        <span className="absolute inset-x-0 bottom-0.5 text-center text-[9px] leading-tight font-semibold text-muted">
+          {motivo}
+        </span>
+      </li>
+    );
+  }
+
+  const textoEstado = t(`estado.${estado}`);
+  const rotulo = `${nome} — ${textoEstado} — ${lugar}`;
+  const linhasCartao = marcada ? [textoEstado, lugar, t("novoCadastro.marcada")] : [textoEstado, lugar];
+
+  // Fora da busca: aparece apagada, para a caixa não se desmontar, e não é
+  // botão — nem marca nem identifica. Se estava marcada, o anel continua.
+  if (apagada) {
+    return (
+      <li
+        aria-label={rotulo}
+        className={`relative flex aspect-square items-center justify-center rounded-md border opacity-30 ${MOLDURA[estado]} ${marcada ? ANEL_MARCADA : ""}`}
+        onMouseEnter={abrir({ sprite: forma.sprite, shiny, nome, linhas: linhasCartao })}
+        onMouseLeave={fechar}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- sprite externo pequeno (PokeAPI), 30 por caixa; mesma convenção das Caixas. */}
+        <img
+          src={urlSpriteDex(forma.sprite, shiny)}
+          alt=""
+          width={56}
+          height={56}
+          loading="lazy"
+          className={`h-full w-full object-contain ${estado === "falta" ? "opacity-40 grayscale" : ""}`}
+          style={{ imageRendering: "pixelated" }}
+        />
+        {simboloGenero}
+        {visto}
+        {numero}
+      </li>
+    );
+  }
+
+  const alvo: AlvoToque = { formaId: forma.id, trilha, nome, caixa, posicao };
+  /* No HOME a vaga não se marca, mas é botão para ser identificável sem
+     mouse: o toque (ou o foco) só escreve "— No HOME" na barra. Sem
+     `aria-pressed`, porque não alterna nada. A exceção é a que já estava
+     marcada (chegou ao HOME por outra aba depois do toque): continua com o
+     anel e o toque a desmarca — senão ela só sairia do lote pela etapa 2. */
+  const soInforma = estado === "no_home" && !marcada;
+
+  return (
+    <li className={`aspect-square rounded-md ${BORDA_LI[estado]} ${FUNDO[estado]} ${marcada ? ANEL_MARCADA : ""}`}>
+      <button
+        type="button"
+        id={idDaVaga(forma.id, trilha)}
+        aria-pressed={soInforma ? undefined : marcada}
+        aria-label={rotulo}
+        // `scroll-mt`: o foco por Tab não para debaixo da barra grudada no topo (desktop).
+        className={`group relative flex h-full w-full items-center justify-center rounded-md md:scroll-mt-24 ${BORDA_BOTAO[estado]}`}
+        onClick={() => (soInforma ? aoIdentificar(alvo) : aoAlternar(alvo, !marcada))}
+        onFocus={(e) => {
+          if (focoDeTeclado(e.currentTarget)) aoIdentificar(alvo);
+        }}
+        onMouseEnter={abrir({ sprite: forma.sprite, shiny, nome, linhas: linhasCartao })}
+        onMouseLeave={fechar}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- sprite externo pequeno (PokeAPI), 30 por caixa; mesma convenção das Caixas. */}
+        <img
+          src={urlSpriteDex(forma.sprite, shiny)}
+          alt=""
+          width={56}
+          height={56}
+          loading="lazy"
+          className={
+            estado === "no_home"
+              ? "h-full w-full object-contain"
+              : `h-full w-full object-contain [transition:transform_200ms,filter_200ms,opacity_200ms] group-hover:scale-125 ${
+                  estado === "falta" && !marcada ? "opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0" : ""
+                }`
+          }
+          style={{ imageRendering: "pixelated" }}
+        />
+        {simboloGenero}
+        {visto}
+        {numero}
+      </button>
+    </li>
+  );
+});
+
+/**
+ * A barra das ações da etapa. Celular: fixa na base, na zona do polegar, com
+ * a área segura do iPhone (a `main` reserva a altura). Abaixo de 640px,
+ * texto numa faixa e botões na de baixo; a de cima chega a 48px quando o
+ * último toque tem par de gênero (duas linhas dele, uma do par, e o botão
+ * do par ao lado): 12 + 48 + 8 + 44 + 12 = 124px. De 640 a 767, uma faixa
+ * só e recuo de 8px (8 + 44 + 8 = 60px), porque deitado o celular tem
+ * ~340px de altura: o texto ali não passa de duas linhas, que cabem nos
+ * 44px dos botões.
+ *
+ * Desktop: grudada no topo da área que rola, porque a grade tem dezenas de
+ * caixas e o botão no começo da página ficaria longe do que se acabou de
+ * marcar. Grudada, ela está no fluxo da página: se mudasse de altura a cada
+ * toque, a grade inteira pulava junto (a 768px, 48px entre o `mousedown` e o
+ * `click`, que caía fora da vaga). Por isso, do `md` para cima, uma linha só
+ * (`flex-nowrap`) e altura reservada para o estado mais alto da faixa, com o
+ * texto cortado dentro dela: de 768 a 1023, último toque em até duas linhas
+ * mais a linha do par, 48px de texto (12 + 48 + 12 + 1 = 73px de barra); de
+ * 1024 para cima, uma linha de cada, 32px (12 + 32 + 12 + 1 = 57px). O corte
+ * é só visual: o texto inteiro continua no DOM, e o leitor de tela o lê.
+ */
+function BarraAcao({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 md:sticky md:top-0 md:z-10 md:flex-nowrap md:border-b md:border-hairline md:bg-background md:py-3 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:border-t max-md:border-line max-md:bg-surface max-md:px-4 max-sm:pt-3 max-sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:max-md:flex-nowrap sm:max-md:pt-2 sm:max-md:pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+      {children}
+    </div>
+  );
+}
+
+export function NovoCadastro({
+  formas,
+  secoes,
+  registros,
+  caixasReservadas,
+  jogos,
+  checkpoints,
+}: {
+  formas: FormaDexDTO[];
+  secoes: SecoesContadas;
+  registros: RegistroDexDTO[];
+  caixasReservadas: number;
+  /** Só os ativos. */
+  jogos: JogoPossuidoDTO[];
+  /** Troféus-checkpoint ainda não conquistados. */
+  checkpoints: TrofeuDexDTO[];
+}) {
+  const t = useTranslations("dex");
+  const tr = useTranslations("recusas");
+  const router = useRouter();
+  const idioma = useLocale() as IdiomaTrofeu;
+  const rotulo = useRotuloForma(formas);
+  const nomeCaixa = useNomeCaixa();
+  const ehMobile = useEhMobile();
+  const { abrir, fechar, cartao } = useCartaoPokemon();
+
+  const mainRef = useRef<HTMLElement>(null);
+  const avisoRef = useRef<HTMLDivElement>(null);
+  const tituloSaidaRef = useRef<HTMLHeadingElement>(null);
+  /** Vaga que recebe o foco ao voltar da etapa 2 (o último toque). */
+  const voltarParaRef = useRef<string | null>(null);
+  const idSaida = useId();
+  const idModal = useId();
+
+  const [etapa, setEtapa] = useState<1 | 2>(1);
+  const [trilha, setTrilha] = useState<TrilhaDex>("normal");
+  const [busca, setBusca] = useState("");
+  // A busca apaga ou acende ~1.300 vagas: o campo responde primeiro, a grade depois.
+  const buscaAdiada = useDeferredValue(busca);
+  const [soFaltantes, setSoFaltantes] = useState(true);
+  const [selecao, setSelecao] = useState<Selecao>(() => new Map());
+  /* Espelho da seleção para os handlers: o teto é decidido no toque, e o
+     toque recusado tem de chegar à barra — dentro do `setSelecao(atual => …)`
+     isso seria efeito colateral num atualizador, que tem de ser puro. Toda
+     escrita da seleção passa por `definirSelecao`, que mantém os dois iguais. */
+  const selecaoRef = useRef<Selecao>(selecao);
+  const [ultimo, setUltimo] = useState<UltimoToque | null>(null);
+  const [saidaEscolhida, setSaidaEscolhida] = useState<string | null>(null);
+  const saidaSalva = useSyncExternalStore(assinarArmazenamento, lerSaidaSalva, () => null);
+  const [enviando, setEnviando] = useState(false);
+  const [erros, setErros] = useState<string[]>([]);
+  const [sucesso, setSucesso] = useState<{ texto: string; movidos: string | null } | null>(null);
+  const [pendente, setPendente] = useState<(PedidoEnvio & { frase: string }) | null>(null);
+
+  /* ---- Etapa 1: a grade ------------------------------------------------ */
+
+  const estados = useMemo(() => mapearEstadosDex(registros), [registros]);
+  const nomes = useMemo(() => new Map(formas.map((f) => [f.id, rotulo.nome(f)])), [formas, rotulo]);
+  const caixas = useMemo(
+    () => montarCaixasDex(formas, trilha, secoes, caixasReservadas),
+    [formas, trilha, secoes, caixasReservadas],
+  );
+  /* Mesma regra de busca da Pokédex e do Cadastrar (nome, forma em inglês ou
+     português, número). Sem texto, `null`: tudo casa. */
+  const casam = useMemo(() => {
+    if (!buscaAdiada.trim()) return null;
+    return new Set(
+      filtrarFormasDex(formas, { regiao: "todas", categoria: "todas", busca: buscaAdiada }).map((f) => f.id),
+    );
+  }, [formas, buscaAdiada]);
+
+  const caixasVisiveis = useMemo(
+    () =>
+      caixas.filter((c) => {
+        if (casam && !c.lugares.some((l) => casam.has(l.forma.id))) return false;
+        if (!soFaltantes) return true;
+        return c.lugares.some(
+          (l) =>
+            l.buraco === null &&
+            (!casam || casam.has(l.forma.id)) &&
+            estadoDaVaga(estados, l.forma.id, trilha) !== "no_home",
+        );
+      }),
+    [caixas, casam, soFaltantes, estados, trilha],
+  );
+
+  const definirSelecao = useCallback((proxima: Selecao) => {
+    selecaoRef.current = proxima;
+    setSelecao(proxima);
+  }, []);
+
+  const aoAlternar = useCallback(
+    (alvo: AlvoToque, marcar: boolean) => {
+      setSucesso(null);
+      const atual = selecaoRef.current;
+      const chave = chaveDaVaga(alvo.formaId, alvo.trilha);
+      if (atual.has(chave) !== marcar) {
+        if (marcar && atual.size >= MAX_ITENS_ENVIO_HOME) {
+          setUltimo({ ...alvo, evento: "teto" });
+          return;
+        }
+        const proxima = new Map(atual);
+        if (marcar) proxima.set(chave, { formaId: alvo.formaId, shiny: alvo.trilha === "shiny" });
+        else proxima.delete(chave);
+        definirSelecao(proxima);
+      }
+      setUltimo({ ...alvo, evento: marcar ? "marcou" : "desmarcou" });
+    },
+    [definirSelecao],
+  );
+
+  const aoIdentificar = useCallback((alvo: AlvoToque) => setUltimo({ ...alvo, evento: "identificou" }), []);
+
+  const tirar = useCallback(
+    (chave: string) => {
+      const atual = selecaoRef.current;
+      if (!atual.has(chave)) return;
+      const proxima = new Map(atual);
+      proxima.delete(chave);
+      definirSelecao(proxima);
+    },
+    [definirSelecao],
+  );
+
+  function limpar() {
+    definirSelecao(new Map());
+    setUltimo(null);
+  }
+
+  /* ---- Etapa 2: o lote ------------------------------------------------- */
+
+  const formaPorId = useMemo(() => new Map(formas.map((f) => [f.id, f])), [formas]);
+  /* O destino é derivado na hora, das caixas de cada trilha com as reservadas
+     de agora; a seleção não guarda posição nenhuma. */
+  const posicoes = useMemo(
+    () => ({
+      normal: posicoesNasCaixas(montarCaixasDex(formas, "normal", secoes, caixasReservadas)),
+      shiny: posicoesNasCaixas(montarCaixasDex(formas, "shiny", secoes, caixasReservadas)),
+    }),
+    [formas, secoes, caixasReservadas],
+  );
+
+  /* Par de gênero: o macho mora no Nacional e a fêmea no Gênero (a do Sneasel
+     de Hisui, no bloco de Hisui), em caixas diferentes. A vaga só mostra
+     ♂/♀, e a barra só aponta a outra, quando as duas têm lugar nas caixas
+     daquela trilha: com Gênero desligado a fêmea não tem vaga, e a fêmea de
+     forma regional vira buraco; na shiny, um lado sem shiny também é buraco. */
+  const pares = useMemo(() => paresDeGenero(formas), [formas]);
+  const generoConta = categoriaConta("genero", secoes);
+  const parVisivel = useCallback(
+    (formaId: string, trilhaDaVaga: TrilhaDex) => {
+      if (!generoConta) return null;
+      const p = pares.get(formaId);
+      const lugares = posicoes[trilhaDaVaga];
+      return p && lugares.has(formaId) && lugares.has(p.par) ? p : null;
+    },
+    [generoConta, pares, posicoes],
+  );
+  const ladosNaTrilha = useMemo(() => {
+    const r = new Map<string, LadoGenero>();
+    for (const id of pares.keys()) {
+      const p = parVisivel(id, trilha);
+      if (p) r.set(id, p.lado);
+    }
+    return r;
+  }, [pares, parVisivel, trilha]);
+
+  const lote = useMemo(() => {
+    const itens: ItemLote[] = [];
+    for (const [chave, item] of selecao) {
+      const forma = formaPorId.get(item.formaId);
+      // Forma que saiu do catálogo (seed novo) não tem o que enviar.
+      if (!forma) continue;
+      itens.push({ chave, forma, shiny: item.shiny, destino: posicoes[item.shiny ? "shiny" : "normal"].get(forma.id) ?? null });
+    }
+    return itens.sort(compararDestino);
+  }, [selecao, formaPorId, posicoes]);
+  const totalShiny = lote.filter((i) => i.shiny).length;
+  const contagem = t("novoCadastro.contagem", { normal: lote.length - totalShiny, shiny: totalShiny });
+  /* O toque já não passa do teto; isto é a defesa para um lote que chegasse
+     acima dele por outro caminho — Continuar e Enviar ficam travados. */
+  const acimaDoTeto = lote.length > MAX_ITENS_ENVIO_HOME;
+  const textoAcimaDoTeto = t("novoCadastro.acimaDoTeto", {
+    maximo: String(MAX_ITENS_ENVIO_HOME),
+    excesso: String(lote.length - MAX_ITENS_ENVIO_HOME),
+  });
+
+  const opcoes = useMemo(
+    () => [...jogos.map((j) => ({ id: j.jogoId, nome: j.nome })), { id: ORIGEM_HOME, nome: t("cadastrar.home") }],
+    [jogos, t],
+  );
+  // A escolhida nesta visita vence a lembrada; as duas só valem se ainda forem opção (jogo parado sai da lista).
+  const candidata = saidaEscolhida ?? saidaSalva;
+  const saida = candidata !== null && opcoes.some((o) => o.id === candidata) ? candidata : null;
+  const nomeDoJogo = useCallback(
+    (id: string) => (id === ORIGEM_HOME ? t("cadastrar.home") : (jogoDex(id)?.nome ?? id)),
+    [t],
+  );
+
+  const catalogo = useMemo(() => (saida ? catalogoDoJogo(saida, formas) : null), [saida, formas]);
+  const trancadas = useMemo(() => {
+    const r = new Map<number, string>();
+    if (!saida) return r;
+    const titulo = new Map(checkpoints.map((c) => [c.id, c.textos[idioma]?.titulo ?? c.id]));
+    for (const [n, ids] of especiesTrancadas(checkpoints, saida, new Set())) {
+      r.set(n, ids.map((id) => titulo.get(id)).join(" + "));
+    }
+    return r;
+  }, [checkpoints, saida, idioma]);
+  /* O registro que a rota moveria: o primeiro com aquela vaga e trilha no jogo
+     de saída. Os registros chegam em `criado_em, id`, a mesma ordem em que a
+     rota escolhe. Saída pelo HOME sempre cria. */
+  const noJogoDeSaida = useMemo(() => {
+    const r = new Map<string, RegistroDexDTO>();
+    if (!saida || saida === ORIGEM_HOME) return r;
+    for (const reg of registros) {
+      if (reg.local !== saida) continue;
+      const chave = chaveDaVaga(reg.formaId, reg.shiny ? "shiny" : "normal");
+      if (!r.has(chave)) r.set(chave, reg);
+    }
+    return r;
+  }, [registros, saida]);
+
+  /* Só avisam (fora do jogo, troca, evento, trancada, o que será movido) ou
+     impedem (não vai ao HOME, já no HOME): o que impede tem de sair do lote. */
+  const linhasLote = lote.map((item) => {
+    const trilhaItem: TrilhaDex = item.shiny ? "shiny" : "normal";
+    const disponibilidade = catalogo?.get(item.forma.id);
+    const naoVai = saida !== null && NAO_VAI_AO_HOME.has(`${saida}:${item.forma.id}`);
+    const jaNoHome = estadoDaVaga(estados, item.forma.id, trilhaItem) === "no_home";
+    const movido = noJogoDeSaida.get(item.chave);
+    const trancadaPor = trancadas.get(item.forma.numero);
+    const marcas: ReactNode[] = [];
+    if (catalogo && !disponibilidade) marcas.push(<Distintivo key="fora">{t("cadastrar.foraDoJogo")}</Distintivo>);
+    if (disponibilidade && disponibilidade.como !== "livre") {
+      marcas.push(
+        <Distintivo key="como" tom="aviso">
+          {t(`cadastrar.como.${disponibilidade.como}`)}
+        </Distintivo>,
+      );
+    }
+    if (trancadaPor) {
+      marcas.push(
+        <Distintivo key="trancada" className="whitespace-normal!">
+          {t("cadastrar.trancada", { checkpoint: trancadaPor })}
+        </Distintivo>,
+      );
+    }
+    if (movido && saida) {
+      marcas.push(
+        <Distintivo key="move" tom="acento" className="whitespace-normal!">
+          {t("novoCadastro.moveDoJogo", { jogo: nomeDoJogo(saida) })}
+        </Distintivo>,
+      );
+      if (movido.jogoOrigem !== saida) {
+        marcas.push(
+          <Distintivo key="nascido" className="whitespace-normal!">
+            {t("novoCadastro.nascidoEm", { jogo: nomeDoJogo(movido.jogoOrigem) })}
+          </Distintivo>,
+        );
+      }
+    }
+    if (naoVai) {
+      marcas.push(
+        <Distintivo key="nao-vai" tom="perigo">
+          {t("cadastrar.naoVaiAoHome")}
+        </Distintivo>,
+      );
+    }
+    if (jaNoHome) {
+      marcas.push(
+        <Distintivo key="ja-no-home" tom="perigo">
+          {t("novoCadastro.jaNoHome")}
+        </Distintivo>,
+      );
+    }
+    return { item, marcas, impede: naoVai || jaNoHome };
+  });
+  const impedidos = linhasLote.filter((l) => l.impede).length;
+  const podeEnviar = saida !== null && lote.length > 0 && !acimaDoTeto && impedidos === 0 && !enviando;
+
+  /* ---- Envio ----------------------------------------------------------- */
+
+  async function enviar(pedido: PedidoEnvio, confirmarSemVolta: boolean) {
+    setEnviando(true);
+    setErros([]);
+    setSucesso(null);
+    try {
+      const r = await fetch("/api/dex/registros/enviar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jogoOrigem: pedido.jogoOrigem, itens: pedido.itens, confirmarSemVolta }),
+      });
+      const corpo: unknown = await r.json().catch(() => null);
+      // Saída só de envio (GO, FireRed): a confirmação é do usuário, nunca automática.
+      if (r.status === 409 && chaveDaRecusa(corpo) === "dexConfirmarSemVolta") {
+        setPendente({ ...pedido, frase: textoDaRecusa(tr, corpo, t("novoCadastro.erro")) });
+        return;
+      }
+      setPendente(null);
+      if (!r.ok) {
+        const legivel = recusasLegiveis(corpo, {
+          forma: (id) => nomes.get(id) ?? id,
+          trilha: (x) => t(`trilha.${x}`),
+        });
+        setErros(textosDasRecusas(tr, legivel, t("novoCadastro.erro")));
+        return;
+      }
+      const { criados, movidos } = lerResultado(corpo, pedido.itens.length);
+      salvarSaida(pedido.jogoOrigem);
+      setSucesso({
+        texto: t("novoCadastro.enviados", { quantidade: criados + movidos, jogo: nomeDoJogo(pedido.jogoOrigem) }),
+        movidos: movidos > 0 ? t("novoCadastro.movidos", { quantidade: movidos }) : null,
+      });
+      definirSelecao(new Map());
+      setUltimo(null);
+      setEtapa(1);
+      router.refresh();
+    } catch {
+      setPendente(null);
+      setErros([t("novoCadastro.erro")]);
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  async function enviarLote() {
+    if (!saida) return;
+    await enviar({ jogoOrigem: saida, itens: lote.map((i) => ({ formaId: i.forma.id, shiny: i.shiny })) }, false);
+  }
+
+  function continuar() {
+    fechar();
+    setErros([]);
+    setSucesso(null);
+    setEtapa(2);
+  }
+
+  function voltar() {
+    setErros([]);
+    voltarParaRef.current = ultimo ? idDaVaga(ultimo.formaId, ultimo.trilha) : null;
+    setEtapa(1);
+  }
+
+  /* Trocar de etapa troca a página inteira, e o botão clicado sai dela: o
+     foco iria para o `body`. Na etapa 2 ele vai para o título da saída, com a
+     página no topo; ao voltar, para a vaga do último toque, no meio da tela.
+     Na volta pelo sucesso não há vaga: quem rola é o efeito do aviso. */
+  useEffect(() => {
+    if (etapa === 2) {
+      tituloSaidaRef.current?.focus({ preventScroll: true });
+      mainRef.current?.scrollIntoView({ block: "start" });
+      return;
+    }
+    const id = voltarParaRef.current;
+    voltarParaRef.current = null;
+    const alvo = id ? document.getElementById(id) : null;
+    if (!alvo) return;
+    alvo.focus({ preventScroll: true });
+    alvo.scrollIntoView({ block: "center" });
+  }, [etapa]);
+
+  /* O botão está na barra (no celular, fixa na base) e o resultado aparece
+     no topo do conteúdo, possivelmente fora da tela: leva o aviso à vista.
+     No sucesso a etapa troca e o botão clicado sai da página, então o foco
+     vem junto para o aviso. Só rola e foca; não mexe em estado. */
+  useEffect(() => {
+    if (erros.length === 0 && !sucesso) return;
+    const aviso = avisoRef.current;
+    if (!aviso) return;
+    if (sucesso) aviso.focus({ preventScroll: true });
+    aviso.scrollIntoView({ block: "nearest" });
+  }, [erros, sucesso]);
+
+  /* ---- Tela ------------------------------------------------------------ */
+
+  const fimDoUltimo = (u: UltimoToque): string => {
+    if (u.evento === "marcou") return t("novoCadastro.marcado");
+    if (u.evento === "desmarcou") return t("novoCadastro.desmarcado");
+    if (u.evento === "teto") return t("novoCadastro.teto", { maximo: String(MAX_ITENS_ENVIO_HOME) });
+    // Só identificou: o estado de agora (marcada, ou falta / no jogo / no HOME).
+    return selecao.has(chaveDaVaga(u.formaId, u.trilha))
+      ? t("novoCadastro.marcado")
+      : t(`estado.${estadoDaVaga(estados, u.formaId, u.trilha)}`);
+  };
+  const textoUltimo = ultimo
+    ? t("novoCadastro.ultimoToque", {
+        nome: ultimo.nome,
+        caixa: String(ultimo.caixa),
+        posicao: String(ultimo.posicao),
+        acao: fimDoUltimo(ultimo),
+      })
+    : t("novoCadastro.dica");
+  /* Para leitor de tela, só o que mudou a seleção (ou o toque recusado pelo
+     teto, que o botão não diz). O foco não entra: o próprio botão já fala o
+     nome, e cada Tab seria dito duas vezes. */
+  const anuncio = ultimo && ultimo.evento !== "identificou" ? textoUltimo : "";
+
+  /* O par de gênero da última vaga tocada, na trilha dela: a barra diz onde
+     está a outra e a marca sem rolar até lá. Par no HOME só informa; o que
+     já estava marcado antes de chegar lá ainda se desmarca, como na grade.
+     O botão passa por `aoAlternar`, então o teto vale igual e o último toque
+     vira o par — tocar de novo volta para a primeira. */
+  const parDoUltimo = (() => {
+    if (!ultimo || acimaDoTeto) return null;
+    const p = parVisivel(ultimo.formaId, ultimo.trilha);
+    const lugar = p ? posicoes[ultimo.trilha].get(p.par) : undefined;
+    if (!p || !lugar) return null;
+    const lado: LadoGenero = p.lado === "macho" ? "femea" : "macho";
+    const marcada = selecao.has(chaveDaVaga(p.par, ultimo.trilha));
+    const noHome = estadoDaVaga(estados, p.par, ultimo.trilha) === "no_home";
+    const nome = nomes.get(p.par) ?? p.par;
+    const posicaoLonga = t("pokedex.posicaoNaCaixa", { caixa: String(lugar.caixa), posicao: String(lugar.posicao) });
+    const noHomeTexto = noHome ? ` — ${t("estado.no_home")}` : "";
+    const acao = marcada ? "desmarcar" : "marcar";
+    const acaoLonga = t(`novoCadastro.${acao}${lado === "macho" ? "Macho" : "Femea"}`);
+    return {
+      alvo: { formaId: p.par, trilha: ultimo.trilha, nome, caixa: lugar.caixa, posicao: lugar.posicao },
+      marcada,
+      alternavel: !noHome || marcada,
+      // "♀ Caixa 47 · 12" para o olho; o leitor de tela ouve o nome e a posição por extenso.
+      curto: `${t("novoCadastro.parEm", { simbolo: SIMBOLO_GENERO[lado], caixa: String(lugar.caixa), posicao: String(lugar.posicao) })}${noHomeTexto}`,
+      longo: `${nome} — ${posicaoLonga}${noHomeTexto}`,
+      botaoCurto: t(`novoCadastro.${acao}Curto`, { simbolo: SIMBOLO_GENERO[lado] }),
+      botaoLongo: acaoLonga,
+      botaoRotulo: `${acaoLonga} — ${nome}, ${posicaoLonga}`,
+    };
+  })();
+
+  const motivoBloqueio =
+    lote.length === 0
+      ? t("novoCadastro.loteVazio")
+      : acimaDoTeto
+        ? textoAcimaDoTeto
+        : saida === null
+          ? t("novoCadastro.escolhaSaida")
+          : impedidos > 0
+            ? t("novoCadastro.tireImpedidos", { quantidade: impedidos })
+            : contagem;
+
+  return (
+    <main
+      ref={mainRef}
+      // O `pb` reserva a barra fixa de cada faixa (ver `BarraAcao`): até 124px abaixo de 640, 60px de 640 a 767.
+      className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 sm:p-8 max-sm:pb-[calc(8rem+env(safe-area-inset-bottom))]! sm:max-md:pb-[calc(4.5rem+env(safe-area-inset-bottom))]!"
+    >
+      <CabecalhoPagina titulo={t("novoCadastro.titulo")} />
+
+      {etapa === 1 ? (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-1.5 max-md:gap-2" role="group" aria-label={t("pokedex.trilha")}>
+              {(["normal", "shiny"] as const).map((opcao) => (
+                <button
+                  key={opcao}
+                  type="button"
+                  aria-pressed={trilha === opcao}
+                  onClick={() => setTrilha(opcao)}
+                  className={classesOpcao(trilha === opcao)}
+                >
+                  {t(`trilha.${opcao}`)}
+                </button>
+              ))}
+            </div>
+            <input
+              aria-label={t("pokedex.buscar")}
+              className={`${classesEntrada} w-56 max-md:w-full`}
+              value={busca}
+              placeholder={t("pokedex.placeholderBuscar")}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+            <label className="flex items-center gap-2 text-sm max-md:min-h-11">
+              <input type="checkbox" checked={soFaltantes} onChange={(e) => setSoFaltantes(e.target.checked)} />
+              {t("novoCadastro.soFaltantes")}
+            </label>
+          </div>
+          <nav className="flex flex-wrap items-center gap-1.5 max-md:gap-2" aria-label={t("caixas.irPara")}>
+            {GRUPOS_CAIXA.map((grupo) => {
+              const primeira = caixasVisiveis.find((c) => c.grupo === grupo);
+              return primeira ? (
+                <a key={grupo} href={`#caixa-${primeira.numero}`} className={classesOpcao(false)}>
+                  {t(`caixas.grupo.${grupo}`)}
+                </a>
+              ) : null;
+            })}
+          </nav>
+          {/* Sem o cartão flutuante (só com mouse), a legenda diz o que cada moldura é. */}
+          {ehMobile && (
+            <ul className="flex flex-wrap items-center gap-2" aria-label={t("pokedex.filtroEstado")}>
+              {ESTADOS_LEGENDA.map((e) => (
+                <li key={e} className="flex items-center gap-1.5">
+                  <span aria-hidden className={`size-4 rounded-md border ${MOLDURA[e]}`} />
+                  <Distintivo>{t(`estado.${e}`)}</Distintivo>
+                </li>
+              ))}
+              <li className="flex items-center gap-1.5">
+                <span aria-hidden className={`size-4 rounded-md border border-hairline ${ANEL_MARCADA}`} />
+                <Distintivo>{t("novoCadastro.marcada")}</Distintivo>
+              </li>
+            </ul>
+          )}
+        </div>
+      ) : null}
+
+      {etapa === 1 ? (
+        <BarraAcao>
+          {/* Deitado e no desktop até 1023px, a contagem quebra em duas linhas
+              ("12 normais ·" / "3 shiny") para sobrar largura ao último toque e
+              ao botão do par; duas linhas cabem na altura da barra das duas faixas. */}
+          <span className="text-xs tabular-nums text-muted max-sm:min-w-0 max-sm:flex-1 sm:shrink-0 sm:max-lg:max-w-[5.5rem]">
+            {contagem}
+          </span>
+          {/* No celular é a única identificação da vaga tocada. Em pé, numa
+              faixa própria: até duas linhas dela (o "marcado/desmarcado" do
+              fim não é cortado), mais uma do par. Deitado, ao lado dos botões,
+              no máximo duas linhas no total (32px), que cabem na altura deles
+              (44px): com par, o último toque perde a segunda. No desktop, a
+              altura reservada de `BarraAcao` (48px até 1023, 32px dali para
+              cima), com o texto cortado dentro dela. O botão do par diz
+              "Marcar ♀" até o `lg` e "Marcar fêmea" dali para cima; o rótulo
+              acessível é sempre o completo. */}
+          <div className="flex min-w-0 items-center gap-3 sm:flex-1 max-sm:order-first max-sm:w-full">
+            <div className="min-w-0 flex-1 text-xs md:flex md:flex-col md:justify-center md:max-lg:min-h-12 lg:min-h-8">
+              <p
+                className={`text-foreground max-sm:line-clamp-2 md:max-lg:line-clamp-2 ${
+                  parDoUltimo ? "sm:max-md:line-clamp-1 lg:line-clamp-1" : "sm:max-md:line-clamp-2 lg:line-clamp-2"
+                }`}
+              >
+                {acimaDoTeto ? textoAcimaDoTeto : textoUltimo}
+              </p>
+              {parDoUltimo && (
+                <p className="truncate text-muted">
+                  <span aria-hidden>{parDoUltimo.curto}</span>
+                  <span className="sr-only">{parDoUltimo.longo}</span>
+                </p>
+              )}
+            </div>
+            {parDoUltimo?.alternavel && (
+              <Botao
+                tamanho="sm"
+                className="shrink-0"
+                aria-label={parDoUltimo.botaoRotulo}
+                onClick={() => aoAlternar(parDoUltimo.alvo, !parDoUltimo.marcada)}
+              >
+                <span className="lg:hidden">{parDoUltimo.botaoCurto}</span>
+                <span className="max-lg:hidden">{parDoUltimo.botaoLongo}</span>
+              </Botao>
+            )}
+          </div>
+          <span className="sr-only" aria-live="polite">
+            {anuncio}
+          </span>
+          {selecao.size > 0 && (
+            <Botao tamanho="sm" onClick={limpar}>
+              {t("cadastrar.limpar")}
+            </Botao>
+          )}
+          <Botao variante="primario" tamanho="sm" onClick={continuar} disabled={lote.length === 0 || acimaDoTeto}>
+            {t("novoCadastro.continuar", { quantidade: String(lote.length) })}
+          </Botao>
+        </BarraAcao>
+      ) : (
+        <BarraAcao>
+          <Botao tamanho="sm" onClick={voltar} disabled={enviando}>
+            {t("novoCadastro.voltar")}
+          </Botao>
+          {/* Desktop: uma linha (`truncate`), para a barra grudada não mudar de altura. */}
+          <p className="min-w-0 text-xs text-muted sm:flex-1 max-md:line-clamp-2 max-sm:order-first max-sm:w-full md:truncate">
+            {motivoBloqueio}
+          </p>
+          <Botao
+            variante="primario"
+            tamanho="sm"
+            className="max-sm:flex-1"
+            disabled={!podeEnviar}
+            onClick={enviarLote}
+          >
+            {t("novoCadastro.enviar", { quantidade: String(lote.length) })}
+          </Botao>
+        </BarraAcao>
+      )}
+
+      <div
+        ref={avisoRef}
+        tabIndex={-1}
+        className="flex scroll-mt-4 scroll-mb-32 flex-col gap-3 empty:hidden sm:max-md:scroll-mb-20 md:scroll-mt-24 md:scroll-mb-4"
+      >
+        {erros.length > 0 && (
+          <div role="alert">
+            <Alerta tom="perigo">
+              <ul>
+                {erros.map((e) => (
+                  <li key={e}>{e}</li>
+                ))}
+              </ul>
+            </Alerta>
+          </div>
+        )}
+        {sucesso && (
+          <div role="status">
+            <Alerta tom="sucesso" className="flex flex-wrap items-center gap-x-3">
+              <span>
+                {sucesso.texto}
+                {sucesso.movidos && ` ${sucesso.movidos}`}
+              </span>
+              <Link
+                href="/v1/dex/recebidos"
+                className="font-semibold underline underline-offset-2 max-md:inline-flex max-md:min-h-11 max-md:items-center"
+              >
+                {t("novoCadastro.verRecebidos")}
+              </Link>
+            </Alerta>
+          </div>
+        )}
+      </div>
+
+      {etapa === 1 ? (
+        caixasVisiveis.length === 0 ? (
+          <EstadoVazio>
+            {casam ? t("novoCadastro.nadaNaBusca") : soFaltantes && caixas.length > 0 ? t("novoCadastro.nadaFaltando") : t("caixas.vazio")}
+          </EstadoVazio>
+        ) : (
+          /* `grid-cols-1` (e `min-w-0` no painel): sem teto, a caixa de 304px do
+             celular alargaria a coluna e a página rolaria de lado. */
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {caixasVisiveis.map((caixa) => (
+              <Painel
+                key={caixa.numero}
+                as="section"
+                padding="sm"
+                id={`caixa-${caixa.numero}`}
+                className="min-w-0 scroll-mt-4 md:scroll-mt-24 max-md:px-2"
+              >
+                <header className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 px-1">
+                  <h2 className="text-sm font-semibold text-strong">
+                    {t("caixas.caixaN", { numero: String(caixa.numero) })}
+                    <span className="ml-2 font-normal text-muted">{nomeCaixa.nome(caixa)}</span>
+                  </h2>
+                  {GRUPO_POR_NUMERO.has(caixa.grupo) && (
+                    <span className="font-mono text-xs tabular-nums text-muted">
+                      {t("caixas.faixa", {
+                        inicio: numero4(caixa.lugares[0].forma.numero),
+                        fim: numero4(caixa.lugares[caixa.lugares.length - 1].forma.numero),
+                      })}
+                    </span>
+                  )}
+                </header>
+                {/* Celular: 6 colunas de 44px no mínimo, 8px entre elas. Onde não
+                    cabe, só esta caixa rola de lado; o recuo de 4px dá lugar ao
+                    anel de foco das vagas da borda. Desktop: as 6 colunas
+                    (`COLUNAS_CAIXA`) e o `gap-1` das Caixas. */}
+                <div className="max-md:-m-1 max-md:overflow-x-auto max-md:p-1">
+                  <ol className="grid grid-cols-6 gap-1 max-md:min-w-[19rem] max-md:grid-cols-[repeat(6,minmax(2.75rem,1fr))] max-md:gap-2">
+                    {caixa.lugares.map(({ forma: f, buraco }, i) => (
+                      <Vaga
+                        key={f.id}
+                        forma={f}
+                        nome={nomes.get(f.id) ?? f.especie}
+                        caixa={caixa.numero}
+                        posicao={i + 1}
+                        trilha={trilha}
+                        estado={estadoDaVaga(estados, f.id, trilha)}
+                        buraco={buraco}
+                        apagada={casam !== null && !casam.has(f.id)}
+                        marcada={selecao.has(chaveDaVaga(f.id, trilha))}
+                        genero={ladosNaTrilha.get(f.id) ?? null}
+                        ehMobile={ehMobile}
+                        aoAlternar={aoAlternar}
+                        aoIdentificar={aoIdentificar}
+                        abrir={abrir}
+                        fechar={fechar}
+                      />
+                    ))}
+                    {Array.from({ length: VAGAS_POR_CAIXA - caixa.lugares.length }, (_, i) => (
+                      <li key={`vazia-${i}`} aria-hidden className="aspect-square rounded-md border border-dashed border-hairline" />
+                    ))}
+                  </ol>
+                </div>
+              </Painel>
+            ))}
+          </div>
+        )
+      ) : (
+        <div className="flex flex-col gap-6">
+          <section className="flex flex-col gap-3">
+            <h2 ref={tituloSaidaRef} id={idSaida} tabIndex={-1} className="text-sm font-semibold text-strong">
+              {t("novoCadastro.saida")}
+            </h2>
+            <div className="flex flex-wrap items-center gap-1.5 max-md:gap-2" role="group" aria-labelledby={idSaida}>
+              {opcoes.map((o) => (
+                <button
+                  key={o.id}
+                  type="button"
+                  aria-pressed={saida === o.id}
+                  onClick={() => setSaidaEscolhida(o.id)}
+                  className={classesOpcao(saida === o.id)}
+                >
+                  {o.nome}
+                </button>
+              ))}
+              {jogos.length === 0 && (
+                <Link href="/v1/dex/jogos" className={classesBotao("secundario", "sm", "ml-2")}>
+                  {t("cadastrar.irParaJogos")}
+                </Link>
+              )}
+            </div>
+          </section>
+
+          <section className="flex flex-col gap-3">
+            <h2 className="text-sm font-semibold text-strong">
+              {t("novoCadastro.lote")}
+              <span className="ml-2 font-normal text-muted tabular-nums">{contagem}</span>
+            </h2>
+            {lote.length === 0 ? (
+              <EstadoVazio>{t("novoCadastro.loteVazio")}</EstadoVazio>
+            ) : (
+              <Painel padding="sm">
+                <ul className="divide-y divide-hairline">
+                  {linhasLote.map(({ item, marcas }) => {
+                    const nome = nomes.get(item.forma.id) ?? item.forma.especie;
+                    const lado = parVisivel(item.forma.id, item.shiny ? "shiny" : "normal")?.lado;
+                    return (
+                      <li key={item.chave} className="flex items-center gap-3 py-2 first:pt-0 last:pb-0">
+                        <span className="shrink-0">
+                          <SpriteDex sprite={item.forma.sprite} shiny={item.shiny} tamanho={40} />
+                        </span>
+                        <div className="flex min-w-0 flex-1 flex-col gap-1">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span className="font-semibold text-strong">
+                              {nome}
+                              {/* O nome já diz "(Macho)"/"(Fêmea)": o símbolo é só para o olho. */}
+                              {lado && (
+                                <span aria-hidden className="ml-1 font-bold text-muted">
+                                  {SIMBOLO_GENERO[lado]}
+                                </span>
+                              )}
+                            </span>
+                            {item.shiny && <Distintivo tom="acento">★ {t("trilha.shiny")}</Distintivo>}
+                          </div>
+                          <span className="font-mono text-xs tabular-nums text-muted">
+                            {item.destino
+                              ? t("pokedex.posicaoNaCaixa", {
+                                  caixa: String(item.destino.caixa),
+                                  posicao: String(item.destino.posicao),
+                                })
+                              : t("recebidos.semLugar")}
+                          </span>
+                          {marcas.length > 0 && <div className="flex flex-wrap gap-1.5">{marcas}</div>}
+                        </div>
+                        <Botao
+                          tamanho="sm"
+                          className="shrink-0"
+                          aria-label={t("novoCadastro.tirar", { nome })}
+                          onClick={() => tirar(item.chave)}
+                          disabled={enviando}
+                        >
+                          <Icone nome="x" />
+                        </Botao>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Painel>
+            )}
+          </section>
+        </div>
+      )}
+
+      {cartao}
+      {pendente && (
+        // O Esc e "Cancelar" fecham sem enviar: só o clique em "Transferir" reenvia com a confirmação.
+        <Modal
+          rotuloId={idModal}
+          onFechar={() => setPendente(null)}
+          rodape={
+            <div className="flex justify-end gap-2">
+              <Botao onClick={() => setPendente(null)}>{t("transferencia.cancelar")}</Botao>
+              <Botao variante="primario" disabled={enviando} onClick={() => enviar(pendente, true)}>
+                {t("transferencia.confirmar")}
+              </Botao>
+            </div>
+          }
+        >
+          <h3 id={idModal} className="text-base font-bold text-strong">
+            {t("transferencia.titulo")}
+          </h3>
+          <p>{pendente.frase}</p>
+        </Modal>
+      )}
+    </main>
+  );
+}

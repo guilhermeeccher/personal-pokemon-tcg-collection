@@ -43,22 +43,22 @@ export const GRUPOS: readonly GrupoNav[] = [
   {
     chaveTitulo: "grupos.cadastro",
     itens: [
-      { href: "/cadastro/set", chaveLabel: "itens.porSet", icone: "grid-2x2" },
-      { href: "/cadastro/busca", chaveLabel: "itens.porBusca", icone: "search" },
+      { href: "/v1/cadastro/set", chaveLabel: "itens.porSet", icone: "grid-2x2" },
+      { href: "/v1/cadastro/busca", chaveLabel: "itens.porBusca", icone: "search" },
     ],
   },
   {
     chaveTitulo: "grupos.inventario",
     itens: [
-      { href: "/inventario/visao-geral", chaveLabel: "itens.visaoGeral", icone: "chart-pie" },
-      { href: "/inventario", chaveLabel: "itens.inventario", icone: "library" },
-      { href: "/inventario/repetidas", chaveLabel: "itens.repetidas", icone: "copy" },
-      { href: "/inventario/precos", chaveLabel: "itens.precos", icone: "tag" },
+      { href: "/v1/inventario/visao-geral", chaveLabel: "itens.visaoGeral", icone: "chart-pie" },
+      { href: "/v1/inventario", chaveLabel: "itens.inventario", icone: "library" },
+      { href: "/v1/inventario/repetidas", chaveLabel: "itens.repetidas", icone: "copy" },
+      { href: "/v1/inventario/precos", chaveLabel: "itens.precos", icone: "tag" },
     ],
   },
   {
     chaveTitulo: "grupos.colecoes",
-    itens: [{ href: "/colecoes", chaveLabel: "itens.colecoes", icone: "layers" }],
+    itens: [{ href: "/v1/colecoes", chaveLabel: "itens.colecoes", icone: "layers" }],
   },
 ] as const;
 
@@ -69,24 +69,24 @@ export const MODULO_VIRTUAL_GAME: ModuloNav = {
   chaveTitulo: "modulos.virtualGame",
   icone: "gamepad-2",
   grupos: [
-    { chaveTitulo: null, itens: [{ href: "/dex", chaveLabel: "itens.visaoGeralDex", icone: "chart-pie" }] },
+    { chaveTitulo: null, itens: [{ href: "/v1/dex", chaveLabel: "itens.visaoGeralDex", icone: "chart-pie" }] },
     {
       chaveTitulo: "grupos.dex",
       itens: [
-        { href: "/dex/pokedex", chaveLabel: "itens.pokedex", icone: "book-open" },
-        { href: "/dex/caixas", chaveLabel: "itens.caixas", icone: "layout-grid" },
-        { href: "/dex/recebidos", chaveLabel: "itens.recebidos", icone: "inbox" },
-        { href: "/dex/cadastrar", chaveLabel: "itens.cadastrarDex", icone: "circle-plus" },
-        { href: "/dex/novo-cadastro", chaveLabel: "itens.novoCadastroDex", icone: "square-plus" },
-        { href: "/dex/inventario", chaveLabel: "itens.inventarioDex", icone: "library" },
+        { href: "/v1/dex/pokedex", chaveLabel: "itens.pokedex", icone: "book-open" },
+        { href: "/v1/dex/caixas", chaveLabel: "itens.caixas", icone: "layout-grid" },
+        { href: "/v1/dex/recebidos", chaveLabel: "itens.recebidos", icone: "inbox" },
+        { href: "/v1/dex/cadastrar", chaveLabel: "itens.cadastrarDex", icone: "circle-plus" },
+        { href: "/v1/dex/novo-cadastro", chaveLabel: "itens.novoCadastroDex", icone: "square-plus" },
+        { href: "/v1/dex/inventario", chaveLabel: "itens.inventarioDex", icone: "library" },
       ],
     },
     {
       chaveTitulo: "grupos.progresso",
       itens: [
-        { href: "/dex/jogos", chaveLabel: "itens.meusJogos", icone: "gamepad-2" },
-        { href: "/dex/trofeus", chaveLabel: "itens.trofeus", icone: "trophy" },
-        { href: "/dex/planos", chaveLabel: "itens.planos", icone: "list-checks" },
+        { href: "/v1/dex/jogos", chaveLabel: "itens.meusJogos", icone: "gamepad-2" },
+        { href: "/v1/dex/trofeus", chaveLabel: "itens.trofeus", icone: "trophy" },
+        { href: "/v1/dex/planos", chaveLabel: "itens.planos", icone: "list-checks" },
       ],
     },
   ],
@@ -105,9 +105,9 @@ const TODOS_ITENS = TODOS_GRUPOS.flatMap((g) => g.itens);
 
 /**
  * Item ativo = o href de maior comprimento que é prefixo do caminho
- * atual (ou igual a ele). Assim `/colecoes/<id>` acende "Coleções" e
- * `/inventario/visao-geral` acende "Visão geral" — nunca "Inventário"
- * junto, mesmo `/inventario` sendo prefixo textual dele.
+ * atual (ou igual a ele). Assim `/v1/colecoes/<id>` acende "Coleções" e
+ * `/v1/inventario/visao-geral` acende "Visão geral" — nunca "Inventário"
+ * junto, mesmo `/v1/inventario` sendo prefixo textual dele.
  */
 export function encontrarAtivo(pathname: string): ItemNav | null {
   let melhor: ItemNav | null = null;

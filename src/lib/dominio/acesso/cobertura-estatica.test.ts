@@ -113,7 +113,16 @@ describe("cobertura estática: route handlers", () => {
 });
 
 describe("cobertura estática: páginas", () => {
-  const paginas = ARQUIVOS.filter((a) => a.endsWith("/page.tsx") && a !== sob("login/page.tsx"));
+  /* A exceção é exatamente a página do login, que mora no grupo da v1 com a
+     URL `/login` (2026-11-22). Um caminho exato, e não "qualquer
+     `login/page.tsx`": um `(v1)/v1/login` ou um `(v2)/login` novo tem de
+     passar pela guarda até alguém decidir mudar esta linha. */
+  const LOGIN = sob("(v1)/login/page.tsx");
+  const paginas = ARQUIVOS.filter((a) => a.endsWith("/page.tsx") && a !== LOGIN);
+
+  it("a página isenta existe (a exceção não ficou apontando para o nada)", () => {
+    expect(ARQUIVOS).toContain(LOGIN);
+  });
 
   it("encontra páginas (o varredor não está olhando para o lugar errado)", () => {
     expect(paginas.length).toBeGreaterThan(10);
@@ -151,11 +160,15 @@ describe("cobertura estática: nenhuma server function dentro de função", () =
 });
 
 describe("cobertura estática: arquivos especiais não chegam ao banco", () => {
-  const ESPECIAIS = /\/(layout|template|loading|error|global-error|not-found|default)\.tsx?$/;
+  const ESPECIAIS = /\/(layout|template|loading|error|global-error|not-found|global-not-found|default)\.tsx?$/;
   const especiais = ARQUIVOS.filter((a) => ESPECIAIS.test(a));
 
-  it("encontra o layout raiz", () => {
-    expect(especiais).toContain(sob("layout.tsx"));
+  /* Dois layouts raiz desde 2026-11-22, um por versão, e nenhum acima deles.
+     O 404 de uma URL sem rota não usa nenhum dos dois: é o padrão do Next. */
+  it("encontra os dois layouts raiz, e nenhum de topo", () => {
+    expect(especiais).toContain(sob("(v1)/layout.tsx"));
+    expect(especiais).toContain(sob("(v2)/layout.tsx"));
+    expect(especiais).not.toContain(sob("layout.tsx"));
   });
 
   it.each(especiais)("%s: não importa @/lib/db, direta nem indiretamente", (arquivo) => {
