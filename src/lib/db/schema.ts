@@ -220,18 +220,22 @@ export const cartaCatalogo = pgTable(
     /**
      * O arquivo desta carta existe no CDN de assets da TCGdex?
      *
-     * `null` = ainda não verificado. Só interessa às linhas com
-     * `imagem_url` nulo, onde a URL do CDN é montada por dedução a partir
-     * de idioma/série/set/número — hoje, só o japonês (o importador do
-     * repositório não traz imagem nenhuma, e lá o palpite acerta ~52%).
+     * `null` = ainda não verificado. O veredito fala da URL EFETIVA da
+     * linha: a `imagem_url` gravada (`verificar:imagens-cdn --com-url`;
+     * `false` tira essa URL da cadeia de imagem, desde 2026-11-22) ou, sem
+     * gravada, a URL deduzida de idioma/série/set/número (o modo padrão; é
+     * o que liga o arquivo confirmado e, no japonês, decide o palpite). Toda
+     * escrita que muda a URL efetiva — sync, toque do set inalterado,
+     * importador, seed — zera as duas colunas
+     * (`lib/db/veredicto-imagem-cdn.ts`).
      *
-     * Por que a coluna existe: **o CDN não devolve 404 para arquivo
-     * inexistente.** Ele segura a conexão por 60 s e responde 504 (medido
-     * em 2026-08-29). Como o navegador abre no máximo 6 conexões por
-     * host, cada palpite errado ocupa um slot por um minuto inteiro e as
-     * fotos que existem ficam na fila atrás dele. Guardar o resultado da
-     * verificação é o que permite parar de tentar o que já se sabe que
-     * não existe — `pnpm verificar:imagens-cdn` preenche.
+     * Por que a coluna existe (histórico, medido em 2026-08-29): o CDN não
+     * devolvia 404 para arquivo inexistente — segurava a conexão por 60 s e
+     * respondia 504. Como o navegador abre no máximo 6 conexões por host,
+     * cada palpite errado ocupava um slot por um minuto inteiro e as fotos
+     * que existem ficavam na fila atrás dele. Em 2026-11-22 o CDN já
+     * respondia 404 em ~0,4 s, mas guardar o resultado continua sendo o que
+     * permite não tentar o que já se sabe que não existe.
      */
     imagemCdnExiste: boolean("imagem_cdn_existe"),
     imagemCdnVerificadoEm: timestamp("imagem_cdn_verificado_em", {

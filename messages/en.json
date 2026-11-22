@@ -477,7 +477,7 @@
     "filtroAlocacaoLivres": "Free only",
     "filtroImagem": "Image (all)",
     "filtroImagemSem": "No image in the catalog",
-    "filtroImagemTitulo": "Cards with no image of their own and no image in the catalog. Some may show a photo anyway: when both are missing, the system tries the TCGdex CDN, and only the browser finds out whether the file exists.",
+    "filtroImagemTitulo": "Cards with no local image (uploaded, from a link or from mypcards) and no usable image in the catalog — missing, or checked and not found on the CDN. Some may show a photo anyway: the same card's in the other language, a CDN file the check confirmed or, for Japanese, a direct try on the CDN.",
     "placeholderLocalizacao": "Location contains…",
     "limparFiltros": "Clear filters",
     "carregando": "Loading…",

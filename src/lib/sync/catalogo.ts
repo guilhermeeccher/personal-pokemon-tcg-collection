@@ -6,6 +6,7 @@ import { decidirInativacaoCatalogo } from "@/lib/dominio/inativacao-catalogo";
 import { decidirResyncSet } from "@/lib/dominio/resync-set";
 import type { Database } from "@/lib/db/client";
 import { cartaCatalogo } from "@/lib/db/schema";
+import { partesDoExcluded, vereditoCdnAoGravar } from "@/lib/db/veredicto-imagem-cdn";
 
 import { mapComConcorrencia } from "./concorrencia";
 import {
@@ -168,6 +169,11 @@ async function upsertLote(
         variantePrimeiraEdicaoDisponivel: sql`excluded.variante_primeira_edicao_disponivel`,
         variantePromoDisponivel: sql`excluded.variante_promo_disponivel`,
         imagemUrl: sql`excluded.imagem_url`,
+        // URL efetiva nova (a gravada, ou a deduzida de série/set/número
+        // quando não há gravada) zera o veredito do CDN; a mesma o mantém.
+        // Um "ausente" de outro arquivo esconderia o novo da cadeia de
+        // imagem (`lib/db/veredicto-imagem-cdn.ts`).
+        ...vereditoCdnAoGravar(partesDoExcluded()),
         ilustrador: sql`excluded.ilustrador`,
         setQtdOficial: sql`excluded.set_qtd_oficial`,
         setQtdTotal: sql`excluded.set_qtd_total`,
@@ -225,6 +231,15 @@ export async function tocarSetInalterado(
       setQtdOficial: setDetail.cardCount.official,
       setQtdTotal: setDetail.cardCount.total,
       atualizadoEm: new Date(),
+      // A série entra na URL deduzida: numa linha sem `imagem_url`, uma
+      // série corrigida muda o arquivo, e o veredito antigo não fala dele.
+      ...vereditoCdnAoGravar({
+        imagemUrl: cartaCatalogo.imagemUrl,
+        idioma: cartaCatalogo.idioma,
+        setSerieId: sql`${setDetail.serie.id}::text`,
+        setId: cartaCatalogo.setId,
+        localId: cartaCatalogo.localId,
+      }),
     })
     .where(
       and(

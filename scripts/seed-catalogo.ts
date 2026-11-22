@@ -28,6 +28,13 @@
  *    nada por conta própria. `origem` fica de fora pelo mesmo motivo
  *    invertido: linha que o usuário criou à mão (`manual`) jamais é
  *    rebaixada para `sync`, o que a exporia à inativação pelo sync.
+ *  - **O veredito do CDN do arquivo só entra no INSERT.** Num conflito,
+ *    `imagem_cdn_existe` e `imagem_cdn_verificado_em` seguem a regra de todo
+ *    escritor (`lib/db/veredicto-imagem-cdn.ts`): mesma URL efetiva mantém o
+ *    par da instalação — mesmo que o do arquivo seja mais novo —, URL
+ *    efetiva diferente zera os dois, e a próxima `verificar:imagens-cdn`
+ *    decide. Antes o arquivo vencia sempre, e uma recarga apagava a
+ *    verificação que a instalação tinha feito.
  *  - **Nunca bloqueia o uso.** Falha registra erro e devolve exit code 1; o
  *    entrypoint segue subindo o servidor, e a app funciona com o catálogo
  *    que houver (inclusive nenhum).
@@ -55,6 +62,7 @@ import { sql } from "drizzle-orm";
 
 import { client, db } from "../src/lib/db/client";
 import { cartaCatalogo, setMypcards } from "../src/lib/db/schema";
+import { partesDoExcluded, vereditoCdnAoGravar } from "../src/lib/db/veredicto-imagem-cdn";
 import {
   COLUNAS_CATALOGO,
   COLUNAS_SET_MYPCARDS,
@@ -155,8 +163,11 @@ async function upsertLoteCatalogo(
         tipos: sql`excluded.tipos`,
         dexIdsDerivado: sql`excluded.dex_ids_derivado`,
         imagemUrl: sql`excluded.imagem_url`,
-        imagemCdnExiste: sql`excluded.imagem_cdn_existe`,
-        imagemCdnVerificadoEm: sql`excluded.imagem_cdn_verificado_em`,
+        // O veredito do CDN que o arquivo traz entra só no INSERT. Num
+        // conflito vale a regra de todo escritor (`lib/db/veredicto-imagem-cdn.ts`):
+        // mesma URL efetiva mantém o par que a instalação já tem — mesmo que
+        // o do arquivo seja mais novo —, URL efetiva diferente zera os dois.
+        ...vereditoCdnAoGravar(partesDoExcluded()),
         ilustrador: sql`excluded.ilustrador`,
         setQtdOficial: sql`excluded.set_qtd_oficial`,
         setQtdTotal: sql`excluded.set_qtd_total`,

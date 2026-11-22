@@ -477,7 +477,7 @@
     "filtroAlocacaoLivres": "Só livres",
     "filtroImagem": "Imagem (todas)",
     "filtroImagemSem": "Sem imagem no catálogo",
-    "filtroImagemTitulo": "Cartas sem imagem própria e sem imagem no catálogo. Algumas podem mostrar foto assim mesmo: quando as duas faltam, o sistema tenta o CDN da TCGdex, e só o navegador descobre se o arquivo existe.",
+    "filtroImagemTitulo": "Cartas sem imagem local (enviada, por link ou do mypcards) e sem imagem utilizável no catálogo — ausente, ou verificada como inexistente no CDN. Algumas podem mostrar foto assim mesmo: a da mesma carta em outra língua, um arquivo do CDN confirmado pela verificação ou, no japonês, a tentativa direta no CDN.",
     "placeholderLocalizacao": "Localização contém…",
     "limparFiltros": "Limpar filtros",
     "carregando": "Carregando…",

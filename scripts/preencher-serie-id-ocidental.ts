@@ -38,6 +38,7 @@ import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { client, db } from "../src/lib/db/client";
 import { cartaCatalogo } from "../src/lib/db/schema";
+import { vereditoCdnAoGravar } from "../src/lib/db/veredicto-imagem-cdn";
 
 const REPO_PATH = process.env.TCGDEX_REPO_PATH ?? "/upstream-dados-tcgdex";
 const PASTA_DADOS = path.join(REPO_PATH, "data");
@@ -149,7 +150,21 @@ async function main() {
     }
     const atualizadas = await db
       .update(cartaCatalogo)
-      .set({ setSerieId: serieId })
+      .set({
+        setSerieId: serieId,
+        // A série entra na URL deduzida: o veredito do CDN segue a regra de
+        // todo escritor (`lib/db/veredicto-imagem-cdn.ts`). Aqui a série só
+        // vai de nula a preenchida, então numa linha sem `imagem_url` a URL
+        // efetiva muda e um veredito que houvesse é zerado; com URL gravada,
+        // nada muda e o veredito fica.
+        ...vereditoCdnAoGravar({
+          imagemUrl: cartaCatalogo.imagemUrl,
+          idioma: cartaCatalogo.idioma,
+          setSerieId: sql`${serieId}::text`,
+          setId: cartaCatalogo.setId,
+          localId: cartaCatalogo.localId,
+        }),
+      })
       .where(
         and(
           eq(cartaCatalogo.setId, setId),

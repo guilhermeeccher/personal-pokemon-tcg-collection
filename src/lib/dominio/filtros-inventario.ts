@@ -50,17 +50,18 @@ export interface FiltrosInventario {
   /**
    * true = só as cartas cuja imagem está faltando. Ausente = sem filtro.
    *
-   * "Faltando" aqui significa **sem imagem local e sem `imagem_url` no
-   * catálogo** — não dá para significar outra coisa: quando as duas
-   * faltam, o sistema monta uma URL de CDN determinística e só o
-   * navegador descobre, no 404, se o arquivo existe. O servidor não tem
-   * como saber sem sair batendo no CDN carta a carta.
+   * "Faltando" aqui significa **sem imagem local e sem `imagem_url`
+   * utilizável no catálogo**, na linha da própria carta: nenhuma imagem
+   * enviada, baixada por link ou do mypcards, e `imagem_url` nula ou
+   * verificada como ausente no CDN (`verificar:imagens-cdn --com-url`; a
+   * regra do degrau 2 de `degrausImagem`).
    *
    * Consequência prática, e o filtro precisa ser honesto sobre ela: uma
-   * carta japonesa cuja imagem existe no CDN aparece nesta lista mesmo
-   * mostrando foto na tela. É o preço de não varrer o CDN — e a lista
-   * ainda é útil, porque é sobre a coleção do usuário, não sobre as
-   * 47 mil linhas do catálogo.
+   * carta da lista pode mostrar foto na tela, vinda de um degrau seguinte
+   * da cadeia — a foto da mesma carta na outra língua ocidental (com selo),
+   * o arquivo do CDN que a verificação confirmou, ou, no japonês ainda não
+   * verificado, a tentativa direta no CDN. A lista continua útil: diz quais
+   * cartas da coleção do usuário não têm foto da própria linha.
    */
   semImagem?: boolean;
   q?: string;

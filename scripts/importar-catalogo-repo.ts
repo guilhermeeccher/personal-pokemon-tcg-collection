@@ -75,6 +75,7 @@ import {
 } from "../src/lib/dominio/parser-catalogo-repo";
 import { client, db } from "../src/lib/db/client";
 import { cartaCatalogo } from "../src/lib/db/schema";
+import { partesDoExcluded, vereditoCdnAoGravar } from "../src/lib/db/veredicto-imagem-cdn";
 import { paraLinha, SERIE_EXCLUIDA_ID } from "../src/lib/sync/catalogo";
 
 const REPO_PATH = process.env.TCGDEX_REPO_PATH ?? "/upstream-dados-tcgdex";
@@ -151,10 +152,11 @@ function emLotes<T>(itens: readonly T[], tamanho: number): T[][] {
 }
 
 /**
- * Upsert por (id, idioma), igual a `upsertLote` em `lib/sync/catalogo.ts`,
- * só que também grava `setSerieId` — coluna que o sync da API ainda não
- * preenche (fica para quando o acesso à API voltar). Não reaproveita
- * `upsertLote` diretamente por isso: ela não conhece essa coluna.
+ * Upsert por (id, idioma), parecido com `upsertLote` em
+ * `lib/sync/catalogo.ts`, mas com regras próprias desta fonte: o repositório
+ * não traz imagem (a `imagem_url` existente é preservada), não decide
+ * inativação (`ativa` fica de fora) e não mexe em `origem`. Por isso não
+ * reaproveita `upsertLote`.
  */
 async function upsertLoteCatalogo(linhas: LinhaCatalogo[]): Promise<void> {
   if (linhas.length === 0) return;
@@ -203,6 +205,13 @@ async function upsertLoteCatalogo(linhas: LinhaCatalogo[]): Promise<void> {
         // Gravar isso por cima apagaria a imagem que a linha tiver ganhado de
         // outra fonte (o sync da API traz URL de imagem para o japonês).
         imagemUrl: sql`coalesce(excluded.imagem_url, ${cartaCatalogo.imagemUrl})`,
+        // Veredito do CDN zerado quando a URL efetiva muda, como no sync
+        // (`lib/db/veredicto-imagem-cdn.ts`). Com o `coalesce`, a URL
+        // gravada só troca se um dia o repositório trouxer uma; a deduzida
+        // troca quando ele corrige série, set ou número de uma linha sem URL.
+        ...vereditoCdnAoGravar(
+          partesDoExcluded(sql`coalesce(excluded.imagem_url, ${cartaCatalogo.imagemUrl})`),
+        ),
         ilustrador: sql`excluded.ilustrador`,
         setQtdOficial: sql`excluded.set_qtd_oficial`,
         setQtdTotal: sql`excluded.set_qtd_total`,

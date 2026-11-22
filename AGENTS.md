@@ -278,6 +278,28 @@ deactivated) and `origem` (a row created by hand by the user, `origem = manual`,
 the data repository, `origem = repo`, is never demoted to `sync`, which would expose it to
 deactivation). Do not "simplify" this into an upsert that updates everything.
 
+The image check columns (`imagem_cdn_existe`, `imagem_cdn_verificado_em`) describe the row's
+**effective image URL** — the stored `imagem_url`, or, when it is null, the URL deduced from
+language, series, set and number. Every write that can change it (the sync's upsert and its touch of
+an unchanged set, the repository importer, the seed) goes through `vereditoCdnAoGravar`
+(`lib/db/veredicto-imagem-cdn.ts`): a different effective URL **resets both to null**, the same one
+keeps them. The pair the seed file carries goes in **only on INSERT**; on conflict the seed follows
+the same rule, so it never overwrites an install's own check, not even with a newer one. A stale
+"missing" must never hide a new URL. A stored URL verified missing is skipped by the image ladder.
+
+**`pnpm verificar:imagens-cdn`** fills those columns: by default the rows without `imagem_url`
+(deduced URL), with `--com-url` the stored URL itself; `--idioma`, `--set`, `--limite`. It is a
+polite client like the sync: `HEAD` only, the 6/s limiter, a User-Agent, the CDN host only
+(redirects not followed), and a 403/429 or refused connection **stops it at once**. It walks the
+queue by cursor, so each row is tried once per run, writes a verdict only if the row is still the
+one it read, and an unknown argument refuses the run with exit code 2 before touching the database
+(`lib/dominio/comando-verificar-imagens-cdn.ts`). **A legacy "missing"** — recorded before 2026-11-22
+against the deduced URL of a row that later got an `imagem_url`, since nothing reset the pair then —
+hides that stored URL, and plain `--com-url` skips the row because it already has a verdict.
+`--com-url --reverificar` re-checks rows that already have a verdict and replaces it with a fresh one. It is deliberately
+not a migration: the stored-URL "missing" verdicts measured on a real install were all real 404s, and a
+blanket reset would bring the broken images back.
+
 A seed failure **does not take the app down**: the entrypoint uses `if !` precisely so that `set -e`
 does not kill the container. The format of the files, the regeneration and the reason for every
 detail are in [`seed/README.md`](./seed/README.md) and in `lib/dominio/seed-catalogo.ts`.

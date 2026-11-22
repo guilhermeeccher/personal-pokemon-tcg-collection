@@ -14,6 +14,7 @@ import { valoresPorCarta } from "./precos-liga";
 import { fonteDePreco } from "@/lib/dominio/fonte-preco";
 import { ordenarJoias } from "@/lib/dominio/precos-cartas-especiais";
 import { cartaCatalogo, colecao, copia, grupoColecao, imagemLocal, melhoriaDescartada, vaga } from "./schema";
+import { urlCatalogoNaoAusente, urlDeduzidaImagem } from "./veredicto-imagem-cdn";
 import type { Condicao, Idioma, VarianteCopia } from "@/lib/dominio/enums";
 import { compararLocalId } from "@/lib/dominio/ordenacao";
 import { type Recusa, recusa } from "@/lib/dominio/recusa";
@@ -77,6 +78,18 @@ import {
  *                 Correção deliberada dele sobre o que o catálogo diz:
  *                 vence até quando existe imagem oficial.
  * 2. `catalogo` — `imagem_url` da linha do próprio idioma. O caso normal.
+ *                 Pulado quando a verificação do CDN confirmou que o
+ *                 arquivo NÃO existe (`imagem_cdn_existe = false`, gravado
+ *                 por `pnpm verificar:imagens-cdn --com-url`): até
+ *                 2026-11-22 a URL gravada valia às cegas, e uma carta
+ *                 cuja URL gravada dava 404 aparecia como imagem quebrada
+ *                 em vez de cair no empréstimo da foto da outra língua.
+ *                 `true` e `null` (não verificada) seguem confiando na URL.
+ *                 Um `false` legado — medido, antes de 2026-11-22, contra a
+ *                 URL deduzida de quando a linha ainda não tinha
+ *                 `imagem_url` — esconde a URL gravada até alguém rodar
+ *                 `verificar:imagens-cdn --com-url --reverificar`, que
+ *                 verifica de novo a URL de hoje.
  * 3. `mypcards` — scan de terceiro baixado para o nosso volume, no MESMO
  *                 idioma. Fica abaixo do catálogo oficial e acima do
  *                 empréstimo, porque idioma certo vale mais que fonte
@@ -91,7 +104,9 @@ import {
  *                 foto inglesa emprestada.
  * 5. `catalogo-pt` / `catalogo-en` — a foto do MESMO card (mesmo `id`) na
  *                 outra língua ocidental: a oficial dela, ou, sem oficial, o
- *                 scan do mypcards dela (2026-09-30, caso `30th-c`).
+ *                 scan do mypcards dela (2026-09-30, caso `30th-c`). A
+ *                 oficial emprestada obedece à mesma regra do degrau 2: URL
+ *                 verificada como ausente não conta como oficial.
  *                 Recupera 509 das 1.129 linhas pt sem foto, e 85 das en
  *                 (medido em 2026-08-29). Seguro
  *                 para identificação: em pt/en o id é o mesmo, então é a
@@ -110,7 +125,11 @@ import {
  * 60 s e responde 504** (medido em 2026-08-29). Como o navegador abre no
  * máximo 6 conexões por host, cada palpite errado ocupa um desses slots
  * por um minuto inteiro, e as fotos que EXISTEM ficam na fila atrás dele:
- * poucas cartas sem foto travam a exibição da grade inteira. No japonês o
+ * poucas cartas sem foto travam a exibição da grade inteira. (Medido de
+ * novo em 2026-11-22: o CDN passou a responder arquivo inexistente com um
+ * 404 rápido, ~0,4 s. O corte fica — o palpite em pt/en continua errando
+ * quase sempre, e nada garante que o CDN não volte a segurar a conexão.)
+ * No japonês o
  * palpite acerta ~52% e segue valendo — lá o importador do repositório
  * não traz imagem nenhuma, então é a única fonte que existe.
  *
@@ -161,7 +180,7 @@ function degrausImagem(t: ColunasImagem) {
   // inglesa já no volume. O selo continua dizendo "foto em inglês".
   const urlEmprestada = sql`(
       select coalesce(
-        emprestimo.imagem_url,
+        ${urlCatalogoNaoAusente(sql`emprestimo.imagem_url`, sql`emprestimo.imagem_cdn_existe`)},
         (
           select '/api/imagens-locais/' || local_emprestado.carta_id || '/' || local_emprestado.idioma::text
           from ${imagemLocal} as local_emprestado
@@ -194,18 +213,16 @@ function degrausImagem(t: ColunasImagem) {
   //
   // As duas portas viram dois degraus: o fato vem antes do empréstimo de
   // outra língua (idioma certo vale mais), o palpite fica por último.
-  const urlCdn = (condicao: ReturnType<typeof sql>) => sql`(case
-      when ${t.setSerieId} is not null and ${condicao} then
-        'https://assets.tcgdex.net/'
-        || case when ${t.idioma} = 'jp' then 'ja' else ${t.idioma}::text end
-        || '/' || ${t.setSerieId} || '/' || ${t.setId} || '/' || ${t.localId}
-    end)::text`;
+  // A montagem da URL é a de `urlDeduzidaImagem` — a mesma que decide,
+  // na escrita, se o veredito ainda fala do mesmo arquivo.
+  const urlCdn = (condicao: ReturnType<typeof sql>) =>
+    sql`(case when ${condicao} then ${urlDeduzidaImagem(t)} end)::text`;
   const urlCdnVerificada = urlCdn(sql`${t.imagemCdnExiste} = true`);
   const urlCdnPalpite = urlCdn(sql`(${t.idioma} = 'jp' and ${t.imagemCdnExiste} is null)`);
 
   return sql`(values
       (1, ${urlLocal(true)}, 'propria'::text),
-      (2, ${t.imagemUrl}::text, 'catalogo'::text),
+      (2, ${urlCatalogoNaoAusente(t.imagemUrl, t.imagemCdnExiste)}::text, 'catalogo'::text),
       (3, ${urlLocal(false)}, 'mypcards'::text),
       (4, ${urlCdnVerificada}, 'cdn'::text),
       (5, ${urlEmprestada}, (case when ${t.idioma} = 'pt' then 'catalogo-en' else 'catalogo-pt' end)::text),
@@ -1254,12 +1271,15 @@ export async function listarCopias(
     );
   }
   if (filtros.semImagem) {
-    // Sem imagem própria E sem imagem no catálogo — as duas fontes que o
-    // servidor consegue afirmar. O terceiro caminho (URL montada no CDN)
-    // fica de fora de propósito: só o navegador sabe se aquele arquivo
-    // existe, e checar aqui exigiria bater no CDN carta a carta. Ver o
-    // comentário de `semImagem` em `lib/dominio/filtros-inventario.ts`.
-    condicoes.push(isNull(cartaCatalogo.imagemUrl));
+    // Sem imagem local (enviada, baixada por link ou do mypcards) E sem
+    // `imagem_url` utilizável no catálogo — nula, ou verificada como
+    // ausente (`urlCatalogoNaoAusente`, a regra do degrau 2). Os outros
+    // degraus da cadeia (a foto da outra língua, o arquivo do CDN deduzido)
+    // ficam de fora de propósito: o filtro é sobre a fonte da própria linha.
+    // Ver o comentário de `semImagem` em `lib/dominio/filtros-inventario.ts`.
+    condicoes.push(
+      sql`${urlCatalogoNaoAusente(cartaCatalogo.imagemUrl, cartaCatalogo.imagemCdnExiste)} is null`,
+    );
     condicoes.push(
       sql`not exists (
         select 1 from ${imagemLocal}

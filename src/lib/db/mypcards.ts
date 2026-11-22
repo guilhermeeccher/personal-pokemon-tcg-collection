@@ -6,10 +6,11 @@
  * `lib/dominio/mypcards.ts`; aqui só se lê e escreve.
  */
 
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, sql, type SQL } from "drizzle-orm";
 
 import type { Database } from "./client";
 import { cartaCatalogo, imagemLocal, setMypcards } from "./schema";
+import { urlCatalogoNaoAusente, urlDeduzidaImagem } from "./veredicto-imagem-cdn";
 import type { Idioma } from "@/lib/dominio/enums";
 
 export interface MapeamentoSet {
@@ -71,14 +72,56 @@ export interface CartaSemFoto {
 }
 
 /**
- * As cartas de um set mapeado que continuam sem foto **em todas as fontes
- * que já temos** — ou seja, as candidatas ao download do mypcards.
+ * Uma linha de `cartaCatalogo` é candidata ao download do mypcards quando
+ * não tem foto **do próprio idioma** nem foto **oficial** da outra língua
+ * ocidental:
  *
- * O critério repete a cadeia de `imagemDaCarta`, mas ao contrário: a
- * carta entra aqui quando NÃO tem imagem local, NÃO tem `imagem_url` no
- * próprio idioma e NÃO tem no outro idioma ocidental. Se algum desses
- * degraus passar a existir depois, a carta simplesmente para de aparecer
- * nesta lista — o script é idempotente por construção, sem marcar estado.
+ * - imagem local da própria linha, de qualquer origem (enviada, por link,
+ *   do mypcards);
+ * - `imagem_url` da própria linha que não foi verificada como ausente
+ *   (`urlCatalogoNaoAusente`, a regra do degrau 2);
+ * - arquivo do CDN da própria linha confirmado pela verificação
+ *   (`imagem_cdn_existe = true`, com URL deduzível — o degrau 4);
+ * - `imagem_url` da outra língua (mesmo `id`), pela mesma regra do degrau 2.
+ *
+ * **Não é a cadeia de imagem (`imagemDaCarta`), de propósito:** o scan do
+ * mypcards emprestado da outra língua não tira a carta da lista, porque
+ * baixar o scan no idioma certo troca uma foto emprestada pela da própria
+ * carta. Já a foto oficial da outra língua tira — é a mesma arte, e o
+ * download não melhoraria nada que justificasse a requisição. Se alguma
+ * dessas fontes passar a existir depois, a carta simplesmente para de
+ * aparecer nesta lista — o script é idempotente por construção, sem marcar
+ * estado.
+ *
+ * Exportada para o teste da forma do SQL (`mypcards.test.ts`).
+ */
+export function semFotoParaMypcards(): SQL {
+  const semImagemLocal = sql`not exists (
+    select 1 from ${imagemLocal}
+    where ${imagemLocal.cartaId} = ${cartaCatalogo.id}
+      and ${imagemLocal.idioma} = ${cartaCatalogo.idioma}
+  )`;
+
+  const semUrlPropria = sql`${urlCatalogoNaoAusente(cartaCatalogo.imagemUrl, cartaCatalogo.imagemCdnExiste)} is null`;
+
+  const semCdnVerificado = sql`not (
+    ${cartaCatalogo.imagemCdnExiste} is true
+    and ${urlDeduzidaImagem(cartaCatalogo)} is not null
+  )`;
+
+  const semOficialDaOutraLingua = sql`not exists (
+    select 1 from ${cartaCatalogo} as emprestimo
+    where emprestimo.id = ${cartaCatalogo.id}
+      and emprestimo.idioma = (case when ${cartaCatalogo.idioma} = 'pt' then 'en' else 'pt' end)::idioma
+      and ${urlCatalogoNaoAusente(sql`emprestimo.imagem_url`, sql`emprestimo.imagem_cdn_existe`)} is not null
+  )`;
+
+  return sql`(${semImagemLocal} and ${semUrlPropria} and ${semCdnVerificado} and ${semOficialDaOutraLingua})`;
+}
+
+/**
+ * As cartas de um set mapeado que continuam sem foto própria — as
+ * candidatas ao download do mypcards (critério em `semFotoParaMypcards`).
  *
  * Só pt e en: o site não publica japonês (`lib/dominio/mypcards.ts`).
  */
@@ -86,19 +129,6 @@ export async function listarCartasSemFotoDeSetMapeado(
   db: Database,
   setId?: string,
 ): Promise<CartaSemFoto[]> {
-  const semImagemLocal = sql`not exists (
-    select 1 from ${imagemLocal}
-    where ${imagemLocal.cartaId} = ${cartaCatalogo.id}
-      and ${imagemLocal.idioma} = ${cartaCatalogo.idioma}
-  )`;
-
-  const semEmprestimo = sql`not exists (
-    select 1 from ${cartaCatalogo} as emprestimo
-    where emprestimo.id = ${cartaCatalogo.id}
-      and emprestimo.idioma = (case when ${cartaCatalogo.idioma} = 'pt' then 'en' else 'pt' end)::idioma
-      and emprestimo.imagem_url is not null
-  )`;
-
   return db
     .select({
       cartaId: cartaCatalogo.id,
@@ -113,9 +143,7 @@ export async function listarCartasSemFotoDeSetMapeado(
       and(
         eq(cartaCatalogo.ativa, true),
         sql`${cartaCatalogo.idioma} in ('pt', 'en')`,
-        isNull(cartaCatalogo.imagemUrl),
-        semImagemLocal,
-        semEmprestimo,
+        semFotoParaMypcards(),
         ...(setId ? [eq(cartaCatalogo.setId, setId)] : []),
       ),
     )

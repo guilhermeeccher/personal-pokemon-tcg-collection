@@ -331,6 +331,19 @@ were never digitized there. For those there are two paths, both manual and both 
 
 In both cases the files stay in the `imagens_locais` volume, on your machine, outside the repository.
 
+Rarely, the catalog points at an image file the CDN does not have, and the card shows a broken
+image. The check below asks the CDN once per card (one `HEAD` request, paced) and stores the answer;
+a stored URL found missing is skipped, and the card falls back to the mypcards photo or to the
+same card's photo in the other Western language, with its badge. It resumes where it stopped, and
+`--idioma` and `--set` narrow it down:
+
+```bash
+docker compose exec -T app pnpm verificar:imagens-cdn --com-url
+```
+
+Without `--com-url` it checks the cards that have no stored URL, where the address is deduced from
+the set and number (mostly the Japanese catalog).
+
 ---
 
 ## LigaPokemon prices
