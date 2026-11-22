@@ -232,7 +232,9 @@ read its README before touching any screen, layout, component or route under `sr
 - **New functionality goes only to the v2.** The v1 gets fixes, not features, and leaves when the v2
   covers everything.
 - **A bridge leaves only when parity is checked**: every action the v1 offers on that screen is
-  marked delivered in [`docs/design-v2/parity.md`](./docs/design-v2/parity.md), with its evidence.
+  marked delivered in [`docs/design-v2/parity.md`](./docs/design-v2/parity.md), with its evidence,
+  or deferred to a named package with a "Do it in v1" link. The v1 leaves only when nothing is
+  deferred.
 - **The eight business rules, the API and every domain section of this file hold for both
   versions, unchanged.** So do the HTTP, password-access and image rules.
 - **What changes for the v2 only**, and holds as written here for the v1 until it leaves: the

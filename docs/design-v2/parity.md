@@ -2,9 +2,10 @@
 
 Every action a user can take on each of the 23 screens of the v1, with the v2 package that owns it,
 the operation it reuses, the evidence that accepts it, and the business-rule cases it touches. A
-bridge page is replaced by its v2 screen **only when every row of that screen is `delivered`**
-(see the [README](./README.md), "A bridge leaves only when parity is checked"), and phase 6 starts
-only when every row of the matrix is.
+bridge page is replaced by its v2 screen **only when every row of that screen is `delivered`, or
+`deferred` to a named package with a working "Do it in v1" link** (see the [README](./README.md),
+"A bridge leaves only when parity is checked"). Phase 6 starts only when every row of the matrix is
+`delivered`: nothing may still be deferred.
 
 ## How to read it
 
@@ -13,9 +14,11 @@ screen file under `src/app/<x>` lives at `src/app/(v1)/v1/<x>` and the login at
 `src/app/(v1)/login/`; `src/app/_componentes/` and `src/app/api/` do not move. The line is where the
 action starts (the button, the field, or the handler that sends the request).
 
-**Owner** is a package of the plan in the README. When an action lives in a component another
-package builds (the card detail of 1b, the Card of 0b), the owner is the package that must make it
-reachable **on that screen**; the reused component is named in "Reuses".
+**Owner** is a package of the plan in the README. When an action is built inside a shared
+component by one package and placed on the screen by another, the cell names both, builder first:
+`1b → 1d` means package 1b builds it in the card detail and package 1d makes it reachable on that
+screen. The row is `delivered` only when the action works on that screen, so the screen's package
+marks it. A component reused as is (0b's Card) is named in "Reuses".
 
 **Reuses** is the API route the v1 calls (and the `lib/db` function behind it for writes), or the
 function the v1 uses on the client. The v2 reuses it unchanged unless the row says otherwise; a
@@ -41,8 +44,8 @@ general screen check (both arrangements, pt and en, the six widths): it is not r
 | `OFF` | With `MODULO_LIVING_DEX` off, the screen and its routes answer 404, with no 307 first. |
 
 **State** is `pending` (not done), `deferred → <package>` (the v2 screen ships without it and shows
-a "Do it in v1" link; the row moves to the named package), or `delivered` (done, with the evidence
-named in the PR). Every row starts `pending`.
+a "Do it in v1" link to the same screen in the v1; the row moves to the named package, which turns it
+`delivered`), or `delivered` (done, with the evidence named in the PR). Every row starts `pending`.
 
 ---
 
@@ -112,7 +115,8 @@ of **4b** until 4b ships (the plan's "Organize leads to the v1 until 4b"): the b
 
 v1: `src/app/colecoes/[id]/pagina-cliente.tsx` and `bloco-tema.tsx`. **1d owns the page** and every
 collection operation; the slot actions live in the card detail (**1b**), which 1d integrates; the
-buy marking lives in the "What's missing" tab (**1e**).
+buy marking lives in the "What's missing" tab (**1e**). Rows marked `1b → 1d` are built by 1b and
+placed on this page by 1d.
 
 | ID | Action | v1 code | Owner | Reuses | Evidence | Rules | State |
 |---|---|---|---|---|---|---|---|
@@ -132,11 +136,11 @@ buy marking lives in the "What's missing" tab (**1e**).
 | CID-14 | Download the collection as CSV | `src/app/colecoes/[id]/pagina-cliente.tsx:307` | 1d | `GET /api/colecoes/:id/exportar` | `DL` | No collection data in the repository (the file is the user's) | pending |
 | CID-15 | Delete the collection (copies are never deleted) | `src/app/colecoes/[id]/pagina-cliente.tsx:327`, `:139`, `:141`, `:143` | 1d | `DELETE /api/colecoes/:id` (`excluirColecao`) | `REQ`, `CONF`, `REF`, `NAV` to `/colecoes` afterwards | R1 (allocations released); groups: its section is renumbered under the lock | pending |
 | CID-16 | Open the buy options of the collection (Pokédex and set) | `src/app/colecoes/[id]/pagina-cliente.tsx:300` | 1e | — | `NAV` to `/colecoes/<id>/opcoes-compra` (a bridge until 4a); in the v2, opened from the "What's missing" tab | R6 (empty slots are cards to buy; custom has none) | pending |
-| CID-17 | Allocate a free copy to an empty slot: list the candidates, pick one, confirm an out-of-pattern one | `src/app/colecoes/[id]/pagina-cliente.tsx:736`, `:1295`, `:1396`, `:1383`, `:1302` | 1b (detail, slot mode) | `GET /api/vagas/:id/candidatos`, `POST /api/vagas/:id/alocar` (`alocarCopiaNaVaga`) | `REQ`, `CONF` (out of pattern), `REF` (the copy was taken meanwhile), `TX` (lot split) | R1 (one slot, one collection, database constraint); R2 (exactly one `dexId` for Pokédex); R3 (forms compete for the slot); R5 (the user picks; the button stays visible and disabled with no candidate); R7 | pending |
-| CID-18 | Deallocate the copy of a slot (asks first) | `src/app/colecoes/[id]/pagina-cliente.tsx:690`, `:151`, `:152`, `:158` | 1b (detail, slot mode) | `DELETE /api/vagas/:id/alocar` (`desalocarVaga`) | `REQ`, `CONF`, `REF` | R1 (copy back to free); R6 (the slot becomes an empty slot again); buy choice of that slot comes back to the list | pending |
-| CID-19 | Swap the slot's copy for a better one: see the candidates and the axis, confirm the swap | `src/app/colecoes/[id]/pagina-cliente.tsx:683`, `:1641`, `:1622`, `:1473`, `:1477` | 1b (detail, slot mode) | `POST /api/vagas/:id/trocar` (`trocarCopiaDaVaga`) | `REQ`, `CONF`, `REF`, `TX` (the slot is never left empty by a failed swap) | R8 (atomic swap, flagged upgrade, never automatic; ladder rarity > language > variant, promo outside, decided in `melhoria-vaga.ts`); R1 | pending |
-| CID-20 | Discard an upgrade suggestion, or restore a discarded one | `src/app/colecoes/[id]/pagina-cliente.tsx:1647`, `:1609`, `:1508`, `:1511` | 1b (detail, slot mode) | `POST`/`DELETE /api/vagas/:id/melhorias/descartar` (`descartarMelhoria`, `restaurarMelhoria`) | `REQ`, `REF` | R8 | pending |
-| CID-21 | Zoom a card image (hover with delay on desktop, tap on mobile) | `src/app/colecoes/[id]/pagina-cliente.tsx:644` (`ImagemCartaComZoom`) | 1b (the detail replaces the zoom) | the image origin of `imagem-carta-zoom.tsx`, ported into 0b's Card | the detail opens from the card; the user's own photo and the borrowed-photo mark show as in the v1 | Nothing only on hover | pending |
+| CID-17 | Allocate a free copy to an empty slot: list the candidates, pick one, confirm an out-of-pattern one | `src/app/colecoes/[id]/pagina-cliente.tsx:736`, `:1295`, `:1396`, `:1383`, `:1302` | 1b → 1d (detail, slot mode) | `GET /api/vagas/:id/candidatos`, `POST /api/vagas/:id/alocar` (`alocarCopiaNaVaga`) | `REQ`, `CONF` (out of pattern), `REF` (the copy was taken meanwhile), `TX` (lot split) | R1 (one slot, one collection, database constraint); R2 (exactly one `dexId` for Pokédex); R3 (forms compete for the slot); R5 (the user picks; the button stays visible and disabled with no candidate); R7 | pending |
+| CID-18 | Deallocate the copy of a slot (asks first) | `src/app/colecoes/[id]/pagina-cliente.tsx:690`, `:151`, `:152`, `:158` | 1b → 1d (detail, slot mode) | `DELETE /api/vagas/:id/alocar` (`desalocarVaga`) | `REQ`, `CONF`, `REF` | R1 (copy back to free); R6 (the slot becomes an empty slot again); buy choice of that slot comes back to the list | pending |
+| CID-19 | Swap the slot's copy for a better one: see the candidates and the axis, confirm the swap | `src/app/colecoes/[id]/pagina-cliente.tsx:683`, `:1641`, `:1622`, `:1473`, `:1477` | 1b → 1d (detail, slot mode) | `POST /api/vagas/:id/trocar` (`trocarCopiaDaVaga`) | `REQ`, `CONF`, `REF`, `TX` (the slot is never left empty by a failed swap) | R8 (atomic swap, flagged upgrade, never automatic; ladder rarity > language > variant, promo outside, decided in `melhoria-vaga.ts`); R1 | pending |
+| CID-20 | Discard an upgrade suggestion, or restore a discarded one | `src/app/colecoes/[id]/pagina-cliente.tsx:1647`, `:1609`, `:1508`, `:1511` | 1b → 1d (detail, slot mode) | `POST`/`DELETE /api/vagas/:id/melhorias/descartar` (`descartarMelhoria`, `restaurarMelhoria`) | `REQ`, `REF` | R8 | pending |
+| CID-21 | Zoom a card image (hover with delay on desktop, tap on mobile) | `src/app/colecoes/[id]/pagina-cliente.tsx:644` (`ImagemCartaComZoom`) | 1b → 1d (the detail replaces the zoom) | the image origin of `imagem-carta-zoom.tsx`, ported into 0b's Card | the detail opens from the card; the user's own photo and the borrowed-photo mark show as in the v1 | Nothing only on hover | pending |
 
 ## 4. `/colecoes/nova` — New collection
 
@@ -147,11 +151,12 @@ v1: `src/app/colecoes/nova/pagina-cliente.tsx`. Owner: **1c**.
 | NOV-01 | Name the collection | `src/app/colecoes/nova/pagina-cliente.tsx:244` | 1c | — | `VIEW` | — | pending |
 | NOV-02 | Choose the type: Pokédex, Set, Custom | `src/app/colecoes/nova/pagina-cliente.tsx:256` | 1c | — | `VIEW` | — | pending |
 | NOV-03 | Pokédex: national or by regions, and pick the regions | `src/app/colecoes/nova/pagina-cliente.tsx:273`, `:282`, `:288` | 1c | `ds/grade-escopo` (logic) | `VIEW` | R2, R3 | pending |
-| NOV-04 | Set: add sets to the recipe (search), remove one, keep the chosen order | `src/app/colecoes/nova/pagina-cliente.tsx:114`, `:324`, `:312` | 1c | `GET /api/sets` (`SeletorExpansao`) | `REQ`; only sets with an active pt/en row | R4; set recipe in order | pending |
-| NOV-05 | Set: catalog language (pt / en / jp) and "include secrets" | `src/app/colecoes/nova/pagina-cliente.tsx:338`, `:352` | 1c | — | `VIEW` | R4 (`official` / `total`); catalog language per card, Japanese never a fallback | pending |
+| NOV-04 | Set: add sets to the recipe, remove one, keep the chosen order | `src/app/colecoes/nova/pagina-cliente.tsx:114`, `:324`, `:312` | 1c | `GET /api/sets` (`SeletorExpansao`) | `REQ`; the same sets offered as in the v1 (every catalog language) | R4; set recipe in order | pending |
+| NOV-04b | Set picker: filter the sets by catalog language, search by name, code or id, pick one | `src/app/_componentes/seletor-expansao.tsx:138`, `:155`, `:165` | 1c | `SeletorExpansao` logic | `VIEW`; same results as the v1 for the same query | — | pending |
+| NOV-05 | Set: catalog language preference (pt or en; a warning when a set has no pt rows) and "include secrets" | `src/app/colecoes/nova/pagina-cliente.tsx:338`, `:352` | 1c | — | `VIEW` | R4 (`official` / `total`); catalog language per card, Japanese never a fallback | pending |
 | NOV-06 | Required language, group, notes | `src/app/colecoes/nova/pagina-cliente.tsx:372`, `:85`, `:386`, `:398` | 1c | `GET /api/colecoes` (groups) | `REQ` | R7 (required language is of the physical copy) | pending |
 | NOV-07 | Create, see validation errors line by line, land on the new collection | `src/app/colecoes/nova/pagina-cliente.tsx:163`, `:190`, `:210` | 1c | `POST /api/colecoes` (`resolverCriacaoColecao`, `criarColecaoComVagas`) | `REQ`, `REF` (each validation error), `NAV` to `/colecoes/<id>` | R4; R6 (slots born empty); groups: goes to the end of its section | pending |
-| NOV-08 | Arrive prefilled from a suggestion (`?set=`), retry the prefill or start blank | `src/app/colecoes/nova/page.tsx:9`, `src/app/colecoes/nova/pagina-cliente.tsx:231`, `:234` | 1c | `GET /api/sets` | `URL` (`set`), `REQ` | Suggestions: the prefill resolves against the same active pt/en filter | pending |
+| NOV-08 | Arrive prefilled from a suggestion (`?set=`), retry the prefill or start blank | `src/app/colecoes/nova/page.tsx:9`, `src/app/colecoes/nova/pagina-cliente.tsx:231`, `:234` | 1c | `GET /api/sets` | `URL` (`set`), `REQ` | Suggestions: a suggested set has an active pt/en row, the filter the prefill resolves against | pending |
 
 ## 5. `/colecoes/falta` — What's missing, all collections
 
@@ -186,9 +191,11 @@ same routes; for this page's bridge, every row has to be delivered by 4a.
 | OPC-12 | Download the buy list as CSV or as text | `src/app/colecoes/[id]/opcoes-compra/pagina-cliente.tsx:1010`, `:1016` | 4a | `GET …/exportar?formato=csv` and `?formato=texto` | `DL`; the CSV says which source each price came from | `precosDasEscolhas` (one function for screen and export) | pending |
 | OPC-13 | Show only slots with an option; collapse or expand all, a group, or one slot (remembered per device) | `src/app/colecoes/[id]/opcoes-compra/pagina-cliente.tsx:1147`, `:1169`, `:1172`, `:1198`, `:1201`, `:1219`, `:305`, `:417` | 4a | `localStorage`, in `try/catch` | `VIEW`, `HTTP` | — | pending |
 | OPC-14 | Out of stock: paste the Liga notice, preview, confirm (records and unmarks in one transaction) or cancel | `src/app/colecoes/[id]/opcoes-compra/painel-sem-estoque.tsx:140`, `:155`, `:209`, `:217`, `:81` | 4a | `POST /api/colecoes/:id/opcoes-compra/sem-estoque` (preview, then confirm) | `REQ`, `REF`, `TX` (record and unmark together) | Out of stock: key name + number/total, global, 30 days, only this collection's empty slots unmarked | pending |
+| OPC-14b | Open the out-of-stock panel | `src/app/colecoes/[id]/opcoes-compra/painel-sem-estoque.tsx:128` | 4a | — | `VIEW` | — | pending |
+| OPC-18 | Read the explanations: options with no price, choices kept from older scans | `src/app/colecoes/[id]/opcoes-compra/pagina-cliente.tsx:993`, `:1003` | 4a | `Dica` texts | open by tap and by keyboard | Nothing only on hover; Cardmarket "no price" wording | pending |
 | OPC-15 | Out of stock: see the cards on record and offer one again | `src/app/colecoes/[id]/opcoes-compra/painel-sem-estoque.tsx:68`, `:244`, `:112` | 4a | `GET` and `DELETE …/sem-estoque?item=` | `REQ`, `REF` | Out of stock | pending |
 | OPC-16 | Open the card's page on the Liga site | `src/app/colecoes/[id]/opcoes-compra/pagina-cliente.tsx:1366` | 4a | `caminhoBuscaLiga` | external link, same URL | Liga: only `cards/search` and `cards/card` | pending |
-| OPC-17 | Back to the collection; zoom a card | `src/app/colecoes/[id]/opcoes-compra/pagina-cliente.tsx:759`; `ImagemCartaComZoom` | 4a | 0b's Card | `NAV` | — | pending |
+| OPC-17 | Back to the collection; zoom a card | `src/app/colecoes/[id]/opcoes-compra/pagina-cliente.tsx:759`, `:1300` | 4a | 0b's Card | `NAV` | — | pending |
 
 ## 7. `/cadastro/set` — Entry by set
 
@@ -197,7 +204,7 @@ v1: `src/app/cadastro/set/pagina-cliente.tsx` (batch logic in `src/lib/dominio/g
 
 | ID | Action | v1 code | Owner | Reuses | Evidence | Rules | State |
 |---|---|---|---|---|---|---|---|
-| CSET-01 | Pick a set and load its cards (with "you have N") | `src/app/cadastro/set/pagina-cliente.tsx:205`, `:115`, `:127` | 3a | `GET /api/sets`, `GET /api/sets/:setId/cartas` | `REQ`; mixed-catalog warning as in the v1 | Catalog language per card (pt→en) | pending |
+| CSET-01 | Pick a set (set picker: filter by catalog language, search by name, code or id) and load its cards (with "you have N") | `src/app/cadastro/set/pagina-cliente.tsx:205`, `:115`, `:127`; `src/app/_componentes/seletor-expansao.tsx:138`, `:155`, `:165` | 3a | `GET /api/sets`, `GET /api/sets/:setId/cartas` | `REQ`; mixed-catalog warning as in the v1 | Catalog language per card (pt→en) | pending |
 | CSET-02 | Set the batch defaults: variant, physical language, condition (a summary with a toggle on mobile) | `src/app/cadastro/set/pagina-cliente.tsx:286`, `:292`, `:298`, `:262` | 3a | reducer `reduzirGrade` | `VIEW` | R7 (language of the physical card, independent of the catalog row) | pending |
 | CSET-03 | Filter the grid by number | `src/app/cadastro/set/pagina-cliente.tsx:317` | 3a | — | `VIEW` | — | pending |
 | CSET-04 | Type a quantity per card; Enter jumps to the next | `src/app/cadastro/set/pagina-cliente.tsx:372`, `:392`, `:151` | 3a | `Quantidade` (controlled) | `VIEW`; keyboard flow kept; fields 16 px on mobile | Mobile: `Quantidade` controlled | pending |
@@ -223,7 +230,7 @@ Owner: **3b**.
 
 v1: `src/app/inventario/pagina-cliente.tsx` and `src/app/_componentes/adicionar-imagem-local.tsx`.
 **2b owns the page**, the list and the bulk edit; the per-copy operations live in the card detail in
-copy mode (**1b**), which 2b integrates.
+copy mode (**1b**), which 2b integrates (rows marked `1b → 2b`).
 
 | ID | Action | v1 code | Owner | Reuses | Evidence | Rules | State |
 |---|---|---|---|---|---|---|---|
@@ -233,12 +240,12 @@ copy mode (**1b**), which 2b integrates.
 | INV-04 | Download the inventory as CSV; download the Liga upload format | `src/app/inventario/pagina-cliente.tsx:293`, `:298` | 2b | `GET /api/copias/exportar`, `GET /api/copias/exportar-liga` | `DL` | Export to LigaPokemon: the upload format (`exportacao-liga.ts`) | pending |
 | INV-05 | Select copies one by one, all on the page, or clear the selection | `src/app/inventario/pagina-cliente.tsx:539`, `:509`, `:486`, `:219`, `:228` | 2b | — | `VIEW`; fixed bottom bar on mobile reserves its height | — | pending |
 | INV-06 | Bulk edit the selection: condition, location, physical language, variant; confirm step; apply | `src/app/inventario/pagina-cliente.tsx:477`, `:1260`–`:1325`, `:1245`, `:1232`, `:1177`, `:1187` | 2b | `PATCH /api/copias/massa` (`atualizarCopiasEmMassa`) | `REQ`, `CONF`, `REF`, `TX` | R7 (changing the physical language never touches the catalog row) | pending |
-| INV-07 | Edit one copy: quantity, variant, physical language, condition, location, grading (company, grade, certificate), acquisition (date, origin, price), notes | `src/app/inventario/pagina-cliente.tsx:670`, `:755`, `:784`, `:789` | 1b (detail, copy mode) | `PATCH /api/copias/:id` (`atualizarCopia`) | `REQ`, `REF` | R7; R1 (an allocated copy keeps its single slot) | pending |
-| INV-08 | Allocate a free copy to a destination: list eligible slots and custom collections, pick, confirm an out-of-pattern one | `src/app/inventario/pagina-cliente.tsx:662`, `:988`, `:1110`, `:1093`, `:1001`, `:1006` | 1b (detail, copy mode) | `GET /api/copias/:id/destinos`, then `POST /api/vagas/:id/alocar` or `POST /api/colecoes/:id/copias` | `REQ`, `CONF`, `REF`, `TX` (lot split) | R1; R2; R3; R5 (the user picks the destination); R7 (required language) | pending |
-| INV-09 | Deallocate an allocated copy (asks first) | `src/app/inventario/pagina-cliente.tsx:654`, `:252`, `:254`, `:262` | 1b (detail, copy mode) | `DELETE /api/vagas/:vagaId/alocar` | `REQ`, `CONF`, `REF` | R1; R6 (the slot is empty again) | pending |
+| INV-07 | Edit one copy: quantity, variant, physical language, condition, location, grading (company, grade, certificate), acquisition (date, origin, price), notes | `src/app/inventario/pagina-cliente.tsx:670`, `:755`, `:784`, `:789` | 1b → 2b (detail, copy mode) | `PATCH /api/copias/:id` (`atualizarCopia`) | `REQ`, `REF` | R7; R1 (an allocated copy keeps its single slot) | pending |
+| INV-08 | Allocate a free copy to a destination: list eligible slots and custom collections, pick, confirm an out-of-pattern one | `src/app/inventario/pagina-cliente.tsx:662`, `:988`, `:1110`, `:1093`, `:1001`, `:1006` | 1b → 2b (detail, copy mode) | `GET /api/copias/:id/destinos`, then `POST /api/vagas/:id/alocar` or `POST /api/colecoes/:id/copias` | `REQ`, `CONF`, `REF`, `TX` (lot split) | R1; R2; R3; R5 (the user picks the destination); R7 (required language) | pending |
+| INV-09 | Deallocate an allocated copy (asks first) | `src/app/inventario/pagina-cliente.tsx:654`, `:252`, `:254`, `:262` | 1b → 2b (detail, copy mode) | `DELETE /api/vagas/:vagaId/alocar` | `REQ`, `CONF`, `REF` | R1; R6 (the slot is empty again) | pending |
 | INV-10 | Delete a copy (asks first) | `src/app/inventario/pagina-cliente.tsx:677`, `:234`, `:235`, `:243` | 2b | `DELETE /api/copias/:id` (`removerCopia`) | `REQ`, `CONF`, `REF` | R1 (an allocated copy leaves its slot, which becomes empty, R6) | pending |
-| INV-11 | Add, replace or remove the card's own photo: upload a file, give a link, or map the set to MyPCards | `src/app/inventario/pagina-cliente.tsx:566`, `:581`; `src/app/_componentes/adicionar-imagem-local.tsx:75`, `:181`, `:212`, `:152`, `:156`, `:131`, `:135` | 1b (detail, copy mode) | `POST`/`DELETE /api/imagens-locais/:cartaId/:idioma`, `POST /api/sets-mypcards` | `REQ`, `REF`; the image is stored in the install's volume, never in the repository | No card images in the repository; local images are plain `<img>` | pending |
-| INV-12 | Zoom a copy's image | `src/app/inventario/pagina-cliente.tsx:550` | 1b (the detail replaces the zoom) | 0b's Card | the user's own photo is preferred, as in the v1 | Nothing only on hover | pending |
+| INV-11 | Add, replace or remove the card's own photo: upload a file, give a link, or map the set to MyPCards | `src/app/inventario/pagina-cliente.tsx:566`, `:581`; `src/app/_componentes/adicionar-imagem-local.tsx:75`, `:181`, `:212`, `:152`, `:156`, `:131`, `:135` | 1b → 2b (detail, copy mode) | `POST`/`DELETE /api/imagens-locais/:cartaId/:idioma`, `POST /api/sets-mypcards` | `REQ`, `REF`; the image is stored in the install's volume, never in the repository | No card images in the repository; local images are plain `<img>` | pending |
+| INV-12 | Zoom a copy's image | `src/app/inventario/pagina-cliente.tsx:550` | 1b → 2b (the detail replaces the zoom) | 0b's Card | the user's own photo is preferred, as in the v1 | Nothing only on hover | pending |
 
 ## 10. `/inventario/visao-geral` — Overview
 
@@ -274,6 +281,8 @@ v1: `src/app/inventario/precos/page.tsx` (reads `PRECO_FONTE`), `pagina-cliente.
 | PRE-03 | Start a price round of the active source | `src/app/inventario/precos/pagina-cliente.tsx:412`, `:297`, `:302` | 2d | `POST /api/inventario/precos` (`iniciarRodadaCardmarket` or the Liga round) | `REQ`, `REF` (`precosJaConsultados`, `precosEmAndamento`, `semCartasEspeciais`, `cotacaoIndisponivel`, Liga blocked) | Liga pace; one live round per source; Cardmarket PTAX per round | pending |
 | PRE-04 | Follow a round in progress (polling) | `src/app/inventario/precos/pagina-cliente.tsx:282` | 2d | `GET /api/inventario/precos` | period derived from the interval, never fixed | Liga: nothing may double the pace | pending |
 | PRE-05 | Read the total value chart, point at a snapshot | `src/app/inventario/precos/grafico-valor-total.tsx:199` | 2d | `listarSerieDePrecos` (in the GET) | one series per source; the text still says the total also rises when cards enter the sum; works by touch | Special card prices: history and snapshots | pending |
+| PRE-05b | Open the chart's data as a table | `src/app/inventario/precos/grafico-valor-total.tsx:319` | 2d | — | `VIEW`; the same points as the chart | — | pending |
+| PRE-07 | Read the explanations: card not found, round error, foil, no price | `src/app/inventario/precos/pagina-cliente.tsx:563`, `:652`, `:800`, `:835` | 2d | `Dica` texts | each opens by tap and by keyboard, never only on hover or in `title` | Nothing only on hover | pending |
 | PRE-06 | Delete a round (asks first) | `src/app/inventario/precos/pagina-cliente.tsx:688`, `:323`, `:324`, `:331` | 2d | `DELETE /api/inventario/precos/rodadas/:id` | `REQ`, `CONF`, `REF` | Prices: a found price is never deleted by this | pending |
 
 ## 13. `/login` — Login
@@ -294,7 +303,7 @@ Dex row also needs `OFF`.
 
 | ID | Action | v1 code | Owner | Reuses | Evidence | Rules | State |
 |---|---|---|---|---|---|---|---|
-| DEX-01 | See progress per track and region, recent arrivals, trophy shelf, game cards, active plan, what is in a game and not in HOME | `src/app/dex/page.tsx:20` | 5a | server reads of `page.tsx` | same numbers as the v1; `OFF` | HOME trophies computed; sections counted as the user set them | pending |
+| DEX-01 | See progress per track and region, recent arrivals, trophy shelf, game cards, active plan, what is in a game and not in HOME | `src/app/dex/page.tsx:20`, `:22` | 5a | server reads of `page.tsx` | same numbers as the v1; `OFF` | HOME trophies computed; sections counted as the user set them | pending |
 | DEX-02 | Open a slot in Register (`?busca=`) from the showcase | `src/app/dex/visao-geral-dex.tsx:192` | 5a | — | `NAV`, `URL` (`busca`) | — | pending |
 | DEX-03 | Open trophies: HOME, or one game | `src/app/dex/visao-geral-dex.tsx:258`, `:294`, `:315`, `:334` | 5a | — | `NAV`, `URL` (`jogo`) | — | pending |
 | DEX-04 | Open the plans; open the Pokédex | `src/app/dex/visao-geral-dex.tsx:357`, `:407` | 5a | — | `NAV` | — | pending |
@@ -328,7 +337,7 @@ v1: `src/app/dex/recebidos/recebidos-home.tsx`. Owner: **5b**.
 
 | ID | Action | v1 code | Owner | Reuses | Evidence | Rules | State |
 |---|---|---|---|---|---|---|---|
-| REC-01 | See what arrived in HOME and was not put away, by destination box, extra copies apart | `src/app/dex/recebidos/page.tsx:19` | 5b | server reads | same grouping as the v1 | "Received": `a_guardar` stored, not derived | pending |
+| REC-01 | See what arrived in HOME and was not put away, by destination box, extra copies apart | `src/app/dex/recebidos/page.tsx:19`, `:21`; `src/app/dex/recebidos/recebidos-home.tsx:67` | 5b | server reads | same grouping as the v1 | "Received": `a_guardar` stored, not derived | pending |
 | REC-02 | "Put away" everything, one box, or those with no place | `src/app/dex/recebidos/recebidos-home.tsx:99`, `:126`, `:191`, `:72`, `:76` | 5b | `POST /api/dex/registros/guardar` (`guardarRegistros`) | `REQ`, `REF` | — | pending |
 
 ## 18. `/dex/cadastrar` — Register by game
@@ -342,7 +351,7 @@ v1: `src/app/dex/cadastrar/page.tsx` and `cadastro-por-jogo.tsx` (virtualized be
 | DCAD-02 | Go manage owned games | `src/app/dex/cadastrar/cadastro-por-jogo.tsx:570` | 5c | — | `NAV` | — | pending |
 | DCAD-03 | Switch view; filter by text; only what I do not have; show all (outside the game's catalog) | `src/app/dex/cadastrar/cadastro-por-jogo.tsx:581`, `:594`, `:597`, `:602` | 5c | — | `VIEW`; trade, event and locked-checkpoint marks shown, never refused | Availability catalog; checkpoints mark, never refuse | pending |
 | DCAD-04 | Type normal and shiny quantities per Pokémon; clear them | `src/app/dex/cadastrar/cadastro-por-jogo.tsx:218`, `:373`, `:615` | 5c | `Quantidade` (controlled) | `VIEW`; the list stays virtualized and the measured tap time does not regress | Mobile: the virtualizer rule (v1 below 768 px; v2 by the measured threshold) | pending |
-| DCAD-05 | Register the batch | `src/app/dex/cadastrar/cadastro-por-jogo.tsx:619`, `:522`, `:528` | 5c | `POST /api/dex/registros` (`criarRegistrosEmLote`) | `REQ`, `REF` (one refusal refuses all), `TX` | Records come in by game, in batches; only forms of the game's catalog | pending |
+| DCAD-05 | Register the batch | `src/app/dex/cadastrar/cadastro-por-jogo.tsx:619`, `:522`, `:528` | 5c | `POST /api/dex/registros` (`criarRegistrosEmLote`) | `REQ`, `REF` (one refusal refuses all), `TX` | Records come in by game, in batches; the game's catalog is the screen's default filter, not a refusal — a form outside it, picked through "show all", is registered as in the v1 (`expandirLoteCadastro` validates through `validarNovoRegistro`) | pending |
 
 ## 19. `/dex/novo-cadastro` — New registration (send to HOME)
 
@@ -353,6 +362,7 @@ definition of done.
 |---|---|---|---|---|---|---|---|
 | NCAD-01 | Step 1: switch track; search; only missing; jump to a group's box | `src/app/dex/novo-cadastro/novo-cadastro.tsx:947`, `:959`, `:962`, `:970` | 5d | — | `VIEW`; the selection survives the filters | — | pending |
 | NCAD-02 | Step 1: mark or unmark slots on the box grid (both tracks); toggle the pair of the last one | `src/app/dex/novo-cadastro/novo-cadastro.tsx:430`, `:1032` | 5d | — | `VIEW`; only slots not in HOME, shiny only where released | Send to HOME: one item per slot and track | pending |
+| NCAD-02b | Step 1: identify a slot already in HOME (name, form, box, position) by tap or keyboard focus, without adding it to the batch | `src/app/dex/novo-cadastro/novo-cadastro.tsx:430`, `:431` | 5d | — | `VIEW`; the selection does not change | — | pending |
 | NCAD-03 | Step 1: clear; continue to step 2 | `src/app/dex/novo-cadastro/novo-cadastro.tsx:1043`, `:1047`, `:614`, `:821` | 5d | — | `VIEW` | — | pending |
 | NCAD-04 | Step 2: pick the game left from (remembered per device); manage games; remove an item; back | `src/app/dex/novo-cadastro/novo-cadastro.tsx:1184`, `:214`, `:222`, `:1191`, `:1243`, `:1053`, `:828` | 5d | `localStorage`, in `try/catch` | `VIEW`, `HTTP` | The game left from is not the historical origin | pending |
 | NCAD-05 | Send the batch to HOME; confirm leaving a send-only game; see readable refusals; go to Received | `src/app/dex/novo-cadastro/novo-cadastro.tsx:1065`, `:816`, `:773`, `:778`, `:1267`, `:1096` | 5d | `POST /api/dex/registros/enviar` (`enviarAoHome`) | `REQ`, `CONF` (409 `dexConfirmarSemVolta`, once per batch), `REF` (`recusas-legiveis.ts`), `TX` (serialized by its own advisory lock) | Send to HOME rules: never confirmed automatically; non-transferable refused | pending |
@@ -407,6 +417,7 @@ definition of done.
 | PLA-06 | Add or edit a step (text and optional details) | `src/app/dex/planos/etapas-tarefa.tsx:199`, `:176`, `:93`, `:65` | 5e | `POST /api/dex/tarefas/:id/etapas`, `PATCH /api/dex/etapas/:id` | `REQ`, `REF` (1–200 / 2,000 characters, 50 steps) | Steps change only while the task is open in an active plan | pending |
 | PLA-07 | Check or uncheck a step | `src/app/dex/planos/etapas-tarefa.tsx:145`, `:73` | 5e | `PATCH /api/dex/etapas/:id` (`feita`) | `REQ`, `REF` | Checking the last step never finishes the task | pending |
 | PLA-08 | Organize steps: move up or down | `src/app/dex/planos/etapas-tarefa.tsx:208`, `:159`, `:168`, `:83` | 5e | `PUT /api/dex/tarefas/:id/etapas/ordem` | `REQ`, `REF` (stale list refused) | Up/down, never drag; renumbered 1..n | pending |
+| PLA-10 | Open the history of closed plans (where a plan is reactivated, PLA-02) | `src/app/dex/planos/painel-planos.tsx:418` | 5e | — | `VIEW` | A closed plan is history | pending |
 | PLA-09 | Delete a step (asks first) | `src/app/dex/planos/etapas-tarefa.tsx:180`, `:78`, `:79` | 5e | `DELETE /api/dex/etapas/:id` | `REQ`, `CONF`, `REF` | Order renumbered | pending |
 
 ---

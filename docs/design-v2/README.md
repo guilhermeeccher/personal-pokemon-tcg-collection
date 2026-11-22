@@ -109,8 +109,9 @@ Every screen the v2 has not done yet has, in its place, a **bridge page**: three
 ### A bridge leaves only when parity is checked
 
 A v2 screen existing is not enough to remove its bridge. The package replaces the bridge with the
-real page **only after every v1 action of that screen is marked `delivered` in
-[`parity.md`](./parity.md)**, each with its acceptance evidence. Counting finished pages does not
+real page **only after every v1 action of that screen is marked in [`parity.md`](./parity.md) as
+`delivered`, with its acceptance evidence, or as `deferred` to a named package with a working "Do it
+in v1" link**. Phase 6 needs every row `delivered`; nothing may still be deferred. Counting finished pages does not
 show that the edit form, the batch button or the confirmation of a destructive action made it
 across; the matrix does.
 
@@ -185,9 +186,9 @@ set by the dispatch order below.
 
 ### Phase 5 — Living Dex (a third of the frontend)
 
-Every Dex screen writes, including those that look read-only (the Pokédex sections, the boxes
-preference, "Put away" on Received); the existing mutations and confirmations are kept on all of
-them.
+Several Dex screens that look read-only do write (the Pokédex sections and "Take to HOME", the
+boxes preference, "Put away" on Received); only the overview `/dex` is read-only. The existing
+mutations and confirmations are kept on all of them.
 
 | Package | Delivers | Dispatched |
 |---|---|---|
@@ -228,8 +229,9 @@ them.
   pure rules of allocation, swap and lot split are tested; the transactions themselves are not, so
   every package that touches them brings its own evidence and an explicit review of the flow).
 - The second-model review was done and its findings fixed or justified.
-- The actions of that screen are marked `delivered` in `parity.md`, and only then the bridge is
-  replaced with the real page; the pairing test passes.
+- The actions of that screen are marked `delivered` in `parity.md` (or `deferred` to a named
+  package, with a "Do it in v1" link), and only then the bridge is replaced with the real page; the
+  pairing test passes.
 - The screen was seen in both arrangements (rail from 768 px, tab bar below), in pt and en, at 320,
   393, ~734, **768**, 1024 and 1400 px; and on a real iPhone at every phase (the cost of the glass,
   the gestures and the keyboard only show there).
