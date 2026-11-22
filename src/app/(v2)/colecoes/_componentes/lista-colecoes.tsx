@@ -34,7 +34,7 @@ export async function ListaColecoes({ lista }: { lista: ListaColecoesV2DTO }) {
             {t("nova")}
           </BotaoLink>
           <BotaoLink href="/colecoes/falta">{t("oQueFalta")}</BotaoLink>
-          <BotaoLink href="/v1/colecoes" variante="fantasma">
+          <BotaoLink href="/v1/colecoes">
             {t("organizarNaV1")}
           </BotaoLink>
         </div>

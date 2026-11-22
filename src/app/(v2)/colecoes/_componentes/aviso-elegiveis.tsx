@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { BotaoLink } from "../../_componentes/primitivos/botao";
 import { AvisoEmLinha } from "../../_componentes/primitivos/painel";
+import estilos from "./colecoes.module.css";
 
 interface Contagem {
   prontas: number;
@@ -42,16 +43,7 @@ export function AvisoElegiveis() {
   if (!contagem || (contagem.prontas === 0 && contagem.foraDePadrao === 0)) return null;
 
   return (
-    <AvisoEmLinha
-      tom="sucesso"
-      papel="status"
-      icone={<Check aria-hidden />}
-      acao={
-        <BotaoLink href="/colecoes/falta" variante="secundario" pequeno>
-          {t("verOQueFalta")}
-        </BotaoLink>
-      }
-    >
+    <AvisoEmLinha tom="sucesso" papel="status" icone={<Check aria-hidden />}>
       {contagem.prontas > 0 && (
         <>
           {t.rich("elegiveisProntas", { total: contagem.prontas, forte: (partes) => <strong>{partes}</strong> })}{" "}
@@ -59,6 +51,12 @@ export function AvisoElegiveis() {
       )}
       {contagem.foraDePadrao > 0 &&
         t.rich("elegiveisForaDePadrao", { total: contagem.foraDePadrao, forte: (partes) => <strong>{partes}</strong> })}
+      {/* Abaixo do texto, não ao lado: a 320 px o botão ao lado espremia a frase em palavras soltas. */}
+      <div className={estilos.avisoAcao}>
+        <BotaoLink href="/colecoes/falta" variante="secundario" pequeno>
+          {t("verOQueFalta")}
+        </BotaoLink>
+      </div>
     </AvisoEmLinha>
   );
 }

@@ -89,7 +89,7 @@ export function SeletorDeSet({ aoEscolher }: { aoEscolher: (set: SetParaCadastro
   return (
     <div className={estilos.seletor}>
       <fieldset className={estilos.filtroIdioma}>
-        <legend className="v2-so-leitor">{t("idiomaCatalogo")}</legend>
+        <legend className={estilos.rotuloFiltro}>{t("idiomaCatalogo")}</legend>
         {opcoesIdioma.map((opcao) => (
           <button
             key={opcao.filtro}

@@ -181,6 +181,13 @@
   padding: 0;
   border: 0;
 }
+.rotuloFiltro {
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+}
 .pilula {
   display: inline-flex;
   align-items: center;
