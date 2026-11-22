@@ -1,0 +1,250 @@
+/*
+ * "Nova coleção" da v2. Uma coluna estreita (a leitura do formulário não passa
+ * de ~640 px), seções em painel sem desfoque e todo controle com 44 px de alvo
+ * e 8 px entre eles. Campos já têm 16 px no celular (`campo.module.css`).
+ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 660px;
+  margin: 0 auto;
+}
+
+.voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  min-height: 44px;
+  padding-right: 10px;
+  font-size: 13.5px;
+  color: var(--v2-tinta-3);
+  text-decoration: none;
+}
+.voltar svg {
+  width: 16px;
+  height: 16px;
+}
+@media (hover: hover) {
+  .voltar:hover {
+    color: var(--v2-tinta);
+  }
+}
+
+.titulo {
+  margin: 0;
+  font-size: clamp(32px, 6vw, 46px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.descricao {
+  margin: 10px 0 0;
+  max-width: 60ch;
+  font-size: 13.5px;
+  color: var(--v2-tinta-2);
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+/* O `fieldset` só serve para desligar tudo de uma vez (set da sugestão ainda
+   carregando); sem borda nem respiro próprios. */
+.bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.secao {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 16px;
+  border: 0;
+  border-radius: var(--v2-raio-painel);
+}
+.legenda {
+  float: left;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+}
+.legenda + * {
+  clear: both;
+}
+.ajuda {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--v2-tinta-3);
+}
+
+/* ------------------------------------------------------- Regiões */
+
+.regioes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
+  gap: 8px;
+}
+.regiao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--v2-raio-campo);
+  font: inherit;
+  font-size: 14px;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s,
+    color 0.2s;
+}
+.regiao[aria-pressed="true"] {
+  color: var(--v2-tinta);
+  background: linear-gradient(120deg, rgb(143 220 255 / 0.16), rgb(192 155 255 / 0.16), rgb(255 176 214 / 0.12));
+  box-shadow: inset 0 0 0 1px rgb(200 180 255 / 0.5);
+}
+.regiao:disabled {
+  opacity: 0.5;
+}
+.faixa {
+  font-family: var(--v2-fonte-num);
+  font-size: 11.5px;
+  color: var(--v2-tinta-3);
+}
+
+/* ------------------------------------------------------- Receita de sets */
+
+.receita {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.itemReceita {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 4px 4px 14px;
+  border-radius: var(--v2-raio-campo);
+  font-size: 14px;
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+}
+.nomeSet {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.idSet {
+  font-family: var(--v2-fonte-num);
+  font-size: 12px;
+  color: var(--v2-tinta-3);
+}
+
+/* ------------------------------------------------------- Seletor de set */
+
+.seletor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.filtroIdioma {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.pilula {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.pilula[aria-pressed="true"] {
+  color: var(--v2-tinta);
+  background: var(--v2-superficie-4);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.3),
+    inset 0 0 0 1px rgb(255 255 255 / 0.2);
+}
+.pilulaContagem {
+  font-family: var(--v2-fonte-num);
+  font-size: 11.5px;
+  color: var(--v2-tinta-3);
+}
+
+/* ------------------------------------------------------- Caixa de marcar */
+
+.marcar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.marcar input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: #b48cff;
+}
+
+/* ------------------------------------------------------- Rodapé */
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.detalhes {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+.sugestao {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

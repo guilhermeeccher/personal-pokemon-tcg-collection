@@ -98,17 +98,17 @@ beforeEach(() => {
 });
 
 describe("pontes da v2, executadas", () => {
-  it("encontra as 13 pontes da Fase 0", () => {
+  /* As 13 da Fase 0, menos as que uma tela real já substituiu: cada pacote que
+     entrega uma tela tira a linha dela daqui (e só a dela). */
+  it("encontra as pontes que ainda restam", () => {
     expect(PONTES.map((p) => p.rota).sort()).toEqual(
       [
         "/",
         "/cadastro/busca",
         "/cadastro/set",
-        "/colecoes",
         "/colecoes/[id]",
         "/colecoes/[id]/opcoes-compra",
         "/colecoes/falta",
-        "/colecoes/nova",
         "/dex/[[...resto]]",
         "/inventario",
         "/inventario/precos",
