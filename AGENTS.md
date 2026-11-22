@@ -226,9 +226,26 @@ read its README before touching any screen, layout, component or route under `sr
 - **Two versions side by side.** Today's interface is **the v1**: it lives at `/v1`, under its own
   root layout (`src/app/(v1)/`). **The v2** opens at the root, under another root layout
   (`src/app/(v2)/`). The API, `/login`, the manifest, `robots.txt` and the PWA icons stay at the
-  root. A root path whose v2 screen does not exist yet is a **bridge page**: it calls
-  `exigirSessao()` and redirects with 307 to `/v1/<same screen>`, query intact. The v1 never links
-  to the root.
+  root. A root path whose v2 screen does not exist yet is a **bridge page**: `await
+  exigirSessao();` then `irParaV1([...segments], await searchParams)`, a 307 (never 308) to
+  `/v1/<same screen>` with the query intact, built by `lib/dominio/destino-v1.ts`. No catch-all at
+  the v2 root; the only one is the Dex bridge, which answers 404 with the module off before any
+  redirect. `grep -rl irParaV1 'src/app/(v2)'` lists the screens still bridged.
+- **Where things are now.** The v1's screens live under `src/app/(v1)/v1/` (so a screen file cited
+  in this document, such as `cadastro-por-jogo.tsx`, is there; `_componentes/` and `_acoes/` did
+  not move), its stylesheet and tokens in `src/app/(v1)/` (the
+  `[data-pwa]` safe-area rules included), and its `PageProps` use the `/v1/...` keys. The screen
+  routes this document cites (`/dex/...`, `/inventario/precos`, `/dex/cadastrar?jogo=…`) live at
+  `/v1/...` and answer at the root through a bridge until the v2 screen exists. The login is
+  `src/app/(v1)/login/` with the URL `/login`, and it is the coverage test's one exact exception;
+  when the v2 redoes it, the page and the exception move together. A path with no route gets Next's
+  default 404, with no layout of ours.
+- **The two versions never mix.** The v1 never links to the root: every screen path in `(v1)/**`
+  and `_componentes/**` starts with `/v1` (root paths both share — `/api/`, `/login`, `/pwa/`,
+  `/manifest.webmanifest`, `/favicon.ico` — are allowed). The v2 never imports `_componentes/` or
+  `(v1)/`. `telas-v1.test.ts` enforces both, plus a v2 counterpart for every v1 screen. The PWA
+  head both layouts render is one piece of code, `lib/pwa/cabeca.ts` and
+  `src/app/_comum/cabeca.tsx`: change it there, never in one layout.
 - **New functionality goes only to the v2.** The v1 gets fixes, not features, and leaves when the v2
   covers everything.
 - **A bridge leaves only when parity is checked**: every action the v1 offers on that screen is

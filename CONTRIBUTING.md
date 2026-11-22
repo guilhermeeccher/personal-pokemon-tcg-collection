@@ -72,12 +72,15 @@ The glossary below is the key. Read it once and the code reads fine.
 | `a guardar` | to put away | Living Dex: a record that arrived in HOME and was not put in its box yet. Column `dex_registro.a_guardar`; the Received screen lists them. |
 | `sessão` | session | Living Dex: a planning session held outside the app with an assistant, read by `pnpm dex:estado` and written back by `pnpm dex:aplicar`. |
 | `preço` | price | A card's LigaPokemon price in BRL, kept with its date. Table `preco_carta_liga`, history in `preco_carta_liga_historico`. |
+| `ponte` | bridge page | Design v2 transition: a root page whose v2 screen does not exist yet. It calls `exigirSessao()` and `irParaV1(...)`, which redirects (307) to the same screen in `/v1`, query intact; `destinoV1` (`lib/dominio/destino-v1.ts`) builds the address. See `docs/design-v2/README.md`. |
 
 Route paths are in Portuguese too. The interface is being rewritten (see
 [`docs/design-v2/`](./docs/design-v2/README.md)), so every screen has two addresses for now: the
 **v1** at `/v1/<path>`, and the root path, which is the **v2** screen once it exists and, until
 then, a bridge that redirects (307) to the same screen in `/v1`, query intact. `/login` and the API
-have no `/v1` copy: they stay at the root.
+have no `/v1` copy: they stay at the root. In the source tree, the v1 screens are under
+`src/app/(v1)/v1/`, the login under `src/app/(v1)/login/`, and the v2 pages and bridges under
+`src/app/(v2)/`; the route groups in parentheses are not part of the URL.
 
 | Path at the root | In the v1 | What it is |
 |---|---|---|
