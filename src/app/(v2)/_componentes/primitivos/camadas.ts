@@ -46,12 +46,31 @@ export const NIVEL_MODAL: Record<NivelCamada, boolean> = {
   balao: false,
 };
 /**
- * O z-index de cada nível, na mesma ordem do peso. Dentro de um nível, a
- * última aberta fica por cima porque o portal dela entra depois no `body`.
- * Acima da casca (trilho 30, abas 40) e abaixo do aviso flutuante (90), que
- * tem de aparecer sobre a janela que o disparou.
+ * A base do z-index de cada nível, na mesma ordem do peso, com folga para a
+ * ordem de abertura entrar como desempate (`zDaCamada`). Acima da casca
+ * (trilho 30, abas 40); o aviso flutuante fica acima de todas
+ * (`Z_AVISO_FLUTUANTE`), porque tem de aparecer sobre a janela que o
+ * disparou.
  */
-export const Z_NIVEL: Record<NivelCamada, number> = { janela: 70, detalhe: 74, confirmacao: 78, balao: 82 };
+export const Z_NIVEL: Record<NivelCamada, number> = {
+  janela: 100_000,
+  detalhe: 200_000,
+  confirmacao: 300_000,
+  balao: 400_000,
+};
+export const Z_AVISO_FLUTUANTE = 500_000;
+
+/**
+ * O z-index de uma camada: o do nível mais a ordem de abertura. O desempate
+ * não pode ficar com a ordem dos portais no `body`: duas janelas montadas no
+ * mesmo commit (uma dentro da outra) entram com a de dentro ANTES da de fora,
+ * e a de fora apareceria por cima de quem recebe o Esc. A ordem é o contador
+ * de aberturas da página; passar de 100.000 aberturas sem recarregar não é um
+ * caso real.
+ */
+export function zDaCamada(nivel: NivelCamada, ordem: number): number {
+  return Z_NIVEL[nivel] + Math.min(Math.max(ordem, 0), 99_999);
+}
 
 export interface CamadaRegistrada {
   id: string;

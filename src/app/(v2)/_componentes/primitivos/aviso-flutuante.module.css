@@ -9,7 +9,7 @@
  */
 .regiao {
   position: fixed;
-  z-index: 90;
+  /* z-index acima de toda camada (`Z_AVISO_FLUTUANTE`), no estilo. */
   left: 0;
   right: 0;
   bottom: calc(var(--v2-topo-abas) + 14px);

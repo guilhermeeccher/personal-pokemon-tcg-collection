@@ -3,11 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   type CamadaRegistrada,
   PESO_NIVEL,
+  Z_AVISO_FLUTUANTE,
   Z_NIVEL,
   camadaDoTopo,
   escolherAlvoDeFoco,
   modalDoTopo,
   precisaTrava,
+  zDaCamada,
 } from "./camadas";
 
 const c = (id: string, nivel: CamadaRegistrada["nivel"], ordem: number, travaRolagem = false): CamadaRegistrada => ({
@@ -51,6 +53,13 @@ describe("nível e sobreposição", () => {
     const porZ = [...niveis].sort((a, b) => Z_NIVEL[a] - Z_NIVEL[b]);
     expect(porZ).toEqual(porPeso);
     expect(new Set(Object.values(Z_NIVEL)).size).toBe(niveis.length);
+  });
+
+  it("no mesmo nível, a aberta depois fica por cima (não a ordem dos portais)", () => {
+    expect(zDaCamada("janela", 8)).toBeGreaterThan(zDaCamada("janela", 7));
+    // A ordem nunca faz um nível passar o de cima, e o aviso fica acima de tudo.
+    expect(zDaCamada("janela", 10_000_000)).toBeLessThan(zDaCamada("detalhe", 0));
+    expect(zDaCamada("balao", 10_000_000)).toBeLessThan(Z_AVISO_FLUTUANTE);
   });
 });
 

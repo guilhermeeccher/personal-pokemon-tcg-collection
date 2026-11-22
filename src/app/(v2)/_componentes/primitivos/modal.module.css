@@ -11,7 +11,7 @@
 .raiz {
   position: fixed;
   inset: 0;
-  /* z-index pelo nível da camada (`Z_NIVEL`), no estilo do elemento. */
+  /* z-index pelo nível e pela ordem de abertura (`zDaCamada`), no estilo. */
   display: grid;
   place-items: center;
   padding: max(28px, var(--v2-seguro-topo)) max(28px, var(--v2-seguro-dir)) max(28px, var(--v2-seguro-base))
@@ -28,8 +28,8 @@
 }
 /* Uma janela por cima de outra não desfoca de novo: o véu de baixo já
    desfocou a página, e dois véus somariam uma superfície ao orçamento de
-   três (no celular: barra de abas, busca e o véu). Os portais entram no
-   `body` na ordem em que abrem, então o de cima é sempre um irmão posterior. */
+   três (no celular: barra de abas, busca e o véu). Basta a segunda janela no
+   `body` perder o desfoque, seja qual for a de cima: um véu desfocado só. */
 .raiz ~ .raiz .veu {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;

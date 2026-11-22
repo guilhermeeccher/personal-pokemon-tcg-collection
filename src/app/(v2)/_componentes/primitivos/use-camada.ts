@@ -52,23 +52,27 @@ type Camada = CamadaRegistrada & { onEsc?: () => void };
 const pilha: Camada[] = [];
 
 /*
- * O último elemento focado fora de qualquer camada (`[data-v2-camada]`). Só
- * serve quando a camada abre com um campo `autoFocus`, que toma o foco antes
- * de a janela saber quem a abriu. Escutado desde o primeiro uso do módulo.
+ * O elemento que tinha o foco ANTES do atual, onde quer que estivesse (numa
+ * janela de baixo, inclusive). Só serve quando a camada abre com um campo
+ * `autoFocus`, que toma o foco antes de a janela saber quem a abriu: o foco
+ * anterior a esse campo é o abridor. Escutado desde o primeiro uso do módulo.
  */
-let ultimoFocoFora: HTMLElement | null = null;
+let focoAtual: HTMLElement | null = null;
+let focoAnterior: HTMLElement | null = null;
 let rastreando = false;
 function rastrearFoco() {
   if (rastreando || typeof document === "undefined") return;
   rastreando = true;
   document.addEventListener("focusin", (e) => {
     const alvo = e.target;
-    if (alvo instanceof HTMLElement && !alvo.closest("[data-v2-camada]")) ultimoFocoFora = alvo;
+    if (!(alvo instanceof HTMLElement) || alvo === focoAtual) return;
+    focoAnterior = focoAtual;
+    focoAtual = alvo;
   });
 }
 
-export function ultimoFocoForaDasCamadas(): HTMLElement | null {
-  return ultimoFocoFora;
+export function focoAntesDoAtual(): HTMLElement | null {
+  return focoAnterior;
 }
 let contador = 0;
 let travaAtiva = false;
@@ -117,7 +121,7 @@ export function useCamada(
     onEsc,
     travaRolagem = NIVEL_MODAL[nivel],
   }: { nivel: NivelCamada; onEsc?: () => void; travaRolagem?: boolean },
-): { ehTopo: () => boolean; ehModalDoTopo: () => boolean } {
+): { ehTopo: () => boolean; ehModalDoTopo: () => boolean; ordem: number } {
   const id = useId();
   // Ordem de ABERTURA, registrada na renderização em que a camada passa a
   // ativa — não no efeito e não na montagem. Na renderização o React passa
@@ -154,7 +158,7 @@ export function useCamada(
 
   const ehTopo = useCallback(() => camadaDoTopo(pilha)?.id === id, [id]);
   const ehModalDoTopo = useCallback(() => modalDoTopo(pilha)?.id === id, [id]);
-  return { ehTopo, ehModalDoTopo };
+  return { ehTopo, ehModalDoTopo, ordem };
 }
 
 /**

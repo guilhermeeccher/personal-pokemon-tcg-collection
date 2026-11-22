@@ -3,6 +3,7 @@
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import estilos from "./aviso-flutuante.module.css";
+import { Z_AVISO_FLUTUANTE } from "./camadas";
 
 export type TomAviso = "neutro" | "sucesso" | "erro";
 
@@ -56,7 +57,13 @@ export function ProvedorAvisos({ children }: { children: ReactNode }) {
   return (
     <ContextoAviso.Provider value={valor}>
       {children}
-      <div className={estilos.regiao} role="status" aria-live="polite" aria-atomic="true">
+      <div
+        className={estilos.regiao}
+        style={{ zIndex: Z_AVISO_FLUTUANTE }}
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {aviso && (
           <div key={aviso.id} className={`${estilos.aviso} ${aviso.tom !== "neutro" ? estilos[aviso.tom] : ""}`}>
             <span className={estilos.ponto} aria-hidden />

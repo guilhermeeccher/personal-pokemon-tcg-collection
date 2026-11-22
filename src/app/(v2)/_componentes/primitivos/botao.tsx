@@ -7,7 +7,7 @@ export type VarianteBotao = "primario" | "secundario" | "fantasma" | "perigo" | 
 
 interface PropsComuns {
   variante?: VarianteBotao;
-  /** 36 px de desenho a partir de 768 px; abaixo, 44 como os outros. */
+  /** Respiro e letra menores; a altura continua 44 px. */
   pequeno?: boolean;
   /** Ocupa a largura do contêiner (rodapé de uma folha no celular). */
   largo?: boolean;

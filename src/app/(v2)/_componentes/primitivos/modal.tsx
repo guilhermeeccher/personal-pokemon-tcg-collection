@@ -16,8 +16,8 @@ import { createPortal } from "react-dom";
 
 import { Botao } from "./botao";
 import estilos from "./modal.module.css";
-import { Z_NIVEL } from "./camadas";
-import { type NivelCamada, type ResolvedorFoco, devolverFoco, ultimoFocoForaDasCamadas, useCamada } from "./use-camada";
+import { zDaCamada } from "./camadas";
+import { type NivelCamada, type ResolvedorFoco, devolverFoco, focoAntesDoAtual, useCamada } from "./use-camada";
 
 const SELETOR_FOCAVEL = [
   "a[href]",
@@ -97,7 +97,7 @@ export function Modal({
   const idTitulo = useId();
   const idDescricao = useId();
 
-  const { ehModalDoTopo } = useCamada(aberto, { nivel, onEsc: onFechar, travaRolagem: true });
+  const { ehModalDoTopo, ordem } = useCamada(aberto, { nivel, onEsc: onFechar, travaRolagem: true });
 
   // Abrir: guarda quem abriu e põe o foco dentro. Fechar (ou desmontar
   // aberta): devolve o foco.
@@ -105,11 +105,11 @@ export function Modal({
     if (!aberto || !montado) return;
     // Um descendente com `autoFocus` já tomou o foco quando este efeito roda
     // (o React foca na montagem, antes do efeito do pai): aí o abridor é o
-    // último foco fora de qualquer camada, que a pilha acompanha.
+    // foco anterior ao dele, que a pilha acompanha.
     const ativo = document.activeElement;
     const dentro = ativo instanceof Node && painel.current?.contains(ativo);
     abridor.current = dentro
-      ? ultimoFocoForaDasCamadas()
+      ? focoAntesDoAtual()
       : ativo instanceof HTMLElement && ativo !== document.body
         ? ativo
         : null;
@@ -157,7 +157,7 @@ export function Modal({
   const estiloPainel = largura ? ({ "--largura-janela": `${largura}px` } as CSSProperties) : undefined;
 
   return createPortal(
-    <div className={estilos.raiz} style={{ zIndex: Z_NIVEL[nivel] }} data-v2-camada="">
+    <div className={estilos.raiz} style={{ zIndex: zDaCamada(nivel, ordem) }} data-v2-camada="">
       <div className={estilos.veu} aria-hidden onClick={fecharPeloVeu ? () => fechar.current() : undefined} />
       <div
         ref={painel}

@@ -98,29 +98,12 @@
   }
 }
 
+/* Pequeno encolhe o respiro e a letra, nunca a altura: o alvo de 44 px vale
+   em toda largura (a partir de 768 px pode ser um iPad em pé), e uma área
+   invisível maior que o desenho comeria os 8 px entre alvos vizinhos. */
 .pequeno {
-  position: relative;
-  min-height: 36px;
-  min-width: 36px;
   padding: 0 14px;
   font-size: 13px;
-}
-/* O desenho tem 36 px a partir de 768 px, o alvo continua com 44 em toda
-   largura (768 px pode ser um iPad em pé): uma área invisível de 4 px em
-   volta. Quem põe dois pequenos lado a lado deixa 8 px entre as áreas, ou
-   seja, 16 px entre os desenhos. */
-.pequeno::after {
-  content: "";
-  position: absolute;
-  inset: -4px;
-}
-@media (max-width: 47.99rem) {
-  .pequeno {
-    min-height: 44px;
-  }
-  .pequeno::after {
-    display: none;
-  }
 }
 
 .icone {
