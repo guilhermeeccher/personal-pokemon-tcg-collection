@@ -322,6 +322,35 @@ export const copia = pgTable(
 
 // --- 3.3 colecao e vaga -------------------------------------------------------
 
+/**
+ * Grupo de coleções (decisão de 2026-11-22): uma pasta de um nível só, onde
+ * o usuário junta e ordena coleções — "Megaevolução" com as coleções de set
+ * da série. Grupo não contém grupo, e uma coleção está em no máximo um.
+ *
+ * `serie_id` liga o grupo, opcionalmente, a uma série do catálogo ocidental
+ * (`carta_catalogo.set_serie_id`, sensível a caixa: `sm` ocidental e `SM`
+ * japonês são séries diferentes). Sem FK: a chave do catálogo é
+ * `(id, idioma)`, e a série não é linha de tabela nenhuma. Grupo sem série é
+ * um grupo livre, por tema; só o ligado oferece "criar as que faltam".
+ *
+ * Excluir um grupo nunca exclui coleção: a aplicação manda as coleções dele
+ * para o fim de "sem grupo" na mesma transação (`excluirGrupoColecao`); o
+ * `on delete set null` de `colecao.grupo_id` é só a rede de segurança.
+ */
+export const grupoColecao = pgTable("grupo_colecao", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  nome: text("nome").notNull(),
+  serieId: text("serie_id"),
+  /** Posição entre os grupos (`lib/dominio/ordem-colecoes.ts`). */
+  ordem: integer("ordem").notNull(),
+  criadoEm: timestamp("criado_em", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  atualizadoEm: timestamp("atualizado_em", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const colecao = pgTable("colecao", {
   id: uuid("id").primaryKey().defaultRandom(),
   nome: text("nome").notNull(),
@@ -335,6 +364,18 @@ export const colecao = pgTable("colecao", {
 
   idiomaExigido: idiomaEnum("idioma_exigido"),
   notas: text("notas"),
+
+  /** Grupo da coleção; nulo = "sem grupo". Ver `grupoColecao`. */
+  grupoId: uuid("grupo_id").references(() => grupoColecao.id, {
+    onDelete: "set null",
+  }),
+  /**
+   * Posição dentro do grupo (ou dentro de "sem grupo"); empate pela mais
+   * nova primeiro. A migração 0034 preencheu as existentes com a ordem que a
+   * lista tinha (mais nova primeiro). Quem ordena é
+   * `lib/dominio/ordem-colecoes.ts`; o SQL só busca.
+   */
+  ordem: integer("ordem").notNull().default(0),
 
   criadoEm: timestamp("criado_em", { withTimezone: true })
     .notNull()

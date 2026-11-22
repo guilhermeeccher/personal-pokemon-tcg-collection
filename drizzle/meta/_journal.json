@@ -239,6 +239,13 @@
       "when": 1794510877148,
       "tag": "0033_precos_candidatas",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1795368943012,
+      "tag": "0034_grupos_e_ordem_de_colecoes",
+      "breakpoints": true
     }
   ]
 }

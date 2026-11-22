@@ -349,6 +349,49 @@ is, so swapping pt for en on a card does not change the card.
 
 ---
 
+## Collection groups and order
+
+Since 2026-11-22 collections can be grouped and ordered (`grupo_colecao`, `colecao.grupo_id`,
+`colecao.ordem`). One level only: a group holds collections, never groups, and a collection is in
+at most one group or in none. Every collection type can be grouped.
+
+- **One ordering source.** `listarColecoes` returns the collections already in display order —
+  groups by `grupo_colecao.ordem`, inside each group by `colecao.ordem`, "no group" last; ties by
+  newest first — through the pure `ordenarColecoes` (`lib/dominio/ordem-colecoes.ts`). The SQL
+  only fetches. The collections screen, the home page, "O que falta" and the overview inherit that
+  order; **do not sort the list again on a screen**. Migration `0034` numbered the existing
+  collections newest first, which was the order before.
+- **Reordering takes the whole list, and it must be exactly the current set**
+  (`conferirNovaOrdem`): a stale list from another tab is refused with 409, never applied in part,
+  and applying renumbers 0..n-1. Order changes by up/down buttons, never drag (it fights page
+  scroll on a phone), as with the Dex task steps.
+- **Deleting a group never deletes a collection.** Its collections go to the end of "no group", in
+  the order they had, in the same transaction; `on delete set null` is only the safety net.
+- **Every write that touches order runs under one `pg_advisory_xact_lock`**
+  (`travarOrganizacaoColecoes`): creating a collection (it goes to the end of its section),
+  groups, reordering, moving between groups and the two group batch actions.
+- **A group may be linked to one Western catalog series** (`serie_id`, a `set_serie_id`, no FK).
+  Western means pt/en: the Japanese series is another id (`SM` against `sm`), stays out, and the
+  comparison is **case-sensitive, never normalized**. Only a linked group offers the two batch
+  actions below (`lib/dominio/grupos-colecao.ts`, `lib/db/grupos-colecao.ts`).
+- **"Create missing collections" goes through the single creation path.** Each set becomes a
+  one-set Set collection resolved by `resolverCriacaoColecao` and written by
+  `inserirColecaoComVagas`, exactly as `POST /api/colecoes` does (the recipe read card by card,
+  rule 4, the no-official-numbering case) — do not write a second resolution. It is all or
+  nothing in one transaction, under the lock, and the preview is re-read after the lock: a set
+  that got a collection in another tab refuses the whole batch with 409. "Already exists" means a
+  Set collection has the set in its recipe (`parametro.sets`); a collection joining several sets
+  counts for all of them. Created collections use catalog `pt` (the per-card pt→en fallback covers
+  untranslated sets), no secrets, no required language; default name `AAAA - SIGLA - Nome`.
+- **Promo and energy sets come unchecked, decided from data, never from a list of ids**: promo is
+  `set_qtd_oficial = 0` (like `mep`); energy is a set whose every active pt/en card is
+  Energy/Energia (like `mee`). They still show in the preview.
+- **"Bring the existing ones"** offers the Set collections with at least one set of the series in
+  the recipe that are not in this group; only those in no group come checked — taking one out of
+  another group is the user's choice. An id outside that list refuses the whole request.
+
+---
+
 ## LigaPokemon price collector — hard rules
 
 The source is **LigaPokemon**, read through the site's public search (`lib/liga/cliente.ts`).

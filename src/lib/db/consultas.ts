@@ -13,7 +13,7 @@ import { valoresPorCartaCardmarket } from "./precos-cardmarket";
 import { valoresPorCarta } from "./precos-liga";
 import { fonteDePreco } from "@/lib/dominio/fonte-preco";
 import { ordenarJoias } from "@/lib/dominio/precos-cartas-especiais";
-import { cartaCatalogo, colecao, copia, imagemLocal, melhoriaDescartada, vaga } from "./schema";
+import { cartaCatalogo, colecao, copia, grupoColecao, imagemLocal, melhoriaDescartada, vaga } from "./schema";
 import type { Condicao, Idioma, VarianteCopia } from "@/lib/dominio/enums";
 import { compararLocalId } from "@/lib/dominio/ordenacao";
 import { type Recusa, recusa } from "@/lib/dominio/recusa";
@@ -27,8 +27,11 @@ import {
 } from "@/lib/dominio/chave-vaga-set";
 import {
   avisosDaReceita,
+  resolverChavesVagas,
+  type AvisosDaReceita,
   type EntradaSetDaReceita,
 } from "@/lib/dominio/vagas-colecao";
+import { ordenarColecoes, proximaOrdem } from "@/lib/dominio/ordem-colecoes";
 import {
   contagensDoSet,
   escolherLinhaPorCarta,
@@ -313,7 +316,7 @@ const PRIORIDADE_IDIOMA_CATALOGO: readonly Idioma[] = ["pt", "en", "jp"];
  * todo set sincronizado tem ao menos a linha `en`.
  */
 export async function listarSetsParaCadastro(
-  db: Database,
+  db: Database | Transacao,
 ): Promise<SetParaCadastro[]> {
   const linhas = await db
     .select({
@@ -1742,36 +1745,51 @@ export interface ColecaoComProgresso {
   avisoCatalogoIncompleto?: AvisoCatalogoIncompleto;
   /** Só presente em coleção de set sem numeração oficial no upstream (ex.: `mep`). */
   avisoSemNumeracaoOficial?: AvisoSemNumeracaoOficial;
+  /** Grupo da coleção; `null` = "sem grupo". */
+  grupoId: string | null;
+  /** Posição dentro do grupo (ou de "sem grupo"). */
+  ordem: number;
 }
 
 /**
- * Lista todas as coleções com progresso (vagas totais e preenchidas).
+ * Lista todas as coleções com progresso (vagas totais e preenchidas), **já
+ * na ordem de exibição** (`ordenarColecoes`): grupos pela ordem deles,
+ * coleções pela ordem dentro do grupo, "sem grupo" por último. É a fonte
+ * única da ordem — a tela de coleções, o Início, "O que falta" e a visão
+ * geral leem daqui e não ordenam de novo. O SQL só busca.
+ *
  * Para coleções de set, anexa `avisoCatalogoIncompleto` e/ou
  * `avisoSemNumeracaoOficial` quando aplicável — omitidos por completo
  * quando o set está completo e com numeração oficial válida (nunca muda
  * o denominador de uma coleção normal, ex.: `sv03.5`).
  */
 export async function listarColecoes(db: Database): Promise<ColecaoComProgresso[]> {
-  const linhas = await db
-    .select({
-      id: colecao.id,
-      nome: colecao.nome,
-      tipo: colecao.tipo,
-      parametro: colecao.parametro,
-      idiomaExigido: colecao.idiomaExigido,
-      notas: colecao.notas,
-      criadoEm: colecao.criadoEm,
-      atualizadoEm: colecao.atualizadoEm,
-      totalVagas: sql<number>`count(${vaga.id})::int`,
-      vagasPreenchidas: sql<number>`count(${vaga.copiaId})::int`,
-    })
-    .from(colecao)
-    .leftJoin(vaga, eq(vaga.colecaoId, colecao.id))
-    .groupBy(colecao.id)
-    .orderBy(desc(colecao.criadoEm));
+  const [linhas, grupos] = await Promise.all([
+    db
+      .select({
+        id: colecao.id,
+        nome: colecao.nome,
+        tipo: colecao.tipo,
+        parametro: colecao.parametro,
+        idiomaExigido: colecao.idiomaExigido,
+        notas: colecao.notas,
+        criadoEm: colecao.criadoEm,
+        atualizadoEm: colecao.atualizadoEm,
+        grupoId: colecao.grupoId,
+        ordem: colecao.ordem,
+        totalVagas: sql<number>`count(${vaga.id})::int`,
+        vagasPreenchidas: sql<number>`count(${vaga.copiaId})::int`,
+      })
+      .from(colecao)
+      .leftJoin(vaga, eq(vaga.colecaoId, colecao.id))
+      .groupBy(colecao.id),
+    db
+      .select({ id: grupoColecao.id, ordem: grupoColecao.ordem, criadoEm: grupoColecao.criadoEm })
+      .from(grupoColecao),
+  ]);
 
   return Promise.all(
-    linhas.map(async (linha) => {
+    ordenarColecoes(linhas, grupos).map(async (linha) => {
       const avisos = await obterAvisosDeSet(db, linha.tipo, linha.parametro);
       return {
         ...linha,
@@ -1791,34 +1809,151 @@ export interface DadosCriacaoColecao extends ColecaoCriadaValida {
   chaves: string[];
 }
 
+export type ResolucaoCriacaoColecao =
+  | ({ ok: true; chaves: string[] } & AvisosDaReceita)
+  | { ok: false; motivo: Recusa };
+
+/**
+ * As vagas de uma coleção nova, antes de gravar: o único caminho de
+ * resolução da criação, usado por `POST /api/colecoes` e pela criação em
+ * lote de um grupo (`criarFaltantesDoGrupo`) — as duas têm de dar a mesma
+ * coleção para o mesmo set.
+ *
+ * Para `tipo: "set"`, resolve as chaves de vaga a partir das cartas reais
+ * de cada set da receita no catálogo (nunca de um range gerado) —
+ * `local_id` ordenado de forma natural, cortado em
+ * `set_qtd_oficial`/`set_qtd_total` conforme `incluirSecretas` (regra 4),
+ * qualificado pelo set (`chave-vaga-set.ts`). Os avisos só existem no tipo
+ * "set": o catálogo local pode não conhecer o set inteiro (achado do
+ * coordenador: `mfb` tem 34 de 48 cartas oficiais), e um set sem numeração
+ * oficial no upstream (`mep`, `set_qtd_oficial = 0`) usa `qtdTotal` como
+ * universo (`numeracao-oficial-set.ts`) em vez de cortar em 0 vagas. Aviso
+ * nunca bloqueia a criação; só impede a coleção de fingir estar completa
+ * (regra 6 do AGENTS.md).
+ */
+export async function resolverCriacaoColecao(
+  db: Database | Transacao,
+  colecaoNova: ColecaoCriadaValida,
+): Promise<ResolucaoCriacaoColecao> {
+  if (colecaoNova.tipo === "pokedex") {
+    const parametro = colecaoNova.parametro as ParametroPokedex;
+    return { ok: true, chaves: resolverChavesVagas({ tipo: "pokedex", parametro }), ...SEM_AVISOS };
+  }
+  if (colecaoNova.tipo === "customizada") {
+    return { ok: true, chaves: resolverChavesVagas({ tipo: "customizada" }), ...SEM_AVISOS };
+  }
+  const parametroSet = colecaoNova.parametro as ParametroSet;
+  // Cada set da receita, carta a carta (`lerReceitaNoCatalogo`). Um set
+  // que o catálogo não tem recusa a criação inteira: juntar sets e
+  // descobrir depois que um deles veio vazio seria a coleção mentindo.
+  const { sets, faltando } = await lerReceitaNoCatalogo(db, parametroSet);
+  if (faltando.length > 0) {
+    return {
+      ok: false,
+      motivo: recusa("setNaoEncontradoNoCatalogoEmIdioma", {
+        setId: faltando.join(", "),
+        idioma: parametroSet.idiomaCatalogo,
+      }),
+    };
+  }
+  const chaves = resolverChavesVagas({
+    tipo: "set",
+    sets,
+    incluirSecretas: parametroSet.incluirSecretas,
+  });
+  // Nunca cria coleção vazia em silêncio (regra 6 do AGENTS.md): só
+  // dispara se nenhum set da receita tem carta utilizável.
+  if (chaves.length === 0) {
+    return {
+      ok: false,
+      motivo: recusa("setSemCartaUtilizavel", {
+        setId: parametroSet.sets.join(", "),
+        idioma: parametroSet.idiomaCatalogo,
+      }),
+    };
+  }
+  return { ok: true, chaves, ...avisosDaReceita(sets, parametroSet.incluirSecretas) };
+}
+
+/**
+ * Chave do `pg_advisory_xact_lock` de quem mexe na organização das coleções:
+ * criar coleção (a posição no fim da seção), grupos, ordem, mover entre
+ * grupos e as ações em lote de um grupo. Uma trava só para todas: cada uma
+ * lê uma seção e grava posições nela, e duas abas intercaladas perderiam ou
+ * duplicariam posição; na criação em lote, é também o que impede duas abas de
+ * criarem a coleção do mesmo set. Número arbitrário, único no app.
+ */
+const TRAVA_ORGANIZACAO_COLECOES = 7_310_004_005;
+
+export async function travarOrganizacaoColecoes(tx: Transacao): Promise<void> {
+  await tx.execute(sql`select pg_advisory_xact_lock(${TRAVA_ORGANIZACAO_COLECOES}::bigint)`);
+}
+
+/** A posição de quem entra no fim de uma seção (`grupoId` nulo = "sem grupo"). */
+export async function proximaOrdemNaSecao(tx: Transacao, grupoId: string | null): Promise<number> {
+  const linhas = await tx
+    .select({ ordem: colecao.ordem })
+    .from(colecao)
+    .where(grupoId === null ? isNull(colecao.grupoId) : eq(colecao.grupoId, grupoId));
+  return proximaOrdem(linhas.map((l) => l.ordem));
+}
+
+/**
+ * Grava uma coleção e as vagas dela dentro de uma transação aberta por quem
+ * chama, na posição dada. Sem trava nem conferência: é o miolo comum de
+ * `criarColecaoComVagas` e da criação em lote de um grupo.
+ */
+export async function inserirColecaoComVagas(
+  tx: Transacao,
+  dados: DadosCriacaoColecao,
+  posicao: { grupoId: string | null; ordem: number },
+): Promise<{ id: string }> {
+  const [linha] = await tx
+    .insert(colecao)
+    .values({
+      nome: dados.nome,
+      tipo: dados.tipo,
+      parametro: dados.parametro,
+      idiomaExigido: dados.idiomaExigido,
+      notas: dados.notas,
+      grupoId: posicao.grupoId,
+      ordem: posicao.ordem,
+    })
+    .returning({ id: colecao.id });
+
+  if (dados.chaves.length > 0) {
+    await tx.insert(vaga).values(
+      dados.chaves.map((chave) => ({ colecaoId: linha.id, chave })),
+    );
+  }
+
+  return { id: linha.id };
+}
+
 /**
  * Cria a coleção e materializa as vagas na mesma transação (critério de
  * aceite da Fase 2): ou a coleção nasce com todas as vagas, ou nada é
- * gravado.
+ * gravado. Entra no fim do grupo pedido (ou de "sem grupo"); um grupo que
+ * não existe recusa antes de gravar.
  */
 export async function criarColecaoComVagas(
   db: Database,
   dados: DadosCriacaoColecao,
-): Promise<{ id: string }> {
+  grupoId: string | null = null,
+): Promise<{ ok: true; id: string } | { ok: false; motivo: "grupoNaoEncontrado" }> {
   return db.transaction(async (tx) => {
-    const [linha] = await tx
-      .insert(colecao)
-      .values({
-        nome: dados.nome,
-        tipo: dados.tipo,
-        parametro: dados.parametro,
-        idiomaExigido: dados.idiomaExigido,
-        notas: dados.notas,
-      })
-      .returning({ id: colecao.id });
-
-    if (dados.chaves.length > 0) {
-      await tx.insert(vaga).values(
-        dados.chaves.map((chave) => ({ colecaoId: linha.id, chave })),
-      );
+    await travarOrganizacaoColecoes(tx);
+    if (grupoId !== null) {
+      const [grupo] = await tx
+        .select({ id: grupoColecao.id })
+        .from(grupoColecao)
+        .where(eq(grupoColecao.id, grupoId));
+      // Nada foi gravado até aqui: a recusa sai por `return`.
+      if (!grupo) return { ok: false as const, motivo: "grupoNaoEncontrado" as const };
     }
-
-    return { id: linha.id };
+    const ordem = await proximaOrdemNaSecao(tx, grupoId);
+    const { id } = await inserirColecaoComVagas(tx, dados, { grupoId, ordem });
+    return { ok: true as const, id };
   });
 }
 

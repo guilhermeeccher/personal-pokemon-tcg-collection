@@ -65,6 +65,9 @@ It is not meant for a public, multi-user site, or for sales and trading control.
   allocation and **the list of what is missing**, the main output of the system. A set collection
   can join several sets (an expansion and its classic collection, say), and once created it is
   yours to edit: add a single card from any set, or take one out.
+- **Groups and order** for your collections: put them in groups ("Mega Evolution", say) and order
+  groups and collections with up/down buttons; the same order shows everywhere. A group linked to a
+  series can create, in one go, a collection for every set of the series you do not have yet.
 - **Duplicates**: what is left over for trading, with total, allocated and free per card.
 - **Overview**: a showcase of your cards, ordered by the price stored for them (the LigaPokemon
   average, or the Cardmarket trend if you chose [that source](#optional-special-card-prices-from-cardmarket);

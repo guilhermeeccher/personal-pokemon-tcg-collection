@@ -15,6 +15,11 @@ import type { Divisao } from "./divisoes-colecao";
 import type { ProgressoRegiao } from "./progresso-regiao";
 import type { TipoEnergia } from "./tipo-energia";
 import type { RegraTrofeuHome } from "./dex-trofeus";
+import type {
+  ColecaoExistenteParaGrupo,
+  SerieParaGrupo,
+  SetFaltante,
+} from "./grupos-colecao";
 
 export interface FlagsVarianteDTO {
   varianteNormalDisponivel: boolean;
@@ -156,6 +161,67 @@ export interface ColecaoListaDTO {
   avisoCatalogoIncompleto?: AvisoCatalogoIncompleto;
   /** Só presente em coleção de set sem numeração oficial no upstream (ex.: `mep`). */
   avisoSemNumeracaoOficial?: AvisoSemNumeracaoOficial;
+  /** Grupo da coleção; `null` = "sem grupo". */
+  grupoId: string | null;
+  /** Posição dentro do grupo (ou de "sem grupo"). A lista já chega ordenada (`ordem-colecoes.ts`). */
+  ordem: number;
+}
+
+/**
+ * Um grupo de coleções (decisão de 2026-11-22). `serieRotulo` é o nome da
+ * série como o seletor de expansão o mostra; o próprio id quando a série
+ * saiu do catálogo; `null` sem série.
+ */
+export interface GrupoColecaoDTO {
+  id: string;
+  nome: string;
+  serieId: string | null;
+  serieRotulo: string | null;
+  ordem: number;
+}
+
+/**
+ * `GET /api/colecoes`. `itens` vem na ordem de exibição — grupos pela ordem
+ * deles, coleções pela ordem dentro do grupo, "sem grupo" por último —, e
+ * `grupos` na ordem dos grupos. As seções saem de `secoesDeColecoes`
+ * (`ordem-colecoes.ts`).
+ */
+export interface ListaColecoesDTO {
+  itens: ColecaoListaDTO[];
+  grupos: GrupoColecaoDTO[];
+}
+
+/** `GET /api/grupos-colecao/series` — as séries ocidentais que um grupo pode ligar, na ordem do seletor. */
+export interface SeriesParaGrupoDTO {
+  series: SerieParaGrupo[];
+}
+
+/** Um set na prévia de "Criar coleções que faltam" (`montarFaltantes`). */
+export type SetFaltanteDTO = SetFaltante;
+
+/** `GET /api/grupos-colecao/:id/faltantes` — sets da série em ordem de lançamento. */
+export interface FaltantesDoGrupoDTO {
+  serieId: string;
+  serieRotulo: string;
+  sets: SetFaltanteDTO[];
+}
+
+/** `POST /api/grupos-colecao/:id/faltantes` — corpo; `nome` é o editado na prévia. */
+export interface CriarFaltantesDTO {
+  sets: { setId: string; nome: string }[];
+}
+
+/** `POST /api/grupos-colecao/:id/faltantes` — 201, as coleções na ordem em que entraram no grupo. */
+export interface FaltantesCriadasDTO {
+  criadas: { id: string; nome: string }[];
+}
+
+/** Uma coleção na prévia de "Trazer as que já existem" (`selecionarExistentes`). */
+export type ColecaoExistenteParaGrupoDTO = ColecaoExistenteParaGrupo;
+
+/** `GET /api/grupos-colecao/:id/existentes`, na ordem da lista. */
+export interface ExistentesDoGrupoDTO {
+  colecoes: ColecaoExistenteParaGrupoDTO[];
 }
 
 export interface VagaDaColecaoDTO {

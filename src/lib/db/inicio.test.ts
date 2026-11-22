@@ -41,6 +41,8 @@ const colecao = (id: string, preenchidas: number): ColecaoNaVitrine => ({
   atualizadoEm: new Date("2026-10-01T00:00:00Z"),
   totalVagas: 100,
   vagasPreenchidas: preenchidas,
+  grupoId: null,
+  ordem: 0,
   divisoes: [regiao(id, 100, preenchidas)],
   capa: null,
   logos: [],

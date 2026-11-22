@@ -971,7 +971,18 @@
     "dexTarefaFechada": "The task has to be open, in an active plan, to change its steps.",
     "dexOrdemEtapasInvalida": "The steps changed somewhere else. The list was refreshed; try again.",
     "semCandidatasParaPreco": "No empty slot of this collection has a catalog card to look up a price for.",
-    "precosCandidatasJaConsultados": "All {total} cards of this collection had their price looked up in the last {dias} days. Tick “look up again” to redo it."
+    "precosCandidatasJaConsultados": "All {total} cards of this collection had their price looked up in the last {dias} days. Tick “look up again” to redo it.",
+    "grupoColecaoNaoEncontrado": "Group not found.",
+    "ordemDeColecoesDesatualizada": "The list changed in another tab. Reload the page and try again.",
+    "grupoSemSerie": "This group is not linked to a series.",
+    "serieForaDoCatalogoOcidental": "Series {serieId} is not in the Portuguese or English catalog.",
+    "nomeDoGrupoInvalido": "The group name must be 1 to {maximo} characters long.",
+    "quantidadeDeSetsParaCriarInvalida": "Choose 1 to {maximo} sets to create.",
+    "setRepetidoNoPedido": "Set {setId} was sent twice.",
+    "nomeDaColecaoVazio": "Give the collection for set {setId} a name.",
+    "setForaDaSerieDoGrupo": "Set {setId} is not in this group's series.",
+    "setJaTemColecao": "Set {setId} already has the collection \"{colecao}\". Reload the preview; nothing was created.",
+    "colecaoForaDasExistentesDoGrupo": "The collection list changed in another tab. Reload the preview; nothing was moved."
   },
   "dex": {
     "categoria": {

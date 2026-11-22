@@ -971,7 +971,18 @@
     "dexTarefaFechada": "A tarefa precisa estar aberta, num plano ativo, para mudar as etapas.",
     "dexOrdemEtapasInvalida": "As etapas mudaram em outro lugar. A lista foi atualizada; tente de novo.",
     "semCandidatasParaPreco": "Nenhuma vaga vazia desta coleção tem carta no catálogo para buscar preço.",
-    "precosCandidatasJaConsultados": "As {total} cartas desta coleção já tiveram o preço buscado nos últimos {dias} dias. Marque “buscar de novo” para refazer."
+    "precosCandidatasJaConsultados": "As {total} cartas desta coleção já tiveram o preço buscado nos últimos {dias} dias. Marque “buscar de novo” para refazer.",
+    "grupoColecaoNaoEncontrado": "Grupo não encontrado.",
+    "ordemDeColecoesDesatualizada": "A lista mudou em outra aba. Recarregue a página e tente de novo.",
+    "grupoSemSerie": "Este grupo não está ligado a uma série.",
+    "serieForaDoCatalogoOcidental": "A série {serieId} não existe no catálogo em português ou inglês.",
+    "nomeDoGrupoInvalido": "O nome do grupo precisa ter de 1 a {maximo} caracteres.",
+    "quantidadeDeSetsParaCriarInvalida": "Escolha de 1 a {maximo} sets para criar.",
+    "setRepetidoNoPedido": "O set {setId} veio duas vezes.",
+    "nomeDaColecaoVazio": "Dê um nome à coleção do set {setId}.",
+    "setForaDaSerieDoGrupo": "O set {setId} não é da série deste grupo.",
+    "setJaTemColecao": "O set {setId} já tem a coleção \"{colecao}\". Recarregue a prévia; nada foi criado.",
+    "colecaoForaDasExistentesDoGrupo": "A lista de coleções mudou em outra aba. Recarregue a prévia; nada foi movido."
   },
   "dex": {
     "categoria": {
