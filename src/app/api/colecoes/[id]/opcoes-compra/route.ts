@@ -2,13 +2,10 @@ import { NextResponse } from "next/server";
 
 import { comAcesso, leituraPodeGravar } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
-import { nomesDosSets, obterColecaoPorId } from "@/lib/db/consultas";
+import { obterColecaoPorId } from "@/lib/db/consultas";
 import {
   criarVarredura,
   encerrarVarredurasMortas,
-  listarOpcoesMaisRecentesPorVaga,
-  listarVagasVaziasPokedex,
-  listarVagasVaziasSet,
   obterUltimaVarredura,
   ultimaConsultaPorChave,
   varreduraViva,
@@ -30,19 +27,15 @@ import { ritmoLigaPadrao } from "@/lib/liga/ritmo";
 import {
   FILTROS_PADRAO,
   FILTROS_PADRAO_SET,
-  montarOpcoesPorVaga,
   type Filtros,
   type Ordenacao,
-  type VagaParaAgrupar,
 } from "@/lib/dominio/liga-opcoes";
 import { listarEscolhas } from "@/lib/db/escolhas";
-import { compararChavesVaga, lerChaveVagaSet } from "@/lib/dominio/chave-vaga-set";
-import type { ParametroSet } from "@/lib/dominio/parametro-colecao";
-import { listarSemEstoqueVigente } from "@/lib/db/sem-estoque";
-import { chaveSemEstoque } from "@/lib/dominio/sem-estoque-liga";
-import { totalDaLista } from "@/lib/dominio/exportacao-lista-compra";
-import { identidadeDaCarta } from "@/lib/dominio/identidade-carta";
-import { abasDaLista, linhaDaEscolha, precosDasEscolhas } from "@/lib/liga/lista-compra";
+import {
+  opcoesDaVarreduraPorVaga,
+  opcoesDasCandidatasPorVaga,
+  resumoDaListaDeCompra,
+} from "@/lib/liga/opcoes-da-colecao";
 import { ehUuid } from "@/lib/dominio/uuid";
 import { executarVarredura, vagasParaVarrer } from "@/lib/liga/varredura";
 import { fonteDePreco } from "@/lib/dominio/fonte-preco";
@@ -50,7 +43,6 @@ import type { EscolhaSalva } from "@/lib/db/escolhas";
 import {
   encerrarRodadasDeCandidatasMortas,
   listarCandidatasDaColecao,
-  precosDasCandidatas,
   ultimaRodadaDeCandidatas,
 } from "@/lib/db/candidatas-compra";
 import {
@@ -160,19 +152,6 @@ function validarFiltros(
           : null,
     },
   };
-}
-
-/** As vagas vazias de hoje, no formato que o agrupamento da tela espera. */
-async function vagasParaAgrupar(
-  colecaoId: string,
-  tipo: TipoComVaga,
-): Promise<VagaParaAgrupar[]> {
-  if (tipo === "pokedex") {
-    const vagas = await listarVagasVaziasPokedex(db, colecaoId);
-    return vagas.map((v) => ({ chave: v.chave, rotulo: v.especie, dex: v.dex }));
-  }
-  const vagas = await listarVagasVaziasSet(db, colecaoId);
-  return vagas.map((v) => ({ chave: v.chave, rotulo: v.nome, dex: null, setNome: v.setNome }));
 }
 
 export const POST = comAcesso(async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -294,21 +273,6 @@ export const POST = comAcesso(async function POST(req: Request, { params }: { pa
   );
 });
 
-function vagasComVariasEscolhas(
-  escolhas: ReadonlyArray<{ chave: string; especie: string | null; nome: string }>,
-): Array<{ chave: string; rotulo: string; quantidade: number }> {
-  const porVaga = new Map<string, { rotulo: string; quantidade: number }>();
-  for (const e of escolhas) {
-    const atual = porVaga.get(e.chave);
-    if (atual) atual.quantidade++;
-    else porVaga.set(e.chave, { rotulo: e.especie ?? e.nome, quantidade: 1 });
-  }
-  return [...porVaga]
-    .filter(([, v]) => v.quantidade > 1)
-    .map(([chave, v]) => ({ chave, ...v }))
-    .sort((a, b) => compararChavesVaga()(a.chave, b.chave));
-}
-
 export const GET = comAcesso(async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!ehUuid(id)) {
@@ -348,48 +312,15 @@ export const GET = comAcesso(async function GET(req: Request, { params }: { para
   // o bloco para colar estar pronto quando ele abre a tela, sem rodar nada
   // (decisão de 2026-09-17).
   const escolhas = await listarEscolhas(db, id);
-  // `vagaVazia` é o filtro que faz a lista encolher sozinha conforme o
-  // usuário cadastra as cartas. A escolha de vaga já preenchida não some
-  // do banco — fica guardada, e volta se a cópia sair da vaga.
-  const daLista = escolhas.filter((e) => e.vagaVazia);
-  // O preço é o da fonte da instalação, nunca as duas somadas
-  // (`precosDasEscolhas`) — a mesma função da exportação.
+  // A lista para colar, com o preço na fonte da instalação — a mesma
+  // montagem da leitura do "o que falta" (`resumoDaListaDeCompra`).
   const fonte = fonteDePreco();
-  const precoDe = await precosDasEscolhas(db, daLista, fonte);
-  const linhas = daLista.map((e) => linhaDaEscolha(e, precoDe(e)));
-
-  // Coleção que junta sets: uma aba por set, com o nome dele no rótulo.
-  const ordemSets = colecao.tipo === "set" ? ((colecao.parametro as ParametroSet).sets ?? []) : [];
-  const nomesSets =
-    colecao.tipo === "set"
-      ? await nomesDosSets(
-          db,
-          [...new Set(linhas.flatMap((l) => lerChaveVagaSet(l.chave)?.setId ?? []))],
-          (colecao.parametro as ParametroSet).idiomaCatalogo,
-        )
-      : new Map<string, string>();
-
-  const precos = daLista.map((e) => precoDe(e).em).filter((d): d is Date => d !== null);
-  const resumoDaLista = {
+  const { resumo: resumoDaLista } = await resumoDaListaDeCompra(
+    db,
+    { tipo: colecao.tipo, parametro: colecao.parametro },
+    escolhas,
     fonte,
-    selecionadas: daLista.length,
-    guardadas: escolhas.length - daLista.length,
-    // Em abas de até 110 cartas, o limite da Compra por Lista deles — por
-    // região na Pokédex. Ver `dividirListaCompra`.
-    abasLiga: abasDaLista(linhas, colecao.tipo, ordemSets, nomesSets),
-    // Vagas com mais de uma carta na string. Várias por vaga é permitido
-    // (decisão de 2026-09-17), então é aviso, não recusa: na Pokédex é quase
-    // sempre sobra de triagem, e cada linha a mais é uma carta a mais comprada.
-    multiplas: vagasComVariasEscolhas(daLista),
-    total: totalDaLista(linhas),
-    // Preço sem data é armadilha: a carta que sumiu da varredura seguinte
-    // continua aqui com o preço de antes, e a tela precisa poder dizer isso.
-    semPreco: daLista.filter((e) => precoDe(e).preco === null).length,
-    precoMaisAntigo:
-      precos.length === 0
-        ? null
-        : new Date(Math.min(...precos.map((d) => d.getTime()))).toISOString(),
-  };
+  );
 
   if (fonte === "cardmarket") {
     return NextResponse.json(
@@ -419,59 +350,16 @@ export const GET = comAcesso(async function GET(req: Request, { params }: { para
     return NextResponse.json({ ...vazio, ...resumoDaLista });
   }
 
-  // Vaga a vaga, a consulta mais nova — não só a última rodada, que depois do
-  // filtro de frescor pode ter consultado poucas vagas.
-  const opcoes = await listarOpcoesMaisRecentesPorVaga(db, id);
-
-  // A marcação de cada opção é DERIVADA da escolha, não uma coluna dela: a
-  // verdade mora em `escolha_compra`, e a linha da varredura é descartável.
-  // É isso que faz a varredura nova já nascer com a triagem no lugar.
-  const escolhidas = new Set(escolhas.map((e) => `${e.chave}|${e.identidade}`));
-  const opcoesComMarcacao = opcoes.map((o) => ({
-    ...o,
-    // `edicaoId` é o `edid` deles — o nome muda entre a linha da busca e a
-    // coluna do banco, e a identidade precisa do valor, não do rótulo.
-    selecionada: escolhidas.has(
-      `${o.chave}|${identidadeDaCarta({
-        edid: o.edicaoId,
-        edicaoSigla: o.edicaoSigla,
-        numero: o.numero,
-      })}`,
-    ),
-  }));
-
-  // A lista de vagas vem das vagas vazias de HOJE, não das opções gravadas.
-  //
-  // Derivá-la das opções fazia sumir justamente a vaga mais informativa: a que
-  // não achou nenhuma carta dentro do teto. Na primeira varredura completa
-  // foram 6 de 161, e a tela dizia "155 de 155" — escondendo a pergunta certa,
-  // que é "quais Pokémon não têm carta comprável por esse preço?". Regra 6:
-  // vaga vazia é saída de primeira classe.
-  //
-  // Efeito colateral desejado: vaga que o usuário preencheu depois da
-  // varredura sai da lista sozinha, em vez de oferecer compra do que já é
-  // dele.
-  // A carta que a Liga devolveu como "sem estoque" deixa de ser oferecida
-  // (decisão de 2026-09-24, `lib/dominio/sem-estoque-liga.ts`). A varredura a
-  // acharia de novo, com preço de outra condição — o filtro é aqui, na
-  // leitura, e não na gravação, para que o registro vencido a traga de volta
-  // sem varredura nova.
-  //
-  // **A já selecionada fica**, com a marca: esconder uma carta que está na
-  // string tiraria do usuário o único jeito de desmarcá-la pela grade.
-  const semEstoque = new Set((await listarSemEstoqueVigente(db)).map((r) => r.chave));
-  const escondidasPorVaga = new Map<string, number>();
-  const oferecidas = opcoesComMarcacao
-    .map((o) => ({ ...o, semEstoque: semEstoque.has(chaveSemEstoque(o)) }))
-    .filter((o) => {
-      if (!o.semEstoque || o.selecionada) return true;
-      escondidasPorVaga.set(o.chave, (escondidasPorVaga.get(o.chave) ?? 0) + 1);
-      return false;
-    });
-
-  const vagasDaRodada = await vagasParaAgrupar(id, colecao.tipo);
-  const agrupadas = montarOpcoesPorVaga(oferecidas, vagasDaRodada, varredura.filtros).map(
-    (v) => ({ ...v, semEstoque: escondidasPorVaga.get(v.chave) ?? 0 }),
+  // As opções salvas, vaga a vaga, marcadas pela triagem e sem as sem
+  // estoque — salvo a marcada (`opcoesDaVarreduraPorVaga`, que explica o
+  // porquê de cada passo). A lista de vagas é a das vagas vazias de HOJE
+  // (regra 6), não a das opções gravadas.
+  const { vagas: agrupadas, vagasDaRodada } = await opcoesDaVarreduraPorVaga(
+    db,
+    id,
+    colecao.tipo,
+    escolhas,
+    varredura.filtros,
   );
 
   const emAndamento = varredura.concluidaEm === null;
@@ -616,104 +504,15 @@ async function respostaDasCandidatas(
     ultimaRodadaDeCandidatas(db, colecao.id),
   ]);
 
-  const escolhasPorVaga = new Map<string, EscolhaSalva[]>();
-  for (const e of escolhas) {
-    if (!e.vagaVazia) continue;
-    const lista = escolhasPorVaga.get(e.chave);
-    if (lista) lista.push(e);
-    else escolhasPorVaga.set(e.chave, [e]);
-  }
-
-  const cartasCandidatas = new Set(vagas.flatMap((v) => v.candidatas.map((c) => c.cartaId)));
-  const precos = await precosDasCandidatas(db, [
-    ...cartasCandidatas,
-    ...escolhas.flatMap((e) => (e.cartaId === null ? [] : [e.cartaId])),
-  ]);
-
-  // Enxuto de propósito: uma Pokédex manda milhares de candidatas, e a tela
-  // relê tudo a cada 10 s enquanto a busca anda. Vai só o que ela lê — a
-  // data da pergunta só quando não há preço (para dizer "o Cardmarket não
-  // tem"), a tendência só quando ela foi trocada pela média de 30 dias.
-  const precoDaCarta = (cartaId: string | null) => {
-    const p = cartaId === null ? undefined : precos.get(cartaId);
-    if (p === undefined) return { preco: null };
-    if (p.valor === null) return { preco: null, consultadaEm: p.consultadoEm.toISOString() };
-    return {
-      preco: p.valor,
-      cardmarket: {
-        valorEur: p.valorEur,
-        criterioValor: p.criterioValor,
-        ...(p.criterioValor === "media30" ? { tendenciaEur: p.tendenciaEur } : {}),
-        cotacao: p.cotacao,
-        cotacaoData: p.cotacaoData,
-      },
-    };
-  };
-
-  // Mesma regra da varredura: a carta que a Liga devolveu como sem estoque
-  // some da grade, salvo se estiver marcada.
-  const semEstoque = new Set((await listarSemEstoqueVigente(db)).map((r) => r.chave));
-
-  const vagasDaTela = vagas.map((v) => {
-    const daVaga = escolhasPorVaga.get(v.chave) ?? [];
-    const explicadas = new Set<string>();
-    const candidatas = v.candidatas.map((c) => {
-      const marcadas = daVaga.filter((e) => e.cartaId === c.cartaId);
-      for (const e of marcadas) explicadas.add(e.id);
-      // Sem `caminho`: a tela o monta do nome (`caminhoBuscaLiga`).
-      return {
-        id: `${v.chave}|${c.cartaId}`,
-        chave: v.chave,
-        nome: c.nome,
-        ...(c.nomeExibicao === null ? {} : { nomeExibicao: c.nomeExibicao }),
-        edicaoNome: c.edicaoNome,
-        numero: c.numero,
-        total: c.total,
-        raridade: c.raridade,
-        cartaId: c.cartaId,
-        selecionada: marcadas.length > 0,
-        semEstoque: semEstoque.has(chaveSemEstoque(c)),
-        imagemUrl: c.imagemUrl,
-        imagemOrigem: c.imagemOrigem,
-        ...precoDaCarta(c.cartaId),
-      };
-    });
-    const avulsas = daVaga
-      .filter((e) => !explicadas.has(e.id))
-      .map((e) => ({
-        id: `escolha|${e.id}`,
-        escolhaId: e.id,
-        chave: v.chave,
-        nome: e.nome,
-        edicaoNome: e.edicaoNome,
-        numero: e.numero,
-        total: e.total,
-        raridade: e.raridade,
-        cartaId: e.cartaId,
-        caminho: e.caminho,
-        selecionada: true,
-        semEstoque: semEstoque.has(chaveSemEstoque(e)),
-        imagemUrl: null,
-        imagemOrigem: null,
-        ...precoDaCarta(e.cartaId),
-      }));
-
-    let escondidas = 0;
-    const oferecidas = [...avulsas, ...candidatas].filter((o) => {
-      if (!o.semEstoque || o.selecionada) return true;
-      escondidas++;
-      return false;
-    });
-    return {
-      chave: v.chave,
-      rotulo: v.rotulo,
-      setNome: v.setNome,
-      dex: v.dex,
-      opcoes: oferecidas,
-      descartadas: 0,
-      semEstoque: escondidas,
-    };
-  });
+  // As candidatas de cada vaga, com o valor de referência, a marcação
+  // derivada da escolha (pela carta) e o filtro de sem estoque — salvo a
+  // marcada. A escolha que nenhuma candidata explica entra marcada na vaga
+  // dela. O porquê de cada passo está em `ofertarCandidatas`.
+  const {
+    vagas: vagasDaTela,
+    cartasCandidatas,
+    precos,
+  } = await opcoesDasCandidatasPorVaga(db, vagas, escolhas);
 
   // Quanto do preço já existe — o que a tela diz ao lado do botão. "A buscar"
   // é exatamente o que uma rodada disparada agora perguntaria.
