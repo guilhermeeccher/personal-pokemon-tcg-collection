@@ -231,8 +231,8 @@ rest are the technical foundations of the v2.
 16. **The v2 does not import the v1's skin.** No file under `src/app/(v2)/` imports from
     `src/app/_componentes/` or `src/app/(v1)/` (`telas-v1.test.ts`): without the v1's tokens their
     classes have no colour. **The ban has no exceptions.** A skinless helper both versions need
-    (`copiar-texto.ts`, `recusa.ts`, `use-eh-mobile.ts`, `use-camada.ts` and the like, all in
-    `_componentes/` today) moves to `src/app/_comum/`, with its v1 importers updated in the same
+    (`copiar-texto.ts`, `use-eh-mobile.ts`, `use-camada.ts` and the like, all in
+    `_componentes/` today; `recusa.ts` already moved, by package 1c) moves to `src/app/_comum/`, with its v1 importers updated in the same
     change — the precedent is the PWA head, `_comum/cabeca.tsx` — and is never copied. The first v2
     package that needs one moves it. Shared code outside `src/app` (`lib/`, `messages/`) is not
     affected. The v2 has its own stylesheet, `(v2)/v2.css`: today only `color-scheme: dark` and the
