@@ -55,12 +55,13 @@ const sob = (relativoAoApp: string) => `${APP}/${relativoAoApp}`;
  * idempotente: fecham rodadas de varredura mortas
  * (`opcoes-compra` e `inventario/precos`).
  *
- * As leituras da v2 (`grade`, `falta` e `falta/alternativas`, de
- * 2026-11-22) foram conferidas assim: só `select`, e a grade numa transação
- * `read only`. A `falta` usa a montagem da tela de opções, mas **não** a
- * limpeza de rodada morta.
+ * As quatro leituras da v2 (`grade`, `falta`, `falta/alternativas` e
+ * `cartas/[cartaId]/detalhe`, de 2026-11-22) foram conferidas assim: só
+ * `select`, e a grade e o detalhe numa transação `read only`. A `falta` usa a
+ * montagem da tela de opções, mas **não** a limpeza de rodada morta.
  */
 const ROTAS_COM_GET = [
+  "api/cartas/[cartaId]/detalhe/route.ts",
   "api/cartas/route.ts",
   "api/colecoes/[id]/cartas-do-tema/route.ts",
   "api/colecoes/[id]/exportar/route.ts",
