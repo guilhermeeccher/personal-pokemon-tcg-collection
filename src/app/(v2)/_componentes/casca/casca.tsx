@@ -12,7 +12,7 @@ import { ATRIBUTO_POLEGAR, usePolegar } from "../primitivos/use-polegar";
 import estilos from "./casca.module.css";
 import { useBrilhoVidro, useModoLeve, useRefracao } from "./efeitos";
 import { IconeNav, Pokebola } from "./icones";
-import { ABAS, type GrupoNavV2, ITEM_BUSCA, abaAtiva, gruposDaNav, itemAtivo } from "./mapa-navegacao";
+import { type GrupoNavV2, ITEM_BUSCA, abaAtiva, abasDaBarra, gruposDaNav, itemAtivo } from "./mapa-navegacao";
 import { Sair } from "./sair";
 import { SeletorIdioma } from "./seletor-idioma";
 
@@ -77,7 +77,7 @@ function CascaCompleta({
   const pathname = usePathname();
   const grupos = gruposDaNav(livingDex);
   const ativo = itemAtivo(pathname);
-  const aba = abaAtiva(pathname);
+  const aba = abaAtiva(pathname, livingDex);
   const [maisAberto, setMaisAberto] = useState(false);
   // Fecha a folha quando a rota muda (um link dela foi seguido). Ajuste de
   // estado na renderização, o padrão do React para estado que depende de
@@ -131,7 +131,7 @@ function CascaCompleta({
 
       <nav ref={abas} className={`${estilos.abas} v2-vidro`} aria-label={t("abas")} data-v2-lente="">
         <span ref={polegar} className={estilos.polegarAbas} aria-hidden />
-        {ABAS.map(({ aba: nome, item }) => (
+        {abasDaBarra(livingDex).map(({ aba: nome, item, chaveRotulo, icone }) => (
           <Link
             key={nome}
             href={item.href}
@@ -139,8 +139,8 @@ function CascaCompleta({
             aria-current={aba === nome ? "page" : undefined}
             {...{ [ATRIBUTO_POLEGAR]: abaComPolegar === nome ? "true" : "false" }}
           >
-            <IconeNav nome={item.icone} />
-            <span className={estilos.rotuloAba}>{tNav(item.chave)}</span>
+            <IconeNav nome={icone} />
+            <span className={estilos.rotuloAba}>{tNav(chaveRotulo)}</span>
           </Link>
         ))}
         <button

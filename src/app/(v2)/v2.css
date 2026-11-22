@@ -138,6 +138,8 @@
   --v2-largura-trilho: 236px;
   --v2-margem-trilho: 12px;
   --v2-altura-abas: 62px;
+  --v2-respiro-abas: 16px;
+  --v2-respiro-interno-abas: 5px;
   --v2-base-abas: max(16px, var(--v2-seguro-base));
   --v2-topo-abas: calc(var(--v2-base-abas) + var(--v2-altura-abas));
   --v2-reserva-base: calc(var(--v2-topo-abas) + 24px);
@@ -152,6 +154,19 @@
 @media (min-width: 48rem) {
   :root {
     --v2-reserva-base: 64px;
+  }
+}
+
+/* Abaixo de 360 px a barra encolhe para as cinco abas (com a Living Dex
+   ligada) caberem com 44 px cada a 320 px: 320 − 2 × 12 de respiro − 54 do
+   botão de busca − 8 entre os dois − 2 × 4 por dentro da barra = 226 px,
+   ~45 por aba; altura 54 − 2 × 4 = 46. Com 62 de altura e 16 de respiro
+   sobrariam ~42. */
+@media (max-width: 359.98px) {
+  :root {
+    --v2-altura-abas: 54px;
+    --v2-respiro-abas: 12px;
+    --v2-respiro-interno-abas: 4px;
   }
 }
 
