@@ -27,7 +27,7 @@ import { useState } from "react";
 import { Botao, classesBotao } from "@/app/_componentes/botao";
 import { Campo, classesEntrada } from "@/app/_componentes/campo";
 import { Modal } from "@/app/_componentes/modal";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import type { GrupoColecaoDTO, SugestaoDeTemaDTO } from "@/lib/dominio/tipos-cliente";
 
 import { chamarApi } from "./chamar-api";

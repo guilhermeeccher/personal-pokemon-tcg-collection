@@ -29,7 +29,7 @@ import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { Icone } from "@/app/_componentes/icone";
 import { Painel } from "@/app/_componentes/painel";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import { progressoEtapas, todasFeitas } from "@/lib/dominio/dex-etapas";
 import { jogoDex } from "@/lib/dominio/dex-jogos";
 import { TIPOS_TAREFA, type StatusPlanoDex, type StatusTarefaDex } from "@/lib/dominio/dex-sessao";

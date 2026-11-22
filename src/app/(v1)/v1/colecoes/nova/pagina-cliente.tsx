@@ -15,7 +15,7 @@ import { Campo, classesEntrada } from "@/app/_componentes/campo";
 import { GradeEscopo } from "@/app/_componentes/ds/grade-escopo";
 import { SeletorExpansao } from "@/app/_componentes/seletor-expansao";
 import type { GrupoColecaoDTO, ListaColecoesDTO, SetParaCadastroDTO } from "@/lib/dominio/tipos-cliente";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import { nomeSugeridoDoSet } from "@/lib/dominio/grupos-colecao";
 
 /* Nome de região é nome próprio do universo Pokémon: igual nos dois

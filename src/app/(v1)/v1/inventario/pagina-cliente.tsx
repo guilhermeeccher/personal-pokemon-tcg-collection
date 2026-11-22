@@ -38,7 +38,7 @@ import {
 import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 import type { CopiaDoInventarioDTO, DestinoElegivelDaCopiaDTO } from "@/lib/dominio/tipos-cliente";
 import { NomeCarta } from "@/app/_componentes/nome-carta";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import { rotuloChaveVaga } from "@/lib/dominio/chave-vaga-set";
 
 interface Opcoes {

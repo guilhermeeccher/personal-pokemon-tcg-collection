@@ -21,7 +21,7 @@ import { ImagemCartaComZoom } from "@/app/_componentes/imagem-carta-zoom";
 import { Painel } from "@/app/_componentes/painel";
 import type { CartaEncontradaDTO } from "@/lib/dominio/tipos-cliente";
 import { NomeCarta } from "@/app/_componentes/nome-carta";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 
 interface FormularioCopia {

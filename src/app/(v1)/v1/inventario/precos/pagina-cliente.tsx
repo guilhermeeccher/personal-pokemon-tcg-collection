@@ -37,7 +37,7 @@ import { Dica } from "@/app/_componentes/dica";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { MarcaRaridade } from "@/app/_componentes/ds/marca-raridade";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import {
   classesCabecalhoEmpilhado,
   classesCelulaCabecalho,

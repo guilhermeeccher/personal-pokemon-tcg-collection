@@ -14,7 +14,7 @@ import { useId, useState, type ReactNode } from "react";
 
 import { Botao } from "@/app/_componentes/botao";
 import { Modal } from "@/app/_componentes/modal";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 
 interface Pendente {
   ids: string[];

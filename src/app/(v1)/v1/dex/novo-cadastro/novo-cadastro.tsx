@@ -92,7 +92,7 @@ import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { Icone } from "@/app/_componentes/icone";
 import { Modal } from "@/app/_componentes/modal";
 import { Painel } from "@/app/_componentes/painel";
-import { textoDaRecusa, textosDasRecusas } from "@/app/_componentes/recusa";
+import { textoDaRecusa, textosDasRecusas } from "@/app/_comum/recusa";
 import { useEhMobile } from "@/app/_componentes/use-eh-mobile";
 import {
   GRUPOS_CAIXA,

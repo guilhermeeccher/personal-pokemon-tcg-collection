@@ -31,7 +31,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Botao } from "@/app/_componentes/botao";
 import { Modal } from "@/app/_componentes/modal";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import { MAXIMO_COLECOES_POR_TRAZER } from "@/lib/dominio/grupos-colecao";
 import type { ExistentesDoGrupoDTO, GrupoColecaoDTO, TrazerExistentesDTO } from "@/lib/dominio/tipos-cliente";
 

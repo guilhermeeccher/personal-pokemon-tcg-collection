@@ -31,7 +31,7 @@ import {
 import { LIMITE_COMPRA_POR_LISTA } from "@/lib/dominio/exportacao-lista-compra";
 import { compararChavesVaga, rotuloChaveVaga } from "@/lib/dominio/chave-vaga-set";
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import { Icone } from "@/app/_componentes/icone";
 import { Dica } from "@/app/_componentes/dica";
 import { useEhMobile } from "@/app/_componentes/use-eh-mobile";

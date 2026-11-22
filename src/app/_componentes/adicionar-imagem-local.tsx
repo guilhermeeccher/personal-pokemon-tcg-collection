@@ -34,7 +34,7 @@ import type { Idioma } from "@/lib/dominio/enums";
 import { Botao } from "./botao";
 import { Campo, classesEntrada } from "./campo";
 import { Modal } from "./modal";
-import { textoDaRecusa } from "./recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 
 type Modo = "arquivo" | "link" | "mypcards";
 

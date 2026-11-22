@@ -22,7 +22,7 @@ import { useEffect, useState } from "react";
 import { Botao } from "@/app/_componentes/botao";
 import { Campo, classesEntrada } from "@/app/_componentes/campo";
 import { Modal } from "@/app/_componentes/modal";
-import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { textoDaRecusa } from "@/app/_comum/recusa";
 import { TAMANHO_MAXIMO_NOME_GRUPO } from "@/lib/dominio/grupos-colecao";
 import type { GrupoColecaoDTO, SeriesParaGrupoDTO } from "@/lib/dominio/tipos-cliente";
 

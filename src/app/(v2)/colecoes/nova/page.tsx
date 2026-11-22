@@ -1,9 +1,16 @@
 import { exigirSessao } from "@/lib/acesso";
 
-import { irParaV1 } from "@/app/(v2)/_ponte/ir-para-v1";
+import { NovaColecao } from "./_componentes/nova-colecao";
 
-/** Ponte: a v2 ainda não tem esta tela (`_ponte/ir-para-v1.ts`). */
-export default async function PonteColecoesNova({ searchParams }: PageProps<"/colecoes/nova">) {
+/**
+ * Nova coleção da v2 (pacote 1c). A tela é um componente de cliente, que não
+ * pode conferir a sessão; este invólucro de servidor confere antes de
+ * entregá-la (ver `lib/acesso.ts`). `?set=` chega do botão "Criar coleção" de
+ * uma sugestão de set; o texto é da URL e a tela o trata como não confiável
+ * (só o usa se achar o set na lista do catálogo).
+ */
+export default async function PaginaColecoesNova({ searchParams }: PageProps<"/colecoes/nova">) {
   await exigirSessao();
-  irParaV1(["colecoes", "nova"], await searchParams);
+  const params = await searchParams;
+  return <NovaColecao setInicial={typeof params.set === "string" ? params.set : ""} />;
 }

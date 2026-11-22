@@ -20,7 +20,7 @@ import { CabecalhoPagina } from "@/app/_componentes/cabecalho-pagina";
 import { Campo, classesEntrada } from "@/app/_componentes/campo";
 import { Distintivo } from "@/app/_componentes/distintivo";
 import { Modal } from "@/app/_componentes/modal";
-import { textoDaRecusa, textosDasRecusas } from "@/app/_componentes/recusa";
+import { textoDaRecusa, textosDasRecusas } from "@/app/_comum/recusa";
 import {
   classesCabecalhoEmpilhado,
   classesCelulaCabecalho,

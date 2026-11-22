@@ -21,7 +21,7 @@ import { IDIOMAS, type Idioma } from "@/lib/dominio/enums";
 import { Botao } from "./botao";
 import { Campo, classesEntrada } from "./campo";
 import { Modal } from "./modal";
-import { textosDasRecusas } from "./recusa";
+import { textosDasRecusas } from "@/app/_comum/recusa";
 
 export function CadastrarCartaManual({
   siglaSugerida = "",
