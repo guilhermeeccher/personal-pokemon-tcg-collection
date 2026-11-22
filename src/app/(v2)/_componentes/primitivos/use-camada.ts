@@ -50,6 +50,26 @@ export type ResolvedorFoco = () => HTMLElement | null | Promise<HTMLElement | nu
 type Camada = CamadaRegistrada & { onEsc?: () => void };
 
 const pilha: Camada[] = [];
+
+/*
+ * O último elemento focado fora de qualquer camada (`[data-v2-camada]`). Só
+ * serve quando a camada abre com um campo `autoFocus`, que toma o foco antes
+ * de a janela saber quem a abriu. Escutado desde o primeiro uso do módulo.
+ */
+let ultimoFocoFora: HTMLElement | null = null;
+let rastreando = false;
+function rastrearFoco() {
+  if (rastreando || typeof document === "undefined") return;
+  rastreando = true;
+  document.addEventListener("focusin", (e) => {
+    const alvo = e.target;
+    if (alvo instanceof HTMLElement && !alvo.closest("[data-v2-camada]")) ultimoFocoFora = alvo;
+  });
+}
+
+export function ultimoFocoForaDasCamadas(): HTMLElement | null {
+  return ultimoFocoFora;
+}
 let contador = 0;
 let travaAtiva = false;
 let rolagemGuardada = 0;
@@ -110,6 +130,8 @@ export function useCamada(
 
   // Entrar e sair da pilha só quando a camada abre ou fecha: mudar a trava ou
   // o Esc depois não reempilha.
+  useEffect(rastrearFoco, []);
+
   useEffect(() => {
     if (!ativa) return;
     pilha.push({ id, nivel, ordem, travaRolagem: false });

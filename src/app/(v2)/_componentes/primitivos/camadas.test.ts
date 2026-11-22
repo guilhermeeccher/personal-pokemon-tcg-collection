@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { type CamadaRegistrada, camadaDoTopo, escolherAlvoDeFoco, modalDoTopo, precisaTrava } from "./camadas";
+import {
+  type CamadaRegistrada,
+  PESO_NIVEL,
+  Z_NIVEL,
+  camadaDoTopo,
+  escolherAlvoDeFoco,
+  modalDoTopo,
+  precisaTrava,
+} from "./camadas";
 
 const c = (id: string, nivel: CamadaRegistrada["nivel"], ordem: number, travaRolagem = false): CamadaRegistrada => ({
   id,
@@ -27,6 +35,22 @@ describe("camadaDoTopo", () => {
     const pilha = [c("janela", "janela", 1), c("confirmacao", "janela", 2)];
     expect(camadaDoTopo(pilha)?.id).toBe("confirmacao");
     expect(camadaDoTopo([...pilha].reverse())?.id).toBe("confirmacao");
+  });
+});
+
+describe("nível e sobreposição", () => {
+  it("a confirmação aberta do detalhe fica no topo, mesmo aberta antes de outra janela", () => {
+    const pilha = [c("detalhe", "detalhe", 1), c("confirmacao", "confirmacao", 2), c("janela", "janela", 3)];
+    expect(camadaDoTopo(pilha)?.id).toBe("confirmacao");
+    expect(modalDoTopo(pilha)?.id).toBe("confirmacao");
+  });
+
+  it("o z-index segue o peso: a camada que se vê por cima é a que recebe o Esc", () => {
+    const niveis = Object.keys(PESO_NIVEL) as (keyof typeof PESO_NIVEL)[];
+    const porPeso = [...niveis].sort((a, b) => PESO_NIVEL[a] - PESO_NIVEL[b]);
+    const porZ = [...niveis].sort((a, b) => Z_NIVEL[a] - Z_NIVEL[b]);
+    expect(porZ).toEqual(porPeso);
+    expect(new Set(Object.values(Z_NIVEL)).size).toBe(niveis.length);
   });
 });
 

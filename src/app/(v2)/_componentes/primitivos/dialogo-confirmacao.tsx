@@ -60,6 +60,7 @@ export function DialogoConfirmacao({
       titulo={titulo}
       descricao={descricao}
       papel="alertdialog"
+      nivel="confirmacao"
       largura={440}
       focoInicial={cancelar}
       fecharPeloVeu={false}

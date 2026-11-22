@@ -8,8 +8,11 @@
  * `src/app/_componentes/` —, com as mesmas regras:
  *
  * - **Topo pelo nível, depois pela ordem de abertura.** Janela < detalhe <
- *   balão, a ordem do z-index; dentro do mesmo nível, a última aberta. Nunca
- *   pela ordem em que os efeitos do React rodam: ao girar o aparelho, duas
+ *   confirmação < balão. O z-index sai da mesma tabela (`Z_NIVEL`), para a
+ *   camada que se vê por cima ser sempre a que recebe o Esc e o Tab; a
+ *   confirmação tem nível próprio porque pode sair tanto de uma janela quanto
+ *   do detalhe de carta, e tem de ficar acima dos dois. Dentro do mesmo
+ *   nível, a última aberta. Nunca pela ordem em que os efeitos do React rodam: ao girar o aparelho, duas
  *   camadas podem se registrar de novo em qualquer ordem, e a de trás não pode
  *   passar a receber o Esc.
  * - **Esc fecha só a camada do topo**, seja ela modal ou não.
@@ -33,10 +36,22 @@
  *    certo; e, se nada estiver no DOM, o foco vai para o conteúdo principal.
  */
 
-export type NivelCamada = "janela" | "detalhe" | "balao";
+export type NivelCamada = "janela" | "detalhe" | "confirmacao" | "balao";
 
-export const PESO_NIVEL: Record<NivelCamada, number> = { janela: 1, detalhe: 2, balao: 3 };
-export const NIVEL_MODAL: Record<NivelCamada, boolean> = { janela: true, detalhe: true, balao: false };
+export const PESO_NIVEL: Record<NivelCamada, number> = { janela: 1, detalhe: 2, confirmacao: 3, balao: 4 };
+export const NIVEL_MODAL: Record<NivelCamada, boolean> = {
+  janela: true,
+  detalhe: true,
+  confirmacao: true,
+  balao: false,
+};
+/**
+ * O z-index de cada nível, na mesma ordem do peso. Dentro de um nível, a
+ * última aberta fica por cima porque o portal dela entra depois no `body`.
+ * Acima da casca (trilho 30, abas 40) e abaixo do aviso flutuante (90), que
+ * tem de aparecer sobre a janela que o disparou.
+ */
+export const Z_NIVEL: Record<NivelCamada, number> = { janela: 70, detalhe: 74, confirmacao: 78, balao: 82 };
 
 export interface CamadaRegistrada {
   id: string;

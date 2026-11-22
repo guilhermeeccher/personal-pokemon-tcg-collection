@@ -16,7 +16,8 @@ import { createPortal } from "react-dom";
 
 import { Botao } from "./botao";
 import estilos from "./modal.module.css";
-import { type NivelCamada, type ResolvedorFoco, devolverFoco, useCamada } from "./use-camada";
+import { Z_NIVEL } from "./camadas";
+import { type NivelCamada, type ResolvedorFoco, devolverFoco, ultimoFocoForaDasCamadas, useCamada } from "./use-camada";
 
 const SELETOR_FOCAVEL = [
   "a[href]",
@@ -102,8 +103,16 @@ export function Modal({
   // aberta): devolve o foco.
   useLayoutEffect(() => {
     if (!aberto || !montado) return;
+    // Um descendente com `autoFocus` já tomou o foco quando este efeito roda
+    // (o React foca na montagem, antes do efeito do pai): aí o abridor é o
+    // último foco fora de qualquer camada, que a pilha acompanha.
     const ativo = document.activeElement;
-    abridor.current = ativo instanceof HTMLElement && ativo !== document.body ? ativo : null;
+    const dentro = ativo instanceof Node && painel.current?.contains(ativo);
+    abridor.current = dentro
+      ? ultimoFocoForaDasCamadas()
+      : ativo instanceof HTMLElement && ativo !== document.body
+        ? ativo
+        : null;
     (focoInicial?.current ?? painel.current)?.focus({ preventScroll: true });
     return () => devolverFoco(abridor.current, resolvedor.current);
   }, [aberto, montado, focoInicial]);
@@ -116,8 +125,11 @@ export function Modal({
       if (e.key !== "Tab" || !ehModalDoTopo()) return;
       const raiz = painel.current;
       if (!raiz) return;
+      // Só o que está na ordem do Tab: um segmentado deixa as opções não
+      // escolhidas com `tabIndex=-1`, e contá-las como ponta deixaria o foco
+      // sair da janela pela opção escolhida.
       const focaveis = Array.from(raiz.querySelectorAll<HTMLElement>(SELETOR_FOCAVEL)).filter(
-        (el) => el.getClientRects().length > 0,
+        (el) => el.tabIndex >= 0 && el.getClientRects().length > 0,
       );
       if (focaveis.length === 0) {
         e.preventDefault();
@@ -145,7 +157,7 @@ export function Modal({
   const estiloPainel = largura ? ({ "--largura-janela": `${largura}px` } as CSSProperties) : undefined;
 
   return createPortal(
-    <div className={estilos.raiz}>
+    <div className={estilos.raiz} style={{ zIndex: Z_NIVEL[nivel] }} data-v2-camada="">
       <div className={estilos.veu} aria-hidden onClick={fecharPeloVeu ? () => fechar.current() : undefined} />
       <div
         ref={painel}
