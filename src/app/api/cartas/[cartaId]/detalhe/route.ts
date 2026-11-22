@@ -6,6 +6,7 @@ import { lerDetalheDaCarta } from "@/lib/db/detalhe-carta";
 import { ehIdioma } from "@/lib/dominio/enums";
 import { fonteDePreco } from "@/lib/dominio/fonte-preco";
 import { corpoRecusa } from "@/lib/dominio/recusa";
+import type { DetalheCartaV2DTO } from "@/lib/dominio/tipos-cliente";
 import { ehUuid } from "@/lib/dominio/uuid";
 
 /**
@@ -64,5 +65,6 @@ export const GET = comAcesso(async function GET(
           : corpoRecusa("cartaNaoEncontradaNoCatalogo", { cartaId, idioma: idioma ?? "" });
     return NextResponse.json(recusa, { status: 404 });
   }
-  return NextResponse.json(resultado.detalhe);
+  const detalhe: DetalheCartaV2DTO = resultado.detalhe;
+  return NextResponse.json(detalhe);
 });

@@ -22,6 +22,18 @@ import type {
 } from "./grupos-colecao";
 import type { ParametroCustomizadaTema, TemaColecao } from "./tema-colecao";
 import type { Sugestao, SugestaoDeSet, SugestaoDeTema, TipoSugestao } from "./sugestoes-colecao";
+import type { VagaDaGrade } from "./grade-colecao";
+import type {
+  AlvoDaOpcao,
+  CriterioDaProposta,
+  EscolhaDaVagaFalta,
+  OpcaoFalta,
+  PrecoReferencia,
+  VagaFalta,
+} from "./falta-colecao";
+import type { PrecoDoDetalhe, SerieCurta } from "./detalhe-carta";
+import type { FontePreco } from "./fonte-preco";
+import type { Regiao } from "./escopo-pokedex";
 
 export interface FlagsVarianteDTO {
   varianteNormalDisponivel: boolean;
@@ -766,4 +778,166 @@ export interface ResumoDexInicioDTO {
   }[];
   /** Planos ativos além dos mostrados. */
   planosAlem: number;
+}
+
+// --- Design v2: leituras da coleção e do detalhe de carta (pacote 1a) -----
+/*
+ * As formas das leituras novas da v2. Bloco próprio, para não conflitar com
+ * os outros pacotes que mexem neste arquivo. Os tipos de cada vaga, opção e
+ * preço são os dos módulos puros que montam a resposta (`grade-colecao.ts`,
+ * `falta-colecao.ts`, `detalhe-carta.ts`) — reexportados aqui, e não
+ * copiados, para que a resposta e o tipo nunca divirjam. O contrato está em
+ * `docs/design-v2/data-contract.md`.
+ */
+
+export type VagaGradeV2DTO = VagaDaGrade;
+export type OpcaoFaltaV2DTO = OpcaoFalta;
+export type AlvoDaOpcaoV2DTO = AlvoDaOpcao;
+export type PrecoReferenciaV2DTO = PrecoReferencia;
+export type CriterioDaPropostaV2DTO = CriterioDaProposta;
+export type EscolhaDaVagaFaltaV2DTO = EscolhaDaVagaFalta;
+export type VagaFaltaV2DTO = VagaFalta;
+export type PrecoDoDetalheV2DTO = PrecoDoDetalhe;
+export type SerieCurtaV2DTO = SerieCurta;
+
+/** `GET /api/colecoes/:id/grade` — a coleção, sem `vagas` de `ColecaoComVagasDTO`, e a grade. */
+export interface GradeColecaoV2DTO extends Omit<ColecaoComVagasDTO, "vagas"> {
+  totalVagas: number;
+  vagasPreenchidas: number;
+  vagas: VagaGradeV2DTO[];
+}
+
+/** Uma aba da lista para colar na Compra por Lista da Liga (até 110 cartas). */
+export interface AbaListaLigaV2DTO {
+  id: string;
+  regiao: Regiao | null;
+  setId: string | null;
+  setNome: string | null;
+  parte: number;
+  partes: number;
+  /** O texto que "Copiar" leva — só desta aba. */
+  texto: string;
+  quantidade: number;
+  total: number;
+}
+
+/** A lista para colar, como a tela de opções a recebe (`resumoDaListaDeCompra`). */
+export interface ListaDeCompraV2DTO {
+  fonte: FontePreco;
+  selecionadas: number;
+  guardadas: number;
+  abasLiga: AbaListaLigaV2DTO[];
+  multiplas: { chave: string; rotulo: string; quantidade: number }[];
+  total: number;
+  semPreco: number;
+  precoMaisAntigo: string | null;
+}
+
+/** O estado das fontes de preço da coleção (o que a tela diz ao lado de "buscar preços"). */
+export type EstadoPrecosFaltaV2DTO =
+  | {
+      fonte: "cardmarket";
+      precosCandidatas: {
+        cartas: number;
+        comPreco: number;
+        semPrecoNoCardmarket: number;
+        aBuscar: number;
+        validadeDias: number;
+      };
+      rodada: { id: string; criadoEm: string; concluidaEm: string | null; erro: string | null } | null;
+    }
+  | {
+      fonte: "liga";
+      varredura: { id: string; criadoEm: string; concluidaEm: string | null; erro: string | null } | null;
+    };
+
+/** `GET /api/colecoes/:id/falta`. Customizada: `vagas` vazio, `criterio`, `estado` e `lista` nulos. */
+export interface FaltaColecaoV2DTO {
+  colecaoId: string;
+  tipo: TipoColecao;
+  fonte: FontePreco;
+  /** Nulo na fonte Liga sem varredura, e na customizada. */
+  criterio: CriterioDaPropostaV2DTO | null;
+  estado: EstadoPrecosFaltaV2DTO | null;
+  vagas: VagaFaltaV2DTO[];
+  lista: ListaDeCompraV2DTO | null;
+}
+
+/** `GET /api/colecoes/:id/falta/alternativas?chave=`. */
+export interface AlternativasDaVagaV2DTO {
+  vagaId: string;
+  chave: string;
+  criterio: CriterioDaPropostaV2DTO | null;
+  opcoes: OpcaoFaltaV2DTO[];
+  descartadas: number;
+  semEstoque: number;
+}
+
+/** Uma cópia do usuário no detalhe de carta, com onde está alocada. */
+export interface CopiaDoDetalheV2DTO {
+  id: string;
+  idiomaCatalogo: Idioma;
+  /** Idioma físico (regra 7). */
+  idioma: Idioma;
+  variante: VarianteCopia;
+  quantidade: number;
+  condicao: Condicao;
+  gradedEmpresa: string | null;
+  gradedNota: string | null;
+  gradedCertificado: string | null;
+  localizacao: string | null;
+  aquisicaoData: string | null;
+  aquisicaoOrigem: string | null;
+  aquisicaoPreco: string | null;
+  notas: string | null;
+  /** Quando a linha foi cadastrada — não a chegada da unidade (divisão e fusão não a preservam). */
+  criadoEm: string;
+  alocacao: {
+    vagaId: string;
+    chave: string;
+    numero: string;
+    colecaoId: string;
+    colecaoNome: string;
+    colecaoTipo: TipoColecao;
+    desde: string;
+  } | null;
+}
+
+/** `GET /api/cartas/:cartaId/detalhe`. */
+export interface DetalheCartaV2DTO {
+  carta: FlagsVarianteDTO & {
+    cartaId: string;
+    idioma: Idioma;
+    idiomas: Idioma[];
+    nome: string;
+    setId: string;
+    setNome: string;
+    setSigla: string | null;
+    setQtdOficial: number | null;
+    localId: string;
+    raridade: string | null;
+    tipos: string[];
+    ilustrador: string | null;
+    dexIds: number[];
+    ativa: boolean;
+    imagemUrl: string | null;
+    imagemAlta: string | null;
+    imagemOrigem: OrigemImagem | null;
+  };
+  especial: boolean;
+  copias: CopiaDoDetalheV2DTO[];
+  preco: PrecoDoDetalheV2DTO;
+  serie: SerieCurtaV2DTO | null;
+  contexto: {
+    vaga: {
+      id: string;
+      chave: string;
+      numero: string;
+      copiaId: string | null;
+      colecaoId: string;
+      colecaoNome: string;
+      colecaoTipo: TipoColecao;
+    } | null;
+    copiaId: string | null;
+  };
 }

@@ -7,6 +7,7 @@ import { criterioPadrao, lerFaltaDaColecao } from "@/lib/db/falta-colecao";
 import { lerCriterioDaUrl } from "@/lib/dominio/falta-colecao";
 import { fonteDePreco } from "@/lib/dominio/fonte-preco";
 import { corpoRecusa } from "@/lib/dominio/recusa";
+import type { FaltaColecaoV2DTO } from "@/lib/dominio/tipos-cliente";
 import { ehUuid } from "@/lib/dominio/uuid";
 
 /**
@@ -41,7 +42,7 @@ export const GET = comAcesso(async function GET(
 
   const fonte = fonteDePreco();
   if (colecao.tipo !== "pokedex" && colecao.tipo !== "set") {
-    return NextResponse.json({
+    const vazio: FaltaColecaoV2DTO = {
       colecaoId: colecao.id,
       tipo: colecao.tipo,
       fonte,
@@ -49,7 +50,8 @@ export const GET = comAcesso(async function GET(
       estado: null,
       vagas: [],
       lista: null,
-    });
+    };
+    return NextResponse.json(vazio);
   }
 
   const criterio = lerCriterioDaUrl(
@@ -61,12 +63,11 @@ export const GET = comAcesso(async function GET(
     return NextResponse.json(corpoRecusa("corpoInvalido"), { status: 400 });
   }
 
-  return NextResponse.json(
-    await lerFaltaDaColecao(
-      db,
-      { id: colecao.id, tipo: colecao.tipo, parametro: colecao.parametro },
-      fonte,
-      criterio,
-    ),
+  const falta: FaltaColecaoV2DTO = await lerFaltaDaColecao(
+    db,
+    { id: colecao.id, tipo: colecao.tipo, parametro: colecao.parametro },
+    fonte,
+    criterio,
   );
+  return NextResponse.json(falta);
 });

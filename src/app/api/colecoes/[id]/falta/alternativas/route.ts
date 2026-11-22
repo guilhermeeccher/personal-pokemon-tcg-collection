@@ -7,6 +7,7 @@ import { criterioPadrao, lerAlternativasDaVaga } from "@/lib/db/falta-colecao";
 import { lerCriterioDaUrl } from "@/lib/dominio/falta-colecao";
 import { fonteDePreco } from "@/lib/dominio/fonte-preco";
 import { corpoRecusa } from "@/lib/dominio/recusa";
+import type { AlternativasDaVagaV2DTO } from "@/lib/dominio/tipos-cliente";
 import { ehUuid } from "@/lib/dominio/uuid";
 
 /**
@@ -59,5 +60,6 @@ export const GET = comAcesso(async function GET(
   if (!alternativas) {
     return NextResponse.json(corpoRecusa("vagaNaoEncontrada"), { status: 404 });
   }
-  return NextResponse.json(alternativas);
+  const corpo: AlternativasDaVagaV2DTO = alternativas;
+  return NextResponse.json(corpo);
 });
