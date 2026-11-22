@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   anexarAoFim,
+  canonizarIds,
   conferirNovaOrdem,
   idsDaSecao,
   moverNaOrdem,
@@ -9,6 +10,7 @@ import {
   posicoesQueMudam,
   proximaOrdem,
   secoesDeColecoes,
+  soltarDeGruposAusentes,
   type ColecaoOrdenavel,
   type GrupoOrdenavel,
 } from "./ordem-colecoes";
@@ -150,5 +152,29 @@ describe("moverNaOrdem", () => {
     expect(moverNaOrdem(["a", "b", "c"], "b", -1)).toEqual(["b", "a", "c"]);
     expect(moverNaOrdem(["a", "b", "c"], "b", 1)).toEqual(["a", "c", "b"]);
     expect(moverNaOrdem(["a", "b", "c"], "a", -1)).toEqual(["a", "b", "c"]);
+  });
+});
+
+describe("soltarDeGruposAusentes", () => {
+  it("coleção de grupo que não veio na lista fica sem grupo — no id também, para a tela não a perder", () => {
+    const r = soltarDeGruposAusentes([col("orfa", "sumiu", 3), col("ok", "g", 0), col("solta", null, 1)], [grp("g", 0)]);
+    expect(r.map((c) => [c.id, c.grupoId])).toEqual([
+      ["orfa", null],
+      ["ok", "g"],
+      ["solta", null],
+    ]);
+  });
+});
+
+describe("canonizarIds", () => {
+  it("UUID em maiúsculas vira a forma do banco, e a lista confere", () => {
+    const atuais = ["0b9f6c1e-2d3a-4c5b-8e7f-1a2b3c4d5e6f"];
+    const pedida = canonizarIds(["0B9F6C1E-2D3A-4C5B-8E7F-1A2B3C4D5E6F"]);
+    expect(conferirNovaOrdem(atuais, pedida)).toEqual({ ok: true, ids: atuais });
+  });
+
+  it("o que não é lista de textos passa como veio, para a conferência recusar o formato", () => {
+    expect(canonizarIds("x")).toBe("x");
+    expect(conferirNovaOrdem(["a"], canonizarIds([1]))).toEqual({ ok: false, motivo: "formato" });
   });
 });

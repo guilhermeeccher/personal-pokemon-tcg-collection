@@ -360,16 +360,24 @@ at most one group or in none. Every collection type can be grouped.
   newest first — through the pure `ordenarColecoes` (`lib/dominio/ordem-colecoes.ts`). The SQL
   only fetches. The collections screen, the home page, "O que falta" and the overview inherit that
   order; **do not sort the list again on a screen**. Migration `0034` numbered the existing
-  collections newest first, which was the order before.
+  collections newest first, which was the order before. A collection whose group is not in the
+  list read falls into "no group" with its `grupoId` cleared (`soltarDeGruposAusentes`), never
+  vanishes; `GET /api/colecoes` reads collections and groups in one read-only REPEATABLE READ
+  transaction, so every `grupoId` it returns is in its `grupos`.
 - **Reordering takes the whole list, and it must be exactly the current set**
   (`conferirNovaOrdem`): a stale list from another tab is refused with 409, never applied in part,
-  and applying renumbers 0..n-1. Order changes by up/down buttons, never drag (it fights page
+  and applying renumbers 0..n-1. A section whose group was deleted meanwhile is also a stale list
+  (409, not 404). Ids from the URL and the body are lowercased before any in-memory comparison
+  (`canonizarUuid`): Postgres accepts an uppercase UUID, a string comparison does not. Order changes by up/down buttons, never drag (it fights page
   scroll on a phone), as with the Dex task steps.
 - **Deleting a group never deletes a collection.** Its collections go to the end of "no group", in
   the order they had, in the same transaction; `on delete set null` is only the safety net.
 - **Every write that touches order runs under one `pg_advisory_xact_lock`**
-  (`travarOrganizacaoColecoes`): creating a collection (it goes to the end of its section),
-  groups, reordering, moving between groups and the two group batch actions.
+  (`travarOrganizacaoColecoes`), and reads its section after taking it: creating a collection (it
+  goes to the end of its section), **deleting a collection** (its section is renumbered), creating,
+  editing (name or series) and deleting groups, reordering, moving between groups and the two
+  group batch actions. A write outside the lock reopens the window between a batch's check and
+  its write.
 - **A group may be linked to one Western catalog series** (`serie_id`, a `set_serie_id`, no FK).
   Western means pt/en: the Japanese series is another id (`SM` against `sm`), stays out, and the
   comparison is **case-sensitive, never normalized**. Only a linked group offers the two batch
@@ -380,8 +388,10 @@ at most one group or in none. Every collection type can be grouped.
   rule 4, the no-official-numbering case) — do not write a second resolution. It is all or
   nothing in one transaction, under the lock, and the preview is re-read after the lock: a set
   that got a collection in another tab refuses the whole batch with 409. "Already exists" means a
-  Set collection has the set in its recipe (`parametro.sets`); a collection joining several sets
-  counts for all of them. Created collections use catalog `pt` (the per-card pt→en fallback covers
+  **Western** Set collection (`idiomaCatalogo` pt or en) has the set in its recipe
+  (`parametro.sets`); a collection joining several sets counts for all of them. A Japanese recipe
+  never counts, here or in "bring the existing ones": `neo1`..`neo4` share the `set_id` with
+  English and are other cards. Created collections use catalog `pt` (the per-card pt→en fallback covers
   untranslated sets), no secrets, no required language; default name `AAAA - SIGLA - Nome`.
 - **Promo and energy sets come unchecked, decided from data, never from a list of ids**: promo is
   `set_qtd_oficial = 0` (like `mep`); energy is a set whose every active pt/en card is

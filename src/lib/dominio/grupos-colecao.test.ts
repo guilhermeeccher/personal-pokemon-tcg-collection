@@ -43,11 +43,11 @@ const comContagem = (s: SetDoCatalogo, cartasAtivas = 100, cartasEnergia = 0) =>
   cartasEnergia,
 });
 
-const colecaoSet = (id: string, sets: string[], grupoId: string | null = null) => ({
+const colecaoSet = (id: string, sets: string[], grupoId: string | null = null, idiomaCatalogo = "pt") => ({
   id,
   nome: `Coleção ${id}`,
   tipo: "set" as const,
-  parametro: { sets, idiomaCatalogo: "pt", incluirSecretas: false },
+  parametro: { sets, idiomaCatalogo, incluirSecretas: false },
   grupoId,
 });
 
@@ -105,6 +105,10 @@ describe("lerGrupoId", () => {
   it("texto que não é UUID é recusado", () => {
     expect(lerGrupoId("abc", true).ok).toBe(false);
   });
+
+  it("UUID em maiúsculas é canonizado, para bater com o id que vem do banco", () => {
+    expect(lerGrupoId(UUID.toUpperCase(), false)).toEqual({ ok: true, valor: UUID });
+  });
 });
 
 describe("lerIds", () => {
@@ -112,6 +116,11 @@ describe("lerIds", () => {
     expect(lerIds({ ids: ["a", "b"] })).toEqual({ ok: true, valor: ["a", "b"] });
     expect(lerIds({ ids: [] }).ok).toBe(false);
     expect(lerIds({ ids: ["a", "a"] }).ok).toBe(false);
+  });
+
+  it("canoniza os ids, e a mesma id em duas caixas é repetição", () => {
+    expect(lerIds({ ids: [UUID.toUpperCase()] })).toEqual({ ok: true, valor: [UUID] });
+    expect(lerIds({ ids: [UUID, UUID.toUpperCase()] }).ok).toBe(false);
     expect(lerIds({}).ok).toBe(false);
   });
 });
@@ -205,6 +214,12 @@ describe("colecoesPorSet — 'já existe' é pela receita", () => {
     expect(porSet.get("a")?.map((c) => c.id)).toEqual(["dupla"]);
     expect(porSet.get("b")?.map((c) => c.id)).toEqual(["dupla", "so-b"]);
     expect(porSet.size).toBe(2);
+  });
+
+  it("receita japonesa não conta: neo1 jp divide o set_id com o en e são outras cartas", () => {
+    const porSet = colecoesPorSet([colecaoSet("neo-jp", ["neo1"], null, "jp"), colecaoSet("neo-en", ["neo2"], null, "en")]);
+    expect(porSet.has("neo1")).toBe(false);
+    expect(porSet.get("neo2")?.map((c) => c.id)).toEqual(["neo-en"]);
   });
 
   it("parâmetro sem receita não quebra", () => {
@@ -326,6 +341,18 @@ describe("selecionarExistentes", () => {
       },
       { id: "solta", nome: "Coleção solta", grupoAtual: null, marcadoPorPadrao: true },
     ]);
+  });
+});
+
+describe("selecionarExistentes — só receita ocidental", () => {
+  it("coleção japonesa do mesmo set_id não é candidata a entrar no grupo da série ocidental", () => {
+    const r = selecionarExistentes(
+      [colecaoSet("neo-jp", ["neo1"], null, "jp"), colecaoSet("neo-en", ["neo1", "neo2"], null, "en")],
+      new Set(["neo1"]),
+      "g",
+      new Map(),
+    );
+    expect(r.map((c) => c.id)).toEqual(["neo-en"]);
   });
 });
 

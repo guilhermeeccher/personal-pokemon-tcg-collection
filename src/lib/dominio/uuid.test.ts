@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ehUuid } from "./uuid";
+import { canonizarUuid, ehUuid } from "./uuid";
 
 describe("ehUuid", () => {
   it("aceita UUID v4 válido, minúsculo", () => {
@@ -42,5 +42,11 @@ describe("ehUuid", () => {
   it("rejeita path traversal / injeção grosseira", () => {
     expect(ehUuid("../../etc/passwd")).toBe(false);
     expect(ehUuid("'; drop table colecao; --")).toBe(false);
+  });
+});
+
+describe("canonizarUuid", () => {
+  it("minúsculas, a forma em que o Postgres devolve", () => {
+    expect(canonizarUuid("0B9F6C1E-2D3A-4C5B-8E7F-1A2B3C4D5E6F")).toBe("0b9f6c1e-2d3a-4c5b-8e7f-1a2b3c4d5e6f");
   });
 });

@@ -5,7 +5,7 @@ import { db } from "@/lib/db/client";
 import { editarGrupoColecao, excluirGrupoColecao } from "@/lib/db/grupos-colecao";
 import { lerEdicaoGrupo } from "@/lib/dominio/grupos-colecao";
 import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
-import { ehUuid } from "@/lib/dominio/uuid";
+import { canonizarUuid, ehUuid } from "@/lib/dominio/uuid";
 
 /**
  * PATCH /api/grupos-colecao/:id — `{ nome?, serieId? }`: renomeia e/ou liga
@@ -15,7 +15,8 @@ export const PATCH = comAcesso(async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
+  // Canonizado: o id é comparado em memória com os que vêm do banco.
+  const id = canonizarUuid((await params).id);
   if (!ehUuid(id)) {
     return NextResponse.json(corpoRecusa("grupoColecaoNaoEncontrado"), { status: 404 });
   }
@@ -45,7 +46,7 @@ export const DELETE = comAcesso(async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
+  const id = canonizarUuid((await params).id);
   if (!ehUuid(id)) {
     return NextResponse.json(corpoRecusa("grupoColecaoNaoEncontrado"), { status: 404 });
   }

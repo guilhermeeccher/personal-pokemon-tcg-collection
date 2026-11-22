@@ -16,9 +16,21 @@ import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
  * GET /api/colecoes — lista as coleções com progresso (vagas totais e
  * preenchidas, spec §3.3: "87/151", "142/165"), já na ordem de exibição
  * (`listarColecoes`), e os grupos em ordem (`ListaColecoesDTO`).
+ *
+ * As duas leituras numa transação só de leitura, REPEATABLE READ: veem o
+ * mesmo instante do banco, então todo `grupoId` dos itens está em `grupos`.
+ * Em leituras soltas, um grupo excluído entre as duas deixaria um item
+ * apontando para um grupo que a tela não recebeu.
  */
 export const GET = comAcesso(async function GET() {
-  const [colecoes, grupos] = await Promise.all([listarColecoes(db), listarGruposColecao(db)]);
+  const { colecoes, grupos } = await db.transaction(
+    async (tx) => {
+      const colecoes = await listarColecoes(tx);
+      const grupos = await listarGruposColecao(tx);
+      return { colecoes, grupos };
+    },
+    { isolationLevel: "repeatable read", accessMode: "read only" },
+  );
   return NextResponse.json({ itens: colecoes, grupos });
 });
 

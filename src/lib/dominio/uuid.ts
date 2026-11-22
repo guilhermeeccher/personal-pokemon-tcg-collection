@@ -16,3 +16,13 @@ const REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 export function ehUuid(v: string): boolean {
   return REGEX_UUID.test(v);
 }
+
+/**
+ * A forma em que o Postgres devolve um UUID: minúsculas. Um id que chega da
+ * URL ou do corpo passa por aqui antes de ser comparado em memória com o que
+ * veio do banco — o banco aceita `ABC…` e `abc…` como o mesmo id, e uma
+ * comparação de texto não.
+ */
+export function canonizarUuid(v: string): string {
+  return v.toLowerCase();
+}

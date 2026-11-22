@@ -31,7 +31,13 @@ import {
   type AvisosDaReceita,
   type EntradaSetDaReceita,
 } from "@/lib/dominio/vagas-colecao";
-import { ordenarColecoes, proximaOrdem } from "@/lib/dominio/ordem-colecoes";
+import {
+  idsDaSecao,
+  ordenarColecoes,
+  posicoesQueMudam,
+  proximaOrdem,
+  soltarDeGruposAusentes,
+} from "@/lib/dominio/ordem-colecoes";
 import {
   contagensDoSet,
   escolherLinhaPorCarta,
@@ -1612,7 +1618,7 @@ const SEM_AVISOS: AvisosDeSet = {
  * catálogo completo e numeração oficial válida nunca ganha aviso).
  */
 export async function obterAvisosDeSet(
-  db: Database,
+  db: Database | Transacao,
   tipo: TipoColecao,
   parametro: unknown,
 ): Promise<AvisosDeSet> {
@@ -1763,7 +1769,7 @@ export interface ColecaoComProgresso {
  * quando o set está completo e com numeração oficial válida (nunca muda
  * o denominador de uma coleção normal, ex.: `sv03.5`).
  */
-export async function listarColecoes(db: Database): Promise<ColecaoComProgresso[]> {
+export async function listarColecoes(db: Database | Transacao): Promise<ColecaoComProgresso[]> {
   const [linhas, grupos] = await Promise.all([
     db
       .select({
@@ -1788,8 +1794,11 @@ export async function listarColecoes(db: Database): Promise<ColecaoComProgresso[
       .from(grupoColecao),
   ]);
 
+  // As duas leituras podem ver estados diferentes (um grupo excluído entre
+  // elas): a coleção de um grupo que não veio cai em "sem grupo" — com o
+  // `grupoId` zerado, para a tela, que procura o grupo pelo id, não a perder.
   return Promise.all(
-    ordenarColecoes(linhas, grupos).map(async (linha) => {
+    ordenarColecoes(soltarDeGruposAusentes(linhas, grupos), grupos).map(async (linha) => {
       const avisos = await obterAvisosDeSet(db, linha.tipo, linha.parametro);
       return {
         ...linha,
@@ -2566,12 +2575,30 @@ export async function atualizarColecao(
  * `vaga.colecao_id`); as cópias NUNCA são tocadas — `vaga.copia_id` só
  * referencia `copia`, apagar a vaga não apaga a cópia do inventário.
  */
+/**
+ * Exclui a coleção e renumera a seção (o grupo, ou "sem grupo") que ela
+ * deixou, sob a trava da organização: sem ela, outra aba poderia ter
+ * conferido uma ordem ou um lote com esta coleção dentro e gravá-lo depois
+ * da exclusão, contando uma coleção que não existe mais.
+ */
 export async function excluirColecao(db: Database, id: string): Promise<boolean> {
-  const resultado = await db
-    .delete(colecao)
-    .where(eq(colecao.id, id))
-    .returning({ id: colecao.id });
-  return resultado.length > 0;
+  return db.transaction(async (tx) => {
+    await travarOrganizacaoColecoes(tx);
+    const [excluida] = await tx
+      .delete(colecao)
+      .where(eq(colecao.id, id))
+      .returning({ id: colecao.id, grupoId: colecao.grupoId });
+    if (!excluida) return false;
+    const restantes = await tx
+      .select({ id: colecao.id, grupoId: colecao.grupoId, ordem: colecao.ordem, criadoEm: colecao.criadoEm })
+      .from(colecao)
+      .where(excluida.grupoId === null ? isNull(colecao.grupoId) : eq(colecao.grupoId, excluida.grupoId));
+    const atual = new Map(restantes.map((c) => [c.id, c.ordem]));
+    for (const p of posicoesQueMudam(idsDaSecao(restantes, excluida.grupoId), atual)) {
+      await tx.update(colecao).set({ ordem: p.ordem }).where(eq(colecao.id, p.id));
+    }
+    return true;
+  });
 }
 
 export type ResultadoToggleSecretas =

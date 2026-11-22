@@ -43,6 +43,7 @@ import {
 } from "@/lib/dominio/grupos-colecao";
 import {
   anexarAoFim,
+  canonizarIds,
   conferirNovaOrdem,
   idsDaSecao,
   ordenarColecoes,
@@ -128,7 +129,7 @@ function rotulosDasSeries(sets: readonly SetParaCadastro[]): Map<string, string>
  * lido quando algum grupo tem série; uma série que saiu do catálogo mostra o
  * próprio id em vez de sumir.
  */
-export async function listarGruposColecao(db: Database): Promise<GrupoColecaoDTO[]> {
+export async function listarGruposColecao(db: Leitor): Promise<GrupoColecaoDTO[]> {
   const grupos = await lerGrupos(db);
   const rotulos = grupos.some((g) => g.serieId !== null)
     ? rotulosDasSeries(await listarSetsParaCadastro(db))
@@ -183,20 +184,33 @@ export async function criarGrupoColecao(
   });
 }
 
+/**
+ * Renomeia e/ou liga ou desliga a série, sob a trava: as ações em lote leem a
+ * série do grupo depois da trava, e uma troca de série fora dela poderia cair
+ * entre a leitura e a escrita de um lote, que criaria ou moveria coleções pela
+ * série que o grupo já não tem.
+ */
 export async function editarGrupoColecao(
   db: Database,
   id: string,
   edicao: EdicaoGrupo,
 ): Promise<{ ok: true } | Falha> {
-  if (typeof edicao.serieId === "string" && !(await serieOcidentalExiste(db, edicao.serieId))) {
-    return { ok: false, motivo: recusa("serieForaDoCatalogoOcidental", { serieId: edicao.serieId }), status: 400 };
-  }
-  const atualizados = await db
-    .update(grupoColecao)
-    .set({ ...edicao, atualizadoEm: new Date() })
-    .where(eq(grupoColecao.id, id))
-    .returning({ id: grupoColecao.id });
-  return atualizados.length > 0 ? { ok: true } : grupoNaoEncontrado();
+  return db.transaction(async (tx) => {
+    await travarOrganizacaoColecoes(tx);
+    if (typeof edicao.serieId === "string" && !(await serieOcidentalExiste(tx, edicao.serieId))) {
+      return {
+        ok: false as const,
+        motivo: recusa("serieForaDoCatalogoOcidental", { serieId: edicao.serieId }),
+        status: 400 as const,
+      };
+    }
+    const atualizados = await tx
+      .update(grupoColecao)
+      .set({ ...edicao, atualizadoEm: new Date() })
+      .where(eq(grupoColecao.id, id))
+      .returning({ id: grupoColecao.id });
+    return atualizados.length > 0 ? { ok: true as const } : grupoNaoEncontrado();
+  });
 }
 
 /**
@@ -228,7 +242,7 @@ export async function reordenarGruposColecao(
   return db.transaction(async (tx) => {
     await travarOrganizacaoColecoes(tx);
     const grupos = await lerGrupos(tx);
-    const conferida = conferirNovaOrdem(grupos.map((g) => g.id), pedida);
+    const conferida = conferirNovaOrdem(grupos.map((g) => g.id), canonizarIds(pedida));
     if (!conferida.ok) {
       return conferida.motivo === "formato" ? { ok: false as const, formato: true as const } : ordemDesatualizada();
     }
@@ -258,7 +272,8 @@ async function renumerarSecoes(
 
 /**
  * Reordena as coleções de uma seção (`grupoId` nulo = "sem grupo"): `pedida`
- * tem de ser exatamente as coleções dela hoje (409 se velha).
+ * tem de ser exatamente as coleções dela hoje (409 se velha, inclusive quando
+ * o grupo da seção já não existe).
  */
 export async function reordenarColecoes(
   db: Database,
@@ -268,9 +283,11 @@ export async function reordenarColecoes(
   return db.transaction(async (tx) => {
     await travarOrganizacaoColecoes(tx);
     const grupos = await lerGrupos(tx);
-    if (grupoId !== null && !grupos.some((g) => g.id === grupoId)) return grupoNaoEncontrado();
+    // A seção sumiu (outra aba excluiu o grupo): a lista que a tela mandou é
+    // velha, e é isso que a resposta diz — 409, não 404.
+    if (grupoId !== null && !grupos.some((g) => g.id === grupoId)) return ordemDesatualizada();
     const colecoes = await lerColecoesNaOrdem(tx, grupos);
-    const conferida = conferirNovaOrdem(idsDaSecao(colecoes, grupoId), pedida);
+    const conferida = conferirNovaOrdem(idsDaSecao(colecoes, grupoId), canonizarIds(pedida));
     if (!conferida.ok) {
       return conferida.motivo === "formato" ? { ok: false as const, formato: true as const } : ordemDesatualizada();
     }

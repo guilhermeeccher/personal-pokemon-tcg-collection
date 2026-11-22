@@ -5,7 +5,7 @@ import { db } from "@/lib/db/client";
 import { obterExistentesParaGrupo, trazerExistentesParaGrupo } from "@/lib/db/grupos-colecao";
 import { lerIds } from "@/lib/dominio/grupos-colecao";
 import { corpoDaRecusa, corpoRecusa } from "@/lib/dominio/recusa";
-import { ehUuid } from "@/lib/dominio/uuid";
+import { canonizarUuid, ehUuid } from "@/lib/dominio/uuid";
 
 /**
  * GET /api/grupos-colecao/:id/existentes — a prévia de "Trazer as que já
@@ -16,7 +16,8 @@ export const GET = comAcesso(async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
+  // Canonizado: o id é comparado em memória com os que vêm do banco.
+  const id = canonizarUuid((await params).id);
   if (!ehUuid(id)) {
     return NextResponse.json(corpoRecusa("grupoColecaoNaoEncontrado"), { status: 404 });
   }
@@ -34,7 +35,7 @@ export const POST = comAcesso(async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
+  const id = canonizarUuid((await params).id);
   if (!ehUuid(id)) {
     return NextResponse.json(corpoRecusa("grupoColecaoNaoEncontrado"), { status: 404 });
   }

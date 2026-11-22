@@ -11,9 +11,12 @@
  *    `sm` ocidental) e fica de fora; a comparação é **sensível a caixa,
  *    sempre** — normalizar juntaria universos diferentes (o mesmo cuidado de
  *    `agrupamento-sets.ts`).
- *  - **"Já existe" é pela receita.** Um set tem coleção quando alguma coleção
- *    de set o tem em `parametro.sets`; uma coleção que junta vários sets conta
- *    para todos. Não importa em que grupo ela está, nem o nome.
+ *  - **"Já existe" é pela receita ocidental.** Um set tem coleção quando
+ *    alguma coleção de set com catálogo pt ou en o tem em `parametro.sets`;
+ *    uma coleção que junta vários sets conta para todos. Não importa em que
+ *    grupo ela está, nem o nome. A receita japonesa não conta, nem como "já
+ *    existe" nem como candidata a "trazer": `neo1`..`neo4` dividem o `set_id`
+ *    com o inglês e são outras cartas (`setsDaReceitaOcidental`).
  *  - **Promo e energia vêm desmarcados, decididos pelo dado**, nunca por uma
  *    lista de ids: promo = sem numeração oficial (`set_qtd_oficial = 0`, como
  *    o `mep`); energia = toda carta ativa do set é Energia (como o `mee`).
@@ -37,7 +40,7 @@ import { agruparSetsPorSerie, type SetAgrupavel } from "./agrupamento-sets";
 import type { Idioma } from "./enums";
 import type { ParametroSet, TipoColecao } from "./parametro-colecao";
 import { recusa, type Recusa } from "./recusa";
-import { ehUuid } from "./uuid";
+import { canonizarUuid, ehUuid } from "./uuid";
 
 export const TAMANHO_MAXIMO_NOME_GRUPO = 80;
 /** Teto de coleções criadas por vez — folgado para uma série inteira (a maior tem ~20 sets). */
@@ -80,7 +83,8 @@ function lerSerieId(v: unknown): Leitura<string | null> {
 export function lerGrupoId(v: unknown, opcional: boolean): Leitura<string | null> {
   if (v === undefined && opcional) return { ok: true, valor: null };
   if (v === null) return { ok: true, valor: null };
-  if (typeof v === "string" && ehUuid(v)) return { ok: true, valor: v };
+  // Canonizado: o id é comparado em memória com os que vêm do banco.
+  if (typeof v === "string" && ehUuid(v)) return { ok: true, valor: canonizarUuid(v) };
   return { ok: false, erro: "grupoId inválido (UUID ou null)." };
 }
 
@@ -123,14 +127,18 @@ export function lerEdicaoGrupo(corpo: unknown): Leitura<EdicaoGrupo> {
   return { ok: true, valor: edicao };
 }
 
-/** `{ ids: string[] }` — os ids de "trazer as que já existem". Pelo menos um, sem repetição. */
+/**
+ * `{ ids: string[] }` — os ids de "trazer as que já existem". Pelo menos um,
+ * sem repetição, canonizados (`canonizarUuid`) antes de comparar com os do banco.
+ */
 export function lerIds(corpo: unknown): Leitura<string[]> {
   const ids = (typeof corpo === "object" && corpo !== null ? (corpo as Record<string, unknown>).ids : undefined);
   if (!Array.isArray(ids) || ids.length === 0 || !ids.every((x) => typeof x === "string")) {
     return { ok: false, erro: "ids ausente ou vazio (lista de UUIDs)." };
   }
-  if (new Set(ids).size !== ids.length) return { ok: false, erro: "ids repetidos." };
-  return { ok: true, valor: ids as string[] };
+  const canonicos = (ids as string[]).map(canonizarUuid);
+  if (new Set(canonicos).size !== canonicos.length) return { ok: false, erro: "ids repetidos." };
+  return { ok: true, valor: canonicos };
 }
 
 // --- Séries ------------------------------------------------------------------
@@ -223,22 +231,30 @@ export interface ColecaoComReceita {
   parametro: unknown;
 }
 
-function setsDaReceita(c: ColecaoComReceita): string[] {
+/**
+ * Os sets da receita de uma coleção de set **ocidental** (`idiomaCatalogo` pt
+ * ou en). A receita japonesa fica de fora de propósito: `neo1` a `neo4` têm o
+ * mesmo `set_id` em en e em jp, mas são cartas diferentes, numeradas de outro
+ * jeito — uma coleção japonesa de `neo1` não é "a coleção do `neo1`" da série
+ * ocidental, nem candidata a entrar no grupo dela.
+ */
+function setsDaReceitaOcidental(c: ColecaoComReceita): string[] {
   if (c.tipo !== "set") return [];
-  const sets = (c.parametro as Partial<ParametroSet> | null)?.sets;
-  return Array.isArray(sets) ? sets.filter((s): s is string => typeof s === "string") : [];
+  const p = c.parametro as Partial<ParametroSet> | null;
+  if (p?.idiomaCatalogo !== "pt" && p?.idiomaCatalogo !== "en") return [];
+  return Array.isArray(p.sets) ? p.sets.filter((s): s is string => typeof s === "string") : [];
 }
 
 /**
- * Cada set com as coleções que o têm na receita, na ordem em que as coleções
- * vieram (a da lista). Uma coleção de vários sets aparece em todos.
+ * Cada set com as coleções ocidentais que o têm na receita, na ordem em que as
+ * coleções vieram (a da lista). Uma coleção de vários sets aparece em todos.
  */
 export function colecoesPorSet(
   colecoes: readonly ColecaoComReceita[],
 ): Map<string, { id: string; nome: string }[]> {
   const porSet = new Map<string, { id: string; nome: string }[]>();
   for (const c of colecoes) {
-    for (const setId of new Set(setsDaReceita(c))) {
+    for (const setId of new Set(setsDaReceitaOcidental(c))) {
       const lista = porSet.get(setId);
       const item = { id: c.id, nome: c.nome };
       if (lista) lista.push(item);
@@ -374,8 +390,8 @@ export interface ColecaoExistenteParaGrupo {
 }
 
 /**
- * As coleções de set que têm pelo menos um set da série na receita e não
- * estão neste grupo, na ordem em que vieram (a da lista).
+ * As coleções de set ocidentais que têm pelo menos um set da série na receita
+ * e não estão neste grupo, na ordem em que vieram (a da lista).
  */
 export function selecionarExistentes(
   colecoes: readonly (ColecaoComReceita & { grupoId: string | null })[],
@@ -384,7 +400,7 @@ export function selecionarExistentes(
   nomesDosGrupos: ReadonlyMap<string, string>,
 ): ColecaoExistenteParaGrupo[] {
   return colecoes
-    .filter((c) => c.grupoId !== grupoId && setsDaReceita(c).some((s) => setsDaSerie.has(s)))
+    .filter((c) => c.grupoId !== grupoId && setsDaReceitaOcidental(c).some((s) => setsDaSerie.has(s)))
     .map((c) => {
       const nomeGrupo = c.grupoId === null ? undefined : nomesDosGrupos.get(c.grupoId);
       return {

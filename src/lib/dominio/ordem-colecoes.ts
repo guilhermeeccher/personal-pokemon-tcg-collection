@@ -28,6 +28,7 @@
  */
 
 import { moverNaOrdem as moverNaOrdemDaLista } from "./dex-etapas";
+import { canonizarUuid } from "./uuid";
 
 /** O que a ordem precisa de uma coleção. `criadoEm` vem `Date` do banco e texto ISO do DTO. */
 export interface ColecaoOrdenavel {
@@ -103,6 +104,21 @@ export function secoesDeColecoes<T extends ColecaoOrdenavel, G extends GrupoOrde
   return secoes;
 }
 
+/**
+ * Zera o `grupoId` de quem aponta para um grupo fora da lista. `secoesDeColecoes`
+ * já põe essa coleção em "sem grupo", mas a tela procura o grupo pelo id: com
+ * o id de um grupo que ela não recebeu, a coleção sumiria. Acontece quando as
+ * coleções e os grupos são lidos em momentos diferentes e um grupo é excluído
+ * entre as duas leituras.
+ */
+export function soltarDeGruposAusentes<T extends ColecaoOrdenavel>(
+  colecoes: readonly T[],
+  grupos: readonly { id: string }[],
+): T[] {
+  const conhecidos = new Set(grupos.map((g) => g.id));
+  return colecoes.map((c) => (c.grupoId !== null && !conhecidos.has(c.grupoId) ? { ...c, grupoId: null } : c));
+}
+
 /** A lista inteira na ordem de exibição: as seções de `secoesDeColecoes`, achatadas. */
 export function ordenarColecoes<T extends ColecaoOrdenavel>(
   colecoes: readonly T[],
@@ -122,6 +138,19 @@ export function idsDaSecao(
 /** A posição de quem entra no fim de uma seção: uma depois da maior, ou 0 na seção vazia. */
 export function proximaOrdem(ordens: readonly number[]): number {
   return ordens.length === 0 ? 0 : Math.max(...ordens) + 1;
+}
+
+/**
+ * Os ids de um corpo na forma em que o banco os devolve (`canonizarUuid`),
+ * antes de comparar: o Postgres aceita um UUID em maiúsculas, mas a
+ * conferência em memória o veria como outro id e devolveria 409 por uma lista
+ * que está certa. O que não é texto passa como veio, para
+ * `conferirNovaOrdem` recusar o formato.
+ */
+export function canonizarIds(pedida: unknown): unknown {
+  return Array.isArray(pedida)
+    ? pedida.map((x: unknown) => (typeof x === "string" ? canonizarUuid(x) : x))
+    : pedida;
 }
 
 export type ConferenciaDeOrdem =
