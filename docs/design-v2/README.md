@@ -40,16 +40,19 @@ alternatives were one shared root layout with a nested `/v1` layout, or a fallba
 ```
 src/app/
   (v1)/
-    layout.tsx            ← today's root layout, unchanged
+    layout.tsx            ← the former root layout, same DOM
     globals.css, tokens/  ← moved, content unchanged
     login/                ← URL /login, in the v1 skin until package 1f
     v1/
       page.tsx, inicio.tsx, cadastro/, colecoes/, inventario/, dex/
   (v2)/
-    layout.tsx, v2.css    ← dark skin, intl, lang, data-pwa, PWA metadata, bfcache
+    layout.tsx, v2.css    ← dark skeleton: lang, intl, data-pwa, PWA metadata, bfcache
+    _ponte/               ← irParaV1, and the test that runs every bridge
     page.tsx, colecoes/…  ← real v2 screens, or bridge pages
     dex/[[...resto]]/page.tsx  ← one bridge for the whole Dex until package 5-0
-  _componentes/, _acoes/  ← stay where they are (the v1 imports them)
+  _comum/cabeca.tsx       ← the PWA head both root layouts render
+  _componentes/           ← the v1's skin; the v2 never imports it
+  _acoes/                 ← server actions (the language switch)
   api/, manifest.webmanifest/, robots.txt/, pwa/, favicon.ico  ← do not move
 ```
 
@@ -62,17 +65,29 @@ src/app/
   changes the folder, not the URL.
 - **The v1 keeps its own components** in `src/app/_componentes/`. The v2's live in a folder of its
   own, and the v2 does not import the v1's skin (see `rules.md`, "Isolation").
+- **The PWA head is one piece of code for both layouts.** What the password module puts in the
+  `<head>` and on `<html>` (manifest, Apple metadata and icon, `viewport-fit`, `data-pwa`, the
+  bfcache script) is decided in `lib/pwa/cabeca.ts`, pure and tested, and rendered by
+  `src/app/_comum/cabeca.tsx`, which both root layouts call. It lives in `_comum/`, not
+  `_componentes/`, because the v2 does not import the v1's skin.
 
-Three behaviours of Next 16.3 depend on having no top-level `app/layout.tsx`, and package 0a confirms
-them before any v2 screen exists:
+Package 0a measured how Next 16.3.2 behaves with no top-level `app/layout.tsx` (2026-11-22):
 
-- `TODO(0a)`: the 404 of a path that matches nothing — whether Next requires a
-  `global-not-found.tsx` (and its flag) without a top-level layout, and what its body looks like.
-  The password module's "404 while off" contract keeps holding by construction (its paths are
-  rewritten to a folder with no route), but the body of the 404 page changes from today's build.
-- `TODO(0a)`: whether `src/app/favicon.ico` is still injected in the `<head>` of both root layouts.
-- `TODO(0a)`: whether the language switch's `revalidatePath("/", "layout")`
-  (`src/app/_acoes/definir-locale.ts`) refreshes pages under both root layouts.
+- **A path that matches nothing gets Next's default 404**, with no layout of ours: static, in
+  English, no `lang`, colours from `prefers-color-scheme`, with the favicon and `robots noindex`.
+  Before the move it rendered inside the v1 layout, with the menu. No `global-not-found.tsx` is
+  needed, and none exists. The password module's "404 while off" still answers exactly like any
+  missing path (same status, headers and body hash), by construction. A 404 in the v2's skin would
+  need `experimental.globalNotFound` in `next.config.ts`; for now the default stays, and package 0c
+  evaluates the flag and updates this text if it adopts it.
+- **The favicon is injected by both root layouts**, and so are the Apple icon, the manifest and
+  `viewport-fit` when the password module is on.
+- **The language switch works under both layouts.** Both root layouts have the layout route `/`, so
+  `revalidatePath("/", "layout")` (`src/app/_acoes/definir-locale.ts`) re-renders the current
+  page in the new language; a move between v1 and v2 is a document load, so no client cache
+  crosses the two.
+- **Page `params` arrive raw, with the URL's escapes; `searchParams` arrive decoded.** That is why
+  `destinoV1` does not re-encode a dynamic segment (see below).
 
 ### Bridge pages
 
@@ -95,13 +110,28 @@ Every screen the v2 has not done yet has, in its place, a **bridge page**: three
   404 directly, never a 307 first.
 - **No catch-all at the root of the v2.** It would swallow the password module's private 404 paths.
   A catch-all exists only below `/dex`.
-- **The destination is built by a pure, tested function** (`lib/dominio/destino-v1.ts`): it keeps
-  repeated keys, accents, `+` and `%` in the query, and encodes the `[id]` segment.
-- **`telas-v1.test.ts`** keeps the pairing honest: every page under `(v1)/v1/**` has a root
-  counterpart (a real v2 page or a bridge), every bridge points at a v1 screen that exists, and no
-  screen path literal in the v1 starts without `/v1` (paths under `/api/`, `/login`, `/pwa/` and `#`
-  anchors are allowed). The 82 hand-written screen paths in 19 v1 files get the `/v1` prefix in
-  package 0a.
+- **A bridge is written one way:** `await exigirSessao();` then
+  `irParaV1(["colecoes", id], await searchParams)` (`src/app/(v2)/_ponte/ir-para-v1.ts`), whose
+  first argument is a literal array of segments — fixed text, the dynamic parameter of the same
+  name, or the spread catch-all — so the test can read where it goes.
+- **The destination is built by a pure, tested function** (`lib/dominio/destino-v1.ts`). Segments
+  go as they arrived (Next hands them over raw), escaping only what cannot go raw in a path; a
+  segment made only of dots (`%2E` included) is escaped twice, so it never climbs a folder. The
+  query is rebuilt from `searchParams`: repeated keys stay repeated, a literal `+` or `%` comes back
+  encoded, accents in UTF-8.
+- **`telas-v1.test.ts`** (pure analysis in `lib/dominio/telas-v1.ts`) keeps the pairing honest:
+  every page under `(v1)/v1/**` has a root counterpart (a real v2 page or a bridge), every bridge
+  points at the same v1 screen and it exists, no catch-all sits at the v2 root, no screen path
+  literal in `(v1)/**` or `_componentes/**` starts without `/v1`, and nothing in `(v2)/**` imports
+  `_componentes/` or `(v1)/`. Root paths both versions share are allowed: `/api/`, `/login`,
+  `/pwa/`, `/manifest.webmanifest`, `/favicon.ico`, and `#` anchors. A template that starts with
+  `/${…}` counts as a screen path only in a navigation position (the `href`, `action` or
+  `formAction` attribute; a `href`, `pathname`, `url` or `volta` property; the argument of `push`,
+  `replace`, `prefetch`, `assign`, `redirect` or `permanentRedirect`): elsewhere it is the
+  "n/total" numbering of a card.
+- **`src/app/(v2)/_ponte/pontes.test.ts` runs every bridge** with Next's real `redirect` and
+  `notFound` and checks the result: 307, the destination, the query, the guard first, and the Dex
+  404 with no redirect when the module is off.
 - **A v1 flow ends in the v1.** The v1 never links to the root. The v2, on the other hand, may link
   to a root path whose screen is still a bridge: the link is already right when the screen arrives.
 - To see what is still bridged: `grep -rl irParaV1 'src/app/(v2)'`.

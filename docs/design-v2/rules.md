@@ -50,7 +50,7 @@ Section "The app is HTTP on the local network — what that forbids in the brows
 | Rule | Scope | For the v2 |
 |---|---|---|
 | The default install is plain HTTP on the machine's IP; no secure-context-only API | **both** | More important in the v2. Besides `navigator.clipboard`, the prototype relies on two more APIs that do not exist there: `navigator.userAgentData` (its engine detection, so the glass refraction never turns on over HTTP) and `deviceorientation`. The v2 uses neither for anything that must work by default. |
-| Copy through `copiar-texto.ts` (`execCommand` fallback), never the Clipboard API directly | **both** | The v2's "copy list" goes through the same function. Whether the v2 imports it from its current place or a skinless copy is fixed by package 0a's isolation test (`TODO(0a)`, section 7). |
+| Copy through `copiar-texto.ts` (`execCommand` fallback), never the Clipboard API directly | **both** | The v2's "copy list" goes through the same function. It lives in `src/app/_componentes/`, which the v2 may not import, so the first v2 package that needs it moves it to `src/app/_comum/` (section 7, rule 16) — never a second copy. |
 | Same restriction for geolocation, notifications, service workers | **both** | — |
 
 ---
@@ -67,11 +67,11 @@ unchanged.
 | Layer 1, `src/proxy.ts`: closed list of public method + path pairs, 307 to `/login?volta=...`, 401 JSON otherwise | **both** | `/v1/**` and the bridges are covered by the existing matcher; no public pair is added. |
 | Layer 2, **every `page.tsx`** except `/login` calls `await exigirSessao()` first; a client page lives in `pagina-cliente.tsx` behind a server wrapper; server actions call `exigirSessaoNaAcao()` | **both** | Every v2 page, **bridges included**, starts with `await exigirSessao()`. The login exception stays **exactly one page**: package 0a points it at `(v1)/login/page.tsx`, package 1f moves it to the v2 and points it there — never a looser pattern that would exempt any `login/page.tsx`, and never two pages for `/login`. |
 | Layer 3, every route handler wrapped in `comAcesso` | **both** | No route handler moves. |
-| **`cobertura-estatica.test.ts` enforces all three** | **both** | Package 0a adjusts it: the login exception, and "finds the root layout" becomes "finds both root layouts" (neither may reach `@/lib/db`). `TODO(0a)`: if a `global-not-found.tsx` is required, it joins the special files and may not reach the database either. |
+| **`cobertura-estatica.test.ts` enforces all three** | **both** | Since package 0a: the login exception is exactly `(v1)/login/page.tsx` (and a test checks that file exists); the test finds both root layouts, `(v1)/layout.tsx` and `(v2)/layout.tsx`, and fails if a top-level `app/layout.tsx` comes back; neither layout may reach `@/lib/db`. `global-not-found` is already in its list of special files, so if package 0c adds one it may not reach the database either. |
 | **Session**, **Origin**, **Two `GET` handlers write**, **Login rate limit** | **both** | Unchanged: cookies are `Path=/`, origins do not change with `/v1`. |
 | **`volta`** accepts only a relative path of the site | **both** | `/v1/...` passes as is; `/login` is still the only path refused by name. |
 | **Headers** (`X-Robots-Tag`, `X-Frame-Options`, `frame-ancestors`, `Referrer-Policy`, `nosniff`, `no-store`) | **both** | Present on `/v1/...` and on every bridge 307. The CSP is only `frame-ancestors`: inline `<svg>`, `data:` mask URIs and `feImage href=data:` keep working. If a `script-src` or `img-src` ever enters, the v2's effects are reviewed. |
-| **The 404 while off** (`x-acesso-desligado` + `beforeFiles` rewrite) | **both** | Holds by construction: the private folder is a path with no route. `TODO(0a)`: the body of that 404 changes with the top-level 404 page (see the README). |
+| **The 404 while off** (`x-acesso-desligado` + `beforeFiles` rewrite) | **both** | Holds by construction: the private folder is a path with no route. Measured by package 0a: same status, headers and body hash as any missing path, in GET and POST. That body is now Next's default 404 (no layout of ours), not the v1 layout's; see the README. |
 | **Metadata routes are route handlers** with `force-dynamic` | **both** | They do not move. |
 | **Turning it off on a published install**: public route first, module second | **both** | — |
 
@@ -83,13 +83,13 @@ Bullet **"PWA, only with the module on"** of the same section.
 
 | Rule | Scope | For the v2 |
 |---|---|---|
-| Manifest, icons from `/pwa/[arquivo]`, Apple metadata — only with the module on | **both** | Unchanged (decision 9). The v2 root layout carries the same metadata as the v1's, so a v2 page does not lose the manifest; the module-dependent part is shared by both layouts rather than copied (`TODO(0a)`: where package 0a puts it). |
+| Manifest, icons from `/pwa/[arquivo]`, Apple metadata — only with the module on | **both** | Unchanged (decision 9). The v2 root layout carries the same metadata as the v1's, so a v2 page does not lose the manifest. Both layouts render one shared head: the decision is in `lib/pwa/cabeca.ts` (`metadadosPwa`, `viewportPwa`, `atributosHtmlPwa`, `SCRIPT_BFCACHE`, pure and tested), rendered by `src/app/_comum/cabeca.tsx`. Change it there, never in one layout. |
 | `data-pwa` on `<html>` and the bfcache script — only with the module on | **both** | Both root layouts have them. Without the script, "Sign out" followed by "Back" would show a cached v2 page. |
-| `viewport-fit=cover` — only with the module on | **v1 only** | **New wording (decision 9):** the v2 always sets `viewportFit: "cover"`, and its safe areas are its own rules, **not** under `[data-pwa]`: the floating tab bar depends on `env(safe-area-inset-*)` with the module off too. Manifest, icons and Apple metadata stay conditional. |
-| Safe-area rules under `[data-pwa]` (`globals.css`, `body > header|nav|div`) | **v1 only** | They depend on the v1's DOM, which the v1 keeps. The v2 writes its own (above). |
+| `viewport-fit=cover` — only with the module on | **v1 only** | **New wording (decision 9):** the v2 always sets `viewportFit: "cover"`, and its safe areas are its own rules, **not** under `[data-pwa]`: the floating tab bar depends on `env(safe-area-inset-*)` with the module off too. Manifest, icons and Apple metadata stay conditional. Package 0c delivers it; until then the v2 skeleton uses the shared `viewportPwa`, conditional like the v1's. |
+| Safe-area rules under `[data-pwa]` (`(v1)/globals.css`, `body > header|nav|div`) | **v1 only** | They depend on the v1's DOM, which the v1 keeps. The v2 writes its own (above), in package 0c. |
 | No service worker | **both** | — |
 | `start_url` and `scope` of the manifest are `/` | **both** | Unchanged: `/` covers `/v1`, and the installed app opens at the root, which today bridges to `/v1` and later is the v2, with no reinstall. |
-| The splash colour (`COR_FUNDO`, cream) and `statusBarStyle: "default"` | **v1 only** | Open point: they become the dark ones when the v2 serves the root; not decided here. iOS stores the manifest at install time, so the user may have to reinstall to see the new splash. |
+| The splash colour (`COR_FUNDO`, cream, `lib/pwa/identidade.ts`) and `statusBarStyle: "default"` (`lib/pwa/cabeca.ts`) | **v1 only** | Package 0c makes them dark. Both are shared by the two layouts, so the change reaches the v1's installed app too. iOS stores the manifest at install time, so the user may have to reinstall to see the new splash. |
 
 ---
 
@@ -185,9 +185,10 @@ rest are the technical foundations of the v2.
 
 ### Foundations
 
-10. **Dark only.** The v2 has one theme, `color-scheme: dark`. The v1 is light only and stays so.
-    The v1 layout avoids `themeColor` because Safari on the Mac would tint the window; whether the
-    v2 sets a dark `theme-color` is decided in package 0c.
+10. **Dark only.** The v2 has one theme, `color-scheme: dark` (already set by the skeleton in
+    `(v2)/v2.css`). The v1 is light only and stays so. The shared PWA head avoids `themeColor`
+    because Safari on the Mac would tint the window; whether the v2 sets a dark `theme-color` is
+    decided in package 0c.
 11. **The window is the scroller at every width.** The rail and the tab bar are fixed or sticky
     glass over the document's own scroll. The prototype scrolls inside a box with
     `overflow: hidden` on the body; the v2 does not copy that (on iOS the address bar collapse and
@@ -207,12 +208,15 @@ rest are the technical foundations of the v2.
 
 ### Isolation between the two versions
 
-16. **The v2 does not import the v1's skin.** Nothing in the v2 imports the v1's stylesheet, tokens
-    or skinned components from `src/app/_componentes/`: without the v1's tokens their classes have
-    no colour. The v2 has its own stylesheet with its own Tailwind entry. `TODO(0a)`: the exact
-    rule and its exceptions — the skinless utilities both versions need (`copiar-texto.ts`,
-    `recusa.ts`, `use-eh-mobile.ts`, `use-camada.ts` and the like) — are fixed by package 0a's test
-    (`telas-v1.test.ts` or a lint rule), and this item is updated to name them.
+16. **The v2 does not import the v1's skin.** No file under `src/app/(v2)/` imports from
+    `src/app/_componentes/` or `src/app/(v1)/` (`telas-v1.test.ts`): without the v1's tokens their
+    classes have no colour. **The ban has no exceptions.** A skinless helper both versions need
+    (`copiar-texto.ts`, `recusa.ts`, `use-eh-mobile.ts`, `use-camada.ts` and the like, all in
+    `_componentes/` today) moves to `src/app/_comum/`, with its v1 importers updated in the same
+    change — the precedent is the PWA head, `_comum/cabeca.tsx` — and is never copied. The first v2
+    package that needs one moves it. Shared code outside `src/app` (`lib/`, `messages/`) is not
+    affected. The v2 has its own stylesheet, `(v2)/v2.css`: today only `color-scheme: dark` and the
+    dark background; its Tailwind entry, tokens and fonts arrive with package 0c.
 17. **The v1 never links to the root**, and its screen paths all start with `/v1` (enforced by
     `telas-v1.test.ts`). The v2 may link to a root path that is still a bridge.
 18. **Bridges are 307**, call `exigirSessao()` first, keep the query, and exist only where a v2
@@ -238,8 +242,10 @@ rest are the technical foundations of the v2.
 
 ## Open points
 
-- `TODO(0a)`: the top-level 404 and `global-not-found.tsx`, the favicon in both root layouts, the
-  language switch's `revalidatePath` with two root layouts — see the README.
-- `TODO(0a)`: the exceptions to the v2's import ban (section 7, rule 16).
-- The splash colour and `statusBarStyle` when the v2 serves the root (section 4).
-- A dark `theme-color` in the v2 (section 7, rule 10), decided in 0c.
+All owned by package 0c:
+
+- A 404 in the v2's skin: today a path with no route gets Next's default 404; 0c evaluates
+  `experimental.globalNotFound` and, if it adopts it, updates the README and section 3.
+- The dark splash colour and `statusBarStyle` (section 4).
+- The v2's `viewport-fit=cover` and its own safe areas, decision 9 (section 4).
+- A dark `theme-color` in the v2 (section 7, rule 10).
