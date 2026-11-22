@@ -18,7 +18,8 @@
  *   (409), um set fora da série (400) ou a falta de resposta, em que o
  *   servidor pode ter gravado —, a prévia é relida e o botão fica desligado
  *   até uma leitura válida chegar.** Uma releitura que falha não religa a
- *   prévia velha. Ficam só os nomes e as marcas que ainda valem: os dos sets
+ *   prévia velha, e a janela oferece "Tentar de novo" ali mesmo, mantendo as
+ *   marcas e os nomes que ainda valem. Ficam só os nomes e as marcas que ainda valem: os dos sets
  *   que seguem na prévia e continuam selecionáveis.
  */
 
@@ -49,6 +50,7 @@ export function ModalFaltantes({
 }) {
   const t = useTranslations("colecoes.faltantes");
   const tr = useTranslations("recusas");
+  const tc = useTranslations("colecoes");
   const [previa, setPrevia] = useState<FaltantesDoGrupoDTO | null>(null);
   const [marcados, setMarcados] = useState<Set<string>>(new Set());
   const [nomes, setNomes] = useState<Record<string, string>>({});
@@ -118,6 +120,13 @@ export function ModalFaltantes({
     escolhidos.length <= MAXIMO_SETS_POR_CRIACAO &&
     !nomeVazio &&
     !enviando;
+
+  /** "Tentar de novo" de uma leitura que falhou: marcas e nomes de agora ficam onde ainda valem. */
+  function reler() {
+    setErroLeitura(null);
+    setCarregando(true);
+    void carregar();
+  }
 
   function alternar(setId: string, valor: boolean) {
     setMarcados((atuais) => {
@@ -238,7 +247,14 @@ export function ModalFaltantes({
       {escolhidos.length > MAXIMO_SETS_POR_CRIACAO && (
         <p className="text-sm text-warning-fg">{t("demais", { maximo: MAXIMO_SETS_POR_CRIACAO })}</p>
       )}
-      {erroLeitura && <p className="text-sm text-danger">{erroLeitura}</p>}
+      {erroLeitura && (
+        <div className="flex flex-wrap items-center gap-2 text-sm text-danger">
+          <p>{erroLeitura}</p>
+          <Botao type="button" tamanho="sm" onClick={reler} disabled={enviando || carregando}>
+            {tc("tentarDeNovo")}
+          </Botao>
+        </div>
+      )}
       {erro && <p className="text-sm text-danger">{erro}</p>}
     </Modal>
   );

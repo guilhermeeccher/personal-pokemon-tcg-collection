@@ -162,11 +162,11 @@
       "cancelar": "Cancelar",
       "erroCarregar": "Falha ao carregar a prévia.",
       "erroCriar": "Falha ao criar as coleções.",
-      "erroRede": "Sem resposta do servidor: não dá para saber se as coleções foram criadas. A lista e a prévia foram relidas; confira antes de tentar de novo."
+      "erroRede": "Sem resposta do servidor: não dá para saber se as coleções foram criadas. Estamos relendo a lista e a prévia; confira antes de tentar de novo."
     },
     "existentes": {
       "titulo": "Trazer coleções para {grupo}",
-      "descricao": "Coleções de set que têm algum set da série {serie}. Só vêm marcadas as que não estão em nenhum grupo.",
+      "descricao": "Coleções de set que têm algum set da série ligada a este grupo. Só vêm marcadas as que não estão em nenhum grupo.",
       "carregando": "Carregando…",
       "nenhuma": "Nenhuma coleção de set desta série fora deste grupo.",
       "saiDe": "Sai do grupo {grupo}",
@@ -176,9 +176,11 @@
       "cancelar": "Cancelar",
       "erroCarregar": "Falha ao carregar a prévia.",
       "erroTrazer": "Falha ao trazer as coleções.",
-      "erroRede": "Sem resposta do servidor: não dá para saber se as coleções foram movidas. A lista e a prévia foram relidas; confira antes de tentar de novo."
+      "erroRede": "Sem resposta do servidor: não dá para saber se as coleções foram movidas. Estamos relendo a lista e a prévia; confira antes de tentar de novo.",
+      "demais": "Marque no máximo {maximo} coleções por vez."
     },
-    "tentarDeNovo": "Tentar de novo"
+    "tentarDeNovo": "Tentar de novo",
+    "grupoExcluido": "Este grupo foi excluído em outra aba."
   },
   "cadastroBusca": {
     "titulo": "Cadastro por busca",

@@ -104,6 +104,13 @@ export default function ColecoesPage() {
   const [ocupado, setOcupado] = useState(false);
   const [janela, setJanela] = useState<JanelaAberta | null>(null);
   const sequencia = useRef(0);
+  // O aviso de uma janela que fechou sozinha (o grupo dela foi excluído em
+  // outra aba) e a janela aberta, lida de dentro da leitura da lista.
+  const [aviso, setAviso] = useState<string | null>(null);
+  const janelaRef = useRef<JanelaAberta | null>(null);
+  useEffect(() => {
+    janelaRef.current = janela;
+  }, [janela]);
 
   // Em promessas encadeadas, não `async`: o `setState` fica no `then`, e o
   // efeito abaixo não o chama de forma síncrona.
@@ -120,6 +127,13 @@ export default function ColecoesPage() {
         }
         setItens(d.itens);
         setGrupos(d.grupos);
+        // Janela de um grupo que a leitura nova já não traz: fecha COM aviso,
+        // não em silêncio (quem a abriu estava no meio de uma decisão).
+        const aberta = janelaRef.current;
+        if (aberta && aberta.grupoId !== null && !d.grupos.some((g) => g.id === aberta.grupoId)) {
+          setJanela(null);
+          setAviso(t("grupoExcluido"));
+        }
         setErroLista(null);
         setOcupado(false);
       })
@@ -152,6 +166,7 @@ export default function ColecoesPage() {
     if (ocupado) return;
     setOcupado(true);
     setErro(null);
+    setAviso(null);
     try {
       const r = await chamarApi(url, method, corpo);
       if (!r.ok) setErro(textoDaRecusa(tr, r.corpo, t("erroOperacao")));
@@ -179,6 +194,11 @@ export default function ColecoesPage() {
 
   function mudarDeGrupo(c: ColecaoListaDTO, grupoId: string) {
     void escrever(`/api/colecoes/${c.id}/grupo`, "PATCH", { grupoId: grupoId || null });
+  }
+
+  function abrir(j: JanelaAberta) {
+    setAviso(null);
+    setJanela(j);
   }
 
   /** A lista pode ter mudado por baixo (uma escrita de resultado incerto, uma recusa por lista velha): relê e trava até chegar. */
@@ -244,13 +264,14 @@ export default function ColecoesPage() {
         <div className="flex flex-col gap-2">
           <Alerta>{t("ajudaOrganizar")}</Alerta>
           <div>
-            <Botao disabled={ocupado} onClick={() => setJanela({ tipo: "grupo", grupoId: null })}>
+            <Botao disabled={ocupado} onClick={() => abrir({ tipo: "grupo", grupoId: null })}>
               {t("novoGrupo")}
             </Botao>
           </div>
         </div>
       )}
 
+      {aviso && <Alerta tom="aviso">{aviso}</Alerta>}
       {erro && <p className="text-sm text-danger">{erro}</p>}
       {erroLista && (
         <div className="flex flex-wrap items-center gap-2 text-sm text-danger">
@@ -308,7 +329,7 @@ export default function ColecoesPage() {
                       tamanho="xs"
                       className={classesBotaoLinha}
                       disabled={ocupado}
-                      onClick={() => setJanela({ tipo: "grupo", grupoId: grupo.id })}
+                      onClick={() => abrir({ tipo: "grupo", grupoId: grupo.id })}
                     >
                       {t("editarGrupo")}
                     </Botao>
@@ -317,7 +338,7 @@ export default function ColecoesPage() {
                       variante="perigo"
                       className={classesBotaoLinha}
                       disabled={ocupado}
-                      onClick={() => setJanela({ tipo: "excluir", grupoId: grupo.id })}
+                      onClick={() => abrir({ tipo: "excluir", grupoId: grupo.id })}
                     >
                       {t("excluirGrupo")}
                     </Botao>
@@ -327,7 +348,7 @@ export default function ColecoesPage() {
                           tamanho="xs"
                           className={classesBotaoLinha}
                           disabled={ocupado}
-                          onClick={() => setJanela({ tipo: "faltantes", grupoId: grupo.id })}
+                          onClick={() => abrir({ tipo: "faltantes", grupoId: grupo.id })}
                         >
                           {t("criarFaltantes")}
                         </Botao>
@@ -335,7 +356,7 @@ export default function ColecoesPage() {
                           tamanho="xs"
                           className={classesBotaoLinha}
                           disabled={ocupado}
-                          onClick={() => setJanela({ tipo: "existentes", grupoId: grupo.id })}
+                          onClick={() => abrir({ tipo: "existentes", grupoId: grupo.id })}
                         >
                           {t("trazerExistentes")}
                         </Botao>
@@ -350,8 +371,8 @@ export default function ColecoesPage() {
               {secao.colecoes.map((c, i) => {
                 const customizada = c.tipo === "customizada";
                 const descricao = (
-                  <div className="max-md:min-w-0">
-                    <div className="font-medium max-md:break-words">{c.nome}</div>
+                  <div className="min-w-0">
+                    <div className="font-medium break-words">{c.nome}</div>
                     <div className="text-sm text-muted">
                       {t.has(`tipo.${c.tipo}`) ? t(`tipo.${c.tipo}`) : c.tipo}
                       {c.idiomaExigido ? t("idiomaExigido", { idioma: c.idiomaExigido }) : ""}
@@ -359,7 +380,7 @@ export default function ColecoesPage() {
                   </div>
                 );
                 const resumo = (
-                  <div className="flex items-center gap-3 text-sm">
+                  <div className="flex shrink-0 items-center gap-3 text-sm">
                     {c.avisoCatalogoIncompleto && <Distintivo tom="aviso">{t("catalogoIncompleto")}</Distintivo>}
                     {c.avisoSemNumeracaoOficial && <Distintivo tom="aviso">{t("semNumeracaoOficial")}</Distintivo>}
                     <span className="tabular-nums text-muted">

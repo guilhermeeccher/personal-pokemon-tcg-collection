@@ -162,11 +162,11 @@
       "cancelar": "Cancel",
       "erroCarregar": "Failed to load the preview.",
       "erroCriar": "Failed to create the collections.",
-      "erroRede": "No response from the server: it is unknown whether the collections were created. The list and the preview were reloaded; check them before trying again."
+      "erroRede": "No response from the server: it is unknown whether the collections were created. We are reloading the list and the preview; check them before trying again."
     },
     "existentes": {
       "titulo": "Bring collections into {grupo}",
-      "descricao": "Set collections that have any set of the {serie} series. Only the ones in no group come checked.",
+      "descricao": "Set collections that have any set of the series linked to this group. Only the ones in no group come checked.",
       "carregando": "Loading…",
       "nenhuma": "No set collection of this series outside this group.",
       "saiDe": "Leaves the group {grupo}",
@@ -176,9 +176,11 @@
       "cancelar": "Cancel",
       "erroCarregar": "Failed to load the preview.",
       "erroTrazer": "Failed to bring the collections.",
-      "erroRede": "No response from the server: it is unknown whether the collections were moved. The list and the preview were reloaded; check them before trying again."
+      "erroRede": "No response from the server: it is unknown whether the collections were moved. We are reloading the list and the preview; check them before trying again.",
+      "demais": "Check at most {maximo} collections at a time."
     },
-    "tentarDeNovo": "Try again"
+    "tentarDeNovo": "Try again",
+    "grupoExcluido": "This group was deleted in another tab."
   },
   "cadastroBusca": {
     "titulo": "Add by search",

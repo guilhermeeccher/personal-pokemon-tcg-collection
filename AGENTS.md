@@ -405,7 +405,9 @@ at most one group or in none. Every collection type can be grouped.
   it). "Bring the existing ones" also sends, per collection, the group the preview showed it in
   (`{ id, grupoOrigemId }`): a collection that another tab moved into some group after the preview
   would otherwise be pulled out of it without that choice ever being on screen
-  (`lerPedidoExistentes`, `conferirSerieDoPedido`, `conferirPedidoExistentes`).
+  (`lerPedidoExistentes`, `conferirSerieDoPedido`, `conferirPedidoExistentes`). The 409 covers a
+  changed series or source group only; a destination group deleted since the preview is a 404
+  (`grupoColecaoNaoEncontrado`), and the screen closes the preview saying so.
 
 ---
 

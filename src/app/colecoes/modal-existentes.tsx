@@ -12,11 +12,18 @@
  * - **A confirmação manda o que a prévia mostrou**: a série que ela traz e, de cada
  *   coleção, o grupo de que ela sai (`grupoOrigemId`). Se um dos dois mudou
  *   em outra aba, o servidor recusa com 409 e nada é movido.
+ * - **A janela não mostra o nome da série**: o rótulo que a página tem pode
+ *   ser de uma série que outra aba já trocou, e a prévia já listaria as
+ *   coleções da nova sob um cabeçalho da antiga. O texto fala só "da série
+ *   ligada a este grupo", que é o que a prévia lida representa.
  * - **Depois de uma recusa, ou de uma falha sem resposta (o servidor pode ter
  *   gravado), a prévia é relida e o botão fica desligado até uma leitura
  *   válida chegar.** Uma releitura que falha não religa a prévia velha. Das
  *   marcas, ficam as das coleções que seguem na lista e cujo grupo de
- *   origem não mudou; as demais voltam ao padrão.
+ *   origem não mudou; as demais voltam ao padrão. Se a leitura falha, a
+ *   janela oferece "Tentar de novo" ali mesmo, mantendo essas marcas.
+ * - **Acima de `MAXIMO_COLECOES_POR_TRAZER` o botão fica desligado**, com
+ *   uma frase, em vez de deixar a API recusar.
  */
 
 import { useTranslations } from "next-intl";
@@ -25,6 +32,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Botao } from "@/app/_componentes/botao";
 import { Modal } from "@/app/_componentes/modal";
 import { textoDaRecusa } from "@/app/_componentes/recusa";
+import { MAXIMO_COLECOES_POR_TRAZER } from "@/lib/dominio/grupos-colecao";
 import type { ExistentesDoGrupoDTO, GrupoColecaoDTO, TrazerExistentesDTO } from "@/lib/dominio/tipos-cliente";
 
 import { chamarApi } from "./chamar-api";
@@ -43,6 +51,7 @@ export function ModalExistentes({
 }) {
   const t = useTranslations("colecoes.existentes");
   const tr = useTranslations("recusas");
+  const tc = useTranslations("colecoes");
   // `null` = não há prévia válida (ainda não leu, ou a última leitura falhou).
   const [previa, setPrevia] = useState<ExistentesDoGrupoDTO | null>(null);
   const [marcados, setMarcados] = useState<Set<string>>(new Set());
@@ -106,6 +115,15 @@ export function ModalExistentes({
   const colecoes = previa?.colecoes ?? [];
   const escolhidas = colecoes.filter((c) => marcados.has(c.id));
 
+  const demais = escolhidas.length > MAXIMO_COLECOES_POR_TRAZER;
+
+  /** "Tentar de novo" de uma leitura que falhou: as marcas de agora ficam onde ainda valem. */
+  function reler() {
+    setErroLeitura(null);
+    setCarregando(true);
+    void carregar();
+  }
+
   function alternar(id: string, valor: boolean) {
     setMarcados((atuais) => {
       const proximo = new Set(atuais);
@@ -116,7 +134,7 @@ export function ModalExistentes({
   }
 
   async function trazer() {
-    if (previa === null || escolhidas.length === 0) return;
+    if (previa === null || escolhidas.length === 0 || demais) return;
     setErro(null);
     setEnviando(true);
     let relido = false;
@@ -161,7 +179,7 @@ export function ModalExistentes({
             type="button"
             variante="primario"
             onClick={() => void trazer()}
-            disabled={enviando || !valida || escolhidas.length === 0}
+            disabled={enviando || !valida || escolhidas.length === 0 || demais}
           >
             {enviando ? t("trazendo") : t("trazer", { total: escolhidas.length })}
           </Botao>
@@ -169,7 +187,7 @@ export function ModalExistentes({
       }
     >
       <h2 className="font-medium break-words text-foreground">{t("titulo", { grupo: grupo.nome })}</h2>
-      <p className="break-words text-muted">{t("descricao", { serie: grupo.serieRotulo ?? "" })}</p>
+      <p className="break-words text-muted">{t("descricao")}</p>
       {carregando && <p className="text-muted">{t("carregando")}</p>}
       {valida && colecoes.length === 0 && <p className="text-muted">{t("nenhuma")}</p>}
       {/* Abaixo de md os rótulos têm 44px de altura e ficam 8px um do outro. */}
@@ -194,7 +212,15 @@ export function ModalExistentes({
           </li>
         ))}
       </ul>
-      {erroLeitura && <p className="text-sm text-danger">{erroLeitura}</p>}
+      {demais && <p className="text-sm text-warning-fg">{t("demais", { maximo: MAXIMO_COLECOES_POR_TRAZER })}</p>}
+      {erroLeitura && (
+        <div className="flex flex-wrap items-center gap-2 text-sm text-danger">
+          <p>{erroLeitura}</p>
+          <Botao type="button" tamanho="sm" onClick={reler} disabled={enviando || carregando}>
+            {tc("tentarDeNovo")}
+          </Botao>
+        </div>
+      )}
       {erro && <p className="text-sm text-danger">{erro}</p>}
     </Modal>
   );
