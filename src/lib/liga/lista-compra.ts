@@ -9,7 +9,7 @@
  */
 
 import { precosDasCandidatas } from "@/lib/db/candidatas-compra";
-import type { Database } from "@/lib/db/client";
+import type { Database, Transacao } from "@/lib/db/client";
 import type { EscolhaSalva } from "@/lib/db/escolhas";
 import type { Regiao } from "@/lib/dominio/escopo-pokedex";
 import type { FontePreco } from "@/lib/dominio/fonte-preco";
@@ -84,7 +84,7 @@ export interface PrecoDaEscolha {
  * A tela e a exportação chamam esta mesma função, para não divergirem.
  */
 export async function precosDasEscolhas(
-  db: Database,
+  db: Database | Transacao,
   escolhas: readonly EscolhaSalva[],
   fonte: FontePreco,
 ): Promise<(e: EscolhaSalva) => PrecoDaEscolha> {

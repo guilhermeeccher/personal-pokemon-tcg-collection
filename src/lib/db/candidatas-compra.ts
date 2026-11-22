@@ -109,7 +109,7 @@ function porCarta(linhas: readonly LinhaFicha[]): Map<string, LinhaFicha[]> {
  * vem primeiro, que é o desempate da tela.
  */
 async function candidatasDaPokedex(
-  db: Database,
+  db: Database | Transacao,
   colecaoId: string,
   comImagem: boolean,
 ): Promise<VagaComCandidatas[]> {
@@ -159,7 +159,7 @@ async function candidatasDaPokedex(
  * as fichas dela em todos os idiomas — a ficha em inglês dá o nome da linha.
  */
 async function candidatasDoSet(
-  db: Database,
+  db: Database | Transacao,
   colecaoId: string,
   parametro: ParametroSet,
   comImagem: boolean,
@@ -194,7 +194,7 @@ async function candidatasDoSet(
 
 /** As vagas vazias de uma coleção Pokédex ou de set, com as candidatas de cada uma. */
 export async function listarCandidatasDaColecao(
-  db: Database,
+  db: Database | Transacao,
   colecao: { id: string; tipo: string; parametro: unknown },
   { comImagem = false }: { comImagem?: boolean } = {},
 ): Promise<VagaComCandidatas[]> {
@@ -228,7 +228,7 @@ export interface PrecoCandidata {
 const numero = (v: string | null) => (v === null ? null : Number(v));
 
 export async function precosDasCandidatas(
-  db: Database,
+  db: Database | Transacao,
   cartaIds: readonly string[],
 ): Promise<Map<string, PrecoCandidata>> {
   if (cartaIds.length === 0) return new Map();
@@ -454,7 +454,7 @@ export async function concluirRodadaDeCandidatas(
 
 /** A rodada mais recente desta coleção — a que a tela mostra. */
 export async function ultimaRodadaDeCandidatas(
-  db: Database,
+  db: Database | Transacao,
   colecaoId: string,
 ): Promise<RodadaPrecoCandidata | null> {
   const [linha] = await db

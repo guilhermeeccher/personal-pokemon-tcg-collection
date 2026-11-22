@@ -5,6 +5,7 @@ import {
   ofertarCandidatas,
   ofertarOpcoesDaVarredura,
   precoDaOpcao,
+  resumirPrecosDasCandidatas,
   vagasComVariasEscolhas,
   type EscolhaParaOpcoes,
   type PrecoParaOpcoes,
@@ -216,5 +217,27 @@ describe("ofertarCandidatas", () => {
     );
     expect(v.opcoes[0]).not.toHaveProperty("nomeExibicao");
     expect(v.opcoes[1]).toMatchObject({ nomeExibicao: "Monstrinho BR" });
+  });
+});
+
+describe("resumirPrecosDasCandidatas", () => {
+  const agora = new Date("2026-11-22T12:00:00Z");
+  const horas = (h: number) => new Date(agora.getTime() - h * 3_600_000);
+
+  it("conta com preço, sem preço no Cardmarket e a buscar; o corte de 7 dias é inclusivo", () => {
+    const r = resumirPrecosDasCandidatas(
+      new Set(["nunca", "fresca", "semPreco", "noLimite", "velha"]),
+      new Map([
+        ["fresca", { valor: 10, consultadoEm: horas(1) }],
+        ["semPreco", { valor: null, consultadoEm: horas(2) }],
+        // Exatamente 7 dias: já venceu, uma rodada agora perguntaria de novo.
+        ["noLimite", { valor: 3, consultadoEm: horas(7 * 24) }],
+        ["velha", { valor: null, consultadoEm: horas(8 * 24) }],
+        // Preço de uma escolha que não é candidata: não entra na conta.
+        ["fora", { valor: 1, consultadoEm: horas(1) }],
+      ]),
+      agora,
+    );
+    expect(r).toEqual({ cartas: 5, comPreco: 2, semPrecoNoCardmarket: 2, aBuscar: 3, validadeDias: 7 });
   });
 });

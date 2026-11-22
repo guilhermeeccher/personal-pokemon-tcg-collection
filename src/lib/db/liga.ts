@@ -7,7 +7,7 @@
 
 import { and, asc, eq, gte, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 
-import type { Database } from "./client";
+import type { Database, Transacao } from "./client";
 import {
   cartaCatalogo,
   colecao,
@@ -51,7 +51,7 @@ export interface VagaVaziaPokedex {
  * qualquer carta com aquele número impresso.
  */
 export async function listarVagasVaziasPokedex(
-  db: Database,
+  db: Database | Transacao,
   colecaoId: string,
 ): Promise<VagaVaziaPokedex[]> {
   const vagas = await db
@@ -116,7 +116,7 @@ export interface VagaVaziaSet {
 }
 
 export async function listarVagasVaziasSet(
-  db: Database,
+  db: Database | Transacao,
   colecaoId: string,
 ): Promise<VagaVaziaSet[]> {
   const [dono] = await db
@@ -628,7 +628,7 @@ export interface VarreduraSalva {
 
 /** A varredura mais recente da coleção — a tela lê sempre daqui, nunca do site. */
 export async function obterUltimaVarredura(
-  db: Database,
+  db: Database | Transacao,
   colecaoId: string,
 ): Promise<VarreduraSalva | null> {
   const [linha] = await db
@@ -677,7 +677,7 @@ export interface OpcaoSalva extends Omit<
  * compras dá à carta que sumiu (decisão de 2026-09-17).
  */
 export async function listarOpcoesMaisRecentesPorVaga(
-  db: Database,
+  db: Database | Transacao,
   colecaoId: string,
 ): Promise<OpcaoSalva[]> {
   const linhas = await db

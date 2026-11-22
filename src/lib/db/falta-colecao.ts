@@ -6,14 +6,15 @@
  * mesmo filtro de sem estoque com a exceção da marcada, e a mesma lista em
  * abas.
  *
- * Só lê. Ao contrário do `GET` de opções, não fecha rodada morta: uma rodada
+ * Só lê, numa transação `read only` REPEATABLE READ (ver `SO_LEITURA`). Ao
+ * contrário do `GET` de opções, não fecha rodada morta: uma rodada
  * parada por reinício aparece como está no banco até a tela de opções, ou um
  * disparo novo, fechá-la.
  */
 
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 
-import type { Database } from "./client";
+import type { Database, Transacao } from "./client";
 import {
   listarCandidatasDaColecao,
   ultimaRodadaDeCandidatas,
@@ -73,7 +74,7 @@ export function criterioPadrao(tipo: TipoComVaga): { ordenacao: Ordenacao; tetoP
 }
 
 /** As vagas vazias da coleção, na ordem de exibição, com as cópias livres que servem em cada uma. */
-async function vagasVazias(db: Database, colecao: ColecaoDaFalta) {
+async function vagasVazias(db: Database | Transacao, colecao: ColecaoDaFalta) {
   const linhas = await db
     .select({ vagaId: vaga.id, chave: vaga.chave })
     .from(vaga)
@@ -90,7 +91,7 @@ async function vagasVazias(db: Database, colecao: ColecaoDaFalta) {
 
 /** A foto de exibição de cada ficha, pela mesma cadeia do resto do app. */
 async function imagensDasFichas(
-  db: Database,
+  db: Database | Transacao,
   pares: ReadonlyArray<{ cartaId: string; idioma: Idioma }>,
 ): Promise<Map<string, { imagemUrl: string | null; imagemOrigem: OrigemImagem | null }>> {
   if (pares.length === 0) return new Map();
@@ -112,7 +113,7 @@ async function imagensDasFichas(
 }
 
 /** Quando cada opção salva foi vista pela varredura — a data do preço da Liga. */
-async function datasDasOpcoes(db: Database, ids: readonly string[]): Promise<Map<string, Date>> {
+async function datasDasOpcoes(db: Database | Transacao, ids: readonly string[]): Promise<Map<string, Date>> {
   if (ids.length === 0) return new Map();
   const linhas = await db
     .select({ id: ligaOpcao.id, criadoEm: ligaOpcao.criadoEm })
@@ -166,7 +167,7 @@ function escolhasPorChave(
 
 /** As opções de cada vaga na fonte da instalação, já na ordem do critério. */
 async function opcoesPorFonte(
-  db: Database,
+  db: Database | Transacao,
   colecao: ColecaoDaFalta,
   fonte: FontePreco,
   escolhas: readonly EscolhaSalva[],
@@ -281,7 +282,7 @@ async function opcoesPorFonte(
  * a buscam; na Liga a opção salva já vem com ela.
  */
 async function comFotos(
-  db: Database,
+  db: Database | Transacao,
   opcoes: readonly OpcaoFalta[],
   candidatas: readonly VagaComCandidatas[],
 ): Promise<void> {
@@ -303,8 +304,25 @@ async function comFotos(
   }
 }
 
+/**
+ * Uma transação só de leitura, REPEATABLE READ: a lista para colar, as
+ * opções, os preços e as escolhas veem o mesmo instante. Sem ela, uma busca
+ * de preços que gravasse uma carta entre duas leituras deixaria o valor de
+ * uma escolha de uma rodada e a cotação de outra.
+ */
+const SO_LEITURA = { isolationLevel: "repeatable read", accessMode: "read only" } as const;
+
 export async function lerFaltaDaColecao(
   db: Database,
+  colecao: ColecaoDaFalta,
+  fonte: FontePreco,
+  pedido: CriterioPedido,
+) {
+  return db.transaction((tx) => lerFaltaNaTransacao(tx, colecao, fonte, pedido), SO_LEITURA);
+}
+
+async function lerFaltaNaTransacao(
+  db: Transacao,
   colecao: ColecaoDaFalta,
   fonte: FontePreco,
   pedido: CriterioPedido,
@@ -340,6 +358,16 @@ export async function lerFaltaDaColecao(
 /** As alternativas de uma vaga vazia, com foto, na ordem do critério; `null` se a vaga não é vazia. */
 export async function lerAlternativasDaVaga(
   db: Database,
+  colecao: ColecaoDaFalta,
+  fonte: FontePreco,
+  chave: string,
+  pedido: CriterioPedido,
+) {
+  return db.transaction((tx) => lerAlternativasNaTransacao(tx, colecao, fonte, chave, pedido), SO_LEITURA);
+}
+
+async function lerAlternativasNaTransacao(
+  db: Transacao,
   colecao: ColecaoDaFalta,
   fonte: FontePreco,
   chave: string,

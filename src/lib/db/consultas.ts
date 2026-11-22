@@ -1697,7 +1697,7 @@ export async function lerReceitaNoCatalogo(
  * do mapa, e quem chama mostra o id.
  */
 export async function nomesDosSets(
-  db: Database,
+  db: Database | Transacao,
   setIds: readonly string[],
   idiomaPreferido: Idioma,
 ): Promise<Map<string, string>> {

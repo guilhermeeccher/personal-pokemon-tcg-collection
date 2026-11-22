@@ -26,7 +26,7 @@ export interface SemEstoqueSalvo {
 
 /** Os registros ainda dentro da validade, do mais recente para o mais antigo. */
 export async function listarSemEstoqueVigente(
-  db: Database,
+  db: Database | Transacao,
   agora: Date = new Date(),
 ): Promise<SemEstoqueSalvo[]> {
   return db

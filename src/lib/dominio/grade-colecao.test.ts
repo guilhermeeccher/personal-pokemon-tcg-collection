@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   montarVagasDaGrade,
+  resolverCartasEsperadas,
   type EntradaGrade,
   type VagaBaseDaGrade,
 } from "./grade-colecao";
@@ -161,6 +162,41 @@ describe("montarVagasDaGrade", () => {
       entrada({ vagas: [base({ id: "a", chave: "3" }), base({ id: "b", chave: "1" })] }),
     );
     expect(vagas.map((v) => v.id)).toEqual(["a", "b"]);
+  });
+});
+
+describe("resolverCartasEsperadas", () => {
+  const linha = (setId: string, localId: string, idioma: "pt" | "en" | "jp", raridade: string | null = null) => ({
+    cartaId: `${setId}-${localId}-${idioma}`,
+    setId,
+    localId,
+    idioma,
+    raridade,
+  });
+
+  it("carta a carta no idioma preferido, senão no outro ocidental", () => {
+    const r = resolverCartasEsperadas(
+      ["xx/001", "xx/002"],
+      [linha("xx", "001", "pt", "Comum"), linha("xx", "001", "en", "Common"), linha("xx", "002", "en", "Rare")],
+      "pt",
+    );
+    expect(r).toEqual([
+      { chave: "xx/001", cartaId: "xx-001-pt", idiomaCatalogo: "pt", raridade: "Comum" },
+      { chave: "xx/002", cartaId: "xx-002-en", idiomaCatalogo: "en", raridade: "Rare" },
+    ]);
+  });
+
+  it("coleção japonesa lê a ficha japonesa, e pt/en nunca caem para jp", () => {
+    const linhas = [linha("yy", "001", "jp", "C"), linha("yy", "002", "en")];
+    expect(resolverCartasEsperadas(["yy/001", "yy/002"], linhas, "jp")).toEqual([
+      { chave: "yy/001", cartaId: "yy-001-jp", idiomaCatalogo: "jp", raridade: "C" },
+    ]);
+    expect(resolverCartasEsperadas(["yy/001"], linhas, "pt")).toEqual([]);
+  });
+
+  it("o mesmo número em dois sets não se confunde", () => {
+    const r = resolverCartasEsperadas(["a/001", "b/001"], [linha("a", "001", "pt"), linha("b", "001", "en")], "pt");
+    expect(r.map((x) => x.cartaId)).toEqual(["a-001-pt", "b-001-en"]);
   });
 });
 

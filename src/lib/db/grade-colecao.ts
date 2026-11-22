@@ -19,14 +19,15 @@ import type { Database, Transacao } from "./client";
 import { listarMelhoriasDaColecao, obterColecaoComVagas, type ColecaoComVagas } from "./consultas";
 import { listarEscolhas } from "./escolhas";
 import { cartaCatalogo, copia, vaga } from "./schema";
-import { chaveVagaSet, lerChaveVagaSet } from "@/lib/dominio/chave-vaga-set";
+import { lerChaveVagaSet } from "@/lib/dominio/chave-vaga-set";
 import {
   montarVagasDaGrade,
+  resolverCartasEsperadas,
   type CartaEsperadaDaGrade,
   type CopiaAlocadaDaGrade,
   type VagaDaGrade,
 } from "@/lib/dominio/grade-colecao";
-import { escolherLinhaPorCarta, ordemIdiomasPorCarta } from "@/lib/dominio/idioma-catalogo";
+import { ordemIdiomasPorCarta } from "@/lib/dominio/idioma-catalogo";
 import type { ParametroSet } from "@/lib/dominio/parametro-colecao";
 
 export interface GradeDaColecao extends Omit<ColecaoComVagas, "vagas"> {
@@ -59,10 +60,9 @@ async function copiasAlocadas(tx: Transacao, colecaoId: string): Promise<CopiaAl
 }
 
 /**
- * A ficha da carta que cada vaga vazia de set espera — a mesma escolha da
- * leitura base (o idioma preferido da coleção carta a carta, senão o outro
- * ocidental, `escolherLinhaPorCarta`), para que a ficha que abre o detalhe
- * seja a da foto e do nome que a vaga mostra.
+ * A ficha da carta que cada vaga vazia de set espera — a mesma consulta da
+ * leitura base (os idiomas da ordem da coleção), resolvida por
+ * `resolverCartasEsperadas`.
  */
 async function cartasEsperadas(
   tx: Transacao,
@@ -90,17 +90,11 @@ async function cartasEsperadas(
       ),
     );
 
-  const porChave = new Map<string, CartaEsperadaDaGrade>();
-  for (const setId of setIds) {
-    const doSet = linhas.flatMap((l) =>
-      l.setId === setId && l.idioma !== "jp" ? [{ ...l, idioma: l.idioma }] : [],
-    );
-    for (const l of escolherLinhaPorCarta(doSet, parametro.idiomaCatalogo)) {
-      const chave = chaveVagaSet(setId, l.localId);
-      porChave.set(chave, { chave, cartaId: l.cartaId, idiomaCatalogo: l.idioma, raridade: l.raridade });
-    }
-  }
-  return vazias.flatMap((v) => porChave.get(v.chave) ?? []);
+  return resolverCartasEsperadas(
+    vazias.map((v) => v.chave),
+    linhas,
+    parametro.idiomaCatalogo,
+  );
 }
 
 /** A grade inteira da coleção, ou `null` se ela não existe. */

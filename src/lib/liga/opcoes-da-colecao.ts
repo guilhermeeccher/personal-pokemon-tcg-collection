@@ -10,7 +10,7 @@
  * `lib/dominio/opcoes-compra-vaga.ts`; aqui só se lê e se junta.
  */
 
-import type { Database } from "@/lib/db/client";
+import type { Database, Transacao } from "@/lib/db/client";
 import { nomesDosSets } from "@/lib/db/consultas";
 import type { EscolhaSalva } from "@/lib/db/escolhas";
 import {
@@ -47,7 +47,7 @@ interface ColecaoDaLista {
  * 2026-09-17).
  */
 export async function resumoDaListaDeCompra(
-  db: Database,
+  db: Database | Transacao,
   colecao: ColecaoDaLista,
   escolhas: readonly EscolhaSalva[],
   fonte: FontePreco,
@@ -99,7 +99,7 @@ export async function resumoDaListaDeCompra(
 
 /** As vagas vazias de hoje, no formato que o agrupamento da tela espera. */
 export async function vagasParaAgrupar(
-  db: Database,
+  db: Database | Transacao,
   colecaoId: string,
   tipo: TipoComVaga,
 ): Promise<VagaParaAgrupar[]> {
@@ -132,7 +132,7 @@ export async function vagasParaAgrupar(
  * dele.
  */
 export async function opcoesDaVarreduraPorVaga(
-  db: Database,
+  db: Database | Transacao,
   colecaoId: string,
   tipo: TipoComVaga,
   escolhas: readonly EscolhaSalva[],
@@ -157,7 +157,7 @@ export async function opcoesDaVarreduraPorVaga(
  * mapa de preços, que o resumo da busca de preços conta.
  */
 export async function opcoesDasCandidatasPorVaga(
-  db: Database,
+  db: Database | Transacao,
   vagas: readonly VagaComCandidatas[],
   escolhas: readonly EscolhaSalva[],
 ): Promise<{

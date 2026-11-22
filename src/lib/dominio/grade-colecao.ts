@@ -37,8 +37,9 @@
  *   não é o que a vaga mostra agora.
  */
 
-import { rotuloChaveVaga } from "./chave-vaga-set";
+import { chaveVagaSet, rotuloChaveVaga } from "./chave-vaga-set";
 import type { Condicao, Idioma, VarianteCopia } from "./enums";
+import { escolherLinhaPorCarta, type IdiomaCatalogo } from "./idioma-catalogo";
 import type { EixoMelhoria } from "./melhoria-vaga";
 import type { OrigemImagem } from "./origem-imagem";
 import type { TipoColecao } from "./parametro-colecao";
@@ -80,6 +81,36 @@ export interface CartaEsperadaDaGrade {
   cartaId: string;
   idiomaCatalogo: Idioma;
   raridade: string | null;
+}
+
+/**
+ * A ficha que cada vaga vazia de set espera, a partir das linhas de catálogo
+ * dos sets das vagas: a mesma escolha da leitura base (`escolherLinhaPorCarta`,
+ * carta a carta na ordem de idioma da coleção), para que a ficha que abre o
+ * detalhe seja a da foto e do nome que a vaga mostra. Uma coleção de set
+ * japonesa lê a ficha japonesa; pt e en nunca caem para jp, nem o contrário.
+ * A escolha é set a set, porque o número se repete entre sets.
+ */
+export function resolverCartasEsperadas(
+  chavesVazias: readonly string[],
+  linhas: ReadonlyArray<{
+    cartaId: string;
+    setId: string;
+    localId: string;
+    idioma: IdiomaCatalogo;
+    raridade: string | null;
+  }>,
+  preferido: IdiomaCatalogo,
+): CartaEsperadaDaGrade[] {
+  const porChave = new Map<string, CartaEsperadaDaGrade>();
+  for (const setId of new Set(linhas.map((l) => l.setId))) {
+    const doSet = linhas.filter((l) => l.setId === setId);
+    for (const l of escolherLinhaPorCarta(doSet, preferido)) {
+      const chave = chaveVagaSet(setId, l.localId);
+      porChave.set(chave, { chave, cartaId: l.cartaId, idiomaCatalogo: l.idioma, raridade: l.raridade });
+    }
+  }
+  return chavesVazias.flatMap((c) => porChave.get(c) ?? []);
 }
 
 export interface EntradaGrade {
