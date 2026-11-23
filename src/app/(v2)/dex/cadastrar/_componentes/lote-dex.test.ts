@@ -7,6 +7,9 @@ import type { FormaDexDTO, TrofeuDexDTO } from "@/lib/dominio/tipos-cliente";
 
 import {
   ajustarQuantidade,
+  bloqueioDoCadastro,
+  leituraNaTela,
+  tabIndexDoCampo,
   comQuantidade,
   corpoDoLote,
   type FiltroCadastroDex,
@@ -228,5 +231,45 @@ describe("lerRespostaCadastro", () => {
   it("5xx é incerto: a resposta pode ter se perdido depois do commit", () => {
     expect(lerRespostaCadastro(500, null)).toEqual({ tipo: "incerto" });
     expect(lerRespostaCadastro(502, { erro: "x" })).toEqual({ tipo: "incerto" });
+  });
+});
+
+describe("envio: travas contra gravar o mesmo lote duas vezes", () => {
+  const base = { total: 3, jogoId: "firered", enviando: false, relendo: false, releituraFalhou: false };
+
+  it("pode enviar com lote, jogo e a leitura em dia", () => {
+    expect(bloqueioDoCadastro(base)).toBeNull();
+  });
+
+  it("lote vazio, sem jogo e envio em curso travam", () => {
+    expect(bloqueioDoCadastro({ ...base, total: 0 })).toBe("vazio");
+    expect(bloqueioDoCadastro({ ...base, jogoId: null })).toBe("semJogo");
+    expect(bloqueioDoCadastro({ ...base, enviando: true })).toBe("enviando");
+  });
+
+  it("resposta incerta → releitura pendente → falhou → releitura boa", () => {
+    // O POST pode ter gravado; a página é relida.
+    let tela = leituraNaTela({ v: 1 }, null);
+    expect(bloqueioDoCadastro({ ...base, relendo: true, releituraFalhou: tela.releituraFalhou })).toBe("relendo");
+    // O servidor não conseguiu ler: a tela fica com a leitura anterior (o lote não some) e trava.
+    tela = leituraNaTela(null, tela.leitura);
+    expect(tela).toEqual({ leitura: { v: 1 }, releituraFalhou: true });
+    expect(bloqueioDoCadastro({ ...base, releituraFalhou: tela.releituraFalhou })).toBe("semReleitura");
+    // Uma releitura boa solta a trava.
+    tela = leituraNaTela({ v: 2 }, tela.leitura);
+    expect(tela).toEqual({ leitura: { v: 2 }, releituraFalhou: false });
+    expect(bloqueioDoCadastro({ ...base, releituraFalhou: tela.releituraFalhou })).toBeNull();
+  });
+
+  it("na abertura sem leitura nenhuma não há tela, nem 'releitura que falhou'", () => {
+    expect(leituraNaTela(null, null)).toEqual({ leitura: null, releituraFalhou: false });
+  });
+});
+
+describe("tabIndexDoCampo", () => {
+  it("de fora, só a célula de entrada; de dentro, todos", () => {
+    expect(tabIndexDoCampo(false, 0)).toBe(0);
+    expect(tabIndexDoCampo(false, -1)).toBe(-1);
+    expect(tabIndexDoCampo(true, -1)).toBe(0);
   });
 });

@@ -70,8 +70,10 @@ import {
   comQuantidade,
   corpoDoLote,
   formasVisiveis,
+  bloqueioDoCadastro,
   jogoAtual,
   jogoEscolhido,
+  leituraNaTela,
   lerRespostaCadastro,
   marcadasForaDaVista,
   type QuantidadesDex,
@@ -144,7 +146,7 @@ export function CadastroPorJogo({
   const t = useTranslations("v2Dex");
   const [ultima, setUltima] = useState(leitura);
   if (leitura !== null && leitura !== ultima) setUltima(leitura);
-  const viva = leitura ?? ultima;
+  const { leitura: viva, releituraFalhou } = leituraNaTela(leitura, ultima);
   if (!viva) {
     return (
       <AvisoEmLinha
@@ -158,7 +160,7 @@ export function CadastroPorJogo({
     );
   }
   return (
-    <TelaCadastro {...viva} releituraFalhou={leitura === null} buscaInicial={buscaInicial} jogoInicial={jogoInicial} />
+    <TelaCadastro {...viva} releituraFalhou={releituraFalhou} buscaInicial={buscaInicial} jogoInicial={jogoInicial} />
   );
 }
 
@@ -316,10 +318,12 @@ function TelaCadastro({
 
   /* ---------- Gravação ---------- */
 
+  const bloqueio = bloqueioDoCadastro({ total, jogoId, enviando, relendo, releituraFalhou });
+
   const reler = useCallback(() => iniciarReleitura(() => router.refresh()), [router]);
 
   async function cadastrar() {
-    if (total === 0 || enviando || relendo || !jogoId) return;
+    if (bloqueio !== null || !jogoId) return;
     const corpo = corpoDoLote(jogoId, quantidades);
     const nome = nomeJogo;
     setEnviando(true);
@@ -591,7 +595,7 @@ function TelaCadastro({
               ref={botaoCadastrar}
               variante="primario"
               carregando={enviando}
-              disabled={total === 0 || jogoId === null || relendo}
+              disabled={bloqueio !== null && bloqueio !== "enviando"}
               onClick={() => void cadastrar()}
             >
               {td("cadastrar.cadastrar", { quantidade: String(total) })}

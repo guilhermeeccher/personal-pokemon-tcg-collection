@@ -12,7 +12,7 @@ import { ATRIBUTO_CELULA, type PropsCelula } from "../../../_componentes/grade/g
 import { SpriteDex } from "../../_componentes/sprite-dex";
 
 import estilos from "./cadastro.module.css";
-import { ajustarQuantidade, quantidadeDoTexto, type SeloCadastro, selosDaForma } from "./lote-dex";
+import { ajustarQuantidade, quantidadeDoTexto, type SeloCadastro, selosDaForma, tabIndexDoCampo } from "./lote-dex";
 
 /**
  * A altura de cada célula, em px, igual em toda largura: a grade virtual põe
@@ -172,7 +172,7 @@ export const CelulaForma = memo(function CelulaForma({
           maxLength={3}
           placeholder="0"
           aria-label={t("quantidade", { nome, trilha: nomeTrilha })}
-          tabIndex={tabulavel ? 0 : celula.tabIndex}
+          tabIndex={tabIndexDoCampo(tabulavel, celula.tabIndex)}
           value={valor > 0 ? String(valor) : ""}
           onChange={(e) => aoMudar(forma.id, trilha, quantidadeDoTexto(e.target.value))}
           onFocus={(e) => e.target.select()}

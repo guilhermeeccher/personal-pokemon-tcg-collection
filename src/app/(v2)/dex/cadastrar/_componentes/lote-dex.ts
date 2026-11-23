@@ -185,6 +185,58 @@ export function selosDaForma(
   return selos;
 }
 
+/* ---------------------------------------------------------- Envio */
+
+/** Por que o "Cadastrar" está travado agora, ou `null` quando pode enviar. */
+export type BloqueioCadastro = "vazio" | "semJogo" | "enviando" | "relendo" | "semReleitura";
+
+/**
+ * Se o lote pode ir ao servidor. Além do óbvio (lote vazio, sem jogo, um envio
+ * em curso), duas travas protegem contra gravar o mesmo lote duas vezes
+ * depois de uma resposta incerta, quando o lote pode ter entrado:
+ *
+ * - **`relendo`**: a releitura da página (o "tenho") ainda não chegou;
+ * - **`semReleitura`**: a última releitura falhou no servidor, e o que está na
+ *   tela é a leitura anterior. A trava dura até uma releitura boa — fechar o
+ *   aviso não a solta —, porque é com o "tenho" atual que a pessoa confere se
+ *   o lote entrou.
+ */
+export function bloqueioDoCadastro(e: {
+  total: number;
+  jogoId: string | null;
+  enviando: boolean;
+  relendo: boolean;
+  releituraFalhou: boolean;
+}): BloqueioCadastro | null {
+  if (e.total === 0) return "vazio";
+  if (e.jogoId === null) return "semJogo";
+  if (e.enviando) return "enviando";
+  if (e.relendo) return "relendo";
+  if (e.releituraFalhou) return "semReleitura";
+  return null;
+}
+
+/**
+ * O que a tela mostra de uma leitura do servidor: a nova quando veio, a
+ * anterior quando a releitura falhou (`nova` nula) — nunca a árvore de erro
+ * por cima do lote digitado. Nulo só na abertura sem leitura nenhuma.
+ */
+export function leituraNaTela<T>(nova: T | null, anterior: T | null): { leitura: T | null; releituraFalhou: boolean } {
+  if (nova !== null) return { leitura: nova, releituraFalhou: false };
+  return { leitura: anterior, releituraFalhou: anterior !== null };
+}
+
+/**
+ * O `tabIndex` de um campo de quantidade. Com o foco dentro da lista, todo
+ * campo entra no Tab (normal → shiny → forma seguinte, como a tabela da v1);
+ * fora dela, só os da célula de entrada da grade (`tabIndexCelula`, 0 só na
+ * ativa ou na primeira à vista), para o Tab de fora não cair num campo de uma
+ * linha de sobra fora da tela (regra 28).
+ */
+export function tabIndexDoCampo(focoNaLista: boolean, tabIndexCelula: 0 | -1): 0 | -1 {
+  return focoNaLista ? 0 : tabIndexCelula;
+}
+
 /* ---------------------------------------------------------- Resposta */
 
 export type RespostaCadastroDex =
