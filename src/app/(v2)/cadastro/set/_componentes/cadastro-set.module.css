@@ -304,6 +304,12 @@
   scroll-margin-top: 16px;
   scroll-margin-bottom: calc(var(--v2-topo-abas) + 96px);
 }
+/* Abaixo de 360 px a barra do lote tem duas linhas (88 px). */
+@media (max-width: 359.98px) {
+  .quantidade {
+    scroll-margin-bottom: calc(var(--v2-topo-abas) + 124px);
+  }
+}
 @media (min-width: 48rem) {
   .quantidade {
     scroll-margin-bottom: 112px;

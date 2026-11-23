@@ -2586,7 +2586,7 @@
       "linhasRecusadas": "Recusadas",
       "padrao": "Não deu para gravar o lote.",
       "rede": "Não deu para confirmar a gravação",
-      "redeTexto": "A conexão caiu antes da resposta, e o lote pode ter entrado. As cartas são relidas abaixo: confira o “você tem” antes de gravar de novo.",
+      "redeTexto": "O servidor não confirmou a gravação (a conexão caiu ou a resposta veio com erro), e o lote pode ter entrado. As cartas são relidas abaixo: confira o “você tem” antes de gravar de novo.",
       "fechar": "Fechar"
     },
     "trocarSet": {

@@ -2594,7 +2594,7 @@
       "linhasRecusadas": "Refused",
       "padrao": "Could not save the batch.",
       "rede": "Could not confirm the save",
-      "redeTexto": "The connection dropped before the answer, and the batch may have gone in. The cards are read again below: check “you have” before saving again.",
+      "redeTexto": "The server did not confirm the save (the connection dropped or the answer was an error), and the batch may have gone in. The cards are read again below: check “you have” before saving again.",
       "fechar": "Close"
     },
     "trocarSet": {

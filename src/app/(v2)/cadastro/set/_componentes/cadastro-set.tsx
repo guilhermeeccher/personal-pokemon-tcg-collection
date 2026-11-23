@@ -251,6 +251,13 @@ export function CadastroSet() {
     setEnviando(true);
     setResultado(null);
     try {
+      // Sem resposta, ou uma resposta que não confirma nem recusa: o lote pode
+      // ter entrado. Relê o "você tem" e mantém o lote na tela, dizendo para
+      // conferir antes de gravar de novo.
+      const incerto = () => {
+        setResultado({ tipo: "rede" });
+        ler(escolhido, true);
+      };
       let resp: Response;
       try {
         resp = await fetch(`/api/sets/${encodeURIComponent(grade.setId)}/copias`, {
@@ -259,15 +266,14 @@ export function CadastroSet() {
           body: JSON.stringify({ itens }),
         });
       } catch {
-        // Sem resposta: o lote pode ter entrado. Relê o "você tem" e mantém o
-        // lote na tela, dizendo para conferir antes de gravar de novo.
-        setResultado({ tipo: "rede" });
-        ler(escolhido, true);
+        incerto();
         return;
       }
       const corpo: unknown = await resp.json().catch(() => null);
-      const lida = lerRespostaLote(resp.ok, corpo);
-      if (lida.ok) {
+      const lida = lerRespostaLote(resp.status, corpo);
+      if (lida.tipo === "incerto") {
+        incerto();
+      } else if (lida.tipo === "gravado") {
         setResultado({
           tipo: "gravado",
           inseridas: lida.inseridas,

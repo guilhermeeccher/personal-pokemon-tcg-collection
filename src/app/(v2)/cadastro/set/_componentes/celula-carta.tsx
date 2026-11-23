@@ -123,7 +123,13 @@ export const CelulaCarta = memo(function CelulaCarta({
           aria-label={t("carta.quantidade", { nome: nomeCompleto })}
           value={quantidade > 0 ? String(quantidade) : ""}
           onChange={(e) => aoMudarQuantidade(carta, quantidadeDoTexto(e.target.value))}
-          onFocus={(e) => e.target.select()}
+          onFocus={(e) => {
+            e.target.select();
+            // As setas da grade rolam só pela barra de abas e focam sem rolar;
+            // aqui o campo acerta a posição pela própria margem de rolagem,
+            // que conta também a barra do lote (`.quantidade`).
+            e.target.scrollIntoView({ block: "nearest" });
+          }}
           onKeyDown={aoTeclar}
         />
         <button

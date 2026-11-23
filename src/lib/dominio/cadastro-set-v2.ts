@@ -122,27 +122,41 @@ export interface DetalheRecusaLote {
 }
 
 export type RespostaLote =
-  | { ok: true; inseridas: number; fundidas: number }
-  | { ok: false; detalhes: readonly DetalheRecusaLote[] };
+  | { tipo: "gravado"; inseridas: number; fundidas: number }
+  | { tipo: "recusado"; detalhes: readonly DetalheRecusaLote[] }
+  /**
+   * Nem gravação confirmada nem recusa da rota: 5xx, um proxy no caminho, um
+   * corpo que não é o da rota. O lote pode ter entrado (a resposta pode ter
+   * se perdido depois do commit), então a tela trata como a queda de rede —
+   * mantém o lote, avisa e relê —, nunca como "nada foi gravado".
+   */
+  | { tipo: "incerto" };
 
 function ehNumero(v: unknown): v is number {
   return typeof v === "number" && Number.isFinite(v);
 }
 
 /**
- * Lê a resposta do `POST` em lote sem confiar na forma: 201 traz as
- * contagens; uma recusa (400) traz em `detalhes` os itens que o servidor
- * recusou, cada um pelo índice no corpo enviado. O texto da recusa em si é
- * traduzido por `textoDaRecusa`, fora daqui.
+ * Lê a resposta do `POST` em lote sem confiar na forma. Gravado é um 2xx com
+ * as contagens. Recusado é só o que a rota recusa de fato: um 4xx que traz a
+ * chave da recusa (`{ recusa: { chave } }`, todas as recusas da rota), com os
+ * itens recusados em `detalhes`, cada um pelo índice no corpo enviado. O
+ * resto é incerto. O texto da recusa é traduzido por `textoDaRecusa`, fora
+ * daqui.
  */
-export function lerRespostaLote(ok: boolean, corpo: unknown): RespostaLote {
+export function lerRespostaLote(status: number, corpo: unknown): RespostaLote {
   const c = (typeof corpo === "object" && corpo !== null ? corpo : {}) as Record<string, unknown>;
-  if (ok) {
+  if (status >= 200 && status < 300) {
+    if (!ehNumero(c.inseridas) && !ehNumero(c.fundidas)) return { tipo: "incerto" };
     return {
-      ok: true,
+      tipo: "gravado",
       inseridas: ehNumero(c.inseridas) ? c.inseridas : 0,
       fundidas: ehNumero(c.fundidas) ? c.fundidas : 0,
     };
+  }
+  const recusa = c.recusa as Record<string, unknown> | undefined;
+  if (status < 400 || status >= 500 || typeof recusa !== "object" || recusa === null || typeof recusa.chave !== "string") {
+    return { tipo: "incerto" };
   }
   const detalhes = Array.isArray(c.detalhes)
     ? c.detalhes.flatMap((d): DetalheRecusaLote[] => {
@@ -152,7 +166,7 @@ export function lerRespostaLote(ok: boolean, corpo: unknown): RespostaLote {
         return [{ indice, cartaId: typeof cartaId === "string" ? cartaId : null }];
       })
     : [];
-  return { ok: false, detalhes };
+  return { tipo: "recusado", detalhes };
 }
 
 export interface LinhaResultado {

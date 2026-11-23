@@ -117,18 +117,29 @@ describe("proximaCarta", () => {
 
 describe("lerRespostaLote", () => {
   it("lê as contagens do 201", () => {
-    expect(lerRespostaLote(true, { inseridas: 3, fundidas: 1 })).toEqual({ ok: true, inseridas: 3, fundidas: 1 });
+    expect(lerRespostaLote(201, { inseridas: 3, fundidas: 1 })).toEqual({ tipo: "gravado", inseridas: 3, fundidas: 1 });
   });
-  it("lê os detalhes da recusa e descarta o malformado", () => {
-    const r = lerRespostaLote(false, {
+  it("lê os detalhes da recusa da rota e descarta o malformado", () => {
+    const r = lerRespostaLote(400, {
       recusa: { chave: "varianteForaDoCatalogoNoLote" },
       detalhes: [{ indice: 1, cartaId: "b", motivo: "x" }, { indice: "2" }, null, { indice: -1, cartaId: null }],
     });
-    expect(r).toEqual({ ok: false, detalhes: [{ indice: 1, cartaId: "b" }, { indice: -1, cartaId: null }] });
+    expect(r).toEqual({ tipo: "recusado", detalhes: [{ indice: 1, cartaId: "b" }, { indice: -1, cartaId: null }] });
   });
-  it("corpo vazio não quebra", () => {
-    expect(lerRespostaLote(false, null)).toEqual({ ok: false, detalhes: [] });
-    expect(lerRespostaLote(true, "x")).toEqual({ ok: true, inseridas: 0, fundidas: 0 });
+  it("recusa sem detalhes ainda é recusa", () => {
+    expect(lerRespostaLote(400, { recusa: { chave: "falhaAoGravarLote" } })).toEqual({ tipo: "recusado", detalhes: [] });
+  });
+  it.each([
+    [502, null],
+    [504, "upstream timeout"],
+    [500, { recusa: { chave: "x" } }],
+    [400, { erro: "Corpo inválido (JSON esperado)." }],
+    [400, null],
+    [401, { erro: "nao_autenticado" }],
+    [201, null],
+    [201, "x"],
+  ])("%d com %j é incerto: o lote pode ter entrado", (status, corpo) => {
+    expect(lerRespostaLote(status, corpo)).toEqual({ tipo: "incerto" });
   });
 });
 
