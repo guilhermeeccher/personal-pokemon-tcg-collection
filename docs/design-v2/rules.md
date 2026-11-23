@@ -776,38 +776,38 @@ F. **The piece package 5e-b owns** (delivered 2026-11-23), moved from
 
 ### Dex inventory and games (package 5e-a)
 
-- **`/dex/inventario` keeps one row per Pokémon in the database and groups only on screen.** The
-  filters, the grouping and the order are the v1's, in `linhas-inventario.ts` (pure, tested); the
-  same records give the same groups and counts as `/v1/dex/inventario`. "Send 1 to HOME" and "Move
-  1 to…" move the group's oldest record and "Delete 1" deletes its newest, as in the v1; "Fix" is
-  `PATCH /api/dex/registros` for the whole group and never touches the location. Moving goes
-  through `useTransferencia`, so leaving a send-only game always asks. "Move 1 to…" offers HOME and
-  the active games but the current one, the v1's list: the screen does not second-guess the HOME
-  rules, and a destination the route refuses shows the route's sentence. It shows whenever one
-  destination besides HOME exists: the v1 asked for two of any kind, which left a Pokémon in HOME
-  with a single active game no way out (fixed in the v1 too, 2026-11-23).
-- **After a write, the actions stay off until the reread arrives** (`router.refresh` inside a
-  transition, on both screens): the refresh does not wait for the data, and a second click in
-  between would act on the old group or open an edit with the values from before the save. A
-  dialog closing returns focus to the control that opened it, or to the page title when that
-  control is off or gone. `/dex/jogos` also rereads on a 409 (the game added or given a record in
-  another tab).
-- **The inventory mounts 60 groups at a time** ("Show more"; a filter change starts over), so a
-  collection of years of GO never puts hundreds of rows with their buttons on one page (rule 13's
-  node budget). The count at the top is always the whole list's.
-- **The inventory row follows the list's width, not the window's** (`container-type` on the list,
-  which is no ancestor of a fixed bar, rule 5d): below ~560 px of list the actions sit in two
-  columns under the name, from there in a row; under ~330 px "Send" and "Move" take the whole line.
-  From 768 px the rail leaves the same window with a narrow or a wide list, which a media query
-  cannot see.
-- **`/dex/jogos` only marks games of the fixed catalog.** A stopped game keeps its records and
-  leaves the inventory's move list; removing one with records is refused by the route
-  (`dexJogoComRegistros`) and the screen shows it. The trophy progress is computed on the server with
-  the v1's `progressoTrofeus`, and links to `/dex/trofeus?jogo=`.
+43. **`/dex/inventario` keeps one row per Pokémon in the database and groups only on screen.** The
+    filters, the grouping and the order are the v1's, in `linhas-inventario.ts` (pure, tested); the
+    same records give the same groups and counts as `/v1/dex/inventario`. "Send 1 to HOME" and "Move
+    1 to…" move the group's oldest record and "Delete 1" deletes its newest, as in the v1; "Fix" is
+    `PATCH /api/dex/registros` for the whole group and never touches the location. Moving goes
+    through `useTransferencia`, so leaving a send-only game always asks. "Move 1 to…" offers HOME and
+    the active games but the current one, the v1's list: the screen does not second-guess the HOME
+    rules, and a destination the route refuses shows the route's sentence. It shows whenever one
+    destination besides HOME exists: the v1 asked for two of any kind, which left a Pokémon in HOME
+    with a single active game no way out (fixed in the v1 too, 2026-11-23).
+44. **After a write, the actions stay off until the reread arrives** (`router.refresh` inside a
+    transition, on both screens): the refresh does not wait for the data, and a second click in
+    between would act on the old group or open an edit with the values from before the save. A
+    dialog closing returns focus to the control that opened it, or to the page title when that
+    control is off or gone. `/dex/jogos` also rereads on a 409 (the game added or given a record in
+    another tab).
+45. **The inventory mounts 60 groups at a time** ("Show more"; a filter change starts over), so a
+    collection of years of GO never puts hundreds of rows with their buttons on one page (rule 13's
+    node budget). The count at the top is always the whole list's.
+46. **The inventory row follows the list's width, not the window's** (`container-type` on the list,
+    which is no ancestor of a fixed bar, rule 5d): below ~560 px of list the actions sit in two
+    columns under the name, from there in a row; under ~330 px "Send" and "Move" take the whole line.
+    From 768 px the rail leaves the same window with a narrow or a wide list, which a media query
+    cannot see.
+47. **`/dex/jogos` only marks games of the fixed catalog.** A stopped game keeps its records and
+    leaves the inventory's move list; removing one with records is refused by the route
+    (`dexJogoComRegistros`) and the screen shows it. The trophy progress is computed on the server with
+    the v1's `progressoTrofeus`, and links to `/dex/trofeus?jogo=`.
 
 ### Boxes and Received (package 5b)
 
-43. **`/dex/caixas` computes the boxes and stores nothing.** The server page reads what the v1 page
+48. **`/dex/caixas` computes the boxes and stores nothing.** The server page reads what the v1 page
     reads (`listarFormasDex`, `lerSecoesDex`, `listarRegistrosDex`, `lerCaixasReservadas`) and the
     screen builds the boxes with `montarCaixasDex`, the same function as the v1, so the counts and
     the numbers are the v1's (51 boxes and 1,387 slots in the normal track, 1,350 in the shiny one,
@@ -826,7 +826,7 @@ F. **The piece package 5e-b owns** (delivered 2026-11-23), moved from
       every refusal; the v2 applies by a button (or Enter), one request at a time, refuses a value
       outside 0–20 before sending and shows a refusal in text, keeping the field as typed. The field
       follows the server's value when the page is read again.
-44. **The boxes are the virtual grid's items, measured against rule 13's budget** (2026-11-23, the
+49. **The boxes are the virtual grid's items, measured against rule 13's budget** (2026-11-23, the
     same protocol: Chromium, iPhone profile 393 × 852, DPR 3, touch, iPhone user agent, CPU 4×,
     production build, invented data; the whole catalog is in the page, so this is the real size:
     51 boxes, 1,387 slots; "tap" is the longest Event Timing duration of a tap that opens the card,
@@ -863,7 +863,7 @@ F. **The piece package 5e-b owns** (delivered 2026-11-23), moved from
       8 px around it; the slot keeps the whole cell as its target and the box is the one exception
       to the 44 px rule, declared here. Every other control of the screen (chips, the summary, the
       field and its button) is 44 px or more.
-45. **`/dex/recebidos` reads `a_guardar` as stored and writes only "Put away"**
+50. **`/dex/recebidos` reads `a_guardar` as stored and writes only "Put away"**
     (`POST /api/dex/registros/guardar`). The grouping is `montarRecebidos` (same boxes, same order,
     same extra copies as the v1: 39 to put away, five boxes and the "no place" panel with two extra
     copies, on both screens). The box grid is drawing only (`aria-hidden`); the list under it,
@@ -887,147 +887,147 @@ F. **The piece package 5e-b owns** (delivered 2026-11-23), moved from
 
 ### Register by game (package 5c)
 
-- **`/dex/cadastrar` is the v1's batch, on the virtual grid.** The server page reads what the v1
-  page reads (the catalog by name, the owned active games, the "have" counts from the records, the
-  sections, the checkpoints not yet earned), after the module guard. The batch is the v1's
-  `POST /api/dex/registros` with `{ jogoId, itens: [{ formaId, normal, shiny }] }`; the pure rules
-  are in `cadastrar/_componentes/lote-dex.ts`, tested.
-  - **The games are chips, HOME always last**; `?jogo=` and `?busca=` are read as the v1 reads them,
-    and a `?jogo=` the user does not own opens on the first option. After that, **a chosen game that
-    leaves the list** (stopped or removed in another tab, seen when the screen rereads after a
-    refusal) leaves the screen with no game and "Register" disabled, never with another game: the
-    next click would otherwise register the whole batch in a game nobody picked.
-  - **The batch lives on the screen, by form**: switching game, view or filter keeps what was
-    typed, and the bar says how many forms of the batch are outside the list shown (they are sent,
-    as in the v1). While it is being sent, the list and the filters are `inert`.
-  - **One refusal refuses the whole batch** (the route validates everything before its one
-    transaction): the refusals are listed above the bar, the batch stays, the page rereads. No answer,
-    or a 5xx, is "the batch may have gone in": the batch stays and the page rereads. The reread is
-    `router.refresh` in a transition, and "Register" stays disabled until it arrives; only then does
-    the screen say the counts were read again. **A reread the server cannot do keeps the screen**
-    (the page passes `leitura: null`, and the screen keeps its previous read and the typed batch,
-    saying so, with "Read again", and "Register" stays disabled until a read succeeds: those counts
-    are what the user checks before sending again); only a first load with nothing to show is the
-    error page. The decisions are pure (`bloqueioDoCadastro`, `leituraNaTela`, `tabIndexDoCampo`).
-    Success is a floating notice, and the "have" counts reread.
-  - **Marks, never refusals**: outside the game's catalog (only with "Show all"), trade or event,
-    locked behind a checkpoint, "cannot go to HOME", and — new in the v2 — "no shiny", as text in a
-    one-line strip that ellipsizes so the cell keeps a fixed height. The name button opens the
-    Pokémon card (`FolhaPokemon`) with every mark written in full, so nothing lives only in the cut.
-  - **Each cell is a panel with the name, the marks and two steppers** (normal, shiny), 198 px tall
-    at every width; the columns are what fits at 300 px each: one on a phone held upright and at
-    768 px beside the rail, two on a phone turned sideways, two or three on a desktop. The fields are
-    text with a numeric keyboard, controlled (the value lives in the batch, so leaving the mounted
-    range, turning the phone or crossing 768 px keeps it), 16 px. With focus inside the list every
-    field is in the Tab order, as in the v1's table (normal, shiny, the next form); from outside,
-    Tab enters at the grid's entry cell (rule 28), never at a spare row's field off screen. Enter
-    goes to the same field of the next form. − and + are out of the Tab order.
-  - **The focused row and its neighbours stay mounted** (`manterMontadas`), as the v1's virtualizer
-    kept them: scrolling with the iPhone keyboard open never unmounts the field being typed in.
-- **Its threshold is 100, measured against rule 13's budget** (2026-11-23, the same protocol:
-  Chromium, iPhone profile 393 × 852, DPR 3, touch, iPhone user agent, CPU 4×, production build,
-  invented data; "tap" is the longest Event Timing duration of a tap on a `+` in the middle of the
-  list, six taps, the first cold). A form here costs ~21 DOM nodes against ~8 for a card, so the
-  grid's 300 would mount over 5,000 nodes for one game's catalog; − and + are text, not SVG icons,
-  and the name button's arrow is a pseudo-element, which took a cell from 33 nodes to ~20.
+51. **`/dex/cadastrar` is the v1's batch, on the virtual grid.** The server page reads what the v1
+    page reads (the catalog by name, the owned active games, the "have" counts from the records, the
+    sections, the checkpoints not yet earned), after the module guard. The batch is the v1's
+    `POST /api/dex/registros` with `{ jogoId, itens: [{ formaId, normal, shiny }] }`; the pure rules
+    are in `cadastrar/_componentes/lote-dex.ts`, tested.
+    - **The games are chips, HOME always last**; `?jogo=` and `?busca=` are read as the v1 reads them,
+      and a `?jogo=` the user does not own opens on the first option. After that, **a chosen game that
+      leaves the list** (stopped or removed in another tab, seen when the screen rereads after a
+      refusal) leaves the screen with no game and "Register" disabled, never with another game: the
+      next click would otherwise register the whole batch in a game nobody picked.
+    - **The batch lives on the screen, by form**: switching game, view or filter keeps what was
+      typed, and the bar says how many forms of the batch are outside the list shown (they are sent,
+      as in the v1). While it is being sent, the list and the filters are `inert`.
+    - **One refusal refuses the whole batch** (the route validates everything before its one
+      transaction): the refusals are listed above the bar, the batch stays, the page rereads. No answer,
+      or a 5xx, is "the batch may have gone in": the batch stays and the page rereads. The reread is
+      `router.refresh` in a transition, and "Register" stays disabled until it arrives; only then does
+      the screen say the counts were read again. **A reread the server cannot do keeps the screen**
+      (the page passes `leitura: null`, and the screen keeps its previous read and the typed batch,
+      saying so, with "Read again", and "Register" stays disabled until a read succeeds: those counts
+      are what the user checks before sending again); only a first load with nothing to show is the
+      error page. The decisions are pure (`bloqueioDoCadastro`, `leituraNaTela`, `tabIndexDoCampo`).
+      Success is a floating notice, and the "have" counts reread.
+    - **Marks, never refusals**: outside the game's catalog (only with "Show all"), trade or event,
+      locked behind a checkpoint, "cannot go to HOME", and — new in the v2 — "no shiny", as text in a
+      one-line strip that ellipsizes so the cell keeps a fixed height. The name button opens the
+      Pokémon card (`FolhaPokemon`) with every mark written in full, so nothing lives only in the cut.
+    - **Each cell is a panel with the name, the marks and two steppers** (normal, shiny), 198 px tall
+      at every width; the columns are what fits at 300 px each: one on a phone held upright and at
+      768 px beside the rail, two on a phone turned sideways, two or three on a desktop. The fields are
+      text with a numeric keyboard, controlled (the value lives in the batch, so leaving the mounted
+      range, turning the phone or crossing 768 px keeps it), 16 px. With focus inside the list every
+      field is in the Tab order, as in the v1's table (normal, shiny, the next form); from outside,
+      Tab enters at the grid's entry cell (rule 28), never at a spare row's field off screen. Enter
+      goes to the same field of the next form. − and + are out of the Tab order.
+    - **The focused row and its neighbours stay mounted** (`manterMontadas`), as the v1's virtualizer
+      kept them: scrolling with the iPhone keyboard open never unmounts the field being typed in.
+52. **Its threshold is 100, measured against rule 13's budget** (2026-11-23, the same protocol:
+    Chromium, iPhone profile 393 × 852, DPR 3, touch, iPhone user agent, CPU 4×, production build,
+    invented data; "tap" is the longest Event Timing duration of a tap on a `+` in the middle of the
+    list, six taps, the first cold). A form here costs ~21 DOM nodes against ~8 for a card, so the
+    grid's 300 would mount over 5,000 nodes for one game's catalog; − and + are text, not SVG icons,
+    and the name button's arrow is a pseudo-element, which took a cell from 33 nodes to ~20.
 
-  | List | Forms | Mounted | DOM nodes (page) | Sprites in DOM | Tap, worst / median |
-  |---|---|---|---|---|---|
-  | HOME, search "ch" (all mounted) | 68 | 68 | 1,572 | 68 | 64–80 / 40–48 ms |
-  | HOME, search "ar", all mounted (threshold 300) | 171 | 171 | 3,579 | 171 | 64 / 48 ms |
-  | FireRed catalog, all mounted (threshold 300) | 253 | 253 | 5,269 | 253 | 80 / 56 ms |
-  | FireRed catalog, virtual (threshold 100) | 253 | 12 | 497 | 12 | 56–64 / 40–48 ms |
-  | HOME, every form, virtual | 1,224 | 12–13 | 490–512 | 13 | 48–80 / 40 ms |
-  | HOME, every form, virtual, 1,400 × 900 | 1,224 | 37 | 971 | 37 | 48–64 / 48 ms |
+    | List | Forms | Mounted | DOM nodes (page) | Sprites in DOM | Tap, worst / median |
+    |---|---|---|---|---|---|
+    | HOME, search "ch" (all mounted) | 68 | 68 | 1,572 | 68 | 64–80 / 40–48 ms |
+    | HOME, search "ar", all mounted (threshold 300) | 171 | 171 | 3,579 | 171 | 64 / 48 ms |
+    | FireRed catalog, all mounted (threshold 300) | 253 | 253 | 5,269 | 253 | 80 / 56 ms |
+    | FireRed catalog, virtual (threshold 100) | 253 | 12 | 497 | 12 | 56–64 / 40–48 ms |
+    | HOME, every form, virtual | 1,224 | 12–13 | 490–512 | 13 | 48–80 / 40 ms |
+    | HOME, every form, virtual, 1,400 × 900 | 1,224 | 37 | 971 | 37 | 48–64 / 48 ms |
 
-  Every case taps under 100 ms, so the node count decides: 100 forms mount whole in about 2,250 nodes,
-  and above that the list costs ~500 nodes on the phone and ~1,000 on a wide desktop at any size. Two
-  of twelve virtual runs had one cold tap of 136 and 168 ms, the rest of each run at 32–56 ms. The
-  v1 measured ~310 ms per tap on the same list without virtualizing (its header, "Lista virtual no
-  celular").
+    Every case taps under 100 ms, so the node count decides: 100 forms mount whole in about 2,250 nodes,
+    and above that the list costs ~500 nodes on the phone and ~1,000 on a wide desktop at any size. Two
+    of twelve virtual runs had one cold tap of 136 and 168 ms, the rest of each run at 32–56 ms. The
+    v1 measured ~310 ms per tap on the same list without virtualizing (its header, "Lista virtual no
+    celular").
 
 ### Trophies and plans (package 5e-b)
 
-- **`/dex/trofeus` reads what the v1 reads and computes nothing new.** The server page reads the
-  same lists with the same functions (`comTrofeusDoHome` for HOME), and the counts are the v1's
-  (`progressoTrofeus`: platinum derived, never a row). The tabs are HOME first, then the user's games
-  that have trophies (`abasDeTrofeus`); `?jogo=` only picks the tab that opens, as in the v1, and an
-  unknown game opens the first. **A HOME trophy has no mark and no undo button**: it counts from the
-  records, the route refuses it (`dexTrofeuCalculado`), and only "Hunt" is offered while it is
-  missing (`acoesDoTrofeu`). A checkpoint not yet earned shows a lock and "Unlocks N species" in
-  text, plus "Locked"; every trophy writes its tier and its state, the colour is only emphasis.
-  Marking asks for the date in line, today (`hojeLocal`) already filled in; undoing asks through the
-  v2 confirmation dialog; "Hunt" creates a plan aimed at the trophy and goes to `/dex/planos`.
-- **`/dex/planos` shows a refusal next to what caused it, and only a keyed one.** The task, the plan
-  or the new-plan form carries the message; when that place left the screen (another tab closed
-  the plan and it went to the history, which is collapsed), it shows at the top. A 404 or 409
-  rereads the page. The forms check, before sending, what the routes would refuse with an English
-  `erro` (`erroDoPlano`, `erroDaEtapa`: empty title, end before start, 1 to 200 characters in a
-  step, up to 2,000 in its details), and both screens print only a refusal with a key, translated
-  (`fraseDaRecusa`); a keyless 400 shows the screen's generic sentence, never the route's English.
-  Tasks start collapsed (the title is the disclosure button) and closed plans live in a history
-  opened by a button, where a plan is reactivated.
-- **Task steps keep every rule of `AGENTS.md`, on screen.** Steps change only while the task is open
-  in an active plan (`etapasEditaveis`); elsewhere the boxes are disabled and a sentence says why.
-  **Checking the last step never finishes the task**: "every step is done, the task stays open"
-  shows as a status next to "Mark done" (`avisoTodasFeitas`), and the click stays the user's.
-  Order changes by up and down buttons only, each sending the whole list of ids; a stale list
-  (`dexOrdemEtapasInvalida`) is shown and reread. **The screen stays busy until the reread lands**,
-  not only until the response: before it, the list on screen is the old one, and a second move
-  computed on it would undo the first (both pass the whole-list check). After a move the focus
-  stays on the same button of the moved step; after saving or cancelling a step form it returns to
-  the button that opened it. A step form that was open when its task closed (here or in another
-  tab) disappears instead of sending. At 50 steps the "Add step" button is off with a note; the server's
-  `dexEtapasDemais` (another tab filled the task) is shown and the reread list shows the note.
-  Deleting a step asks through the confirmation dialog. Finishing a catch, evolve or trade task
-  **offers** Register on the task's game (`hrefCadastroDaTarefa`: `jogo` and, for a single slot,
-  `busca` with the species), in the task's own row; it never records.
+53. **`/dex/trofeus` reads what the v1 reads and computes nothing new.** The server page reads the
+    same lists with the same functions (`comTrofeusDoHome` for HOME), and the counts are the v1's
+    (`progressoTrofeus`: platinum derived, never a row). The tabs are HOME first, then the user's games
+    that have trophies (`abasDeTrofeus`); `?jogo=` only picks the tab that opens, as in the v1, and an
+    unknown game opens the first. **A HOME trophy has no mark and no undo button**: it counts from the
+    records, the route refuses it (`dexTrofeuCalculado`), and only "Hunt" is offered while it is
+    missing (`acoesDoTrofeu`). A checkpoint not yet earned shows a lock and "Unlocks N species" in
+    text, plus "Locked"; every trophy writes its tier and its state, the colour is only emphasis.
+    Marking asks for the date in line, today (`hojeLocal`) already filled in; undoing asks through the
+    v2 confirmation dialog; "Hunt" creates a plan aimed at the trophy and goes to `/dex/planos`.
+54. **`/dex/planos` shows a refusal next to what caused it, and only a keyed one.** The task, the plan
+    or the new-plan form carries the message; when that place left the screen (another tab closed
+    the plan and it went to the history, which is collapsed), it shows at the top. A 404 or 409
+    rereads the page. The forms check, before sending, what the routes would refuse with an English
+    `erro` (`erroDoPlano`, `erroDaEtapa`: empty title, end before start, 1 to 200 characters in a
+    step, up to 2,000 in its details), and both screens print only a refusal with a key, translated
+    (`fraseDaRecusa`); a keyless 400 shows the screen's generic sentence, never the route's English.
+    Tasks start collapsed (the title is the disclosure button) and closed plans live in a history
+    opened by a button, where a plan is reactivated.
+55. **Task steps keep every rule of `AGENTS.md`, on screen.** Steps change only while the task is open
+    in an active plan (`etapasEditaveis`); elsewhere the boxes are disabled and a sentence says why.
+    **Checking the last step never finishes the task**: "every step is done, the task stays open"
+    shows as a status next to "Mark done" (`avisoTodasFeitas`), and the click stays the user's.
+    Order changes by up and down buttons only, each sending the whole list of ids; a stale list
+    (`dexOrdemEtapasInvalida`) is shown and reread. **The screen stays busy until the reread lands**,
+    not only until the response: before it, the list on screen is the old one, and a second move
+    computed on it would undo the first (both pass the whole-list check). After a move the focus
+    stays on the same button of the moved step; after saving or cancelling a step form it returns to
+    the button that opened it. A step form that was open when its task closed (here or in another
+    tab) disappears instead of sending. At 50 steps the "Add step" button is off with a note; the server's
+    `dexEtapasDemais` (another tab filled the task) is shown and the reread list shows the note.
+    Deleting a step asks through the confirmation dialog. Finishing a catch, evolve or trade task
+    **offers** Register on the task's game (`hrefCadastroDaTarefa`: `jogo` and, for a single slot,
+    `busca` with the species), in the task's own row; it never records.
 
 ### New registration (package 5d)
 
-- **`/dex/novo-cadastro` keeps the v1's two steps and the v1's request.** The server page reads what
-  the v1 page reads (the Boxes' four reads, the active games, the unearned checkpoints). Step 1 is the
-  box grid of `/dex/caixas` — `montarCaixasDex`, the same numbers, groups and holes, on the
-  `GradeVirtual` with 5b's box geometry (`caixas/_componentes/geometria-caixa.ts`, `LIMIAR_CAIXAS`,
-  imported, never copied; the screen's stylesheet declares the same `--cx-*` measures and a test reads
-  it) — where a tap marks a slot that is missing or in a game, in either track. Step 2 is the game left
-  from (the active games and HOME; the last one used is a device preference, `v2-dex-novo-cadastro-saida`,
-  rule 19), the batch with each item's box and position and the v1's marks, and the send,
-  `POST /api/dex/registros/enviar` with `{ jogoOrigem, itens, confirmarSemVolta }`. The rules that were
-  in the v1 component are pure and tested: `lote-envio.ts` (selection by slot and track, the route's
-  ceiling, marks, what blocks the send) and `fluxo-envio.ts` (the request and the confirmation).
-- **A slot in HOME, and a hole, are identified, never marked.** A tap or keyboard focus writes the
-  slot's name, box, position and state (or the hole's reason) in the action bar, and the selection does
-  not change; a slot marked before it reached HOME (another tab) keeps its ring and a tap unmarks it. The
-  bar also says where the other half of a gender pair is and marks it without scrolling to it. Nothing
-  is only on hover: the mouse preview is `useCartaoFlutuante`, an enhancement.
-- **Leaving a send-only game always asks, once per batch.** The first send goes with
-  `confirmarSemVolta: false`; the 409 `dexConfirmarSemVolta` opens the v2 confirmation dialog with the
-  route's sentence, and only "Transfer" resends the same game and items with `true`. Cancel and Esc send
-  nothing, and the same 409 to a confirmed request is a plain refusal, never a second question.
-- **What the route would refuse for certain comes first in the batch and blocks the send**: a form HOME
-  does not take from that game, and a slot already in HOME. The batch mounts 60 items at a time ("Show
-  more"), so a blocking item is never hidden at the end of 500, and "Remove the ones that cannot go"
-  takes them all out. Marks that only warn (outside the game, trade, event, locked, moved, born in)
-  never block: the route accepts them.
-- **A refusal rereads the page.** The route serializes sends with its own advisory lock, so two tabs
-  sending the same slot get one 201 and one 400 `dexVagaJaNoHome`; the second tab shows the refusal
-  through `recusas-legiveis.ts` (moved to `src/app/_comum/dex/`, the v1 imports it from there), with
-  the form and track in the interface language, and rereads, after which the item shows "Already in
-  HOME". Send stays off until the reread arrives.
-- **The grid, measured against rule 13's budget** — see the table below this list. The box geometry,
-  the threshold and the cell are 5b's (rule 44, which also measured the grid mounted whole), and so
-  is the 42 px slot at 320 px, the one declared exception to the 44 px target.
+56. **`/dex/novo-cadastro` keeps the v1's two steps and the v1's request.** The server page reads what
+    the v1 page reads (the Boxes' four reads, the active games, the unearned checkpoints). Step 1 is the
+    box grid of `/dex/caixas` — `montarCaixasDex`, the same numbers, groups and holes, on the
+    `GradeVirtual` with 5b's box geometry (`caixas/_componentes/geometria-caixa.ts`, `LIMIAR_CAIXAS`,
+    imported, never copied; the screen's stylesheet declares the same `--cx-*` measures and a test reads
+    it) — where a tap marks a slot that is missing or in a game, in either track. Step 2 is the game left
+    from (the active games and HOME; the last one used is a device preference, `v2-dex-novo-cadastro-saida`,
+    rule 19), the batch with each item's box and position and the v1's marks, and the send,
+    `POST /api/dex/registros/enviar` with `{ jogoOrigem, itens, confirmarSemVolta }`. The rules that were
+    in the v1 component are pure and tested: `lote-envio.ts` (selection by slot and track, the route's
+    ceiling, marks, what blocks the send) and `fluxo-envio.ts` (the request and the confirmation).
+57. **A slot in HOME, and a hole, are identified, never marked.** A tap or keyboard focus writes the
+    slot's name, box, position and state (or the hole's reason) in the action bar, and the selection does
+    not change; a slot marked before it reached HOME (another tab) keeps its ring and a tap unmarks it. The
+    bar also says where the other half of a gender pair is and marks it without scrolling to it. Nothing
+    is only on hover: the mouse preview is `useCartaoFlutuante`, an enhancement.
+58. **Leaving a send-only game always asks, once per batch.** The first send goes with
+    `confirmarSemVolta: false`; the 409 `dexConfirmarSemVolta` opens the v2 confirmation dialog with the
+    route's sentence, and only "Transfer" resends the same game and items with `true`. Cancel and Esc send
+    nothing, and the same 409 to a confirmed request is a plain refusal, never a second question.
+59. **What the route would refuse for certain comes first in the batch and blocks the send**: a form HOME
+    does not take from that game, and a slot already in HOME. The batch mounts 60 items at a time ("Show
+    more"), so a blocking item is never hidden at the end of 500, and "Remove the ones that cannot go"
+    takes them all out. Marks that only warn (outside the game, trade, event, locked, moved, born in)
+    never block: the route accepts them.
+60. **A refusal rereads the page.** The route serializes sends with its own advisory lock, so two tabs
+    sending the same slot get one 201 and one 400 `dexVagaJaNoHome`; the second tab shows the refusal
+    through `recusas-legiveis.ts` (moved to `src/app/_comum/dex/`, the v1 imports it from there), with
+    the form and track in the interface language, and rereads, after which the item shows "Already in
+    HOME". Send stays off until the reread arrives.
+61. **The grid, measured against rule 13's budget** — see the table below this list. The box geometry,
+    the threshold and the cell are 5b's (rule 49, which also measured the grid mounted whole), and so
+    is the 42 px slot at 320 px, the one declared exception to the 44 px target.
 
-  | Track (whole, "only missing" off) | Boxes | Mounted | DOM nodes (page) | `<img>` in the grid | Loaded | Tap, worst / median |
-  |---|---|---|---|---|---|---|
-  | normal, virtual (the shipped `LIMIAR_CAIXAS`), three runs | 51 | 10 | 1,551 | 300 | 282 | 64–72 / 40–48 ms |
+    | Track (whole, "only missing" off) | Boxes | Mounted | DOM nodes (page) | `<img>` in the grid | Loaded | Tap, worst / median |
+    |---|---|---|---|---|---|---|
+    | normal, virtual (the shipped `LIMIAR_CAIXAS`), three runs | 51 | 10 | 1,551 | 300 | 282 | 64–72 / 40–48 ms |
 
-  Measured 2026-11-23 with rule 44's protocol (Chromium, iPhone profile 393 × 852, DPR 3, touch,
-  iPhone user agent, CPU 4×, production build, invented data, scrolled to the middle; "tap" is the
-  longest Event Timing duration of a tap that marks a slot, six taps, the first cold). A tap redraws
-  one box: `CaixaEscolha` is `memo`, and each box gets its marked slots as one string, so a mark
-  elsewhere does not redraw it.
+    Measured 2026-11-23 with rule 49's protocol (Chromium, iPhone profile 393 × 852, DPR 3, touch,
+    iPhone user agent, CPU 4×, production build, invented data, scrolled to the middle; "tap" is the
+    longest Event Timing duration of a tap that marks a slot, six taps, the first cold). A tap redraws
+    one box: `CaixaEscolha` is `memo`, and each box gets its marked slots as one string, so a mark
+    elsewhere does not redraw it.
 
 ## 8. Other rules, checked for the transition
 
