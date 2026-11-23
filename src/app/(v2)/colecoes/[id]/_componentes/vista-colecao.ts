@@ -37,6 +37,31 @@ export function abaDaUrl(valor: string | null | undefined, tipo: TipoColecao): A
   return abas.find((a) => a === valor) ?? abas[0];
 }
 
+/**
+ * As vagas que cada aba mostra, na ordem da grade: o fichário e a lista
+ * inteira mostram todas; "O que falta", as vazias; Upgrades, as cheias com
+ * upgrade. É com esta lista que o foco volta do detalhe: se a vaga que abriu
+ * saiu da aba (alocada no "O que falta", trocada nos Upgrades), o foco vai
+ * para a que ficou no mesmo lugar da lista.
+ */
+export function vagasDaAba<V extends { copia?: unknown; upgrade?: unknown }>(aba: Aba, vagas: readonly V[]): readonly V[] {
+  if (aba === "falta") return vagas.filter((v) => !v.copia);
+  if (aba === "upgrades") return vagas.filter((v) => v.copia && v.upgrade);
+  return vagas;
+}
+
+/**
+ * Para onde o foco volta quando o detalhe fecha: a própria vaga, se ainda
+ * está na aba; senão a que ocupa agora a posição que ela tinha (a seguinte,
+ * ou a última, se ela era a última); `null` com a aba vazia.
+ */
+export function vagaDoFoco<V extends { id: string }>(lista: readonly V[], id: string, posicao: number): V | null {
+  const propria = lista.find((v) => v.id === id);
+  if (propria) return propria;
+  if (lista.length === 0) return null;
+  return lista[Math.min(Math.max(0, posicao), lista.length - 1)];
+}
+
 /* ------------------------------------------------------- Preferências */
 
 /**

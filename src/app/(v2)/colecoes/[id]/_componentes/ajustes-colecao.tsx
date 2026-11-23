@@ -46,7 +46,9 @@ async function enviar(url: string, metodo: string, corpo?: unknown): Promise<Res
  *
  * - **Toda ação destrutiva pergunta** pela confirmação da v2, que abre por
  *   cima desta janela; cancelar não envia nada. Desligar secretas e tirar
- *   uma região dizem o que acontece com as vagas que saem.
+ *   uma região dizem o que acontece com as vagas que saem — e que, se
+ *   alguma delas já estiver preenchida, o servidor recusa e nada muda
+ *   (`secretasPreenchidas`, `escopoVagasPreenchidas`).
  * - **Recusa vira frase** (`recusa.ts`) dentro da janela. Validação (400)
  *   mantém o que foi digitado; uma recusa que diz que o estado mudou por
  *   baixo (404, 409) relê a grade, como o detalhe faz.

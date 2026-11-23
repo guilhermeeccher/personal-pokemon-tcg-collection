@@ -50,6 +50,8 @@ import {
   paginaAposTrocarGrade,
   paginaDoIndice,
   totalDePaginas,
+  vagaDoFoco,
+  vagasDaAba,
 } from "./_componentes/vista-colecao";
 
 type Leitura = { estado: "carregando" } | { estado: "ok"; grade: GradeColecaoV2DTO } | { estado: "naoEncontrada" } | { estado: "erro" };
@@ -177,7 +179,6 @@ export function PaginaColecao({ id }: { id: string }) {
   const grade = leitura.estado === "ok" ? leitura.grade : null;
   const tipo = grade?.tipo ?? "set";
   const vagas = useMemo(() => grade?.vagas ?? [], [grade]);
-  const indicePorVaga = useMemo(() => new Map(vagas.map((v, i) => [v.id, i])), [vagas]);
   const inicioDivisao = useMemo(() => inicioDasDivisoes(vagas), [vagas]);
   const vazias = useMemo(() => vagas.filter((v) => !v.copia), [vagas]);
   const comUpgrade = useMemo(() => vagas.filter((v) => v.upgrade && v.copia).length, [vagas]);
@@ -231,7 +232,20 @@ export function PaginaColecao({ id }: { id: string }) {
   // A chave do par ativo da transição: a carta que abriu, e para onde o detalhe volta.
   const [parAtivo, setParAtivo] = useState<string | null>(null);
 
+  // O que abriu o detalhe por último (a vaga e o lugar dela na aba), para o
+  // foco voltar ao fechar. Não se apaga ao fechar: o resolvedor do foco roda
+  // depois do commit que fecha.
+  const origemDoDetalhe = useRef<{ tipo: "vaga"; id: string; posicao: number } | { tipo: "copia"; copiaId: string } | null>(null);
+  const abaRef = useRef(aba);
+  const vagasRef = useRef(vagas);
+  useEffect(() => {
+    abaRef.current = aba;
+    vagasRef.current = vagas;
+  });
+
   const abrirVaga = useCallback((v: VagaGradeV2DTO) => {
+    const posicao = vagasDaAba(abaRef.current, vagasRef.current).findIndex((x) => x.id === v.id);
+    origemDoDetalhe.current = { tipo: "vaga", id: v.id, posicao };
     setParAtivo(v.id);
     startTransition(() => setAberta({ tipo: "vaga", id: v.id }));
   }, []);
@@ -256,24 +270,32 @@ export function PaginaColecao({ id }: { id: string }) {
     };
   }
 
-  // O resolvedor do foco lê o estado da hora em que o detalhe fecha.
-  const atual = useRef({ aberta, aba, indicePorVaga, gradeFichario });
+  /*
+   * O foco ao fechar o detalhe (`devolverFocoPara`): a célula da vaga que o
+   * abriu, montada de novo se ela saiu do DOM — a lista inteira rola até ela
+   * pela grade virtual, o fichário vira para a página dela. Se a vaga saiu da
+   * aba (alocada no "O que falta", trocada nos Upgrades, tirada da coleção),
+   * a que ficou no mesmo lugar da lista (`vagaDoFoco`). Lê o estado da hora em
+   * que fecha, pelas refs.
+   */
+  const gradeFicharioRef = useRef(gradeFichario);
   useEffect(() => {
-    atual.current = { aberta, aba, indicePorVaga, gradeFichario };
+    gradeFicharioRef.current = gradeFichario;
   });
-
   const devolverFoco = useCallback(async (): Promise<HTMLElement | null> => {
-    const { aberta: a, aba: abaAgora, indicePorVaga: indices, gradeFichario: g } = atual.current;
-    if (!a) return null;
-    if (a.tipo === "copia") return document.querySelector<HTMLElement>(`[${ATRIBUTO_COPIA_TEMA}="${CSS.escape(a.copiaId)}"]`);
-    if (abaAgora === "inteiro" || abaAgora === "falta") return (await controleGrade.current?.elementoDe(a.id)) ?? null;
+    const origem = origemDoDetalhe.current;
+    if (!origem) return null;
+    if (origem.tipo === "copia") return document.querySelector<HTMLElement>(`[${ATRIBUTO_COPIA_TEMA}="${CSS.escape(origem.copiaId)}"]`);
+    const abaAgora = abaRef.current;
+    const lista = vagasDaAba(abaAgora, vagasRef.current);
+    const alvo = vagaDoFoco(lista, origem.id, origem.posicao);
+    if (!alvo) return null;
+    if (abaAgora === "inteiro" || abaAgora === "falta") return (await controleGrade.current?.elementoDe(alvo.id)) ?? null;
     if (abaAgora === "fichario") {
-      const i = indices.get(a.id);
-      if (i === undefined) return null;
-      setPaginaPedida(paginaDoIndice(i, g));
+      setPaginaPedida(paginaDoIndice(lista.indexOf(alvo), gradeFicharioRef.current));
       await doisQuadros();
     }
-    return document.querySelector<HTMLElement>(`[${ATRIBUTO_VAGA}="${CSS.escape(a.id)}"]`);
+    return document.querySelector<HTMLElement>(`[${ATRIBUTO_VAGA}="${CSS.escape(alvo.id)}"]`);
   }, [setPaginaPedida]);
 
   /* ---------- Operações da coleção ---------- */
@@ -561,6 +583,7 @@ export function PaginaColecao({ id }: { id: string }) {
             reler();
           }}
           aoAmpliar={(c) => {
+            origemDoDetalhe.current = { tipo: "copia", copiaId: c.copiaId };
             setParAtivo(null);
             setAberta({ tipo: "copia", cartaId: c.cartaId, copiaId: c.copiaId, previa: c });
           }}

@@ -18,6 +18,8 @@ import {
   totalDePaginas,
   umaLinhaPorCarta,
   vaoDoTamanho,
+  vagaDoFoco,
+  vagasDaAba,
 } from "./vista-colecao";
 
 describe("abas", () => {
@@ -33,6 +35,31 @@ describe("abas", () => {
     expect(abaDaUrl("xyz", "set")).toBe("fichario");
     expect(abaDaUrl("falta", "customizada")).toBe("inteiro");
     expect(abaDaUrl("fichario", "customizada")).toBe("inteiro");
+  });
+});
+
+describe("vagas da aba e o foco de volta", () => {
+  const vagas = [
+    { id: "a", copia: 1, upgrade: "variante" },
+    { id: "b" },
+    { id: "c", copia: 1 },
+    { id: "d" },
+  ];
+
+  it("cada aba mostra a sua parte, na ordem da grade", () => {
+    expect(vagasDaAba("fichario", vagas).map((v) => v.id)).toEqual(["a", "b", "c", "d"]);
+    expect(vagasDaAba("inteiro", vagas).map((v) => v.id)).toEqual(["a", "b", "c", "d"]);
+    expect(vagasDaAba("falta", vagas).map((v) => v.id)).toEqual(["b", "d"]);
+    expect(vagasDaAba("upgrades", vagas).map((v) => v.id)).toEqual(["a"]);
+  });
+
+  it("a própria vaga, se ainda está; senão a do mesmo lugar, ou a última", () => {
+    const falta = vagasDaAba("falta", vagas);
+    expect(vagaDoFoco(falta, "d", 1)?.id).toBe("d");
+    // "b" foi alocada: saiu do "O que falta"; o lugar 0 agora é "d".
+    expect(vagaDoFoco(falta.filter((v) => v.id !== "b"), "b", 0)?.id).toBe("d");
+    expect(vagaDoFoco(falta, "x", 9)?.id).toBe("d");
+    expect(vagaDoFoco([], "a", 0)).toBeNull();
   });
 });
 
