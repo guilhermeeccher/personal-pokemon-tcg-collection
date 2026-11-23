@@ -2510,8 +2510,7 @@
       "ligaSemVarredura": "Esta coleção não tem varredura salva: não há opções para marcar. As escolhas já feitas continuam na lista, e dá para tirá-las.",
       "cardmarketTitulo": "Preço de referência do Cardmarket",
       "cardmarketTexto": "{comPreco} de {cartas} cartas candidatas com preço; {aBuscar} a buscar. Cada preço vale {dias} dias. Buscar preços fica na tela de opções de compra, ainda na v1.",
-      "semPrecoNenhum": "Sem preço ainda, a escolha é sua, carta a carta: o atalho só marca carta com preço.",
-      "buscarNaV1": "Buscar preços na v1"
+      "semPrecoNenhum": "Sem preço ainda, a escolha é sua, carta a carta: o atalho só marca carta com preço."
     },
     "criterio": {
       "linha": "Critério: {ordem}, {teto} ({origem}).",
@@ -2556,7 +2555,7 @@
       "rotuloLista": "{total, plural, =1 {A carta que entra} other {As # cartas que entram}}",
       "vaga": "Vaga {numero}",
       "fora": {
-        "jaTemEscolha": "{total, plural, =1 {1 vaga já tem escolha} other {# vagas já têm escolha}} e fica como está",
+        "jaTemEscolha": "{total, plural, =1 {1 vaga já tem escolha e fica como está} other {# vagas já têm escolha e ficam como estão}}",
         "semPreco": "{total, plural, =1 {1 vaga sem preço} other {# vagas sem preço}}: marque à mão",
         "semOpcao": "{total, plural, =1 {1 vaga sem opção} other {# vagas sem opção}}",
         "pendentes": "{total, plural, =1 {1 vaga ainda salvando} other {# vagas ainda salvando}}"

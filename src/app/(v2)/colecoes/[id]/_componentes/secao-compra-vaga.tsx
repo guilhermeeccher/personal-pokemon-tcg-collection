@@ -149,21 +149,29 @@ export function SecaoCompraVaga({
           <p className={estilos.sutil}>{t("nenhumaNaLista")}</p>
         ) : (
           <ul className={estilos.listaSimples}>
-            {escolhas.map((e) => (
-              <li key={e.id} className={estilos.linhaEscolha}>
-                <span className={estilos.nomeEscolha}>{e.nome}</span>
-                <Botao
-                  pequeno
-                  variante="fantasma"
-                  icone={<X aria-hidden />}
-                  disabled={ocupado}
-                  aria-label={t("tirarDe", { nome: e.nome })}
-                  onClick={() => void enviar([{ ids: [e.id], selecionada: false }])}
-                >
-                  {t("tirar")}
-                </Botao>
-              </li>
-            ))}
+            {escolhas.map((e) => {
+              // A grade só diz o nome; a opção da mesma carta, quando está entre
+              // as lidas, diz a edição e o número — duas "Bulbasaur" se distinguem.
+              const o = e.cartaId === null ? undefined : opcoes.find((x) => x.cartaId === e.cartaId);
+              return (
+                <li key={e.id} className={estilos.linhaEscolha}>
+                  <span className={estilos.nomeEscolha}>
+                    {e.nome}
+                    {o ? <span className={estilos.sutil}> · {[o.edicaoNome, o.total ? `${o.numero}/${o.total}` : o.numero].join(" · ")}</span> : null}
+                  </span>
+                  <Botao
+                    pequeno
+                    variante="fantasma"
+                    icone={<X aria-hidden />}
+                    disabled={ocupado}
+                    aria-label={t("tirarDe", { nome: e.nome })}
+                    onClick={() => void enviar([{ ids: [e.id], selecionada: false }])}
+                  >
+                    {t("tirar")}
+                  </Botao>
+                </li>
+              );
+            })}
           </ul>
         )}
         {escolhas.length > 1 ? (

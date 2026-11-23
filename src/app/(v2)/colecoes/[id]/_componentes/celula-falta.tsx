@@ -97,7 +97,7 @@ export function CelulaFalta({
       alt=""
       raridade={vaga.carta?.raridade ?? null}
       className={naLista ? undefined : estilos.cartaApagada}
-      fallback={<span className={estilos.fundoVazio} />}
+      fallback={<span className={estilos.fundoVazio}>{nome ? <span className={estilos.semImagem}>{nome}</span> : null}</span>}
     />
   ) : (
     <span className={estilos.fundoVazio}>{nome ? <span className={estilos.semImagem}>{nome}</span> : null}</span>

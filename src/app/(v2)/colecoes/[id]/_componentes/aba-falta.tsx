@@ -450,15 +450,7 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
         </AvisoEmLinha>
       ) : null}
       {estado?.fonte === "cardmarket" ? (
-        <AvisoEmLinha
-          icone={<ShoppingCart aria-hidden />}
-          titulo={t("fonte.cardmarketTitulo")}
-          acao={
-            <BotaoLink href={linkOpcoes} pequeno>
-              {t("fonte.buscarNaV1")}
-            </BotaoLink>
-          }
-        >
+        <AvisoEmLinha icone={<ShoppingCart aria-hidden />} titulo={t("fonte.cardmarketTitulo")}>
           {t("fonte.cardmarketTexto", {
             comPreco: estado.precosCandidatas.comPreco,
             cartas: estado.precosCandidatas.cartas,
@@ -527,17 +519,18 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
         />
       </div>
 
-      {lista ? (
+      {/* A barra aparece quando há o que copiar (ou uma marca a caminho): vazia, só tiraria espaço da grade. */}
+      {lista && (resumo.cartas > 0 || resumo.pendentes > 0 || lista.selecionadas > 0) ? (
         <div className={estilos.barraCompra} role="region" aria-label={t("barra.rotulo")}>
           <p className={estilos.barraResumo} aria-live="polite">
             <b>{t("barra.cartas", { total: resumo.cartas })}</b>
-            <span className="v2-num">
+            <span>
               {resumo.cartas > 0 ? (cardmarket ? t("barra.valorCardmarket", { valor: formatos.brl(resumo.total) }) : t("barra.valorLiga", { valor: formatos.brl(resumo.total) })) : null}
               {atualizando ? ` · ${t("barra.atualizando")}` : ""}
             </span>
           </p>
           <div className={estilos.barraAcoes}>
-            <Botao variante="secundario" icone={<ListChecks aria-hidden />} disabled={resumo.cartas === 0 && lista.selecionadas === 0} onClick={() => setListaAberta(true)}>
+            <Botao variante="secundario" icone={<ListChecks aria-hidden />} onClick={() => setListaAberta(true)}>
               {t("barra.verLista")}
             </Botao>
             {umaAba ? (

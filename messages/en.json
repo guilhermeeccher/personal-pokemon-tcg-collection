@@ -2518,8 +2518,7 @@
       "ligaSemVarredura": "This collection has no saved scan: there are no options to mark. Choices already made stay on the list, and you can take them off.",
       "cardmarketTitulo": "Cardmarket reference price",
       "cardmarketTexto": "{comPreco} of {cartas} candidate cards priced; {aBuscar} to look up. Each price holds for {dias} days. Looking up prices is on the buy options screen, still in v1.",
-      "semPrecoNenhum": "With no price yet, the choice is yours, card by card: the shortcut only marks a priced card.",
-      "buscarNaV1": "Look up prices in v1"
+      "semPrecoNenhum": "With no price yet, the choice is yours, card by card: the shortcut only marks a priced card."
     },
     "criterio": {
       "linha": "Criterion: {ordem}, {teto} ({origem}).",
@@ -2564,7 +2563,7 @@
       "rotuloLista": "{total, plural, =1 {The card that goes in} other {The # cards that go in}}",
       "vaga": "Slot {numero}",
       "fora": {
-        "jaTemEscolha": "{total, plural, =1 {1 slot already has a choice} other {# slots already have a choice}} and stays as it is",
+        "jaTemEscolha": "{total, plural, =1 {1 slot already has a choice and stays as it is} other {# slots already have a choice and stay as they are}}",
         "semPreco": "{total, plural, =1 {1 slot with no price} other {# slots with no price}}: mark by hand",
         "semOpcao": "{total, plural, =1 {1 slot with no option} other {# slots with no option}}",
         "pendentes": "{total, plural, =1 {1 slot still saving} other {# slots still saving}}"
