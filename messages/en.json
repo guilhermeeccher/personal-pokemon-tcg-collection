@@ -2070,7 +2070,7 @@
       "faixaPokedex": "No. {de}–{ate}",
       "pagina": "Page {pagina} of {total}",
       "paginas": "Pages {de}–{ate} of {total}",
-      "irParaPagina": "Go to page",
+      "irParaPagina": "Go to page (1 to {total})",
       "anterior": "Previous page",
       "proxima": "Next page",
       "vazias": "{total, plural, =1 {1 empty} other {# empty}}",

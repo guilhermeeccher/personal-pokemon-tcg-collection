@@ -48,14 +48,18 @@
   gap: 16px;
 }
 
+/* O nome e o progresso lado a lado enquanto o nome tem ao menos 320 px; abaixo
+   disso o progresso desce (a 768 px, com o trilho, o nome espremido quebrava
+   palavra por linha). */
 .cabecalhoTopo {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  flex-wrap: wrap;
   gap: 18px 28px;
-  align-items: end;
+  align-items: flex-end;
 }
 
 .cabecalhoTexto {
+  flex: 1 1 320px;
   min-width: 0;
 }
 
@@ -538,11 +542,14 @@
   color: var(--v2-tinta-3);
 }
 
+/* Os pontos numa linha própria, embaixo: ao lado do rótulo e das setas eles
+   quebravam em várias linhas. */
 .pontos {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  flex: 1;
+  order: 3;
+  flex-basis: 100%;
   min-width: 0;
 }
 .pontos {
@@ -568,6 +575,7 @@
 
 .setas {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -579,7 +587,7 @@
   color: var(--v2-tinta-2);
 }
 .entradaPagina {
-  width: 4.5em;
+  width: 64px;
   min-height: 44px;
   padding: 0 10px;
   box-sizing: border-box;
@@ -597,6 +605,9 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 26px;
   touch-action: pan-y;
+  /* A página que entra desliza 18 px de lado: sem o corte, ela empurraria a
+     janela para os lados durante a entrada. `clip` não cria rolagem própria. */
+  overflow-x: clip;
 }
 .paginas[data-por-vez="2"] {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -948,9 +959,6 @@ span.cartaUpgrade {
 /* ---------------------------------------------------------- Celular */
 
 @media (max-width: 47.99rem) {
-  .cabecalhoTopo {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .anel {
     width: 76px;
     font-size: 17px;
@@ -962,13 +970,6 @@ span.cartaUpgrade {
   .ferramentas {
     flex-direction: column;
     align-items: stretch;
-  }
-  .paginador {
-    justify-content: space-between;
-  }
-  .pontos {
-    order: 3;
-    flex-basis: 100%;
   }
   .folha {
     padding: 10px;

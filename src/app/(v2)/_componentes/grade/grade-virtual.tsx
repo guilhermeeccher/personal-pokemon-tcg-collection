@@ -4,7 +4,8 @@
  * `<GradeVirtual>` — a grade de cartas reutilizável da v2 (regra 13 de
  * `docs/design-v2/rules.md`). A coleção a usa no "Set inteiro" e na
  * "Pokédex inteira"; "O que falta" (pacote 1e) e o inventário (2b) a
- * reaproveitam. A interface está documentada em `rules.md`, regra 13.
+ * reaproveitam. A interface está documentada em `rules.md`, regra 28; a
+ * medição do limiar, na regra 13.
  *
  * ## O que ela garante
  *

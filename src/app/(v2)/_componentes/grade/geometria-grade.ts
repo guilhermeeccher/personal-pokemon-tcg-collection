@@ -31,10 +31,12 @@
 
 /**
  * Acima disto a grade monta só a faixa visível. Medido em 2026-11-23 no
- * Chromium com perfil de iPhone e CPU 4× (`rules.md`, regra 13): uma grade
- * montada inteira passa do orçamento de toque (100 ms) entre 400 e 600
- * células; 300 deixa folga para a célula mais pesada (a vaga vazia de set,
- * que carrega a carta esperada apagada).
+ * Chromium com perfil de iPhone e CPU 4× (a tabela está em `rules.md`, regra
+ * 13): montada inteira, a grade cabe no orçamento (~2.500 nós, ~60 imagens
+ * carregadas, toque frio abaixo de 100 ms) até o set de 266 vagas e sai dele
+ * por volta de 500 (toque de 104 ms, imagens carregadas triplicando); virtual,
+ * fica em ~600 nós e ~50 imagens em qualquer tamanho. 300 mantém numa árvore
+ * só os sets grandes e virtualiza toda Pokédex de mais de três regiões.
  */
 export const LIMIAR_VIRTUALIZACAO = 300;
 

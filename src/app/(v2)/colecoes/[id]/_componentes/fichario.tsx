@@ -139,16 +139,16 @@ export function Fichario({
             })}
           </div>
         )}
-        <CampoPagina
-          pagina={pagina}
-          total={total}
-          aoIrPara={(p) => {
-            setSentido(p < pagina ? -1 : 1);
-            aoIrPara(p);
-          }}
-        />
         <div className={estilos.setas}>
           <Botao soIcone variante="secundario" aria-label={t("anterior")} disabled={!anterior} icone={<ChevronLeft aria-hidden />} onClick={() => virar(-1)} />
+          <CampoPagina
+            pagina={pagina}
+            total={total}
+            aoIrPara={(p) => {
+              setSentido(p < pagina ? -1 : 1);
+              aoIrPara(p);
+            }}
+          />
           <Botao soIcone variante="secundario" aria-label={t("proxima")} disabled={!proxima} icone={<ChevronRight aria-hidden />} onClick={() => virar(1)} />
         </div>
       </div>
@@ -233,7 +233,7 @@ function CampoPagina({ pagina, total, aoIrPara }: { pagina: number; total: numbe
       }}
     >
       <label>
-        <span className="v2-so-leitor">{t("irParaPagina")}</span>
+        <span className="v2-so-leitor">{t("irParaPagina", { total })}</span>
         <input
           className={`${estilos.entradaPagina} v2-num`}
           inputMode="numeric"
@@ -243,7 +243,6 @@ function CampoPagina({ pagina, total, aoIrPara }: { pagina: number; total: numbe
           onBlur={(e) => e.currentTarget.form?.requestSubmit()}
         />
       </label>
-      <span className="v2-num">/ {total}</span>
     </form>
   );
 }

@@ -2062,7 +2062,7 @@
       "faixaPokedex": "nº {de}–{ate}",
       "pagina": "Página {pagina} de {total}",
       "paginas": "Páginas {de}–{ate} de {total}",
-      "irParaPagina": "Ir para a página",
+      "irParaPagina": "Ir para a página (de 1 a {total})",
       "anterior": "Página anterior",
       "proxima": "Próxima página",
       "vazias": "{total, plural, =1 {1 vazia} other {# vazias}}",

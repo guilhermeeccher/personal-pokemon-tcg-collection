@@ -16,7 +16,7 @@
  * e preenche `secaoCompraDoDetalhe`, que a página passa ao `<DetalheCarta>`
  * como `secaoCompra`. A página não muda: ela só renderiza `<AbaFalta {...}/>`
  * quando a aba é "falta" e lê `secaoCompraDoDetalhe` daqui. O contrato está
- * documentado em `docs/design-v2/rules.md`, regra 27.
+ * documentado em `docs/design-v2/rules.md`, regra 29.
  */
 
 import { ShoppingCart } from "lucide-react";
