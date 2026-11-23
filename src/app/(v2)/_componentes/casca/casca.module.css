@@ -22,7 +22,11 @@
   z-index: 100;
   top: calc(8px + var(--v2-seguro-topo));
   left: var(--v2-respiro-esq);
-  padding: 10px 16px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 0 16px;
   border-radius: 999px;
   background: #f6f4fb;
   color: #0b0b12;
