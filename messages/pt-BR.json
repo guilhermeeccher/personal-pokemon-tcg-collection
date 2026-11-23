@@ -3155,5 +3155,36 @@
       "enviados": "{quantidade, plural, one {# Pokémon enviado ao HOME} other {# Pokémon enviados ao HOME}}",
       "mostrarMais": "Mostrar mais ({restantes} restantes)"
     }
+  },
+  "v2DexCadastrar": {
+    "descricao": "Escolha o jogo, digite quantos de cada Pokémon você tem nele e cadastre tudo de uma vez. Cada Pokémon vira um registro, nascido no jogo e ainda nele.",
+    "pokedex": "Pokédex",
+    "semJogos": "Nenhum jogo marcado ainda: só o HOME aparece aqui.",
+    "filtros": "Jogo e filtros",
+    "catalogoDoJogo": "{total, plural, one {# forma} other {# formas}} no catálogo de {jogo}.",
+    "catalogoTodas": "{total, plural, one {# forma} other {# formas}}, dentro e fora do catálogo de {jogo}.",
+    "exibindo": "{total, plural, one {# forma} other {# formas}} na lista.",
+    "lista": "Pokémon para cadastrar em {jogo}",
+    "tenho": "Tenho: {partes}",
+    "tenhoNormal": "{n} normal",
+    "tenhoShiny": "{n} shiny",
+    "nenhumRegistro": "Nenhum registro ainda",
+    "noJogo": "Cadastro em {jogo}",
+    "quantidade": "{nome}, {trilha}",
+    "menos": "Menos um {nome}, {trilha}",
+    "mais": "Mais um {nome}, {trilha}",
+    "barra": {
+      "rotulo": "Lote do cadastro",
+      "nada": "Digite as quantidades na lista",
+      "total": "{total, plural, one {# Pokémon} other {# Pokémon}} para {jogo}",
+      "fora": "{total, plural, one {# forma do lote está fora da lista à vista} other {# formas do lote estão fora da lista à vista}}"
+    },
+    "resultado": {
+      "recusado": "Nada foi cadastrado",
+      "tudoOuNada": "O lote é tudo ou nada: ajuste e cadastre de novo. As quantidades continuam na lista.",
+      "incerto": "Sem resposta do servidor",
+      "incertoTexto": "O lote pode ter entrado. O que você tem foi relido: confira antes de cadastrar de novo, para não registrar duas vezes.",
+      "fechar": "Fechar"
+    }
   }
 }

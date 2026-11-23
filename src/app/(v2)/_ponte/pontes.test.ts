@@ -36,7 +36,6 @@ vi.mock("@/lib/modulos", () => ({
 /* Uma ponte por tela da Dex, sem catch-all: um caminho de Dex que a v1 não tem
    cai no 404 padrão do Next, ligado ou desligado o módulo. */
 const TELAS_DA_DEX = [
-  "/dex/cadastrar",
   "/dex/caixas",
   "/dex/inventario",
   "/dex/jogos",

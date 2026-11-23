@@ -1,0 +1,387 @@
+/*
+ * O cadastro por jogo da Living Dex na v2 (`/dex/cadastrar`), pensado
+ * primeiro para o celular com o jogo aberto ao lado. As formas são células de
+ * altura fixa da grade virtual (`GradeVirtual`: uma coluna no celular, duas ou
+ * três conforme a largura); cada uma é um painel sem desfoque (regra 5b: lista
+ * nunca gasta `backdrop-filter`) e sem camada de composição (regra 5a).
+ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------- Cabeçalho */
+
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 24px;
+}
+.sobretitulo {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--v2-tinta-3);
+}
+.titulo {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.subtitulo {
+  margin: 8px 0 0;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+}
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------------------------------------------------------- Filtros */
+
+/* O que compõe o lote, num bloco só para travar durante o envio. */
+.editavel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.linhaFiltros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+}
+.campoBusca {
+  flex: 1 1 240px;
+  max-width: 420px;
+}
+.nota {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--v2-tinta-3);
+}
+
+/*
+ * Pílulas de escolha (jogo, "só o que não tenho", "mostrar todas"). 44 px de
+ * altura em toda largura e 8 px entre elas (o `gap`), como os alvos de toque
+ * pedem; o nome longo de um jogo quebra dentro da pílula, nunca a estoura.
+ */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 4px 14px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  cursor: pointer;
+  transition:
+    background 160ms var(--v2-curva-suave),
+    color 160ms var(--v2-curva-suave);
+}
+.chip[data-ativo] {
+  color: #0b0c12;
+  background: var(--v2-tinta);
+  box-shadow: none;
+}
+@media (hover: hover) {
+  .chip:not([data-ativo]):hover {
+    background: var(--v2-superficie-3);
+  }
+}
+
+/* ---------------------------------------------------------- Célula */
+
+/*
+ * Altura fixa (`ALTURA_CELULA` em `celula-forma.tsx`), igual em toda largura:
+ * 10 + 48 (nome) + 8 + 18 (marcas) + 8 + 44 (normal) + 8 + 44 (shiny) + 10 =
+ * 198. A grade precisa da altura de antemão para pôr cada linha sem medir; por
+ * isso o nome e as marcas cortam com reticências em vez de quebrar, e o botão
+ * do nome abre o cartão com tudo por extenso.
+ */
+.celula {
+  box-sizing: border-box;
+  height: 100%;
+  display: grid;
+  grid-template-rows: 48px 18px 44px 44px;
+  gap: 8px;
+  padding: 10px 12px;
+  touch-action: pan-y;
+}
+.celula[data-marcada] {
+  box-shadow:
+    inset 0 0 0 1px rgb(111 240 180 / 0.45),
+    0 0 0 1px rgb(111 240 180 / 0.08);
+  background: linear-gradient(180deg, rgb(111 240 180 / 0.1), rgb(111 240 180 / 0.04));
+}
+
+.cabeca {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 -6px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+@media (hover: hover) {
+  .cabeca:hover {
+    background: var(--v2-superficie-2);
+  }
+}
+.cabeca:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 0;
+}
+.cabecaTexto {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.especie,
+.linhaForma {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.especie {
+  font-size: 15px;
+  line-height: 19px;
+  font-weight: 600;
+}
+.linhaForma {
+  font-size: 12.5px;
+  line-height: 16px;
+  color: var(--v2-tinta-2);
+}
+.cabecaIcone {
+  flex: none;
+  color: var(--v2-tinta-3);
+}
+
+.selos {
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--v2-tinta-3);
+}
+.selos > * + *::before {
+  content: " · ";
+  color: var(--v2-tinta-3);
+  font-weight: 400;
+}
+.seloTenho {
+  color: var(--v2-livre);
+  font-weight: 600;
+}
+.selo[data-tipo="como"],
+.selo[data-tipo="trancada"] {
+  color: var(--v2-falta);
+}
+.selo[data-tipo="naoVaiAoHome"] {
+  color: var(--v2-perigo);
+  font-weight: 600;
+}
+
+/* Quantidade: rótulo, − campo +, 8 px entre os três alvos de 44 px. */
+.passo {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.passoRotulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+}
+.passoBotao {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  color: var(--v2-tinta);
+  background: var(--v2-superficie-2);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.passoBotao:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+.quantidade {
+  box-sizing: border-box;
+  flex: none;
+  width: 64px;
+  height: 44px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--v2-raio-campo);
+  font: inherit;
+  font-family: var(--v2-fonte-num);
+  /* 16 px em toda largura: abaixo disso o Safari do iPhone dá zoom ao focar. */
+  font-size: 16px;
+  text-align: center;
+  color: var(--v2-tinta);
+  background: rgb(0 0 0 / 0.3);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+  /*
+   * O Tab e o Enter levam o foco ao campo seguinte, e o navegador o rola para
+   * a vista: a margem faz a linha parar acima da barra do lote (e, no
+   * celular, da barra de abas), nunca embaixo delas.
+   */
+  scroll-margin-top: 16px;
+  scroll-margin-bottom: calc(var(--v2-topo-abas) + 96px);
+}
+/* Abaixo de 360 px a barra do lote tem duas linhas. */
+@media (max-width: 359.98px) {
+  .quantidade {
+    scroll-margin-bottom: calc(var(--v2-topo-abas) + 124px);
+  }
+}
+@media (min-width: 48rem) {
+  .quantidade {
+    scroll-margin-bottom: 112px;
+  }
+}
+.quantidade:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 2px;
+}
+.quantidade:not(:placeholder-shown) {
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgb(111 240 180 / 0.6);
+}
+
+/* ---------------------------------------------------------- Barra do lote */
+
+/*
+ * `sticky`, não `fixed`: o rodapé ocupa a própria altura no fluxo, então o fim
+ * da lista nunca fica atrás dele; e gruda no pé da janela enquanto a lista
+ * rola — no celular, logo acima da barra de abas (`--v2-topo-abas`, que já
+ * soma a área segura). Com HOME são centenas de linhas: o botão no topo
+ * ficaria a uma rolagem inteira do que se acabou de digitar. Sem desfoque (o
+ * orçamento de três superfícies é da casca e do véu de uma janela). O aviso
+ * de recusa sobe junto, acima da barra, à vista de quem tocou "Cadastrar".
+ */
+.rodape {
+  position: sticky;
+  bottom: calc(var(--v2-topo-abas) + 10px);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+@media (min-width: 48rem) {
+  .rodape {
+    bottom: max(16px, var(--v2-seguro-base));
+  }
+}
+.resultado {
+  max-height: 40dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--v2-raio-painel);
+  background: rgb(14 15 22 / 0.96);
+}
+.recusas {
+  margin: 4px 0 6px;
+  padding-left: 18px;
+}
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--v2-raio-vidro);
+  background: linear-gradient(180deg, rgb(30 31 44 / 0.98), rgb(14 15 22 / 0.99));
+}
+.barraTexto {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  font-weight: 600;
+}
+.barraTexto[data-vazio] {
+  font-weight: 400;
+  color: var(--v2-tinta-3);
+}
+.barraFora {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--v2-falta);
+}
+.barraAcoes {
+  display: flex;
+  gap: 8px;
+}
+/* Abaixo de 360 px o texto e os botões não cabem lado a lado: os botões
+   ocupam a linha de baixo inteira. */
+@media (max-width: 359.98px) {
+  .barraTexto {
+    flex-basis: 100%;
+  }
+  .barraAcoes {
+    flex: 1;
+  }
+  .barraAcoes > :last-child {
+    flex: 1;
+  }
+}
