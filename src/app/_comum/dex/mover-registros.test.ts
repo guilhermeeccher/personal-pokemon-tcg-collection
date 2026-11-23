@@ -134,4 +134,65 @@ describe("criarFluxoMover: a confirmação de saída sem volta nunca é automát
     expect(enviados.map((e) => e.confirmarSemVolta)).toEqual([false, true, true]);
     expect(fluxo.estado().pendente).toBeNull();
   });
+
+  it("cada passo chega a quem ouve (o estado do React sai daqui)", async () => {
+    const vistos: string[] = [];
+    const fila: RespostaHttp[] = [
+      { status: 409, corpo: SEM_VOLTA },
+      { status: 409, corpo: SEM_VOLTA },
+      { status: 200, corpo: { movidos: 1 } },
+    ];
+    const fluxo = criarFluxoMover({
+      post: async () => fila.shift()!,
+      aoMudar: (e) => vistos.push(`${e.ocupado ? "ocupado" : "livre"}/${e.pendente ? "pendente" : "-"}`),
+    });
+    await fluxo.mover([ID], "home");
+    fluxo.cancelar();
+    await fluxo.mover([ID], "home");
+    await fluxo.confirmar();
+    expect(vistos).toEqual([
+      "ocupado/-",
+      "livre/pendente",
+      "livre/-",
+      "ocupado/-",
+      "livre/pendente",
+      "ocupado/pendente",
+      "livre/-",
+    ]);
+  });
+
+  it("durante a confirmação, outro confirmar ou mover não envia nada", async () => {
+    let soltar: (r: RespostaHttp) => void = () => {};
+    const enviados: { confirmarSemVolta: boolean }[] = [];
+    let primeira = true;
+    const fluxo = criarFluxoMover({
+      post: (corpo) => {
+        enviados.push(JSON.parse(corpo));
+        if (primeira) {
+          primeira = false;
+          return Promise.resolve({ status: 409, corpo: SEM_VOLTA });
+        }
+        return new Promise((r) => (soltar = r));
+      },
+      aoMudar: () => {},
+    });
+    await fluxo.mover([ID], "home");
+    const confirmacao = fluxo.confirmar();
+    expect(await fluxo.confirmar()).toEqual({ tipo: "ignorado" });
+    expect(await fluxo.mover([ID2], "home")).toEqual({ tipo: "ignorado" });
+    soltar({ status: 200, corpo: { movidos: 1 } });
+    expect(await confirmacao).toEqual({ tipo: "ok", movidos: 1 });
+    expect(enviados.map((e) => e.confirmarSemVolta)).toEqual([false, true]);
+  });
+
+  it("um segundo 409 de saída sem volta depois do true encerra como recusa, sem perguntar de novo", async () => {
+    const { fluxo, enviados } = montar([
+      { status: 409, corpo: SEM_VOLTA },
+      { status: 409, corpo: SEM_VOLTA },
+    ]);
+    await fluxo.mover([ID], "home");
+    expect(await fluxo.confirmar()).toEqual({ tipo: "recusa", status: 409 });
+    expect(fluxo.estado().pendente).toBeNull();
+    expect(enviados).toHaveLength(2);
+  });
 });
