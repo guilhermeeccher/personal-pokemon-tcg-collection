@@ -30,7 +30,7 @@
  */
 
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { textoDaRecusa } from "@/app/_comum/recusa";
 import { formatarDuracao } from "@/lib/dominio/estimativa-varredura";
@@ -40,6 +40,7 @@ import {
   type CartaDaTabelaDTO,
   type RespostaPrecosDTO,
   type RodadaListadaDTO,
+  batidaDeveReler,
   fonteDaResposta,
   idsParaPedir,
   paginar,
@@ -99,8 +100,10 @@ export function Precos({ fonte: fonteDoServidor }: { fonte?: FontePreco }) {
   const [excluindo, setExcluindo] = useState<string | null>(null);
   const [pagina, setPagina] = useState(1);
   const [cartas, setCartas] = useState<ReadonlyMap<string, CartaDaTabelaDTO>>(new Map());
-  // Sobe a cada escrita do detalhe: a cópia que cada carta abre pode ter mudado.
+  // Sobe a cada escrita do detalhe, e a cada "tentar de novo" da leitura das cartas:
+  // a cópia que cada carta abre pode ter mudado.
   const [versaoDasCartas, setVersaoDasCartas] = useState(0);
+  const [falhaDasCartas, setFalhaDasCartas] = useState(false);
 
   // Quem decide é a resposta do GET, e uma resposta sem `fonte` é a Liga. Antes
   // de ela chegar vale a que o invólucro de servidor passou: sem isso, numa
@@ -113,19 +116,24 @@ export function Precos({ fonte: fonteDoServidor }: { fonte?: FontePreco }) {
   // nunca sobrescrever uma mais nova. Reler é subir `versaoDaLeitura`.
   const [versaoDaLeitura, setVersaoDaLeitura] = useState(0);
   const recarregar = useCallback(() => setVersaoDaLeitura((v) => v + 1), []);
+  // Há leitura em voo: o relógio não a cancela (`batidaDeveReler`).
+  const leituraEmCurso = useRef(false);
   useEffect(() => {
     const controle = new AbortController();
+    leituraEmCurso.current = true;
     fetch("/api/inventario/precos", { signal: controle.signal, cache: "no-store" })
       .then(async (resposta) => {
         if (!resposta.ok) throw new Error(String(resposta.status));
         const corpo = (await resposta.json()) as RespostaPrecosDTO;
         if (controle.signal.aborted) return;
+        leituraEmCurso.current = false;
         setDados(corpo);
         setFalhaDeLeitura(false);
         setCarregando(false);
       })
       .catch(() => {
         if (controle.signal.aborted) return;
+        leituraEmCurso.current = false;
         setFalhaDeLeitura(true);
         setCarregando(false);
       });
@@ -140,7 +148,10 @@ export function Precos({ fonte: fonteDoServidor }: { fonte?: FontePreco }) {
     const periodo = periodoDeAtualizacaoMs(intervaloSegundos === null ? null : { intervaloSegundos });
     const relogio = setInterval(() => {
       // Aba escondida não precisa do andamento; ao voltar, a próxima batida lê.
-      if (document.visibilityState !== "hidden") recarregar();
+      // E uma leitura ainda em voo termina antes de outra começar.
+      if (batidaDeveReler({ leituraEmCurso: leituraEmCurso.current, abaVisivel: document.visibilityState !== "hidden" })) {
+        recarregar();
+      }
     }, periodo);
     return () => clearInterval(relogio);
   }, [rodando, intervaloSegundos, recarregar]);
@@ -246,10 +257,15 @@ export function Precos({ fonte: fonteDoServidor }: { fonte?: FontePreco }) {
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((corpo: { cartas: CartaDaTabelaDTO[] }) => {
         if (controle.signal.aborted) return;
+        setFalhaDasCartas(false);
         setCartas((antes) => new Map([...antes, ...corpo.cartas.map((c) => [c.cartaId, c] as const)]));
       })
-      // Sem a foto a linha continua lendo bem; só não abre o detalhe.
-      .catch(() => {});
+      // Sem a foto a linha continua lendo bem, mas a carta não abre: diz isso e
+      // deixa repetir a leitura, que os próximos relógios não repetem (os ids
+      // da página não mudaram).
+      .catch(() => {
+        if (!controle.signal.aborted) setFalhaDasCartas(true);
+      });
     return () => controle.abort();
   }, [idsDaPagina, versaoDasCartas]);
 
@@ -430,6 +446,21 @@ export function Precos({ fonte: fonteDoServidor }: { fonte?: FontePreco }) {
           alvoCartaId={alvoCartaId}
           aoAbrir={abrir}
         />
+      )}
+
+      {falhaDasCartas && dados && dados.itens.length > 0 && (
+        <AvisoEmLinha
+          tom="alerta"
+          papel="alert"
+          titulo={t("erroCartas")}
+          acao={
+            <Botao pequeno onClick={() => setVersaoDasCartas((v) => v + 1)}>
+              {t("tentarDeNovo")}
+            </Botao>
+          }
+        >
+          {t("erroCartasTexto")}
+        </AvisoEmLinha>
       )}
 
       {totalPaginas > 1 && (

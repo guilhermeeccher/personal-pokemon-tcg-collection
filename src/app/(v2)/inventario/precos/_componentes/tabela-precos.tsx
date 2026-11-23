@@ -86,7 +86,7 @@ export function TabelaPrecos({
         </span>
         <span>{t("colunaConsultado")}</span>
       </div>
-      <ul className={estilos.linhas} aria-label={t("lista")}>
+      <ul className={estilos.linhas} aria-label={t("lista")} data-lista-precos tabIndex={-1}>
         {linhas.map((l) => (
           <LinhaDePreco
             key={l.item.cartaId}
@@ -137,7 +137,7 @@ function LinhaDePreco({
   const semCopia = info !== null && info.copiaId === null;
 
   return (
-    <li className={`v2-painel ${estilos.linha}`}>
+    <li className={`v2-painel ${estilos.linha}`} data-carta-id={i.cartaId}>
       <div className={estilos.foto}>
         {pedido ? (
           <CartaQueAbre
@@ -158,7 +158,7 @@ function LinhaDePreco({
       </div>
       <div className={estilos.cartaCelula}>
         {pedido ? (
-          <button type="button" className={estilos.nomeBotao} onClick={() => aoAbrir(pedido)}>
+          <button type="button" className={estilos.nomeBotao} data-abre onClick={() => aoAbrir(pedido)}>
             {i.nome}
             <span className="v2-so-leitor"> — {t("abrirCarta", { nome: i.nome })}</span>
           </button>
@@ -258,35 +258,34 @@ function PrecosCardmarket({
       <span className={`${estilos.preco} ${estilos.precoForte} v2-num`}>
         <span className={estilos.rotuloCampo}>{t("cardmarket.colunaTendencia")}</span>
         {brl(i.valor)}
-        {(i.valorEur !== null || i.foil) && (
-          <span className={estilos.detalhePreco}>
-            {i.valorEur !== null && eur(i.valorEur)}
-            {i.valorEur !== null && i.foil && " · "}
+        {i.valorEur !== null && <span className={estilos.detalhePreco}>{eur(i.valorEur)}</span>}
+        {/* As etiquetas (foil, critério) são botões de 44 px: moram juntas, com
+            8 px entre elas, e não uma por linha de detalhe. */}
+        {(i.foil || criterio !== null) && (
+          <span className={estilos.etiquetas}>
             {i.foil && (
               <Explicacao assunto={t("cardmarket.foil")} texto={t("cardmarket.foilExplicacao")}>
                 {t("cardmarket.foil")}
               </Explicacao>
             )}
-          </span>
-        )}
-        {criterio !== null && (
-          <span className={estilos.detalhePreco}>
-            <Explicacao
-              assunto={criterio.tipo === "media30" ? t("cardmarket.criterioMedia30") : t("cardmarket.criterioMedia")}
-              tom={criterio.tom === "aviso" ? "aviso" : "neutro"}
-              texto={
-                criterio.tipo === "media30"
-                  ? t("cardmarket.criterioMedia30Explicacao", {
-                      tendencia: eur(i.tendenciaEur),
-                      media30: eur(i.media30Eur),
-                      // Texto, não número: o ICU formataria "3" pela localidade à toa.
-                      limite: String(LIMITE_TENDENCIA_SOBRE_MEDIA30),
-                    })
-                  : t("cardmarket.criterioMediaExplicacao")
-              }
-            >
-              {criterio.tipo === "media30" ? t("cardmarket.criterioMedia30") : t("cardmarket.criterioMedia")}
-            </Explicacao>
+            {criterio !== null && (
+              <Explicacao
+                assunto={criterio.tipo === "media30" ? t("cardmarket.criterioMedia30") : t("cardmarket.criterioMedia")}
+                tom={criterio.tom === "aviso" ? "aviso" : "neutro"}
+                texto={
+                  criterio.tipo === "media30"
+                    ? t("cardmarket.criterioMedia30Explicacao", {
+                        tendencia: eur(i.tendenciaEur),
+                        media30: eur(i.media30Eur),
+                        // Texto, não número: o ICU formataria "3" pela localidade à toa.
+                        limite: String(LIMITE_TENDENCIA_SOBRE_MEDIA30),
+                      })
+                    : t("cardmarket.criterioMediaExplicacao")
+                }
+              >
+                {criterio.tipo === "media30" ? t("cardmarket.criterioMedia30") : t("cardmarket.criterioMedia")}
+              </Explicacao>
+            )}
           </span>
         )}
         {diaDoCambio !== null && (

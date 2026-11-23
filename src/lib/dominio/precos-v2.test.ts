@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   CARTAS_POR_PAGINA,
+  batidaDeveReler,
   PERIODO_MAXIMO_MS,
   PERIODO_MINIMO_MS,
   criterioForaDaTendencia,
@@ -48,6 +49,17 @@ describe("periodoDeAtualizacaoMs", () => {
       expect(p).toBeGreaterThanOrEqual(PERIODO_MINIMO_MS);
       expect(p).toBeLessThanOrEqual(PERIODO_MAXIMO_MS);
     }
+  });
+});
+
+describe("batidaDeveReler", () => {
+  it("não cancela uma leitura em curso: respostas lentas ainda terminam", () => {
+    expect(batidaDeveReler({ leituraEmCurso: true, abaVisivel: true })).toBe(false);
+  });
+
+  it("lê quando não há leitura em curso e a aba está à vista", () => {
+    expect(batidaDeveReler({ leituraEmCurso: false, abaVisivel: true })).toBe(true);
+    expect(batidaDeveReler({ leituraEmCurso: false, abaVisivel: false })).toBe(false);
   });
 });
 
@@ -160,6 +172,13 @@ describe("o gráfico", () => {
       expect(ticks[ticks.length - 1]).toBe(topo);
     }
     expect(escalaY(1000).ticks).toEqual([0, 250, 500, 750, 1000]);
+  });
+
+  it("com tudo zerado o topo continua positivo e nenhuma coordenada vira NaN", () => {
+    const { topo, ticks } = escalaY(0);
+    expect(topo).toBeGreaterThan(0);
+    expect(ticks.length).toBeGreaterThan(1);
+    expect(0 / topo).toBe(0);
   });
 
   it("os pontos ficam pelo tempo, não pelo índice", () => {

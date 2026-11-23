@@ -2623,6 +2623,8 @@
       "anterior": "Anterior",
       "proxima": "Próxima",
       "pagina": "Página {pagina} de {totalPaginas}"
-    }
+    },
+    "erroCartas": "Não foi possível ler as fotos e as cópias desta página",
+    "erroCartasTexto": "Os preços continuam valendo, mas sem essa leitura as cartas não abrem o detalhe. Nada foi alterado."
   }
 }

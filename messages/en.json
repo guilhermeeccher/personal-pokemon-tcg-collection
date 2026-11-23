@@ -2631,6 +2631,8 @@
       "anterior": "Previous",
       "proxima": "Next",
       "pagina": "Page {pagina} of {totalPaginas}"
-    }
+    },
+    "erroCartas": "Could not read the photos and copies of this page",
+    "erroCartasTexto": "The prices still hold, but without this read the cards cannot open their detail. Nothing was changed."
   }
 }

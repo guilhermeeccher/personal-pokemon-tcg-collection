@@ -12,6 +12,11 @@ import estilos from "./precos.module.css";
  * em linha, abaixo dele, empurrando o resto: não flutua, não sai da tela a
  * 320 px e não precisa de camada nem de foco preso.
  *
+ * O botão tem **44 px de altura de verdade** e fundo nenhum; a pílula que se vê
+ * (26 px) é desenhada por dentro dele. Uma área de toque ampliada por
+ * pseudoelemento passaria dos 8 px de folga entre dois botões seguidos (a
+ * etiqueta `foil` e a do critério moram na mesma célula), e a folga é da tela.
+ *
  * `assunto` é o que o botão explica ("foil", "sem preço"); ele entra no nome
  * acessível, para um leitor de tela distinguir os vários botões de uma lista.
  */
@@ -41,9 +46,11 @@ export function Explicacao({
         aria-label={aberta ? t("fechar", { assunto }) : t("abrir", { assunto })}
         onClick={() => setAberta((v) => !v)}
       >
-        <span>{children ?? assunto}</span>
-        <span className={estilos.explicacaoInfo} aria-hidden>
-          {aberta ? "−" : "i"}
+        <span className={estilos.explicacaoPilula}>
+          <span>{children ?? assunto}</span>
+          <span className={estilos.explicacaoInfo} aria-hidden>
+            {aberta ? "−" : "i"}
+          </span>
         </span>
       </button>
       <span id={id} className={estilos.explicacaoTexto} hidden={!aberta}>

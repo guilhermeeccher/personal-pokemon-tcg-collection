@@ -153,6 +153,18 @@ export function periodoDeAtualizacaoMs(ritmo: Pick<RitmoDTO, "intervaloSegundos"
   return Math.min(PERIODO_MAXIMO_MS, Math.max(PERIODO_MINIMO_MS, bruto));
 }
 
+/**
+ * Uma batida do relógio de leitura só pede uma leitura nova se não há outra em
+ * curso e a aba está à vista. Sem a primeira condição, com respostas mais
+ * lentas do que o período (5 s no Cardmarket) cada batida cancelaria a leitura
+ * anterior antes de ela terminar, e o andamento nunca chegaria à tela. Uma
+ * recarga explícita (depois de uma ação, "tentar de novo") continua cancelando
+ * a leitura em curso: aí o que está voando já nasceu velho.
+ */
+export function batidaDeveReler({ leituraEmCurso, abaVisivel }: { leituraEmCurso: boolean; abaVisivel: boolean }): boolean {
+  return !leituraEmCurso && abaVisivel;
+}
+
 // --- A tabela ---------------------------------------------------------------
 
 /** Cartas por página na tabela de preços — pedido do usuário, 2026-10-11. */
@@ -271,7 +283,9 @@ export function escalaY(maximo: number): { topo: number; ticks: number[] } {
   const alvo = Math.max(maximo, 1) / 4;
   const pot = 10 ** Math.floor(Math.log10(alvo));
   const passo = [1, 2, 2.5, 5, 10].map((m) => m * pot).find((p) => p >= alvo) ?? alvo;
-  const n = Math.ceil(maximo / passo);
+  // Ao menos um passo: com tudo zerado (uma rodada em que nada achou preço) o
+  // topo seria 0, e `valor / topo` viraria NaN em toda coordenada do desenho.
+  const n = Math.max(1, Math.ceil(maximo / passo));
   return { topo: n * passo, ticks: Array.from({ length: n + 1 }, (_, i) => i * passo) };
 }
 
