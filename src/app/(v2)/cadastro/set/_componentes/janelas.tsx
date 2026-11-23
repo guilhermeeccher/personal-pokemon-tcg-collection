@@ -12,6 +12,7 @@ import { Carta } from "../../../_componentes/carta/carta";
 import { Botao } from "../../../_componentes/primitivos/botao";
 import { Selecao } from "../../../_componentes/primitivos/campo";
 import { Modal } from "../../../_componentes/primitivos/modal";
+import type { ResolvedorFoco } from "../../../_componentes/primitivos/use-camada";
 import estilos from "./cadastro-set.module.css";
 import { flagsDaCarta } from "./flags";
 
@@ -27,22 +28,26 @@ export function AjusteCarta({
   padrao,
   aoMudar,
   onFechar,
+  devolverFocoPara,
 }: {
   carta: CartaParaGradeDTO | null;
   linha: LinhaGrade | undefined;
   padrao: DefaultsGrade;
   aoMudar: (cartaId: string, campo: keyof DefaultsGrade, valor: string) => void;
   onFechar: () => void;
+  /** Devolve o foco à carta na grade, mesmo que ela tenha saído da faixa montada. */
+  devolverFocoPara: ResolvedorFoco;
 }) {
   const t = useTranslations("v2CadastroSet");
   const tc = useTranslations("componentes");
-  if (!carta) return <Modal aberto={false} onFechar={onFechar} titulo="" />;
+  if (!carta) return <Modal aberto={false} onFechar={onFechar} titulo="" devolverFocoPara={devolverFocoPara} />;
   const flags = flagsDaCarta(carta);
   const valores = valoresDaCarta(linha, padrao, flags);
   return (
     <Modal
       aberto
       onFechar={onFechar}
+      devolverFocoPara={devolverFocoPara}
       titulo={t("ajuste.titulo", { numero: carta.localId, nome: carta.nome })}
       rodape={
         <Botao variante="primario" largo onClick={onFechar}>
@@ -98,11 +103,19 @@ export function AjusteCarta({
  * pequena aparece primeiro e troca quando a grande decodifica). Abre pelo
  * toque na miniatura — nunca pelo passar do mouse.
  */
-export function ZoomCarta({ carta, onFechar }: { carta: CartaParaGradeDTO | null; onFechar: () => void }) {
+export function ZoomCarta({
+  carta,
+  onFechar,
+  devolverFocoPara,
+}: {
+  carta: CartaParaGradeDTO | null;
+  onFechar: () => void;
+  devolverFocoPara: ResolvedorFoco;
+}) {
   const t = useTranslations("v2CadastroSet");
-  if (!carta) return <Modal aberto={false} onFechar={onFechar} titulo="" />;
+  if (!carta) return <Modal aberto={false} onFechar={onFechar} titulo="" devolverFocoPara={devolverFocoPara} />;
   return (
-    <Modal aberto onFechar={onFechar} titulo={t("zoom.titulo", { numero: carta.localId, nome: carta.nome })} largura={420}>
+    <Modal aberto onFechar={onFechar} devolverFocoPara={devolverFocoPara} titulo={t("zoom.titulo", { numero: carta.localId, nome: carta.nome })} largura={420}>
       <div className={estilos.zoom}>
         <div className={estilos.zoomCarta}>
           <Carta

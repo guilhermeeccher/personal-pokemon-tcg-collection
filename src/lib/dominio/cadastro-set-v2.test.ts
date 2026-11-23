@@ -56,7 +56,8 @@ describe("valoresDaCarta", () => {
     expect(v.variante).toBe("holo");
     expect(v.semVarianteDoPadrao).toBe(true);
     expect(v.varianteNoLugar).toBe("holo");
-    expect(v.ajustes).toEqual(["variante"]);
+    // A troca automática é aviso, não ajuste da pessoa.
+    expect(v.ajustes).toEqual([]);
   });
 
   it("a variante escolhida à mão numa carta sem a do padrão é ajuste, não aviso", () => {

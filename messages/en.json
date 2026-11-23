@@ -2594,13 +2594,18 @@
       "linhasRecusadas": "Refused",
       "padrao": "Could not save the batch.",
       "rede": "Could not confirm the save",
-      "redeTexto": "The connection dropped before the answer, and the batch may have gone in. The cards were read again: check “you have” before saving again.",
+      "redeTexto": "The connection dropped before the answer, and the batch may have gone in. The cards are read again below: check “you have” before saving again.",
       "fechar": "Close"
     },
     "trocarSet": {
       "titulo": "Switch sets?",
       "descricao": "{total, plural, one {The marked card will be discarded} other {The # marked cards will be discarded}}: the batch has not been saved.",
       "confirmar": "Switch and discard"
+    },
+    "releitura": {
+      "relendo": "Updating “you have”…",
+      "falhou": "Could not update “you have”",
+      "falhouTexto": "The quantities you already have may be out of date. Read them again before checking or saving again."
     }
   }
 }

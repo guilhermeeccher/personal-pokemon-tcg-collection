@@ -45,7 +45,9 @@ interface PropsCelulaCarta {
  *   e **controlado**: a célula pode sair da faixa montada e voltar, e o
  *   digitado mora no estado do lote, nunca aqui.
  * - Os botões da célula seguem a ordem do Tab da grade (só a célula ativa
- *   entra nela); − e + ficam fora dela, porque o teclado digita o número.
+ *   entra nela), **depois** do campo: a ordem do DOM é nome, quantidade,
+ *   ajuste e miniatura, e o CSS põe a miniatura à esquerda. − e + ficam fora
+ *   do Tab, porque o teclado digita o número.
  * - Nada só na cor ou só no passar do mouse: "ajustada", o aviso de variante
  *   e "recusada" são texto.
  */
@@ -76,16 +78,6 @@ export const CelulaCarta = memo(function CelulaCarta({
 
   return (
     <div className={`${estilos.celula} v2-painel`} data-marcada={quantidade > 0 || undefined} data-recusada={recusada || undefined}>
-      <button
-        type="button"
-        className={estilos.miniatura}
-        tabIndex={celula.tabIndex}
-        aria-label={t("carta.ampliar", { nome: nomeCompleto })}
-        onClick={() => aoAmpliar(carta.cartaId)}
-      >
-        <Carta imagemUrl={carta.imagemUrl} origem={carta.imagemOrigem} alt="" raridade={carta.raridade} />
-      </button>
-
       <div className={estilos.cabeca}>
         <span className={estilos.linhaNome}>
           <span className={`${estilos.numero} v2-num`}>#{carta.localId}</span>
@@ -165,6 +157,19 @@ export const CelulaCarta = memo(function CelulaCarta({
         ) : null}
         <ChevronRight aria-hidden size={16} />
       </button>
+      {/* Por último no DOM e à esquerda na tela (áreas da grade CSS): o Tab de
+          fora entra pela quantidade, o que se digita, e a leitura vai do nome
+          à quantidade antes dos botões. */}
+      <button
+        type="button"
+        className={estilos.miniatura}
+        tabIndex={celula.tabIndex}
+        aria-label={t("carta.ampliar", { nome: nomeCompleto })}
+        onClick={() => aoAmpliar(carta.cartaId)}
+      >
+        <Carta imagemUrl={carta.imagemUrl} origem={carta.imagemOrigem} alt="" raridade={carta.raridade} />
+      </button>
+
     </div>
   );
 }, mesmasProps);

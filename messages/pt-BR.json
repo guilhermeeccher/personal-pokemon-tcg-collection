@@ -2586,13 +2586,18 @@
       "linhasRecusadas": "Recusadas",
       "padrao": "Não deu para gravar o lote.",
       "rede": "Não deu para confirmar a gravação",
-      "redeTexto": "A conexão caiu antes da resposta, e o lote pode ter entrado. As cartas foram relidas: confira o “você tem” antes de gravar de novo.",
+      "redeTexto": "A conexão caiu antes da resposta, e o lote pode ter entrado. As cartas são relidas abaixo: confira o “você tem” antes de gravar de novo.",
       "fechar": "Fechar"
     },
     "trocarSet": {
       "titulo": "Trocar de set?",
       "descricao": "{total, plural, one {A carta marcada será descartada} other {As # cartas marcadas serão descartadas}}: o lote ainda não foi gravado.",
       "confirmar": "Trocar e descartar"
+    },
+    "releitura": {
+      "relendo": "Atualizando o “você tem”…",
+      "falhou": "Não deu para atualizar o “você tem”",
+      "falhouTexto": "As quantidades que você já tem podem estar desatualizadas. Releia antes de conferir ou de gravar de novo."
     }
   }
 }

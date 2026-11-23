@@ -160,6 +160,14 @@
   }
 }
 
+/* O que compõe o lote, num bloco só para travar durante o envio; o
+   espaçamento é o da página. */
+.editavel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .filtroNumero {
   max-width: 320px;
 }

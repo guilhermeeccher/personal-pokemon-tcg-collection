@@ -45,6 +45,9 @@ interface LinhaVista {
   carta: CartaParaGradeDTO | undefined;
 }
 
+/** A releitura silenciosa do "você tem" (depois de gravar, ou sem resposta do servidor). */
+type Releitura = "ok" | "relendo" | "falhou";
+
 type Resultado =
   | { tipo: "gravado"; inseridas: number; fundidas: number; setNome: string; linhas: LinhaVista[] }
   | { tipo: "recusado"; texto: string; recusadas: LinhaVista[] }
@@ -91,6 +94,7 @@ export function CadastroSet() {
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [ajustando, setAjustando] = useState<string | null>(null);
   const [ampliando, setAmpliando] = useState<string | null>(null);
+  const [releitura, setReleitura] = useState<Releitura>("ok");
 
   const idPadrao = useId();
   const idTituloPadrao = useId();
@@ -107,21 +111,31 @@ export function CadastroSet() {
   /**
    * Lê a grade do set escolhido, abortando a leitura anterior (uma troca
    * rápida de set nunca deixa a resposta velha por cima da nova). A leitura
-   * silenciosa é a releitura depois de gravar: falhando, a grade de antes
-   * fica, só com o "você tem" de antes.
+   * silenciosa é a releitura depois de gravar: a grade de antes fica na tela
+   * enquanto ela corre, e uma falha não some calada — o "você tem" velho é
+   * justamente o que a pessoa confere antes de gravar de novo, então a tela
+   * diz que ele pode estar desatualizado e oferece reler (`releitura`).
    */
   const ler = useCallback((escolha: SetEscolhido, silenciosa: boolean) => {
     leituraViva.current?.abort();
     const controlador = new AbortController();
     leituraViva.current = controlador;
-    if (!silenciosa) setLeitura({ estado: "carregando" });
+    if (silenciosa) setReleitura("relendo");
+    else {
+      setReleitura("ok");
+      setLeitura({ estado: "carregando" });
+    }
     fetch(caminhoGradeDoSet(escolha.set.setId, escolha.catalogo), { signal: controlador.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((grade: GradeDoSetDTO) => {
-        if (!controlador.signal.aborted) setLeitura({ estado: "pronta", grade });
+        if (controlador.signal.aborted) return;
+        setLeitura({ estado: "pronta", grade });
+        setReleitura("ok");
       })
       .catch(() => {
-        if (!controlador.signal.aborted && !silenciosa) setLeitura({ estado: "erro" });
+        if (controlador.signal.aborted) return;
+        if (silenciosa) setReleitura("falhou");
+        else setLeitura({ estado: "erro" });
       });
   }, []);
 
@@ -185,8 +199,24 @@ export function CadastroSet() {
     else void controle.current?.elementoDe(proxima).then(focar);
   }, []);
 
-  const aoAjustar = useCallback((cartaId: string) => setAjustando(cartaId), []);
-  const aoAmpliar = useCallback((cartaId: string) => setAmpliando(cartaId), []);
+  /*
+   * A carta que abriu a janela, guardada à parte: ao fechar, o estado da
+   * janela já é nulo, e o foco volta ao campo de quantidade dela pela grade
+   * (`elementoDe` a monta de novo se a rolagem ou um giro a tirou da faixa).
+   */
+  const cartaDaJanela = useRef<string | null>(null);
+  const aoAjustar = useCallback((cartaId: string) => {
+    cartaDaJanela.current = cartaId;
+    setAjustando(cartaId);
+  }, []);
+  const aoAmpliar = useCallback((cartaId: string) => {
+    cartaDaJanela.current = cartaId;
+    setAmpliando(cartaId);
+  }, []);
+  const focoDaJanela = useCallback(() => {
+    const chave = cartaDaJanela.current;
+    return chave ? (controle.current?.elementoDe(chave) ?? null) : null;
+  }, []);
 
   const recusadas = useMemo(
     () => new Set(resultado?.tipo === "recusado" ? resultado.recusadas.map((l) => l.item.cartaId) : []),
@@ -286,7 +316,7 @@ export function CadastroSet() {
         <p className={estilos.descricao}>{t("descricao")}</p>
       </header>
 
-      <Painel as="section" aria-label={t("seletor.titulo")}>
+      <Painel as="section" aria-label={t("seletor.titulo")} inert={enviando}>
         <SeletorSet escolhido={escolhido} aoEscolher={(e) => void escolher(e)} />
       </Painel>
 
@@ -323,96 +353,124 @@ export function CadastroSet() {
             </span>
           </div>
 
+          {releitura === "relendo" ? (
+            <p className={estilos.carregando} role="status">
+              {t("releitura.relendo")}
+            </p>
+          ) : null}
+          {releitura === "falhou" && escolhido ? (
+            <AvisoEmLinha
+              tom="alerta"
+              papel="alert"
+              titulo={t("releitura.falhou")}
+              acao={
+                <Botao pequeno onClick={() => ler(escolhido, true)}>
+                  {t("tentarDeNovo")}
+                </Botao>
+              }
+            >
+              {t("releitura.falhouTexto")}
+            </AvisoEmLinha>
+          ) : null}
+
           <AvisoCatalogo
             grade={grade}
             idiomaDoLote={estado.defaults.idioma}
             aoUsarJp={() => mudarPadrao("idioma", "jp")}
           />
 
-          <Painel as="section" aria-labelledby={idTituloPadrao} className={estilos.padrao}>
-            <div className={estilos.padraoCabeca}>
-              <h2 id={idTituloPadrao} className={estilos.padraoTitulo}>
-                {t("padrao.titulo")}
-              </h2>
-              <span className={estilos.padraoResumo}>{resumoPadrao}</span>
-              <Botao
-                pequeno
-                className={estilos.padraoAlternar}
-                aria-expanded={padraoAberto}
-                aria-controls={idPadrao}
-                onClick={() => setPadraoAberto((a) => !a)}
-              >
-                {padraoAberto ? t("padrao.fechar") : t("padrao.alterar")}
-              </Botao>
-            </div>
-            <div id={idPadrao} className={estilos.padraoCampos} data-aberto={padraoAberto || undefined}>
-              <Selecao
-                rotulo={t("padrao.variante")}
-                value={estado.defaults.variante}
-                onChange={(e) => mudarPadrao("variante", e.target.value)}
-              >
-                {VARIANTES_COPIA.map((v) => (
-                  <option key={v} value={v}>
-                    {nomeVariante(v)}
-                  </option>
-                ))}
-              </Selecao>
-              <Selecao
-                rotulo={t("padrao.idioma")}
-                value={estado.defaults.idioma}
-                onChange={(e) => mudarPadrao("idioma", e.target.value)}
-              >
-                {IDIOMAS.map((i) => (
-                  <option key={i} value={i}>
-                    {t(`idioma.${i}`)}
-                  </option>
-                ))}
-              </Selecao>
-              <Selecao
-                rotulo={t("padrao.condicao")}
-                value={estado.defaults.condicao}
-                onChange={(e) => mudarPadrao("condicao", e.target.value)}
-              >
-                {CONDICOES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </Selecao>
-            </div>
-            <p className={estilos.padraoExplica}>{t("padrao.explica")}</p>
-          </Painel>
+          {/*
+            Enquanto o lote vai ao servidor, nada do que o compõe muda: a
+            resposta limpa o lote inteiro, e uma carta marcada no meio do
+            envio sumiria sem ter sido gravada. \`inert\` tira os campos do
+            toque, do teclado e do leitor de tela até a resposta.
+          */}
+          <div className={estilos.editavel} inert={enviando}>
+            <Painel as="section" aria-labelledby={idTituloPadrao} className={estilos.padrao}>
+              <div className={estilos.padraoCabeca}>
+                <h2 id={idTituloPadrao} className={estilos.padraoTitulo}>
+                  {t("padrao.titulo")}
+                </h2>
+                <span className={estilos.padraoResumo}>{resumoPadrao}</span>
+                <Botao
+                  pequeno
+                  className={estilos.padraoAlternar}
+                  aria-expanded={padraoAberto}
+                  aria-controls={idPadrao}
+                  onClick={() => setPadraoAberto((a) => !a)}
+                >
+                  {padraoAberto ? t("padrao.fechar") : t("padrao.alterar")}
+                </Botao>
+              </div>
+              <div id={idPadrao} className={estilos.padraoCampos} data-aberto={padraoAberto || undefined}>
+                <Selecao
+                  rotulo={t("padrao.variante")}
+                  value={estado.defaults.variante}
+                  onChange={(e) => mudarPadrao("variante", e.target.value)}
+                >
+                  {VARIANTES_COPIA.map((v) => (
+                    <option key={v} value={v}>
+                      {nomeVariante(v)}
+                    </option>
+                  ))}
+                </Selecao>
+                <Selecao
+                  rotulo={t("padrao.idioma")}
+                  value={estado.defaults.idioma}
+                  onChange={(e) => mudarPadrao("idioma", e.target.value)}
+                >
+                  {IDIOMAS.map((i) => (
+                    <option key={i} value={i}>
+                      {t(`idioma.${i}`)}
+                    </option>
+                  ))}
+                </Selecao>
+                <Selecao
+                  rotulo={t("padrao.condicao")}
+                  value={estado.defaults.condicao}
+                  onChange={(e) => mudarPadrao("condicao", e.target.value)}
+                >
+                  {CONDICOES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </Selecao>
+              </div>
+              <p className={estilos.padraoExplica}>{t("padrao.explica")}</p>
+            </Painel>
 
-          <div className={estilos.filtroNumero}>
-            <Campo
-              rotulo={t("filtro.rotulo")}
-              placeholder={t("filtro.placeholder")}
-              value={filtroNumero}
-              onChange={(e) => setFiltroNumero(e.target.value)}
-              inputMode="numeric"
-              autoComplete="off"
-              enterKeyHint="search"
-            />
-          </div>
-
-          <div ref={lista}>
-            {cartas.length > 0 ? (
-              <GradeVirtual
-                ref={controle}
-                itens={cartas}
-                chaveDe={chaveDaCarta}
-                renderizar={renderizar}
-                minCelula={MIN_CELULA}
-                vaoX={10}
-                vaoY={10}
-                proporcao={0}
-                alturaExtra={ALTURA_CELULA}
-                manterMontadas={manterMontadas}
-                rotulo={t("lista", { set: grade.setNome })}
+            <div className={estilos.filtroNumero}>
+              <Campo
+                rotulo={t("filtro.rotulo")}
+                placeholder={t("filtro.placeholder")}
+                value={filtroNumero}
+                onChange={(e) => setFiltroNumero(e.target.value)}
+                inputMode="numeric"
+                autoComplete="off"
+                enterKeyHint="search"
               />
-            ) : (
-              <Painel className={estilos.nenhuma}>{t("filtro.nenhuma")}</Painel>
-            )}
+            </div>
+
+            <div ref={lista}>
+              {cartas.length > 0 ? (
+                <GradeVirtual
+                  ref={controle}
+                  itens={cartas}
+                  chaveDe={chaveDaCarta}
+                  renderizar={renderizar}
+                  minCelula={MIN_CELULA}
+                  vaoX={10}
+                  vaoY={10}
+                  proporcao={0}
+                  alturaExtra={ALTURA_CELULA}
+                  manterMontadas={manterMontadas}
+                  rotulo={t("lista", { set: grade.setNome })}
+                />
+              ) : (
+                <Painel className={estilos.nenhuma}>{t("filtro.nenhuma")}</Painel>
+              )}
+            </div>
           </div>
 
           <div className={`${estilos.barra} v2-painel-flutuante`} role="region" aria-label={t("barra.rotulo")}>
@@ -432,8 +490,9 @@ export function CadastroSet() {
         padrao={estado.defaults}
         aoMudar={(cartaId, campo, valor) => despachar({ tipo: "campoLinha", cartaId, campo, valor })}
         onFechar={() => setAjustando(null)}
+        devolverFocoPara={focoDaJanela}
       />
-      <ZoomCarta carta={cartaAmpliada} onFechar={() => setAmpliando(null)} />
+      <ZoomCarta carta={cartaAmpliada} onFechar={() => setAmpliando(null)} devolverFocoPara={focoDaJanela} />
       {dialogo}
     </div>
   );

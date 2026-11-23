@@ -30,7 +30,7 @@ export interface ValoresDaCarta {
   variante: VarianteCopia;
   idioma: Idioma;
   condicao: Condicao;
-  /** Os campos em que a carta difere do padrão do lote, na ordem da tela. */
+  /** Os campos em que a carta foi ajustada fora do padrão do lote, na ordem da tela. */
   ajustes: readonly (keyof DefaultsGrade)[];
   /**
    * O catálogo não tem a variante do padrão para esta carta (o Alakazam do
@@ -62,8 +62,11 @@ export function valoresDaCarta(
   const semVarianteDoPadrao = !variantesDisponiveis(flags).includes(padrao.variante);
   const idioma = linha?.idioma ?? padrao.idioma;
   const condicao = linha?.condicao ?? padrao.condicao;
+  const varianteNoLugar = semVarianteDoPadrao && variante === automatica ? variante : null;
+  // A troca automática da variante é o aviso (`varianteNoLugar`), não um
+  // ajuste: a pessoa não mexeu na carta.
   const ajustes: (keyof DefaultsGrade)[] = [];
-  if (variante !== padrao.variante) ajustes.push("variante");
+  if (variante !== padrao.variante && !varianteNoLugar) ajustes.push("variante");
   if (idioma !== padrao.idioma) ajustes.push("idioma");
   if (condicao !== padrao.condicao) ajustes.push("condicao");
   return {
@@ -72,7 +75,7 @@ export function valoresDaCarta(
     condicao,
     ajustes,
     semVarianteDoPadrao,
-    varianteNoLugar: semVarianteDoPadrao && variante === automatica ? variante : null,
+    varianteNoLugar,
   };
 }
 
