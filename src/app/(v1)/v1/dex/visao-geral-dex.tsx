@@ -65,7 +65,7 @@ import type {
 } from "@/lib/dominio/tipos-cliente";
 import { urlRenderHomeDex, urlSpriteDex } from "@/lib/imagens";
 
-import { useRotuloForma } from "./_componentes/use-rotulo-forma";
+import { useRotuloForma } from "@/app/_comum/dex/use-rotulo-forma";
 
 const COR_NIVEL: Record<NivelTrofeu | "platina", string> = {
   bronze: "var(--trophy-bronze)",

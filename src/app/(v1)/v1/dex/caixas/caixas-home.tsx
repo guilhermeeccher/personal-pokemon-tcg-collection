@@ -53,7 +53,7 @@ import { urlSpriteDex } from "@/lib/imagens";
 
 import { useCartaoPokemon } from "../_componentes/cartao-pokemon";
 import { useNomeCaixa } from "../_componentes/use-nome-caixa";
-import { useRotuloForma } from "../_componentes/use-rotulo-forma";
+import { useRotuloForma } from "@/app/_comum/dex/use-rotulo-forma";
 
 /* No celular a pílula chega a 44 de altura e largura (`max-md:`); o intervalo de 8px
    entre elas vem do `gap` dos grupos. De 768px para cima nada muda. */

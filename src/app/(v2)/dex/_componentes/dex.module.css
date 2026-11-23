@@ -1,0 +1,93 @@
+/*
+ * As peças compartilhadas da Dex na v2: sprite, cartão do Pokémon e o erro no
+ * diálogo de transferência. Nada aqui tem `backdrop-filter` (regra 5b: o
+ * cartão flutuante é `.v2-painel-flutuante`, desenhado como vidro sem
+ * desfoque) nem `will-change`.
+ */
+
+.sprite {
+  /* Pixel art: ampliado sem borrar. */
+  image-rendering: pixelated;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+/* A vaga que falta: cinza e apagada. Realce só; o estado vem escrito ao lado. */
+.apagado {
+  opacity: 0.38;
+  filter: grayscale(1);
+}
+
+/* ------------------------------------------------------------ Cartão */
+
+.cartao {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.render {
+  width: min(180px, 52vw);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgb(0 0 0 / 0.45));
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.cartaoNome {
+  font-family: var(--v2-fonte-display);
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+.seloShiny {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1206;
+  background: var(--v2-iris-linear);
+}
+.cartaoLinhas {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+  color: var(--v2-tinta-2);
+}
+
+/* Pré-visão ao parar o mouse: acima do conteúdo e da casca (trilho 30, abas
+   40), abaixo de qualquer camada da pilha (janela 100000). Nunca recebe
+   clique: o ponteiro passa através dela para a grade. */
+.flutuante {
+  position: fixed;
+  z-index: 50;
+  padding: 14px 12px;
+  border-radius: var(--v2-raio-painel);
+  pointer-events: none;
+  animation: surgir 150ms var(--v2-curva-suave);
+}
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flutuante {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------- Transferência */
+
+.erroNoDialogo {
+  display: block;
+  margin-top: 10px;
+  color: var(--v2-perigo);
+}
