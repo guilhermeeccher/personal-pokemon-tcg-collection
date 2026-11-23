@@ -41,9 +41,7 @@ const TELAS_DA_DEX = [
   "/dex/inventario",
   "/dex/jogos",
   "/dex/novo-cadastro",
-  "/dex/planos",
   "/dex/recebidos",
-  "/dex/trofeus",
 ];
 
 const PASTA_V2 = path.resolve(__dirname, "..");

@@ -1,0 +1,259 @@
+/*
+ * Troféus da Living Dex na v2. Painéis sem desfoque (regra 5b: uma lista de
+ * dezenas de troféus nunca gasta `backdrop-filter`) e nenhuma camada de
+ * composição por item. A cor do nível é realce; o nível vem escrito.
+ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------- Cabeçalho */
+
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 24px;
+}
+.sobretitulo {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--v2-tinta-3);
+}
+.titulo {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.subtitulo {
+  margin: 8px 0 0;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+}
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.textoFraco {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+}
+
+/* ------------------------------------------------------------- Pílulas */
+
+/* 44 px de altura e 8 px entre elas (o `gap`), como os alvos de toque pedem. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  cursor: pointer;
+  transition:
+    background 160ms var(--v2-curva-suave),
+    color 160ms var(--v2-curva-suave);
+}
+.chip[data-ativo] {
+  color: #0b0c12;
+  background: var(--v2-tinta);
+  box-shadow: none;
+}
+@media (hover: hover) {
+  .chip:not([data-ativo]):hover {
+    background: var(--v2-superficie-3);
+  }
+}
+
+/* -------------------------------------------------------------- Resumo */
+
+.resumo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 22px;
+}
+.platina {
+  display: flex;
+  flex: 1 1 320px;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.platina > svg {
+  flex: none;
+}
+.platinaTexto {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.platinaTexto > b {
+  font-family: var(--v2-fonte-display);
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.contagem {
+  font-size: 15px;
+  color: var(--v2-tinta);
+}
+.niveis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--v2-tinta-2);
+}
+.niveis > li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.niveis b {
+  color: var(--v2-tinta);
+}
+
+.barra {
+  position: relative;
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--v2-superficie-3);
+}
+.barra > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+}
+
+/* --------------------------------------------------------------- Lista */
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.trofeu {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.icone {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  color: var(--v2-tinta-3);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+.trofeu[data-obtido] .icone {
+  background: var(--v2-superficie-3);
+}
+.corpo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.trofeuTitulo {
+  margin: 0;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+.selos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+.selo {
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--v2-tinta-2);
+  box-shadow: inset 0 0 0 1px var(--v2-aresta);
+}
+.selo[data-nivel="ouro"] {
+  color: #ffd27a;
+}
+.selo[data-nivel="prata"] {
+  color: #c9ced8;
+}
+.selo[data-nivel="bronze"] {
+  color: #d59a6a;
+}
+.selo[data-tom="acento"] {
+  color: #c7b6ff;
+  box-shadow: inset 0 0 0 1px rgb(199 182 255 / 0.4);
+}
+.selo[data-tom="sucesso"] {
+  color: var(--v2-livre);
+  box-shadow: inset 0 0 0 1px rgb(111 240 180 / 0.36);
+}
+.selo[data-tom="fraco"] {
+  color: var(--v2-tinta-3);
+}
+.descricao {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--v2-tinta-2);
+}
+.botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.marcar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 12px;
+}
+.marcar > :first-child {
+  flex: 1 1 200px;
+  max-width: 260px;
+}
