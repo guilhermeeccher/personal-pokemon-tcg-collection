@@ -96,9 +96,9 @@ function Janela({
   // A seleção de agora, para conferir depois da confirmação: enquanto a
   // pergunta esperava, uma releitura pode ter podado a seleção, e o corpo
   // montado antes dela levaria uma cópia que já não está selecionada.
-  const selecaoAgora = useRef("");
+  const selecaoAgora = useRef({ ids: "", relendo: false });
   useEffect(() => {
-    selecaoAgora.current = itens.map((i) => i.id).join(",");
+    selecaoAgora.current = { ids: itens.map((i) => i.id).join(","), relendo };
   });
 
   function marcar(campo: keyof typeof marcados, valor: boolean) {
@@ -127,7 +127,9 @@ function Janela({
       rotuloConfirmar: t("aplicar", { total: corpo.copiaIds.length }),
     });
     if (!ok) return;
-    if (selecaoAgora.current !== corpo.copiaIds.join(",")) {
+    // Uma releitura começada com a pergunta aberta (uma remoção que já estava
+    // a caminho) ainda pode mudar a seleção: espera ela acabar.
+    if (selecaoAgora.current.relendo || selecaoAgora.current.ids !== corpo.copiaIds.join(",")) {
       setErro(t("selecaoMudou"));
       return;
     }
