@@ -290,6 +290,10 @@
     linear-gradient(var(--v2-superficie-2), var(--v2-superficie-2)),
     linear-gradient(100deg, rgb(159 227 255 / 0.28), rgb(199 168 255 / 0.28) 40%, rgb(255 180 221 / 0.28) 70%, rgb(255 217 160 / 0.28));
 }
+.seloLote {
+  color: var(--v2-tinta);
+  background: rgb(159 216 255 / 0.16);
+}
 .selo[data-condicao="NM"] {
   color: var(--v2-livre);
 }
@@ -344,6 +348,8 @@
   gap: 8px 12px;
   padding: 8px 8px 8px 16px;
   border-radius: var(--v2-raio-vidro);
+  /* Mais opaca que o painel flutuante comum: por baixo corre a lista. */
+  background: linear-gradient(180deg, rgb(30 31 44 / 0.98), rgb(14 15 22 / 0.99));
 }
 @media (min-width: 48rem) {
   .barraSelecao {

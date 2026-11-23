@@ -359,7 +359,7 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
       */}
       {selecionadas.length > 0 ? (
         <div className={`${estilos.barraSelecao} v2-painel-flutuante`} role="region" aria-label={t("selecao.rotulo")}>
-          <span className={`${estilos.selecaoTexto} v2-num`}>
+          <span className={estilos.selecaoTexto}>
             <CheckSquare aria-hidden size={18} />
             {t("selecao.total", { total: selecionadas.length })}
           </span>

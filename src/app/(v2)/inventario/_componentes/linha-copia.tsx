@@ -82,7 +82,10 @@ export function LinhaCopia({
           </span>
           <span className={estilos.set}>{c.setNome}</span>
           <span className={estilos.selos}>
-            <span className={`${estilos.selo} v2-num`}>{t("quantidade", { total: c.quantidade })}</span>
+            {/* Lote: só quando passa de uma unidade, o caso comum fica sem ruído. */}
+            {c.quantidade > 1 ? (
+              <span className={`${estilos.selo} ${estilos.seloLote}`}>{t("quantidade", { total: c.quantidade })}</span>
+            ) : null}
             <span className={estilos.selo} data-variante={c.variante}>
               {tComp(`variante.${c.variante}`)}
             </span>
