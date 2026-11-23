@@ -3461,5 +3461,46 @@
     "parado": "{jogo} marcado como parado",
     "reativado": "{jogo} de volta à lista de jogando",
     "removido": "{jogo} removido da sua lista"
+  },
+  "v2DexCadastrar": {
+    "descricao": "Escolha o jogo, digite quantos de cada Pokémon você tem nele e cadastre tudo de uma vez. Cada Pokémon vira um registro, nascido no jogo e ainda nele.",
+    "pokedex": "Pokédex",
+    "semJogos": "Nenhum jogo marcado ainda: só o HOME aparece aqui.",
+    "filtros": "Jogo e filtros",
+    "catalogoDoJogo": "{total, plural, one {# forma} other {# formas}} no catálogo de {jogo}.",
+    "catalogoTodas": "{total, plural, one {# forma} other {# formas}}, dentro e fora do catálogo de {jogo}.",
+    "exibindo": "{total, plural, one {# forma} other {# formas}} na lista.",
+    "lista": "Pokémon para cadastrar em {jogo}",
+    "tenho": "Tenho: {partes}",
+    "tenhoNormal": "{n} normal",
+    "tenhoShiny": "{n} shiny",
+    "nenhumRegistro": "Nenhum registro ainda",
+    "noJogo": "Cadastro em {jogo}",
+    "quantidade": "{nome}, {trilha}",
+    "menos": "Menos um {nome}, {trilha}",
+    "mais": "Mais um {nome}, {trilha}",
+    "barra": {
+      "rotulo": "Lote do cadastro",
+      "nada": "Digite as quantidades na lista",
+      "total": "{total, plural, one {# Pokémon} other {# Pokémon}} para {jogo}",
+      "fora": "{total, plural, one {# forma do lote está fora da lista à vista} other {# formas do lote estão fora da lista à vista}}",
+      "semJogo": "{total, plural, one {# Pokémon} other {# Pokémon}}: escolha o jogo"
+    },
+    "resultado": {
+      "recusado": "Nada foi cadastrado",
+      "tudoOuNada": "O lote é tudo ou nada: ajuste e cadastre de novo. As quantidades continuam na lista.",
+      "incerto": "Sem resposta do servidor",
+      "incertoTexto": "O lote pode ter entrado. O que você tem foi relido: confira antes de cadastrar de novo, para não registrar duas vezes.",
+      "fechar": "Fechar",
+      "incertoRelendo": "O lote pode ter entrado. Relendo o que você tem; o cadastro volta quando a leitura chegar.",
+      "incertoSemReleitura": "O lote pode ter entrado, e não deu para reler o que você tem. Releia antes de cadastrar de novo, para não registrar duas vezes."
+    },
+    "jogoSaiu": "O jogo escolhido saiu da sua lista (parado ou removido em outro lugar). Escolha o jogo do lote acima: as quantidades continuam.",
+    "listaSemJogo": "Pokémon para cadastrar",
+    "releitura": {
+      "falhou": "Não deu para reler",
+      "falhouTexto": "O que aparece aqui é da leitura anterior, e o lote continua. Tente reler antes de cadastrar.",
+      "tentar": "Reler"
+    }
   }
 }

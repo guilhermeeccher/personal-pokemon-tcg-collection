@@ -30,7 +30,7 @@ Section "Mobile layout — below 768px, and only there".
 | **Fields are 16px on mobile** | **both** | Includes every v2 field: the "Almost there" filter, searches, the "up to R$ X" ceiling field. |
 | **Touch targets are at least 44 x 44px, 8px apart** | **both** | Check the shortcut chips and the binder pager dots in particular. Informative badges are still not targets. |
 | **One tree, not two** | **both** | The v2 adds a case: **Binder and Whole set are the same list of slots** in two sizes, never two lists. A page-turn animation may build a second, short-lived copy of the two faces only for the duration of the turn, only `aria-hidden`/`inert`, and never with state (refs, marks) inside it. |
-| **Dex → Cadastrar virtualizes its list below 768px, and only that screen does** | **v1 only** | **New wording:** a grid or list of the v2 is virtualized above a **measured** threshold, at every width, with the window as the scroller. Package 1d delivers the reusable virtual grid and fixes the threshold by measuring a full collection and the relevant Dex screens (budget of nodes, images and response time); until it is measured, no number is a rule. A v2 screen that renders more than the threshold without virtualizing says why. The v1 keeps its rule: its desktop scrolls in an inner pane, so its window virtualizer only works on the phone. **Measured by package 1d (2026-11-23): 300 items**, with the budget and the numbers in section 7, rule 13; the Dex lists measure themselves against the same budget when their packages port them. |
+| **Dex → Cadastrar virtualizes its list below 768px, and only that screen does** | **v1 only** | **New wording:** a grid or list of the v2 is virtualized above a **measured** threshold, at every width, with the window as the scroller. Package 1d delivers the reusable virtual grid and fixes the threshold by measuring a full collection and the relevant Dex screens (budget of nodes, images and response time); until it is measured, no number is a rule. A v2 screen that renders more than the threshold without virtualizing says why. The v1 keeps its rule: its desktop scrolls in an inner pane, so its window virtualizer only works on the phone. **Measured by package 1d (2026-11-23): 300 items**, with the budget and the numbers in section 7, rule 13; the Dex lists measure themselves against the same budget when their packages port them; the register list (package 5c) fixed its own threshold, **100**, because a form costs ~21 nodes against a card's ~8 (section 7, "Register by game (package 5c)"). |
 | **Nothing only on hover or in `title`** | **both** | The v2 adds a corollary: **tilt and holo under the pointer are an enhancement, never information** — the copy's variant also shows as text or a badge. The prototype breaks this rule (slot number only on hover, the fan opening on `:hover`, an explanation in a `title`); the v2 does not copy those. |
 | **Overlays share one stack** (`use-camada.ts`): Esc closes only the top layer, focus containment belongs to the top modal layer, scroll lock reference-counted; the `Modal` is a bottom sheet on mobile with its actions in `rodape`, kept in view at the bottom of the sheet | **both**, with two v2 additions | The whole rule holds for the v2, bottom sheet included. (1) **Scroll lock at every width in the v2.** The v1 locks only below 768 px because its desktop scrolls in an inner pane; the v2's window scrolls at every width, so a dialog without the lock would let the page scroll under it on the desktop. The v1 keeps its behaviour. (2) **Focus and position return to the right cell** when a layer closes, even when the cell that opened it left the DOM through virtualization. The card detail is a layer of this stack and contains focus from the moment it opens. **Delivered by package 0c:** the stack is ported, not imported (`(v2)/_componentes/primitivos/camadas.ts`, pure and tested, and `use-camada.ts`), with the levels `janela` < `detalhe` < `confirmacao` < `balao`, whose z-index comes from the same table (the layer seen on top is the one that gets Esc and Tab); a modal layer locks scroll by default at every width (`scrollbar-gutter: stable` keeps the desktop from shifting), and a dialog over another dialog does not blur again (one veil spends the budget); every layer takes a `devolverFocoPara` resolver, called on close and allowed to be async, so a virtual grid can scroll the cell back in and hand it over. Focus goes to the first of resolver, opener and the main content that is still in the DOM. |
 | **Quantity steppers use `Quantidade`** (controlled, `value` required) | **both** | Whatever the v2 stepper looks like, it stays controlled: crossing 768 px remounts it. |
@@ -254,7 +254,7 @@ rest are the technical foundations of the v2.
     the cost is flat: ~600 nodes and ~50 images at any size. The median tap does not move with the
     size, so the worst (cold) tap and the memory decide. The Dex screens have their own lists (forms,
     boxes) and measure them when their package ports them onto this grid (5a, 5c), against the same
-    budget; the Pokédex grid (5a) is measured in rule 42.
+    budget; the Pokédex grid (5a) is measured in rule 42, the register list (5c) in "Register by game (package 5c)".
 14. **New components the v1 does not have.** The **card detail** absorbs the v1's allocate,
     upgrade, edit-copy and destination modals and the zoom, and is born with two modes, slot and
     copy. A glass **confirmation dialog** replaces the twelve `window.confirm` calls of the v1: a
@@ -872,6 +872,67 @@ E. **The piece package 5b owns: the box name** (delivered 2026-11-23). Ported fr
       (a disabled button drops it, and a box's button leaves the list with its box) it goes back to
       the button that asked when that button is still there (a refusal) or to the count when it is
       not; a focus the user moved on purpose while waiting stays where it is.
+
+### Register by game (package 5c)
+
+- **`/dex/cadastrar` is the v1's batch, on the virtual grid.** The server page reads what the v1
+  page reads (the catalog by name, the owned active games, the "have" counts from the records, the
+  sections, the checkpoints not yet earned), after the module guard. The batch is the v1's
+  `POST /api/dex/registros` with `{ jogoId, itens: [{ formaId, normal, shiny }] }`; the pure rules
+  are in `cadastrar/_componentes/lote-dex.ts`, tested.
+  - **The games are chips, HOME always last**; `?jogo=` and `?busca=` are read as the v1 reads them,
+    and a `?jogo=` the user does not own opens on the first option. After that, **a chosen game that
+    leaves the list** (stopped or removed in another tab, seen when the screen rereads after a
+    refusal) leaves the screen with no game and "Register" disabled, never with another game: the
+    next click would otherwise register the whole batch in a game nobody picked.
+  - **The batch lives on the screen, by form**: switching game, view or filter keeps what was
+    typed, and the bar says how many forms of the batch are outside the list shown (they are sent,
+    as in the v1). While it is being sent, the list and the filters are `inert`.
+  - **One refusal refuses the whole batch** (the route validates everything before its one
+    transaction): the refusals are listed above the bar, the batch stays, the page rereads. No answer,
+    or a 5xx, is "the batch may have gone in": the batch stays and the page rereads. The reread is
+    `router.refresh` in a transition, and "Register" stays disabled until it arrives; only then does
+    the screen say the counts were read again. **A reread the server cannot do keeps the screen**
+    (the page passes `leitura: null`, and the screen keeps its previous read and the typed batch,
+    saying so, with "Read again", and "Register" stays disabled until a read succeeds: those counts
+    are what the user checks before sending again); only a first load with nothing to show is the
+    error page. The decisions are pure (`bloqueioDoCadastro`, `leituraNaTela`, `tabIndexDoCampo`).
+    Success is a floating notice, and the "have" counts reread.
+  - **Marks, never refusals**: outside the game's catalog (only with "Show all"), trade or event,
+    locked behind a checkpoint, "cannot go to HOME", and — new in the v2 — "no shiny", as text in a
+    one-line strip that ellipsizes so the cell keeps a fixed height. The name button opens the
+    Pokémon card (`FolhaPokemon`) with every mark written in full, so nothing lives only in the cut.
+  - **Each cell is a panel with the name, the marks and two steppers** (normal, shiny), 198 px tall
+    at every width; the columns are what fits at 300 px each: one on a phone held upright and at
+    768 px beside the rail, two on a phone turned sideways, two or three on a desktop. The fields are
+    text with a numeric keyboard, controlled (the value lives in the batch, so leaving the mounted
+    range, turning the phone or crossing 768 px keeps it), 16 px. With focus inside the list every
+    field is in the Tab order, as in the v1's table (normal, shiny, the next form); from outside,
+    Tab enters at the grid's entry cell (rule 28), never at a spare row's field off screen. Enter
+    goes to the same field of the next form. − and + are out of the Tab order.
+  - **The focused row and its neighbours stay mounted** (`manterMontadas`), as the v1's virtualizer
+    kept them: scrolling with the iPhone keyboard open never unmounts the field being typed in.
+- **Its threshold is 100, measured against rule 13's budget** (2026-11-23, the same protocol:
+  Chromium, iPhone profile 393 × 852, DPR 3, touch, iPhone user agent, CPU 4×, production build,
+  invented data; "tap" is the longest Event Timing duration of a tap on a `+` in the middle of the
+  list, six taps, the first cold). A form here costs ~21 DOM nodes against ~8 for a card, so the
+  grid's 300 would mount over 5,000 nodes for one game's catalog; − and + are text, not SVG icons,
+  and the name button's arrow is a pseudo-element, which took a cell from 33 nodes to ~20.
+
+  | List | Forms | Mounted | DOM nodes (page) | Sprites in DOM | Tap, worst / median |
+  |---|---|---|---|---|---|
+  | HOME, search "ch" (all mounted) | 68 | 68 | 1,572 | 68 | 64–80 / 40–48 ms |
+  | HOME, search "ar", all mounted (threshold 300) | 171 | 171 | 3,579 | 171 | 64 / 48 ms |
+  | FireRed catalog, all mounted (threshold 300) | 253 | 253 | 5,269 | 253 | 80 / 56 ms |
+  | FireRed catalog, virtual (threshold 100) | 253 | 12 | 497 | 12 | 56–64 / 40–48 ms |
+  | HOME, every form, virtual | 1,224 | 12–13 | 490–512 | 13 | 48–80 / 40 ms |
+  | HOME, every form, virtual, 1,400 × 900 | 1,224 | 37 | 971 | 37 | 48–64 / 48 ms |
+
+  Every case taps under 100 ms, so the node count decides: 100 forms mount whole in about 2,250 nodes,
+  and above that the list costs ~500 nodes on the phone and ~1,000 on a wide desktop at any size. Two
+  of twelve virtual runs had one cold tap of 136 and 168 ms, the rest of each run at 32–56 ms. The
+  v1 measured ~310 ms per tap on the same list without virtualizing (its header, "Lista virtual no
+  celular").
 
 ## 8. Other rules, checked for the transition
 
