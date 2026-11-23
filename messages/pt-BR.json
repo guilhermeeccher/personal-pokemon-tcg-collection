@@ -2601,7 +2601,8 @@
       "alocadas": "{total, plural, =1 {1 carta alocada} other {# cartas alocadas}} neste tema.",
       "ampliar": "Ver {carta} maior",
       "tentarDeNovo": "Tentar de novo",
-      "mostrarMais": "Mostrar mais {total} (faltam {restantes})"
+      "mostrarMais": "Mostrar mais {total} (faltam {restantes})",
+      "desatualizadas": "Suas cartas mudaram desde que a lista abriu (em outra aba, talvez). Nada foi alocado, e a lista já foi lida de novo: confira as marcas e confirme outra vez."
     },
     "upgrades": {
       "nenhum": "Nenhuma vaga tem upgrade.",

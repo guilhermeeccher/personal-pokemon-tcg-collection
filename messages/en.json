@@ -2609,7 +2609,8 @@
       "alocadas": "{total, plural, =1 {1 card allocated} other {# cards allocated}} to this theme.",
       "ampliar": "See {carta} larger",
       "tentarDeNovo": "Try again",
-      "mostrarMais": "Show {total} more ({restantes} left)"
+      "mostrarMais": "Show {total} more ({restantes} left)",
+      "desatualizadas": "Your cards changed since the list opened (in another tab, perhaps). Nothing was allocated, and the list has been read again: check the ticks and confirm again."
     },
     "upgrades": {
       "nenhum": "No slot has an upgrade.",

@@ -207,7 +207,14 @@ export function CartasDoTema({
         onAlocadas(Array.isArray(vagas) ? vagas.length : escolhidas.length);
         return;
       }
-      setErro(textoDaRecusa(tRecusas, resposta, t("erroAlocar")));
+      // A frase do catálogo pede para recarregar a lista, que aqui é relida
+      // sozinha logo abaixo; a v1 ainda usa a frase como está.
+      const chave = (resposta as { recusa?: { chave?: string } } | null)?.recusa?.chave;
+      setErro(
+        chave === "cartasDoTemaDesatualizadas"
+          ? tGeral("desatualizadas")
+          : textoDaRecusa(tRecusas, resposta, t("erroAlocar")),
+      );
       reler = true;
     } catch {
       setErro(t("erroRede"));
