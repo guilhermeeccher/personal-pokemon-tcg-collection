@@ -3461,5 +3461,29 @@
     "parado": "{jogo} marcado como parado",
     "reativado": "{jogo} de volta à lista de jogando",
     "removido": "{jogo} removido da sua lista"
+  },
+  "v2DexNovoCadastro": {
+    "descricao": "Marque nas caixas o que está indo ao HOME e diga de que jogo saiu. Tudo chega ao HOME como \"a guardar\", em Recebidos.",
+    "recebidos": "Recebidos",
+    "caixas": "Caixas",
+    "etapa1": "Etapa 1 de 2 · as vagas que vão ao HOME",
+    "etapa2": "Etapa 2 de 2 · de onde saem",
+    "filtros": "Filtros da grade",
+    "grade": "Caixas do HOME para escolher",
+    "legenda": "Legenda das vagas",
+    "legendaBuraco": "Tracejada",
+    "legendaBuracoTexto": "a posição existe no HOME, mas nada se guarda nela nesta trilha",
+    "notaNoHome": "Toque numa vaga em falta ou num jogo para marcá-la. Uma vaga já no HOME, ou tracejada, só se identifica na barra de baixo.",
+    "barra": "Lote do novo cadastro",
+    "soEnvio": "só envia",
+    "notaSaida": "É de onde o Pokémon sai agora, não onde nasceu: se já há um registro desta vaga nesse jogo, ele é movido e mantém a origem, a data e as notas; senão, um novo nasce nesse jogo. Do HOME, sempre um novo.",
+    "tirarImpedidos": "{quantidade, plural, =1 {Tirar o que não pode ir} other {Tirar os # que não podem ir}}",
+    "mostrarMais": "Mostrar mais ({restantes} restantes)",
+    "recusado": "Nada foi enviado",
+    "confirmacao": {
+      "titulo": "Transferência sem volta",
+      "confirmar": "Transferir",
+      "lote": "{quantidade, plural, =1 {Vale para o Pokémon deste lote.} other {Vale para os # Pokémon deste lote.}}"
+    }
   }
 }
