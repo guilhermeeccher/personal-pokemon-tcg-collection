@@ -2061,7 +2061,8 @@
       "rotulo": "Selection",
       "total": "{total, plural, one {# copy selected} other {# copies selected}}",
       "editar": "Edit selected",
-      "limpar": "Clear"
+      "limpar": "Clear",
+      "limparRotulo": "Clear selection"
     },
     "paginacao": {
       "rotulo": "Inventory pages",

@@ -386,8 +386,17 @@
   .selecaoAcoes {
     flex: 1;
   }
-  .selecaoAcoes > * {
+  .selecaoAcoes > :first-child {
     flex: 1;
+  }
+}
+@media (max-width: 359.98px) {
+  .rotuloLimpar {
+    display: none;
+  }
+  .selecaoAcoes .limparSelecao {
+    width: 44px;
+    padding: 0;
   }
 }
 

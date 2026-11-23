@@ -2053,7 +2053,8 @@
       "rotulo": "Seleção",
       "total": "{total, plural, one {# cópia selecionada} other {# cópias selecionadas}}",
       "editar": "Editar selecionadas",
-      "limpar": "Limpar"
+      "limpar": "Limpar",
+      "limparRotulo": "Limpar seleção"
     },
     "paginacao": {
       "rotulo": "Páginas do inventário",

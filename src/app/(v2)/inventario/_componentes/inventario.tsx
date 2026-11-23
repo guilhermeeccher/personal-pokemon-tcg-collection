@@ -405,8 +405,15 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
             <Botao variante="primario" disabled={!pronta} onClick={() => setMassaAberta(true)}>
               {t("selecao.editar")}
             </Botao>
-            <Botao variante="fantasma" icone={<X aria-hidden size={18} />} onClick={() => setSelecao(new Set())}>
-              {t("selecao.limpar")}
+            {/* Abaixo de 360 px o rótulo some e fica o X (o nome segue no `aria-label`). */}
+            <Botao
+              variante="fantasma"
+              className={estilos.limparSelecao}
+              icone={<X aria-hidden size={18} />}
+              aria-label={t("selecao.limparRotulo")}
+              onClick={() => setSelecao(new Set())}
+            >
+              <span className={estilos.rotuloLimpar}>{t("selecao.limpar")}</span>
             </Botao>
           </div>
         </div>
