@@ -50,7 +50,7 @@ Section "The app is HTTP on the local network — what that forbids in the brows
 | Rule | Scope | For the v2 |
 |---|---|---|
 | The default install is plain HTTP on the machine's IP; no secure-context-only API | **both** | More important in the v2. Besides `navigator.clipboard`, the prototype relies on two more APIs that do not exist there: `navigator.userAgentData` (its engine detection, so the glass refraction never turns on over HTTP) and `deviceorientation`. The v2 uses neither for anything that must work by default. |
-| Copy through `copiar-texto.ts` (`execCommand` fallback), never the Clipboard API directly | **both** | The v2's "copy list" goes through the same function. It lives in `src/app/_componentes/`, which the v2 may not import, so the first v2 package that needs it moves it to `src/app/_comum/` (section 7, rule 16) — never a second copy. |
+| Copy through `copiar-texto.ts` (`execCommand` fallback), never the Clipboard API directly | **both** | The v2's "copy list" goes through the same function. Package 1e moved it to `src/app/_comum/copiar-texto.ts` (section 7, rule 16), with the v1's importer updated — never a second copy. |
 | Same restriction for geolocation, notifications, service workers | **both** | — |
 
 ---
@@ -270,8 +270,8 @@ rest are the technical foundations of the v2.
 16. **The v2 does not import the v1's skin.** No file under `src/app/(v2)/` imports from
     `src/app/_componentes/` or `src/app/(v1)/` (`telas-v1.test.ts`): without the v1's tokens their
     classes have no colour. **The ban has no exceptions.** A skinless helper both versions need
-    (`copiar-texto.ts`, `use-eh-mobile.ts`, `use-camada.ts` and the like, all in
-    `_componentes/` today; `recusa.ts` already moved, by package 1c) moves to `src/app/_comum/`, with its v1 importers updated in the same
+    (`use-eh-mobile.ts`, `use-camada.ts` and the like, in
+    `_componentes/` today; `recusa.ts` already moved, by package 1c, and `copiar-texto.ts` by 1e) moves to `src/app/_comum/`, with its v1 importers updated in the same
     change — the precedent is the PWA head, `_comum/cabeca.tsx` — and is never copied. The first v2
     package that needs one moves it. Shared code outside `src/app` (`lib/`, `messages/`) is not
     affected. The v2 has its own stylesheet, `(v2)/v2.css`: today only `color-scheme: dark` and the
@@ -463,9 +463,55 @@ rest are the technical foundations of the v2.
     empty slots in grid order), `versaoGrade` (bumps on every new grid: reread `GET …/falta` with
     it), `abrirVaga(vaga)`, `reler()`, `abertaId`/`parAtivo` (for the transition), `tamanho` (the
     whole-list size preference) and `controle` (the grid handle the page uses to return focus —
-    pass it to the `GradeVirtual` the tab renders). Until 1e, the tab shows the empty slots on the
-    virtual grid, each opening the detail, and a "Do it in v1" link to `/v1/colecoes/<id>` for the
-    buy marking, the list and the buy options.
+    pass it to the `GradeVirtual` the tab renders).
+
+### What's missing and marking to buy (package 1e)
+
+30. **What the tab does.** `AbaFalta` reads `GET /api/colecoes/:id/falta` (package 1a) with every new
+    grid and draws every empty slot (R6) on the page's `GradeVirtual`. Every write is the v1's
+    `PATCH /api/colecoes/:id/opcoes-compra/selecao`, with the v1's bodies (`{ cartas: [{ chave,
+    cartaId }], selecionada }` on Cardmarket, `{ ids, selecionada }` for a Liga option or a choice).
+    The decisions are pure and tested (`compra-falta.ts`, `arrasto-compra.ts`):
+    - **A tap** (decision 2): in a set it puts the slot's card on the list and takes it off again;
+      with no price yet it is the manual choice of that card (works before the first price round).
+      In a Pokédex it opens the slot's options, read on demand (`…/falta/alternativas`). A slot
+      with a free copy opens the detail, where allocating fills it; buying it stays possible
+      there. A slot with two or more choices opens its options: "Clear the slot" is a named
+      action there, with a confirmation, never a tap.
+    - **Drag** (set only, where a tap marks): horizontal only, after 8 px, never from the left 24
+      px, along the row it started on (`indiceNoPonto(x, y0)`), one direction (the first card's),
+      sent as one request when the finger lifts. The grid area has `touch-action: pan-y`, so a
+      vertical move scrolls and marks nothing. A `pointercancel` sends nothing and puts the marks
+      the drag drew back as they were.
+    - **Optimistic, then checked.** A mark shows at once as a pending mark per slot. Requests go
+      through **one queue per collection, shared by the tab and the card detail**
+      (`envio-selecao.ts`), entered at the gesture, so the server sees the user's gestures in
+      order. The queue also keeps, per collection, the requests in flight, the requests finished
+      and a generation that a refusal from either side bumps: the list is not copied while a
+      request is in flight, nor until a read started after the last finished request arrives
+      (a failed read keeps it stale), and a request queued before a refusal is dropped unsent. A
+      pending mark is dropped only by a read asked after its request finished; the marks left
+      are recounted against each new read; and a cancelled drag never brings back one that a
+      read, a refusal or the queue already ended. A refusal (404, 400, 5xx, no network) drops
+      every pending mark, says why and rereads. In the slot options, the buttons stay locked
+      after a write until the options are read again successfully (a second tap would repeat the
+      request instead of undoing it; a failed reread says so and offers "Try again"); a request that changed fewer rows than it carried (`alteradas`: the slot was
+      filled, the card stopped being a candidate) says so and rereads.
+    - **"Mark the best of each slot"** opens a dialog with the criterion and, slot by slot, the card,
+      its price and source, plus how many slots stay out and why; only its confirm sends, and it
+      sends exactly the plan shown (`planoDoAtalho`, the 1a `proposta`: no slot with a choice, no
+      unpriced card). If the read changed while the dialog was open, confirm sends nothing and
+      shows the new plan to be confirmed again.
+    - **The list to paste** is the server's (`lista.abasLiga`, the same function as the buy options
+      screen and the per-tab download); the tab shows it in a dialog with one tab per region in a
+      Pokédex, and copying waits for pending marks to be reread. Copy goes through
+      `src/app/_comum/copiar-texto.ts` (plain HTTP).
+    - **`PRECO_FONTE=liga`** (decision 3): a notice says new lookups are unavailable; marking works
+      only over the options of saved scans, unmarking and copying always. Nothing starts a scan.
+    - The buy options page itself (price round, ceiling and order, out-of-stock paste, downloads) is
+      package 4a's; until then the tab links to `/v1/colecoes/<id>/opcoes-compra`.
+    - `secaoCompraDoDetalhe` renders the same slot options component (`secao-compra-vaga.tsx`) inside
+      the card detail.
 
 ### Collections list: organize, suggestions, thematic collection (package 4b)
 

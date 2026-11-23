@@ -115,7 +115,6 @@ describe("pontes da v2, executadas", () => {
     expect(PONTES.map((p) => p.rota).sort()).toEqual(
       [
         "/colecoes/[id]/opcoes-compra",
-        "/colecoes/falta",
         ...TELAS_DA_DEX,
       ].sort(),
     );

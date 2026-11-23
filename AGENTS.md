@@ -1287,7 +1287,7 @@ change: plain HTTP on the local network is the case to design for.
 
 That is how the "Copy" button on the lists was born broken: it worked on `localhost` on the machine
 where it was developed and did not work on the screen of whoever opened it by IP. The fallback to
-`document.execCommand("copy")` lives in `app/_componentes/copiar-texto.ts`; use it instead of
+`document.execCommand("copy")` lives in `app/_comum/copiar-texto.ts`; use it instead of
 calling the Clipboard API directly. The same restriction applies to geolocation, notifications,
 service workers and the like.
 
