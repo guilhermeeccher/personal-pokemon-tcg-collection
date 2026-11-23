@@ -173,6 +173,23 @@ export function Carta({
   const src = trocaDepois && alvoPronto === alvo ? alvo : base;
   const semImagem = !src || urlQueFalhou === src;
 
+  const aoFalharImagem = useCallback(() => {
+    if (src === base) setUrlQueFalhou(src ?? null);
+    // A grande falhou depois de decodificada (raro): volta para a pequena.
+    else setAlvoPronto(null);
+  }, [src, base]);
+
+  // Numa página renderizada no servidor, a imagem pode falhar antes da
+  // hidratação: o `error` já disparou quando o React liga o `onError`, e a
+  // carta ficava com o ícone de imagem quebrada em vez do `fallback`. Na
+  // montagem do elemento, uma imagem já terminada sem largura é uma falha.
+  const conferirImagem = useCallback(
+    (img: HTMLImageElement | null) => {
+      if (img && img.complete && img.naturalWidth === 0) aoFalharImagem();
+    },
+    [aoFalharImagem],
+  );
+
   /* ---------- Atividade ---------- */
 
   const [sobPonteiro, setSobPonteiro] = useState(false);
@@ -370,11 +387,8 @@ export function Carta({
           loading={carregamento ?? (modo === "grade" ? "lazy" : "eager")}
           decoding="async"
           draggable={false}
-          onError={() => {
-            if (src === base) setUrlQueFalhou(src);
-            // A grande falhou depois de decodificada (raro): volta para a pequena.
-            else setAlvoPronto(null);
-          }}
+          ref={conferirImagem}
+          onError={aoFalharImagem}
         />
       )}
       {ativa && !semImagem ? (
