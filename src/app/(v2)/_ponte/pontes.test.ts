@@ -104,7 +104,6 @@ describe("pontes da v2, executadas", () => {
     expect(PONTES.map((p) => p.rota).sort()).toEqual(
       [
         "/cadastro/busca",
-        "/cadastro/set",
         "/colecoes/[id]/opcoes-compra",
         "/colecoes/falta",
         "/dex/[[...resto]]",

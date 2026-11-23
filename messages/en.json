@@ -2503,5 +2503,104 @@
       "erroAdicionar": "Could not add.",
       "erroRede": "No answer from the server: there is no telling whether the copy went in. The list was reread."
     }
+  },
+  "v2CadastroSet": {
+    "titulo": "Entry by set",
+    "descricao": "Pick the set and type how many copies you have of each card. Enter moves to the next card.",
+    "seletor": {
+      "titulo": "Set",
+      "idiomaCatalogo": "Catalog language",
+      "buscar": "Search sets",
+      "placeholderBuscar": "name, code or id — e.g. 151, MEW, sv2a",
+      "expansao": "Set",
+      "selecione": "Pick a set…",
+      "nenhumSet": "No set matches the search",
+      "cartas": "{total} cards",
+      "erroCarregar": "Could not load the list of sets.",
+      "idioma": {
+        "todos": "All",
+        "pt": "Portuguese",
+        "en": "English",
+        "jp": "Japanese"
+      }
+    },
+    "carregando": "Loading the cards…",
+    "erroGrade": "Could not load this set's cards.",
+    "tentarDeNovo": "Try again",
+    "contagemCartas": "{total, plural, one {# card} other {# cards}}",
+    "catalogo": {
+      "pt": "Portuguese catalog",
+      "ptTexto": "Each card is identified by its Portuguese record.",
+      "en": "English catalog",
+      "enTexto": "This set has no card-by-card Portuguese data in the catalog, so each card is identified by its English record. The batch language is your physical card's: pick Portuguese if it is the Brazilian edition.",
+      "misto": "{total, plural, one {# card of this set has no Portuguese record yet and uses the English one} other {# cards of this set have no Portuguese record yet and use the English one}}. The batch language is still your physical card's.",
+      "jp": "Japanese catalog",
+      "jpTexto": "The cards are the Japanese records. The batch language is your physical card's, separate from the catalog.",
+      "usarJp": "Use Japanese for the batch"
+    },
+    "padrao": {
+      "titulo": "Batch defaults",
+      "explica": "They apply to every card you mark from now on. A card already marked keeps what it had.",
+      "alterar": "Change",
+      "fechar": "Close",
+      "variante": "Variant",
+      "idioma": "Physical card language",
+      "condicao": "Condition"
+    },
+    "idioma": {
+      "pt": "Portuguese",
+      "en": "English",
+      "jp": "Japanese"
+    },
+    "filtro": {
+      "rotulo": "Filter by number",
+      "placeholder": "e.g. 4, 04 or 004",
+      "nenhuma": "No card with that number in this set."
+    },
+    "lista": "Cards of {set}",
+    "carta": {
+      "quantidade": "Quantity of {nome}",
+      "menos": "One fewer {nome}",
+      "mais": "One more {nome}",
+      "voceTem": "you have {total}",
+      "ampliar": "Enlarge {nome}",
+      "ajustar": "Variant, language and condition of {nome}: {valores}",
+      "ajustada": "changed",
+      "semVariante": "no {padrao}: goes {variante}",
+      "recusada": "refused"
+    },
+    "ajuste": {
+      "titulo": "#{numero} · {nome}",
+      "explica": "This applies to this card only. The language is your physical card's, not the catalog's.",
+      "semVariante": "The catalog has no {padrao} for this card; the list shows only the variants it has.",
+      "pronto": "Done"
+    },
+    "zoom": {
+      "titulo": "#{numero} · {nome}"
+    },
+    "barra": {
+      "rotulo": "Batch",
+      "totais": "{cartas, plural, one {# card} other {# cards}} · {copias, plural, one {# copy} other {# copies}}",
+      "nada": "No card marked",
+      "gravar": "Save batch"
+    },
+    "resultado": {
+      "gravado": "Batch saved",
+      "textoGravado": "{inseridas, plural, one {# copy saved} other {# copies saved}} from {set}.",
+      "textoComFusao": "{inseridas, plural, one {# copy saved} other {# copies saved}} and {fundidas, plural, one {# added to an identical free copy} other {# added to identical free copies}}, from {set}.",
+      "verLinhas": "See {total, plural, one {the saved line} other {the # saved lines}}",
+      "recusado": "Batch not saved",
+      "tudoOuNada": "Nothing was saved: the batch goes in whole or not at all. Fix the cards marked as refused and save again.",
+      "linhasRecusadas": "Refused",
+      "padrao": "Could not save the batch.",
+      "rede": "Could not confirm the save",
+      "redeTexto": "The connection dropped before the answer, and the batch may have gone in. The cards were read again: check “you have” before saving again.",
+      "fechar": "Close"
+    },
+    "trocarSet": {
+      "titulo": "Switch sets?",
+      "descricao": "{total, plural, one {The marked card will be discarded} other {The # marked cards will be discarded}}: the batch has not been saved.",
+      "confirmar": "Switch and discard"
+    }
   }
 }
