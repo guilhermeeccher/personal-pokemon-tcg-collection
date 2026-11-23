@@ -164,16 +164,29 @@ export function podarPendencias(pendencias: Pendencias, confirmadasAte: number):
  * Desfaz um gesto que não foi confirmado (o arrasto que o navegador
  * cancelou): cada vaga que ele tocou volta à pendência que tinha antes dele,
  * ou a nenhuma. Nada foi enviado, então nada há a desfazer no servidor.
+ *
+ * A pendência de antes só volta se ainda estiver viva: uma leitura que chegou
+ * durante o gesto pode tê-la refletido, ou uma recusa a derrubado
+ * (`podadasAte`); ressuscitá-la deixaria a vaga "salvando" para sempre.
  */
 export function restaurarPendencias(
   pendencias: Pendencias,
   antes: ReadonlyMap<string, Pendencia | undefined>,
+  podadasAte: number,
 ): Map<string, Pendencia> {
   const saida = new Map(pendencias);
   for (const [vagaId, anterior] of antes) {
-    if (anterior) saida.set(vagaId, anterior);
+    if (anterior && anterior.seq > podadasAte) saida.set(vagaId, anterior);
     else saida.delete(vagaId);
   }
+  return saida;
+}
+
+/** Tira as pendências de gestos que nunca saíram (descartados na fila por uma recusa anterior). */
+export function semGestos(pendencias: Pendencias, seqs: readonly number[]): Map<string, Pendencia> {
+  const descartados = new Set(seqs);
+  const saida = new Map<string, Pendencia>();
+  for (const [vagaId, p] of pendencias) if (!descartados.has(p.seq)) saida.set(vagaId, p);
   return saida;
 }
 

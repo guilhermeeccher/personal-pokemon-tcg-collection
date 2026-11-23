@@ -2,10 +2,16 @@
 
 import { Check, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { TipoColecao } from "@/lib/dominio/parametro-colecao";
-import type { AlternativasDaVagaV2DTO, OpcaoFaltaV2DTO, VagaGradeV2DTO } from "@/lib/dominio/tipos-cliente";
+import type {
+  AlternativasDaVagaV2DTO,
+  EscolhaDaVagaFaltaV2DTO,
+  FaltaColecaoV2DTO,
+  OpcaoFaltaV2DTO,
+  VagaGradeV2DTO,
+} from "@/lib/dominio/tipos-cliente";
 
 import { Carta } from "../../../_componentes/carta/carta";
 import { useFormatos } from "../../../_componentes/detalhe/formatos";
@@ -51,11 +57,19 @@ export function SecaoCompraVaga({
   colecaoId,
   tipo,
   vaga,
+  escolhasDetalhadas,
   aoMudar,
 }: {
   colecaoId: string;
   tipo: TipoColecao;
   vaga: VagaGradeV2DTO;
+  /**
+   * As escolhas da vaga como `GET …/falta` as dá (edição, número, preço), quando
+   * quem abre já as tem (a aba). Sem elas, e com escolha na vaga, a seção as lê:
+   * a grade só diz o nome, e duas escolhas do mesmo Pokémon em edições
+   * diferentes precisam se distinguir antes de uma delas sair da lista.
+   */
+  escolhasDetalhadas?: readonly EscolhaDaVagaFaltaV2DTO[];
   aoMudar: () => void;
 }) {
   const t = useTranslations("v2Falta.opcoes");
@@ -68,11 +82,38 @@ export function SecaoCompraVaga({
   const [leitura, setLeitura] = useState<Leitura>({ estado: "carregando" });
   const [pedido, setPedido] = useState(0);
   const [ocupado, setOcupado] = useState(false);
+  /**
+   * Depois de uma escrita, os botões ficam travados até as opções serem
+   * relidas: antes disso a marca na tela é a de antes, e um segundo toque
+   * repetiria o pedido em vez de desfazê-lo.
+   */
+  const [aguardando, setAguardando] = useState(false);
+  const [falhaReler, setFalhaReler] = useState(false);
+  /** Se alguma leitura das opções já deu certo: uma falha depois disso mantém as que estão na tela. */
+  const jaLeu = useRef(false);
   const [mostrar, setMostrar] = useState(OPCOES_POR_VEZ);
   const reler = useCallback(() => setPedido((p) => p + 1), []);
+  const travado = ocupado || aguardando;
 
   // As escolhas da grade mudam quando outra parte da tela marca: relê junto.
   const assinaturaEscolhas = (vaga.escolhas ?? []).map((e) => e.id).join(",");
+
+  const [detalhadasLidas, setDetalhadasLidas] = useState<readonly EscolhaDaVagaFaltaV2DTO[] | null>(null);
+  const precisaLerEscolhas = escolhasDetalhadas === undefined && assinaturaEscolhas !== "";
+  useEffect(() => {
+    if (!precisaLerEscolhas) return;
+    const controle = new AbortController();
+    fetch(`/api/colecoes/${colecaoId}/falta`, { cache: "no-store", signal: controle.signal })
+      .then(async (r) => (r.ok ? ((await r.json()) as FaltaColecaoV2DTO) : null))
+      .then((f) => {
+        if (controle.signal.aborted || !f) return;
+        setDetalhadasLidas(f.vagas.find((v) => v.vagaId === vaga.id)?.escolhas ?? []);
+      })
+      // Sem a leitura, a lista fica só com os nomes (e o que as opções contam).
+      .catch(() => undefined);
+    return () => controle.abort();
+  }, [colecaoId, vaga.id, assinaturaEscolhas, precisaLerEscolhas]);
+  const detalhadas = escolhasDetalhadas ?? detalhadasLidas ?? [];
 
   useEffect(() => {
     const controle = new AbortController();
@@ -88,10 +129,16 @@ export function SecaoCompraVaga({
       .then((d) => {
         if (controle.signal.aborted) return;
         setLeitura(d === "sumiu" ? { estado: "sumiu" } : { estado: "ok", dados: d });
+        jaLeu.current = d !== "sumiu";
+        setAguardando(false);
+        setFalhaReler(false);
       })
       .catch(() => {
         if (controle.signal.aborted) return;
-        setLeitura((atual) => (atual.estado === "ok" ? atual : { estado: "erro" }));
+        // Com opções já na tela, elas ficam — e a seção diz que podem estar velhas.
+        if (jaLeu.current) setFalhaReler(true);
+        else setLeitura({ estado: "erro" });
+        setAguardando(false);
       });
     return () => controle.abort();
   }, [colecaoId, vaga.chave, assinaturaEscolhas, pedido]);
@@ -103,9 +150,13 @@ export function SecaoCompraVaga({
   async function enviar(corpos: CorpoSelecao[], sucesso?: string) {
     setOcupado(true);
     // Nunca `null`: sem `aindaVale`, a fila sempre envia.
-    const desfecho = (await enviarSelecao(colecaoId, corpos)) ?? ({ tipo: "ok" } as const);
+    const desfecho = await enviarSelecao(colecaoId, corpos);
     setOcupado(false);
-    if (desfecho.tipo === "ok") {
+    setAguardando(true);
+    if (desfecho === null) {
+      // Descartado na fila: uma recusa anterior mudou o estado; a releitura mostra o de agora.
+      avisar(tRecusa("descartada"), { tom: "erro" });
+    } else if (desfecho.tipo === "ok") {
       if (sucesso) avisar(sucesso, { tom: "sucesso" });
     } else {
       avisar(textoDoDesfecho(desfecho), { tom: "erro" });
@@ -139,7 +190,7 @@ export function SecaoCompraVaga({
   const visiveis = opcoes.slice(0, mostrar);
 
   return (
-    <section className={estilos.secaoCompra} aria-labelledby={`v2-compra-${vaga.id}`} aria-busy={ocupado || undefined}>
+    <section className={estilos.secaoCompra} aria-labelledby={`v2-compra-${vaga.id}`} aria-busy={travado || undefined}>
       <h3 id={`v2-compra-${vaga.id}`} className={estilos.tituloBloco}>
         {t("titulo")}
       </h3>
@@ -153,18 +204,19 @@ export function SecaoCompraVaga({
             {escolhas.map((e) => {
               // A grade só diz o nome; a opção da mesma carta, quando está entre
               // as lidas, diz a edição e o número — duas "Bulbasaur" se distinguem.
-              const o = e.cartaId === null ? undefined : opcoes.find((x) => x.cartaId === e.cartaId);
+              const d = detalhadas.find((x) => x.escolhaId === e.id) ?? (e.cartaId === null ? undefined : opcoes.find((x) => x.cartaId === e.cartaId));
+              const sobre = d ? [d.edicaoNome, d.total ? `${d.numero}/${d.total}` : d.numero, d.preco ? formatos.brl(d.preco.valor) : null] : [];
               return (
                 <li key={e.id} className={estilos.linhaEscolha}>
                   <span className={estilos.nomeEscolha}>
                     {e.nome}
-                    {o ? <span className={estilos.sutil}> · {[o.edicaoNome, o.total ? `${o.numero}/${o.total}` : o.numero].join(" · ")}</span> : null}
+                    {d ? <span className={estilos.sutil}> · {sobre.filter(Boolean).join(" · ")}</span> : null}
                   </span>
                   <Botao
                     pequeno
                     variante="fantasma"
                     icone={<X aria-hidden />}
-                    disabled={ocupado}
+                    disabled={travado}
                     aria-label={t("tirarDe", { nome: e.nome })}
                     onClick={() => void enviar([{ ids: [e.id], selecionada: false }])}
                   >
@@ -176,7 +228,7 @@ export function SecaoCompraVaga({
           </ul>
         )}
         {escolhas.length > 1 ? (
-          <Botao pequeno variante="secundario" disabled={ocupado} onClick={() => void limparVaga()}>
+          <Botao pequeno variante="secundario" disabled={travado} onClick={() => void limparVaga()}>
             {t("limpar")}
           </Botao>
         ) : null}
@@ -195,6 +247,14 @@ export function SecaoCompraVaga({
           </p>
         ) : null}
         {leitura.estado === "sumiu" ? <p className={estilos.sutil}>{t("sumiu")}</p> : null}
+        {falhaReler ? (
+          <p className={estilos.sutil} role="alert">
+            {t("erroReler")}{" "}
+            <Botao pequeno variante="fantasma" onClick={reler}>
+              {t("tentarDeNovo")}
+            </Botao>
+          </p>
+        ) : null}
         {dados && opcoes.length === 0 ? (
           <p className={estilos.sutil}>{ligaSemVarredura ? t("vazioLigaSemVarredura") : tipo === "pokedex" ? t("vazioPokedex") : t("vazioSet")}</p>
         ) : null}
@@ -222,7 +282,7 @@ export function SecaoCompraVaga({
                     icone={o.selecionada ? <Check aria-hidden /> : <Plus aria-hidden />}
                     aria-pressed={o.selecionada}
                     aria-label={o.selecionada ? t("desmarcarDe", { nome: o.nomeExibicao ?? o.nome }) : t("marcarDe", { nome: o.nomeExibicao ?? o.nome })}
-                    disabled={ocupado || (soSai && !o.selecionada)}
+                    disabled={travado || (soSai && !o.selecionada)}
                     onClick={() => alternar(o)}
                   >
                     {o.selecionada ? t("naListaCurto") : t("marcar")}

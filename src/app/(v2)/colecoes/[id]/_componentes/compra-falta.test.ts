@@ -16,6 +16,7 @@ import {
   podarPendencias,
   restaurarPendencias,
   resumoComPendencias,
+  semGestos,
   type VagaDoToque,
 } from "./compra-falta";
 
@@ -240,10 +241,25 @@ describe("pendências otimistas", () => {
     m = comPendencia(m, "v-1", p(2, false), false);
     m = comPendencia(m, "v-2", p(3, true), false);
     m = comPendencia(m, "v-3", p(4, true), false); // de outro gesto: fica
-    const r = restaurarPendencias(m, antes);
+    const r = restaurarPendencias(m, antes, 0);
     expect(r.get("v-1")).toEqual(antiga);
     expect(r.has("v-2")).toBe(false);
     expect(r.get("v-3")?.seq).toBe(4);
+  });
+
+  it("o cancelamento não ressuscita a pendência que uma leitura ou uma recusa já matou durante o gesto", () => {
+    let m = comPendencia(new Map(), "v-1", p(1, true), false);
+    const antes = new Map<string, Pendencia | undefined>([["v-1", m.get("v-1")]]);
+    m = comPendencia(m, "v-1", p(2, false), false);
+    // Uma leitura que refletia o gesto 1 chegou no meio do arrasto (ou uma recusa podou até ele).
+    expect(restaurarPendencias(m, antes, 1).has("v-1")).toBe(false);
+  });
+
+  it("os gestos descartados na fila saem da tela; os outros ficam", () => {
+    let m = comPendencia(new Map(), "v-1", p(1, true), false);
+    m = comPendencia(m, "v-2", p(2, true), false);
+    m = comPendencia(m, "v-3", p(3, true), false);
+    expect([...semGestos(m, [1, 3]).keys()]).toEqual(["v-2"]);
   });
 
   it("o resumo soma só o que muda em relação à leitura, em centavos", () => {

@@ -2603,7 +2603,8 @@
       "mostrarMais": "Show more ({total})",
       "escondidasTeto": "{total} above the cap",
       "escondidasSemEstoque": "{total} out of stock at Liga",
-      "abrirVaga": "Open the slot"
+      "abrirVaga": "Open the slot",
+      "erroReler": "Could not read the options again: what is on screen may be stale."
     },
     "preco": {
       "semPreco": "no price",
@@ -2646,7 +2647,8 @@
       "colecao": "This collection no longer exists.",
       "pedido": "The marking was refused: this slot's options changed. The list was read again.",
       "servidor": "Could not save the marking. The list was read again.",
-      "rede": "No connection to the server: the marking was not saved."
+      "rede": "No connection to the server: the marking was not saved.",
+      "descartada": "The marking was not sent: an earlier refusal changed the list. The options were read again."
     },
     "geral": {
       "voltar": "Collections",

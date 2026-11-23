@@ -73,8 +73,9 @@ import {
   podarPendencias,
   restaurarPendencias,
   resumoComPendencias,
+  semGestos,
 } from "./compra-falta";
-import { enviarSelecao } from "./envio-selecao";
+import { enviarSelecao, geracaoDosEnvios, useEnvios } from "./envio-selecao";
 import estilos from "./falta.module.css";
 import { ListaLiga, useCopiarAba } from "./lista-liga";
 import { textoDoCriterio } from "./preco-compra";
@@ -141,23 +142,30 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
     setPendenciasEstado(pendenciasRef.current);
   }, []);
 
-  /**
-   * Depois de uma recusa, o texto da lista é o de antes dela e não se copia
-   * até uma leitura pedida depois da recusa chegar (mesmo que essa falhe:
-   * continua velha).
-   */
-  const [listaVelha, setListaVelha] = useState(false);
-
   const seq = useRef(0);
-  /** Sobe a cada recusa: o que estava na fila foi pensado sobre um estado que não existe mais. */
-  const geracao = useRef(0);
   /** O maior gesto cujo pedido já terminou: uma leitura pedida agora o reflete. */
   const confirmadasAte = useRef(0);
+  /**
+   * Até onde as pendências já morreram: refletidas por uma leitura aplicada,
+   * ou derrubadas por uma recusa. Um arrasto cancelado não ressuscita nenhuma
+   * delas (`restaurarPendencias`).
+   */
+  const podadasAte = useRef(0);
+
+  // Os envios da coleção, da aba e do detalhe juntos (`envio-selecao.ts`).
+  const envios = useEnvios(colecao.id);
+  /**
+   * A geração dos envios quando saiu a última leitura que deu certo. Uma
+   * recusa (daqui ou do detalhe) sobe a geração: até uma leitura pedida depois
+   * dela chegar, o texto da lista é o de antes e não se copia — mesmo que essa
+   * leitura falhe.
+   */
+  const [geracaoLida, setGeracaoLida] = useState<number | null>(null);
 
   useEffect(() => {
     const controle = new AbortController();
     const reflete = confirmadasAte.current;
-    const geracaoNaLeitura = geracao.current;
+    const geracaoNaLeitura = geracaoDosEnvios(colecao.id);
     fetch(`/api/colecoes/${colecao.id}/falta`, { cache: "no-store", signal: controle.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error(String(r.status));
@@ -166,8 +174,9 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
       .then((dados) => {
         if (controle.signal.aborted) return;
         setLeitura({ estado: "ok", dados });
+        podadasAte.current = Math.max(podadasAte.current, reflete);
         definirPendencias((p) => podarPendencias(p, reflete));
-        if (geracaoNaLeitura === geracao.current) setListaVelha(false);
+        setGeracaoLida(geracaoNaLeitura);
       })
       .catch(() => {
         if (controle.signal.aborted) return;
@@ -180,6 +189,7 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
   const faltaPorId = useMemo(() => new Map((dados?.vagas ?? []).map((v) => [v.vagaId, v] as const)), [dados]);
   const vagaPorId = useMemo(() => new Map(vazias.map((v) => [v.id, v] as const)), [vazias]);
   const fonte = dados?.fonte ?? null;
+  const listaVelha = geracaoLida !== null && envios.geracao !== geracaoLida;
 
   /* ---------- Envio em fila ---------- */
 
@@ -208,19 +218,21 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
    */
   const enfileirar = useCallback(
     (corpos: CorpoSelecao[], seqs: number[], sucesso?: string) => {
-      const minhaGeracao = geracao.current;
       emVoo.current++;
-      void enviarSelecao(colecao.id, juntarCorpos(corpos), () => geracao.current === minhaGeracao).then((desfecho) => {
+      void enviarSelecao(colecao.id, juntarCorpos(corpos)).then((desfecho) => {
         emVoo.current--;
-        // Descartado: uma recusa anterior já limpou a tela e pediu a releitura.
-        if (desfecho === null) return;
+        if (desfecho === null) {
+          // Descartado: uma recusa (daqui ou do detalhe) entrou antes. As
+          // marcas deste gesto nunca saíram; quem recusou já pediu a releitura.
+          definirPendencias((p) => semGestos(p, seqs));
+          return;
+        }
         confirmadasAte.current = Math.max(confirmadasAte.current, ...seqs);
         if (desfecho.tipo === "recusada") {
           // Tudo o que a tela mostrava por conta própria cai: a releitura diz a
           // verdade, e a lista para colar fica velha até ela chegar.
-          geracao.current++;
+          podadasAte.current = seq.current;
           definirPendencias(() => new Map());
-          setListaVelha(true);
           avisar(textoDaRecusa(desfecho), { tom: "erro" });
           reler();
           return;
@@ -386,13 +398,19 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
     arrasto.current = null;
     if (a.estado.fase !== "pintando") return;
     engolirProximoClique();
-    definirPendencias((p) => restaurarPendencias(p, a.antes));
+    definirPendencias((p) => restaurarPendencias(p, a.antes, podadasAte.current));
   }
 
   function aoSoltar(e: PointerEvent<HTMLDivElement>) {
     const a = arrasto.current;
     if (!a || e.pointerId !== a.id) return;
     arrasto.current = null;
+    if (a.estado.fase === "rolagem") {
+      // Um gesto que passou do limiar na vertical não é toque: com o mouse,
+      // que não rola, o clique ainda viria e marcaria a carta.
+      engolirProximoClique();
+      return;
+    }
     if (a.estado.fase !== "pintando") return;
     engolirProximoClique();
     if (a.corpos.length === 0) return;
@@ -456,7 +474,7 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
   const vao = vaoDoTamanho(tamanho);
   const manter = [abertaId, parAtivo, opcoesDe].filter((x): x is string => x !== null);
   const resumo = resumoComPendencias(dados?.lista ?? null, pendencias);
-  const atualizando = resumo.pendentes > 0 || listaVelha || leitura.estado === "carregando";
+  const atualizando = resumo.pendentes > 0 || envios.emVoo > 0 || listaVelha || leitura.estado === "carregando";
   const lista = dados?.lista ?? null;
   const umaAba = lista && lista.abasLiga.length === 1 ? lista.abasLiga[0] : null;
   const estado = dados?.estado ?? null;
@@ -626,7 +644,15 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
           ) : undefined
         }
       >
-        {vagaDasOpcoes ? <SecaoCompraVaga colecaoId={colecao.id} tipo={colecao.tipo} vaga={vagaDasOpcoes} aoMudar={reler} /> : null}
+        {vagaDasOpcoes ? (
+          <SecaoCompraVaga
+            colecaoId={colecao.id}
+            tipo={colecao.tipo}
+            vaga={vagaDasOpcoes}
+            escolhasDetalhadas={faltaPorId.get(vagaDasOpcoes.id)?.escolhas}
+            aoMudar={reler}
+          />
+        ) : null}
       </Modal>
     </div>
   );

@@ -2595,7 +2595,8 @@
       "mostrarMais": "Mostrar mais ({total})",
       "escondidasTeto": "{total, plural, =1 {1 acima do teto} other {# acima do teto}}",
       "escondidasSemEstoque": "{total, plural, =1 {1 sem estoque na Liga} other {# sem estoque na Liga}}",
-      "abrirVaga": "Abrir a vaga"
+      "abrirVaga": "Abrir a vaga",
+      "erroReler": "Não deu para reler as opções: o que está na tela pode estar velho."
     },
     "preco": {
       "semPreco": "sem preço",
@@ -2638,7 +2639,8 @@
       "colecao": "Esta coleção não existe mais.",
       "pedido": "A marcação foi recusada: as opções desta vaga mudaram. A lista foi relida.",
       "servidor": "Não deu para salvar a marcação. A lista foi relida.",
-      "rede": "Sem conexão com o servidor: a marcação não foi salva."
+      "rede": "Sem conexão com o servidor: a marcação não foi salva.",
+      "descartada": "A marcação não saiu: uma recusa anterior mudou a lista. As opções foram relidas."
     },
     "geral": {
       "voltar": "Coleções",
