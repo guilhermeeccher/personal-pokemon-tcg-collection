@@ -467,6 +467,37 @@ rest are the technical foundations of the v2.
     virtual grid, each opening the detail, and a "Do it in v1" link to `/v1/colecoes/<id>` for the
     buy marking, the list and the buy options.
 
+### Prices screen (package 2d)
+
+30. **The screen reads the snapshot; the round is the server's.** `/inventario/precos`
+    (`src/app/(v2)/inventario/precos/`) reads `GET /api/inventario/precos` and starts a round with
+    `POST /api/inventario/precos`, the v1's requests, with no body. While a round is alive it rereads the
+    snapshot every `clamp(interval × 250 ms, 5 s, 60 s)` (`periodoDeAtualizacaoMs`, pure and tested): the
+    interval is the Liga's `ritmo.intervaloSegundos`, and the Cardmarket source, which has none, gets
+    the rule's 5 s floor, the v1's own value. Never a fixed number, and nothing on the screen can speed a
+    round up: it asks our database, never the Liga or TCGdex. Reads are one at a time (a new one cancels
+    the one in flight) and skip a hidden tab. Every refusal of the `POST` goes through `recusa.ts`
+    (`precosEmAndamento` also rereads, to show the live round); a round the Liga blocks arrives as the
+    round's `erro` and is shown as written, and the screen has nothing to do about it: **a block is never
+    worked around**.
+31. **Two sources, never mixed.** The table, the summary, the chart and the rounds list all come from the
+    active source: Liga in BRL as the site gives it, with no conversion; Cardmarket in euro and BRL with the
+    quote and its date, the column still headed "Trend" and, when the value is not the trend, a visible
+    tag with the explanation. The chart says in writing that the total also rises when cards enter the
+    sum (and, on Cardmarket, that it follows the exchange rate), and its reading panel shows the chosen
+    point (the last one until someone chooses) by pointer, touch or arrow keys, with the same points in
+    a table.
+32. **Explanations open by touch and keyboard** (`Explicacao`): a disclosure button with
+    `aria-expanded` and the text in line below it, never a `title` and never a floating balloon. The
+    v2 has no balloon primitive, and an inline disclosure needs no layer and does not leave a 320 px screen.
+33. **The table is a list, one tree.** A card per row on the phone and in a narrow column, grid columns when
+    the list itself is 880 px wide or more (`@container`, on the list only — never on an ancestor of
+    the detail or of a bar). A row's photo and the copy its card opens come from
+    `GET /api/inventario/precos/cartas` (`data-contract.md`), asked only for the page on screen; the card
+    opens `<DetalheCarta>` in copy mode on the representative copy (`copia-representante.ts`), and a card
+    with no copy any more (its price row is never deleted) says so and does not open. Deleting a round
+    asks through the confirmation dialog.
+
 ## 8. Other rules, checked for the transition
 
 | Rule | Section of `AGENTS.md` | Scope | Note |

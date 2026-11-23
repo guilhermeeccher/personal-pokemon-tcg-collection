@@ -247,6 +247,17 @@ export function idsParaPedir(cartaIds: readonly string[]): string[] {
   return [...new Set(cartaIds.filter((id) => id.length > 0 && id.length <= 100))].slice(0, MAXIMO_CARTAS_POR_PEDIDO);
 }
 
+/**
+ * Os `id=` de `GET /api/inventario/precos/cartas`, ou `null` quando o pedido
+ * não é uma página da tabela: nenhum id, mais do que o teto, um id enorme ou
+ * vazio. Recusar, e não cortar em silêncio, para um pedido errado aparecer.
+ */
+export function lerIdsPedidos(pedidos: readonly string[]): string[] | null {
+  if (pedidos.length === 0 || pedidos.length > MAXIMO_CARTAS_POR_PEDIDO) return null;
+  if (pedidos.some((id) => id.length === 0 || id.length > 100)) return null;
+  return idsParaPedir(pedidos);
+}
+
 // --- O gráfico --------------------------------------------------------------
 
 export const ALTURA_GRAFICO = 220;

@@ -111,6 +111,23 @@ copy of this card, and its row is shown), `vaga=<id>` (the slot that opened it).
 
 Allocate, swap, deallocate, edit a copy and mark a purchase keep their routes; the detail only reads.
 
+## `GET /api/inventario/precos/cartas?id=<carta_id>&id=<carta_id>…` — the prices table (package 2d)
+
+The price rows of `GET /api/inventario/precos` carry the card's name, set, number and rarity but no
+photo and no copy, and the v2 table shows the first and opens the card detail through the second. The
+screen asks this route for the cards of the page on screen only, and again only when those cards change
+or after a write of the detail. One to 100 `id`s (more, none, or one over 100 characters is 400
+`corpoInvalido`); it answers `{ cartas: [{ cartaId, copiaId, imagemUrl, imagemOrigem }] }` in the order
+asked, and a card that is not in the catalog is left out.
+
+- **`imagemUrl` and `imagemOrigem`** are the image ladder's (`imagemDaCarta`, `origemDaImagem`) for the
+  same catalog row the prices table shows for the card (pt, else en, else jp), so the borrowed-photo
+  badge still says where the image came from.
+- **`copiaId`** is the copy the detail opens in copy mode: the representative of the physical card
+  (`escolherRepresentantes`: a free copy first, then the oldest). `null` when the user has no copy of
+  the card any more: a price row is never deleted, so the table may list a card that is no longer owned.
+- Only `select`, two of them, limited to the ids asked. It does not touch the Liga, TCGdex or any round.
+
 ## The home read (package 2a) — server-side, no route
 
 The v2 home (`/`) reads on the server, in `src/app/(v2)/page.tsx`, through `lerInicioV2`

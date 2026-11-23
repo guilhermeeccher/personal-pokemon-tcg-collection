@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { comAcesso } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
 import { lerCartasDaTabelaPrecos } from "@/lib/db/cartas-da-tabela-precos";
-import { MAXIMO_CARTAS_POR_PEDIDO, idsParaPedir } from "@/lib/dominio/precos-v2";
+import { lerIdsPedidos } from "@/lib/dominio/precos-v2";
 import { corpoRecusa } from "@/lib/dominio/recusa";
 
 /**
@@ -17,11 +17,9 @@ import { corpoRecusa } from "@/lib/dominio/recusa";
  * a Liga nem com a TCGdex e não toca em nenhuma rodada.
  */
 export const GET = comAcesso(async function GET(req: Request) {
-  const pedidos = new URL(req.url).searchParams.getAll("id");
   // Mais ids do que o teto, ou um id enorme, não é uma página da tabela.
-  if (pedidos.length === 0 || pedidos.length > MAXIMO_CARTAS_POR_PEDIDO || pedidos.some((id) => id.length > 100)) {
-    return NextResponse.json(corpoRecusa("corpoInvalido"), { status: 400 });
-  }
-  const cartas = await lerCartasDaTabelaPrecos(db, idsParaPedir(pedidos));
+  const ids = lerIdsPedidos(new URL(req.url).searchParams.getAll("id"));
+  if (ids === null) return NextResponse.json(corpoRecusa("corpoInvalido"), { status: 400 });
+  const cartas = await lerCartasDaTabelaPrecos(db, ids);
   return NextResponse.json({ cartas });
 });

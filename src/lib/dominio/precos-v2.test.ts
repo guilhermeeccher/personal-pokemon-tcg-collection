@@ -11,6 +11,7 @@ import {
   fonteDaResposta,
   idsParaPedir,
   indiceEmFoco,
+  lerIdsPedidos,
   moverFoco,
   paginar,
   periodoDeAtualizacaoMs,
@@ -133,6 +134,20 @@ describe("idsParaPedir", () => {
   it("tira repetidos e vazios, e respeita o teto", () => {
     expect(idsParaPedir(["a", "b", "a", ""])).toEqual(["a", "b"]);
     expect(idsParaPedir(Array.from({ length: 300 }, (_, i) => `c${i}`))).toHaveLength(100);
+  });
+});
+
+describe("lerIdsPedidos", () => {
+  it("aceita uma página, sem repetição", () => {
+    expect(lerIdsPedidos(["a", "b", "a"])).toEqual(["a", "b"]);
+    expect(lerIdsPedidos(Array.from({ length: 100 }, (_, i) => `c${i}`))).toHaveLength(100);
+  });
+
+  it("recusa nenhum id, mais do que o teto, id vazio e id enorme", () => {
+    expect(lerIdsPedidos([])).toBeNull();
+    expect(lerIdsPedidos(Array.from({ length: 101 }, (_, i) => `c${i}`))).toBeNull();
+    expect(lerIdsPedidos(["a", ""])).toBeNull();
+    expect(lerIdsPedidos(["x".repeat(101)])).toBeNull();
   });
 });
 

@@ -122,6 +122,14 @@
   background: var(--v2-iris-linear);
   transition: width 0.4s var(--v2-curva-suave);
 }
+@media (prefers-reduced-motion: reduce) {
+  .progressoBarra {
+    transition: none;
+  }
+}
+:global(html[data-v2-efeitos="leve"]) .progressoBarra {
+  transition: none;
+}
 .erroRodada {
   margin: 0;
   font-size: 13px;
@@ -177,7 +185,7 @@
 .explicacaoBotao::after {
   content: "";
   position: absolute;
-  inset: -10px -6px;
+  inset: -12px -6px;
 }
 .explicacaoBotao[data-tom="aviso"] {
   color: var(--v2-falta);
@@ -363,9 +371,9 @@
   .cabecalhoTabela,
   .linha {
     display: grid;
-    grid-template-columns: 56px minmax(0, 2fr) minmax(0, 1.5fr) 52px minmax(0, 1.2fr) minmax(0, 3.4fr) 92px;
+    grid-template-columns: 56px minmax(0, 2fr) minmax(0, 1.5fr) 52px minmax(0, 1.1fr) minmax(0, 3.9fr) 92px;
     gap: 14px;
-    align-items: center;
+    align-items: start;
   }
   .cabecalhoTabela {
     padding: 0 14px 8px;
@@ -406,8 +414,18 @@
     grid-column: 1 / -1;
     text-align: left;
   }
+  /* Some da vista (o cabeçalho da coluna o diz), mas o leitor de tela continua
+     lendo o rótulo na frente de cada valor. */
   .rotuloCampo {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .linha {
+    position: relative;
   }
   .cabecalhoTabela .precosCab {
     display: grid;
@@ -437,7 +455,9 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  box-sizing: border-box;
   padding: 16px;
+  border-radius: var(--v2-raio-painel);
 }
 .graficoTexto {
   display: flex;
@@ -648,7 +668,15 @@
   .rodadaAcao {
     grid-column: auto;
   }
+  .rodada {
+    position: relative;
+  }
   .rodada .rotuloCampo {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
