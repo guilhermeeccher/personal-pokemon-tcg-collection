@@ -23,6 +23,7 @@ import {
 import {
   cartaTemPrecoDeInventario,
   escolherFichaDoDetalhe,
+  raridadeCanonicaDaFicha,
   PONTOS_SERIE_CURTA,
   precoDoDetalhe,
   serieCurta,
@@ -282,6 +283,8 @@ async function montar(
       setQtdOficial: ficha.setQtdOficial,
       localId: ficha.localId,
       raridade: ficha.raridade,
+      /** Para rotular: a da ficha en do mesmo `carta_id`, senão a gravada (`raridadeCanonicaDaFicha`). */
+      raridadeCanonica: raridadeCanonicaDaFicha(ficha, fichas),
       tipos: ficha.tipos,
       ilustrador: ficha.ilustrador,
       dexIds: ficha.dexIds,

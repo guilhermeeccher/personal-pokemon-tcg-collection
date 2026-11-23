@@ -113,7 +113,7 @@ export function Palco({
 
 /* ---------- Ficha ---------- */
 
-/** Tipos, raridade e ilustrador da ficha, como texto (nada só no hover). */
+/** Tipos, raridade (a canônica) e ilustrador da ficha, como texto (nada só no hover). */
 export function Ficha({ carta }: { carta: DetalheCartaV2DTO["carta"] }) {
   const t = useTranslations("v2Detalhe");
   const tTipos = useTranslations("tiposPokemon");
@@ -126,7 +126,9 @@ export function Ficha({ carta }: { carta: DetalheCartaV2DTO["carta"] }) {
           {rotuloTipo(tTipos, tipo)}
         </li>
       ))}
-      <li className={estilos.chip}>{rotuloRaridade(tRaridades, tComp("semRaridade"), carta.raridade)}</li>
+      {/* Pela canônica (a da ficha en): `raridadesCarta` é chaveado pela grafia
+          en, e uma ficha pt com a interface em inglês sairia em português. */}
+      <li className={estilos.chip}>{rotuloRaridade(tRaridades, tComp("semRaridade"), carta.raridadeCanonica)}</li>
       <li className={estilos.chip}>
         {carta.ilustrador ? t("ilustracaoDe", { nome: carta.ilustrador }) : t("ilustradorDesconhecido")}
       </li>

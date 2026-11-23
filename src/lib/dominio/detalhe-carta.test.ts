@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   cartaTemPrecoDeInventario,
   escolherFichaDoDetalhe,
+  raridadeCanonicaDaFicha,
   PONTOS_SERIE_CURTA,
   precoDoDetalhe,
   serieCurta,
@@ -136,5 +137,31 @@ describe("serieCurta", () => {
     expect(s?.pontos[0].valor).toBe(5);
     expect(s?.pontos.at(-1)?.valor).toBe(PONTOS_SERIE_CURTA + 4);
     expect(serieCurta("liga", true, [{ em: new Date(0), encontrada: false, valor: null }])?.pontos).toEqual([]);
+  });
+});
+
+describe("raridadeCanonicaDaFicha", () => {
+  /* Fichas inventadas de uma carta só. */
+  const pt = { idioma: "pt" as const, raridade: "Rara Dupla" };
+  const en = { idioma: "en" as const, raridade: "Double rare" };
+  const jp = { idioma: "jp" as const, raridade: "RR" };
+
+  it("a ficha pt rotula pela raridade da ficha en do mesmo carta_id", () => {
+    expect(raridadeCanonicaDaFicha(pt, [pt, en])).toBe("Double rare");
+  });
+  it("a ficha en é a própria canônica", () => {
+    expect(raridadeCanonicaDaFicha(en, [pt, en])).toBe("Double rare");
+  });
+  it("sem ficha en, ou com a en sem raridade, fica a gravada", () => {
+    expect(raridadeCanonicaDaFicha(pt, [pt])).toBe("Rara Dupla");
+    expect(raridadeCanonicaDaFicha(pt, [pt, { idioma: "en" as const, raridade: null }])).toBe("Rara Dupla");
+    expect(raridadeCanonicaDaFicha(pt, [pt, { idioma: "en" as const, raridade: "  " }])).toBe("Rara Dupla");
+  });
+  it("sem raridade em lugar nenhum, nula", () => {
+    const semPt = { idioma: "pt" as const, raridade: null };
+    expect(raridadeCanonicaDaFicha(semPt, [semPt])).toBeNull();
+  });
+  it("a ficha jp nunca toma a raridade da en (neo1 a neo4 dividem o id e são outras cartas)", () => {
+    expect(raridadeCanonicaDaFicha(jp, [jp, en])).toBe("RR");
   });
 });

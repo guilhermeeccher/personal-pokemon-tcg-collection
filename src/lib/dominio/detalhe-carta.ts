@@ -42,6 +42,7 @@ import type { Idioma } from "./enums";
 import type { PrecoReferencia } from "./falta-colecao";
 import type { FontePreco } from "./fonte-preco";
 import { ehCartaEspecial } from "./precos-cartas-especiais";
+import { raridadeCanonica } from "./tema-colecao";
 import type { CriterioValorCardmarket } from "./preco-cardmarket";
 
 /** Quantos pontos a série curta leva, no máximo: os mais recentes. */
@@ -66,6 +67,28 @@ export function escolherFichaDoDetalhe<T extends { idioma: Idioma }>(
     if (f) return f;
   }
   return undefined;
+}
+
+/**
+ * A raridade canônica da ficha mostrada, para a tela rotular: a regra das
+ * sugestões de coleção (`raridadeCanonica`, seção "Collection suggestions"
+ * do AGENTS.md) — a raridade da linha **en** do mesmo `carta_id`, senão a
+ * gravada. As fichas pt e en de uma carta escrevem a raridade em dois
+ * idiomas ("Rara Dupla", "Double rare"), e o rótulo (`raridadesCarta`) é
+ * chaveado pela grafia en: sem isto, uma ficha pt com a interface em inglês
+ * mostraria a raridade em português.
+ *
+ * Só para ficha ocidental: a japonesa tem `set_id` próprio, e os quatro sets
+ * que dividem o id com o inglês (`neo1` a `neo4`) são outras cartas — a linha
+ * en não diz nada sobre ela, e a ficha jp fica com a raridade gravada.
+ */
+export function raridadeCanonicaDaFicha<T extends { idioma: Idioma; raridade: string | null }>(
+  ficha: T,
+  fichas: readonly T[],
+): string | null {
+  if (ficha.idioma === "jp") return ficha.raridade;
+  const en = fichas.find((f) => f.idioma === "en");
+  return raridadeCanonica({ raridade: ficha.raridade, raridadeEn: en?.raridade ?? null });
 }
 
 /**

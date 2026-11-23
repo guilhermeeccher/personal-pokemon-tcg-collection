@@ -915,7 +915,10 @@ export interface DetalheCartaV2DTO {
     setSigla: string | null;
     setQtdOficial: number | null;
     localId: string;
+    /** A raridade gravada na ficha mostrada, como veio do upstream. */
     raridade: string | null;
+    /** A canônica, para rotular por `raridadesCarta`: a da ficha en do mesmo `carta_id`, senão a gravada (ficha jp: a gravada). */
+    raridadeCanonica: string | null;
     tipos: string[];
     ilustrador: string | null;
     dexIds: number[];
