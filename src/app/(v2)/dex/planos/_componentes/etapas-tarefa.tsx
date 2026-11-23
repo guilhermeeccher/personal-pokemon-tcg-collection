@@ -147,21 +147,21 @@ export function EtapasTarefa({
     });
     if (!ok) return;
     // A etapa sai da lista com o botão que tinha o foco.
-    focar.current = [ORGANIZAR, ADICIONAR];
-    if (!(await enviar(`/api/dex/etapas/${e.id}`, "DELETE", undefined, tarefa.id))) focar.current = null;
+    if (await enviar(`/api/dex/etapas/${e.id}`, "DELETE", undefined, tarefa.id)) focar.current = [ORGANIZAR, ADICIONAR];
   }
 
   async function mover(e: EtapaDexDTO, direcao: -1 | 1) {
-    // Marcado antes de enviar: a lista nova pode chegar antes desta promessa voltar.
-    // Na ponta, o botão daquela direção desliga: o foco vai para o outro.
-    focar.current = [naEtapa(e.id, `[data-mover="${direcao < 0 ? "subir" : "descer"}"]`), naEtapa(e.id, "[data-mover]")];
     const ok = await enviar(
       `/api/dex/tarefas/${tarefa.id}/etapas/ordem`,
       "PUT",
       { ids: moverNaOrdem(ids, e.id, direcao) },
       tarefa.id,
     );
-    if (!ok) focar.current = null;
+    // Marcado só quando o pedido foi aceito: um segundo clique recusado por já
+    // haver um em voo não apaga o foco do primeiro. A lista nova chega depois —
+    // a tela fica ocupada até ela, e o foco só se aplica com a tela livre.
+    // Na ponta, o botão daquela direção desliga: o foco vai para o outro.
+    if (ok) focar.current = [naEtapa(e.id, `[data-mover="${direcao < 0 ? "subir" : "descer"}"]`), naEtapa(e.id, "[data-mover]")];
   }
 
   const formulario = (f: Formulario) => (
