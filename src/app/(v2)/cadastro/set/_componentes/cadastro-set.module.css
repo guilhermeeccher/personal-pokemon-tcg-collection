@@ -385,6 +385,16 @@
   font-size: 14px;
   font-weight: 600;
 }
+/* Abaixo de 360 px o texto e o botão não cabem lado a lado: o botão
+   ocupa a linha de baixo inteira, em vez de ficar só à esquerda. */
+@media (max-width: 359.98px) {
+  .barraTexto {
+    flex-basis: 100%;
+  }
+  .barra > button {
+    flex: 1;
+  }
+}
 .barraTexto[data-vazio] {
   font-weight: 400;
   color: var(--v2-tinta-3);
@@ -415,7 +425,8 @@
   font-size: 13.5px;
   font-weight: 600;
 }
-.resultadoAcoes {
+.resultadoTitulo {
+  display: block;
   margin-top: 8px;
 }
 
@@ -427,8 +438,10 @@
   align-items: center;
   gap: 10px;
 }
+/* A carta inteira à vista na folha do celular: a largura também sai da
+   altura da tela (cabeçalho e respiro da folha somam ~230 px). */
 .zoomCarta {
-  width: min(100%, 340px);
+  width: min(100%, 340px, calc((100dvh - 230px) * 600 / 825));
 }
 .zoomInfo {
   margin: 0;

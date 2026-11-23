@@ -416,7 +416,7 @@ export function CadastroSet() {
           </div>
 
           <div className={`${estilos.barra} v2-painel-flutuante`} role="region" aria-label={t("barra.rotulo")}>
-            <span className={`${estilos.barraTexto} v2-num`} data-vazio={totais.cartas === 0 || undefined} aria-live="polite">
+            <span className={estilos.barraTexto} data-vazio={totais.cartas === 0 || undefined} aria-live="polite">
               {totais.cartas === 0 ? t("barra.nada") : t("barra.totais", totais)}
             </span>
             <Botao ref={botaoGravar} variante="primario" carregando={enviando} disabled={totais.cartas === 0} onClick={() => void gravar()}>
@@ -527,7 +527,7 @@ function PainelResultado({
         {resultado.texto} {t("tudoOuNada")}
         {resultado.recusadas.length > 0 ? (
           <>
-            <b className={estilos.resultadoAcoes}>{t("linhasRecusadas")}</b>
+            <b className={estilos.resultadoTitulo}>{t("linhasRecusadas")}</b>
             <ul className={estilos.resultadoLista}>{resultado.recusadas.map(linha)}</ul>
           </>
         ) : null}

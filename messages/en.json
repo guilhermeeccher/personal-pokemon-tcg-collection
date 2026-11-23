@@ -2587,7 +2587,7 @@
     "resultado": {
       "gravado": "Batch saved",
       "textoGravado": "{inseridas, plural, one {# copy saved} other {# copies saved}} from {set}.",
-      "textoComFusao": "{inseridas, plural, one {# copy saved} other {# copies saved}} and {fundidas, plural, one {# added to an identical free copy} other {# added to identical free copies}}, from {set}.",
+      "textoComFusao": "{inseridas, plural, =0 {No new copy} one {# copy saved} other {# copies saved}} and {fundidas, plural, one {# added to an identical free copy} other {# added to identical free copies}}, from {set}.",
       "verLinhas": "See {total, plural, one {the saved line} other {the # saved lines}}",
       "recusado": "Batch not saved",
       "tudoOuNada": "Nothing was saved: the batch goes in whole or not at all. Fix the cards marked as refused and save again.",

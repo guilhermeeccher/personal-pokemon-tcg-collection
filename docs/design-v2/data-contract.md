@@ -136,3 +136,25 @@ The v2 home (`/`) reads on the server, in `src/app/(v2)/page.tsx`, through `lerI
   split off a lot keeps the original's `criado_em` in both split paths (allocation to a slot, which
   the swap also uses, and addition to a custom collection, which the theme batch also uses:
   `parteSeparadaDoLote`, `divisao-lote.ts`). No old date is repaired by inference.
+
+## `GET /api/sets/:setId/cartas?catalogo=jp` — the Japanese grid of a set in both catalogs (package 3a)
+
+The entry-by-set grid (the v1's route, unchanged without the parameter) gained one optional query
+parameter, added by package 3a on 2026-11-23. It exists for `neo1` to `neo4`: they share the
+`set_id` with English and are other cards (`neo1` has 111 cards `1..111` in en and 96 `001..096` in
+jp, no number in common). Without the parameter the grid's preferred language comes from the
+pt > en > jp priority, so those four always gave the English grid, even to someone who picked the set
+under the "Japanese" filter to enter the Japanese card.
+
+| Request | Answer |
+|---|---|
+| no `catalogo` | exactly the answer from before the parameter (the v1 never sends it) |
+| `catalogo=jp`, the set has active Japanese rows | the grid from the Japanese rows **only** — never a Western row to fill in; `idiomaCatalogo: "jp"` on the grid and on every card, `cartasEmOutroIdioma: 0` |
+| `catalogo=jp`, the set has no Japanese row | 404, as for a set that does not exist — never the Western grid in silence |
+| any other value (empty, `JP`, `pt`, repeated) | 400 `{ erro }`, a guard in Portuguese like the route's other ones: a misspelled parameter must not fall back to the Western grid |
+
+The decision is pure and tested (`lerCatalogoPedido`, `idiomaDaGradeDoSet`,
+`lib/dominio/catalogo-grade-set.ts`); the SQL only fetches. The v2 screen sends it whenever the set
+was chosen from the Japanese catalog (`catalogoDoSetEscolhido`, the rule the new-collection screen
+uses), Japanese-only sets included, and the batch `POST /api/sets/:setId/copias` carries each card's
+own `idiomaCatalogo` (`jp` here), which the route already checks card by card.

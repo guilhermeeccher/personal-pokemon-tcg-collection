@@ -2579,7 +2579,7 @@
     "resultado": {
       "gravado": "Lote gravado",
       "textoGravado": "{inseridas, plural, one {# cópia gravada} other {# cópias gravadas}} de {set}.",
-      "textoComFusao": "{inseridas, plural, one {# cópia gravada} other {# cópias gravadas}} e {fundidas, plural, one {# somada a uma cópia livre igual} other {# somadas a cópias livres iguais}}, de {set}.",
+      "textoComFusao": "{inseridas, plural, =0 {Nenhuma cópia nova} one {# cópia gravada} other {# cópias gravadas}} e {fundidas, plural, one {# somada a uma cópia livre igual} other {# somadas a cópias livres iguais}}, de {set}.",
       "verLinhas": "Ver {total, plural, one {a linha gravada} other {as # linhas gravadas}}",
       "recusado": "Lote não gravado",
       "tudoOuNada": "Nada foi gravado: o lote entra inteiro ou não entra. Corrija as cartas marcadas como recusadas e grave de novo.",
