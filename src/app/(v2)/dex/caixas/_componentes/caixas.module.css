@@ -1,0 +1,310 @@
+/*
+ * As Caixas do HOME na v2. Painéis sem desfoque (regra 5b), sem `transform`,
+ * `will-change` nem `filter` animado na vaga (regra 5a): o cinza do sprite em
+ * falta é estático. As medidas da caixa (`--cx-*`) são as de
+ * `geometria-caixa.ts`: a grade virtual põe as caixas pela altura calculada,
+ * então mudar um lado sem o outro corta a última fileira.
+ */
+
+.pagina {
+  --cx-respiro: 8px;
+  --cx-vao: 4px;
+  --cx-cabecalho: 44px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------- Cabeçalho */
+
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 24px;
+}
+.sobretitulo {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--v2-tinta-3);
+}
+.titulo {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.subtitulo {
+  margin: 8px 0 0;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+}
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------------------------------------------------------- Controles */
+
+.controles {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.linhaControles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+.contagem,
+.nota {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+}
+.nota {
+  max-width: 72ch;
+}
+
+/* O ajuste das caixas reservadas, recolhido: só o resumo (nome e valor) ocupa lugar. */
+.ajustes {
+  border-radius: var(--v2-raio-painel);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+.resumo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: 13.5px;
+  color: var(--v2-tinta-2);
+  cursor: pointer;
+}
+.resumo b {
+  color: var(--v2-tinta);
+}
+.ajustesCorpo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 16px 16px;
+}
+
+/* "Caixas antes da Nacional 1": campo e botão lado a lado; o botão alinha com o campo, não com o rótulo. */
+.reservadas {
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) auto;
+  justify-content: start;
+  align-items: start;
+  gap: 8px;
+  max-width: 100%;
+}
+.reservadas > button {
+  margin-top: 22px;
+}
+.campoNumero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pílulas de "Ir para": 44 px de altura e 8 px entre elas. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  cursor: pointer;
+  transition: background 160ms var(--v2-curva-suave);
+}
+@media (hover: hover) {
+  .chip:hover {
+    background: var(--v2-superficie-3);
+  }
+}
+
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--v2-tinta-2);
+}
+.legendaItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.amostra {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+}
+.amostra[data-estado="no_home"] {
+  background: rgb(111 240 180 / 0.12);
+  box-shadow: inset 0 0 0 1px rgb(111 240 180 / 0.55);
+}
+.amostra[data-estado="no_jogo"] {
+  box-shadow: inset 0 0 0 1px rgb(255 183 102 / 0.6);
+}
+.amostraBuraco {
+  background: none;
+  box-shadow: none;
+  border: 1px dashed rgb(255 255 255 / 0.4);
+}
+
+/* -------------------------------------------------------------- Caixa */
+
+/*
+ * A caixa ocupa a célula da grade virtual inteira (largura e altura que a
+ * grade dá). O conteúdo soma exatamente a altura calculada: cabeçalho de
+ * 44 px, respiro de 8 px em volta (acima e abaixo contam na altura), cinco
+ * fileiras de vagas quadradas e quatro vãos de 4 px.
+ */
+.caixa {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: var(--cx-respiro);
+  border-radius: var(--v2-raio-painel);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09);
+  overflow: hidden;
+}
+.cabecalhoCaixa {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: var(--cx-cabecalho);
+  padding: 0 4px;
+}
+.tituloCaixa {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.nomeCaixa {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+  color: var(--v2-tinta-2);
+}
+.faixa {
+  flex: none;
+  font-size: 12px;
+  color: var(--v2-tinta-3);
+}
+
+.posicoes {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--cx-vao);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.posicoes > li {
+  aspect-ratio: 1;
+  min-width: 0;
+}
+
+.vaga {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  color: inherit;
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07);
+  cursor: pointer;
+  overflow: hidden;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.vaga[data-estado="no_home"] {
+  background: rgb(111 240 180 / 0.07);
+  box-shadow: inset 0 0 0 1px rgb(111 240 180 / 0.5);
+}
+.vaga[data-estado="no_jogo"] {
+  box-shadow: inset 0 0 0 1px rgb(255 183 102 / 0.5);
+}
+.buraco {
+  background: none;
+  box-shadow: none;
+  border: 1px dashed rgb(255 255 255 / 0.28);
+}
+@media (hover: hover) {
+  .vaga:hover {
+    background: var(--v2-superficie-3);
+  }
+}
+.spriteVaga {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.numeroVaga {
+  position: absolute;
+  inset: auto 2px 1px;
+  font-size: 9px;
+  line-height: 11px;
+  text-align: center;
+  color: var(--v2-tinta-2);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+  pointer-events: none;
+}
+.vazia {
+  border-radius: 10px;
+  border: 1px dashed rgb(255 255 255 / 0.1);
+}

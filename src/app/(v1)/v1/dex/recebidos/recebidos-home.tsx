@@ -27,7 +27,7 @@ import type { SecoesContadas } from "@/lib/dominio/dex-secoes";
 import type { FormaDexDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 import { urlSpriteDex } from "@/lib/imagens";
 
-import { useNomeCaixa } from "../_componentes/use-nome-caixa";
+import { useNomeCaixa } from "@/app/_comum/dex/use-nome-caixa";
 import { useRotuloForma } from "@/app/_comum/dex/use-rotulo-forma";
 
 function Sprite({ forma, shiny, nome, className = "" }: { forma: FormaDexDTO; shiny: boolean; nome: string; className?: string }) {

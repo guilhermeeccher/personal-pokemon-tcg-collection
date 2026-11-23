@@ -231,7 +231,7 @@ mutations and confirmations are kept on all of them.
 |---|---|---|
 | **5-0 Dex bridges** (done) | replaces the single Dex bridge with one bridge per screen, keeping the direct 404 with the module off; names the owner of the Dex shared components (below) | step 6 |
 | **5a Overview and Pokédex** (done) | `/dex`, `/dex/pokedex`, and the four shared Dex pieces below | after 5-0 |
-| **5b Boxes and received** | `/dex/caixas`, `/dex/recebidos` | after 5-0 |
+| **5b Boxes and received** (done) | `/dex/caixas`, `/dex/recebidos`, and the box name hook | after 5-0 |
 | **5c Register** | `/dex/cadastrar` (virtualized) | after 5-0 |
 | **5d New registration** | `/dex/novo-cadastro` (two steps), with its own definition of done | after 5-0 |
 | **5e Inventory, games, trophies and plans** | the four screens; the split is reassessed by size, and plans get their own definition of done | after 5-0 |
@@ -255,7 +255,9 @@ that needs it builds it, and the others take it from the branch of the owner.
 
 Package 5a delivered its four pieces (2026-11-23); their interfaces are in `rules.md`, "Dex shared
 code", D. The v1 now takes the form label from `src/app/_comum/dex/` and its move-to-HOME request from
-`_comum/dex/use-mover-registros.ts`, keeping its own sprite, card and modal.
+`_comum/dex/use-mover-registros.ts`, keeping its own sprite, card and modal. Package 5b delivered the
+box name hook (2026-11-23), E; the v1's Boxes, Received and New registration take it from
+`src/app/_comum/dex/` too.
 
 **Merge order: 5a, then 5b, then 5c, 5d and 5e in any order.** A package that needs a piece whose
 owner has not merged asks (`ask`) instead of writing its own copy; two pieces doing one job is what

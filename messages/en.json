@@ -3113,6 +3113,40 @@
       "erroCarregarTexto": "Try again in a moment."
     }
   },
+  "v2DexCaixas": {
+    "descricao": "The HOME boxes the way the app lays them out, with each slot's position. Tap a slot to see the Pokémon, its box and add it.",
+    "visaoGeral": "Overview",
+    "pokedex": "Pokédex",
+    "recebidos": "Received",
+    "grade": "HOME boxes",
+    "caixa": "Box {numero}, {nome}",
+    "legenda": "Slot legend",
+    "legendaBuraco": "Dashed",
+    "legendaBuracoTexto": "the position exists in HOME, but nothing is kept there on this track",
+    "reservadas": {
+      "dica": "From 0 to 20. It changes only the box numbers, never a position.",
+      "aplicar": "Apply",
+      "invalido": "Use a whole number from 0 to 20.",
+      "salvas": "{quantidade, plural, =0 {No boxes reserved} one {# box reserved} other {# boxes reserved}}",
+      "erro": "Could not save. Try again."
+    }
+  },
+  "v2DexRecebidos": {
+    "descricao": "What arrived in HOME and was not put away yet, by destination box. The positions to fill are lit.",
+    "visaoGeral": "Overview",
+    "caixas": "Boxes",
+    "legenda": "Position legend",
+    "aGuardarLegenda": "To put away",
+    "jaGuardadaLegenda": "Already put away",
+    "listaCaixa": "Box {numero}: what to put away",
+    "guardeiCaixa": "Put away the {quantidade} of box {numero}",
+    "guardeiSemLugar": "Put away the {quantidade} with no place",
+    "guardados": "{quantidade, plural, one {# Pokémon put away} other {# Pokémon put away}}",
+    "nadaMudou": "Nothing changed: these were already put away. The list was read again.",
+    "confirmarTitulo": "Put away the whole round?",
+    "confirmarTexto": "This takes all {quantidade} Pokémon of this round off the list, the ones with no place in the boxes included. It cannot be undone from here.",
+    "mostrarMais": "Show more ({restantes} left)"
+  },
   "v2Dex": {
     "erroCarregar": "Could not open the Living Dex",
     "erroCarregarTexto": "Reading the database failed. Nothing was changed; try again in a moment.",
