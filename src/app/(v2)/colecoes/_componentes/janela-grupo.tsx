@@ -26,9 +26,14 @@ import { pedirApi } from "./pedir-api";
  *   lista não carrega, o seletor fica desligado e a série, como está.
  * - **Editar manda só o que mudou** (`pedidoDoGrupo`), e "Salvar" só liga
  *   com uma mudança válida.
- * - **O grupo da janela é o da última lista lida**: uma série trocada em
- *   outra aba chega aqui pela releitura da página. Um 404 (o grupo foi
+ * - **O grupo da janela é o da última lista lida**, e um campo que o usuário
+ *   não tocou mostra o valor dela: uma série trocada em outra aba chega aqui
+ *   pela releitura da página, e o próximo "Salvar" não a desfaz (o campo
+ *   intocado é igual ao original e não vai no corpo). Um 404 (o grupo foi
  *   excluído em outra aba) fecha a janela pela página, que diz por quê.
+ * - **`relendo`**: depois de uma recusa ou de uma resposta perdida, campos e
+ *   botão ficam desligados até a lista nova chegar — o próximo envio parte do
+ *   que o servidor tem (um grupo novo cuja resposta se perdeu aparece nela).
  * - O erro fica dentro da janela, perto do botão que o causou. Toda escrita
  *   relê a lista, dê certo ou não.
  */
@@ -38,9 +43,12 @@ export function JanelaGrupo({
   aoSalvo,
   aoSumir,
   aoReler,
+  relendo,
 }: {
   /** `null` = grupo novo. */
   grupo: GrupoListaV2DTO | null;
+  /** A página está relendo a lista: nada se envia até ela chegar. */
+  relendo: boolean;
   aoFechar: () => void;
   aoSalvo: (nome: string) => void;
   /** O grupo não existe mais (404): a página fecha a janela com aviso. */
@@ -50,8 +58,11 @@ export function JanelaGrupo({
 }) {
   const t = useTranslations("v2Organizar.grupo");
   const tRecusas = useTranslations("recusas");
-  const [nome, setNome] = useState(grupo?.nome ?? "");
-  const [serieId, setSerieId] = useState(grupo?.serieId ?? "");
+  // `null` = campo intocado, que segue o grupo da última lista lida.
+  const [nomeEditado, setNomeEditado] = useState<string | null>(null);
+  const [serieEditada, setSerieEditada] = useState<string | null>(null);
+  const nome = nomeEditado ?? grupo?.nome ?? "";
+  const serieId = serieEditada ?? grupo?.serieId ?? "";
   const [series, setSeries] = useState<SeriesParaGrupoDTO["series"] | null>(null);
   const [erroSeries, setErroSeries] = useState(false);
   const [pedidoSeries, setPedidoSeries] = useState(0);
@@ -84,7 +95,7 @@ export function JanelaGrupo({
 
   async function salvar(e: React.FormEvent) {
     e.preventDefault();
-    if (!pedido || enviando) return;
+    if (!pedido || enviando || relendo) return;
     setErro(null);
     setEnviando(true);
     const r = grupo
@@ -116,7 +127,7 @@ export function JanelaGrupo({
           <Botao variante="fantasma" onClick={aoFechar} disabled={enviando}>
             {t("cancelar")}
           </Botao>
-          <Botao variante="primario" type="submit" form="v2-form-grupo" carregando={enviando} disabled={!pedido}>
+          <Botao variante="primario" type="submit" form="v2-form-grupo" carregando={enviando} disabled={!pedido || relendo}>
             {grupo ? t("salvar") : t("criar")}
           </Botao>
         </>
@@ -129,15 +140,15 @@ export function JanelaGrupo({
           required
           maxLength={TAMANHO_MAXIMO_NOME_GRUPO}
           autoComplete="off"
-          disabled={enviando}
-          onChange={(e) => setNome(e.target.value)}
+          disabled={enviando || relendo}
+          onChange={(e) => setNomeEditado(e.target.value)}
         />
         <Selecao
           rotulo={t("campoSerie")}
           value={serieId}
-          disabled={series === null || enviando}
+          disabled={series === null || enviando || relendo}
           dica={series === null && !erroSeries ? t("carregandoSeries") : undefined}
-          onChange={(e) => setSerieId(e.target.value)}
+          onChange={(e) => setSerieEditada(e.target.value)}
         >
           <option value="">{t("semSerie")}</option>
           {serieForaDaLista && grupo?.serieId && <option value={grupo.serieId}>{grupo.serieRotulo ?? grupo.serieId}</option>}

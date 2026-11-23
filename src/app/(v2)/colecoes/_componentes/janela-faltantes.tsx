@@ -48,7 +48,8 @@ export function JanelaFaltantes({
   /** Criadas: os `setId` dos sets (a sugestão deles sai já) e quantas. */
   aoCriadas: (setIds: string[], total: number) => void;
   /** O grupo sumiu (404) ou perdeu a série: a página fecha com o aviso. */
-  aoEncerrar: (motivo: "sumiu" | "semSerie") => void;
+  /** Leva o id do grupo: a página só encerra a janela que ainda é deste grupo. */
+  aoEncerrar: (grupoId: string, motivo: "sumiu" | "semSerie") => void;
   /** A lista pode ter mudado por baixo: relê. */
   aoReler: () => void;
 }) {
@@ -80,8 +81,8 @@ export function JanelaFaltantes({
   });
 
   const encerrar = useCallback(
-    (corpo: unknown) => encerrarRef.current(chaveDaRecusa(corpo) === "grupoSemSerie" ? "semSerie" : "sumiu"),
-    [],
+    (corpo: unknown) => encerrarRef.current(grupo.id, chaveDaRecusa(corpo) === "grupoSemSerie" ? "semSerie" : "sumiu"),
+    [grupo.id],
   );
 
   // Em promessa encadeada, não `async`: o `setState` fica no `then`, nunca no corpo do efeito que a chama.
@@ -111,7 +112,13 @@ export function JanelaFaltantes({
   }, [grupo.id, encerrar]);
 
   useEffect(() => {
+    const leituras = sequencia;
     void carregar();
+    // Ao fechar, a leitura no ar fica superada: a resposta dela nunca chega a
+    // esta janela nem, por `aoEncerrar`, à janela que a página abrir depois.
+    return () => {
+      leituras.current++;
+    };
   }, [carregar]);
 
   function reler() {

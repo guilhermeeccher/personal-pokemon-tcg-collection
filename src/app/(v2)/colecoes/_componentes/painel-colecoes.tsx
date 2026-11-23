@@ -150,9 +150,11 @@ export function PainelColecoes({ lista, vista }: { lista: ListaColecoesV2DTO; vi
   };
 
   const fecharJanela = useCallback(() => setJanela(null), []);
+  // Só encerra a janela que ainda é do grupo que respondeu: uma resposta de
+  // outra janela, já fechada, nunca fecha a que está aberta agora.
   const encerrarJanela = useCallback(
-    (motivo: "sumiu" | "semSerie") => {
-      setJanela((j) => (j ? { ...j, encerrada: motivo } : j));
+    (grupoId: string | null, motivo: "sumiu" | "semSerie") => {
+      setJanela((j) => (j && j.grupoId === grupoId ? { ...j, encerrada: motivo } : j));
       reler();
     },
     [reler],
@@ -257,8 +259,9 @@ export function PainelColecoes({ lista, vista }: { lista: ListaColecoesV2DTO; vi
             avisar(janelaViva.grupoId ? t("grupoSalvo", { grupo: nome }) : t("grupoCriado", { grupo: nome }), { tom: "sucesso" });
             reler();
           }}
-          aoSumir={() => encerrarJanela("sumiu")}
+          aoSumir={() => encerrarJanela(janelaViva.grupoId, "sumiu")}
           aoReler={reler}
+          relendo={relendo}
         />
       )}
       {janelaViva?.tipo === "faltantes" && grupoDaJanela && (
@@ -307,6 +310,7 @@ export function PainelColecoes({ lista, vista }: { lista: ListaColecoesV2DTO; vi
             setJanelaTema({ tipo: "cartas", colecaoId: colecao.id, nome: colecao.nome });
           }}
           aoReler={reler}
+          relendo={relendo}
         />
       )}
       {janelaTema?.tipo === "cartas" && (

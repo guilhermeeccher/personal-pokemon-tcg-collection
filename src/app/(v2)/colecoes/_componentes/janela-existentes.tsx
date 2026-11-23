@@ -45,7 +45,8 @@ export function JanelaExistentes({
   grupo: GrupoListaV2DTO;
   aoFechar: () => void;
   aoTrazidas: (total: number) => void;
-  aoEncerrar: (motivo: "sumiu" | "semSerie") => void;
+  /** Leva o id do grupo: a página só encerra a janela que ainda é deste grupo. */
+  aoEncerrar: (grupoId: string, motivo: "sumiu" | "semSerie") => void;
   aoReler: () => void;
 }) {
   const t = useTranslations("v2Organizar.existentes");
@@ -80,7 +81,7 @@ export function JanelaExistentes({
       const lida = r.corpo as ExistentesDoGrupoDTO | null;
       if (!r.ok || !lida || !Array.isArray(lida.colecoes)) {
         if (!r.ok && reacaoDaPrevia(r.status, r.corpo) === "fechar") {
-          encerrarRef.current(chaveDaRecusa(r.corpo) === "grupoSemSerie" ? "semSerie" : "sumiu");
+          encerrarRef.current(grupo.id, chaveDaRecusa(r.corpo) === "grupoSemSerie" ? "semSerie" : "sumiu");
           return;
         }
         setPrevia(null);
@@ -96,7 +97,13 @@ export function JanelaExistentes({
   }, [grupo.id]);
 
   useEffect(() => {
+    const leituras = sequencia;
     void carregar();
+    // Ao fechar, a leitura no ar fica superada: a resposta dela nunca chega a
+    // esta janela nem, por `aoEncerrar`, à janela que a página abrir depois.
+    return () => {
+      leituras.current++;
+    };
   }, [carregar]);
 
   function reler() {
@@ -138,7 +145,7 @@ export function JanelaExistentes({
     }
     aoReler();
     if (r.status !== null && reacaoDaPrevia(r.status, r.corpo) === "fechar") {
-      aoEncerrar(chaveDaRecusa(r.corpo) === "grupoSemSerie" ? "semSerie" : "sumiu");
+      aoEncerrar(grupo.id, chaveDaRecusa(r.corpo) === "grupoSemSerie" ? "semSerie" : "sumiu");
       return;
     }
     setErro(

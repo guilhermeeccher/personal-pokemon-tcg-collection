@@ -66,6 +66,13 @@ describe("marcasDeFaltantes", () => {
     expect(marcasDeFaltantes([set("a", true)], anteriores, "sv").size).toBe(0);
   });
 
+  it("na mesma série, set novo na prévia segue o padrão e set que saiu perde a marca", () => {
+    const anteriores = { serieId: "sv", marcados: new Set(["a", "saiu"]) };
+    const marcas = marcasDeFaltantes([set("a", true), set("novo", true), set("novoPromo", false)], anteriores, "sv");
+    // O set novo não estava na leitura anterior: a escolha do usuário sobre ele não existe ainda.
+    expect([...marcas].sort()).toEqual(["a"]);
+  });
+
   it("quando a série mudou, volta ao padrão da série nova", () => {
     const anteriores = { serieId: "sv", marcados: new Set(["a"]) };
     const marcas = marcasDeFaltantes([set("x", true), set("y", false)], anteriores, "swsh");
@@ -80,6 +87,11 @@ describe("nomesDeFaltantes", () => {
       { setId: "b", nomeSugerido: "2024 - B", marcadoPorPadrao: true, colecoesExistentes: [] },
     ];
     expect(nomesDeFaltantes(sets, { a: "Meu A", sumiu: "x" })).toEqual({ a: "Meu A", b: "2024 - B" });
+  });
+
+  it("um nome apagado de propósito continua vazio, nunca volta ao sugerido", () => {
+    const sets = [{ setId: "a", nomeSugerido: "2024 - A", marcadoPorPadrao: true, colecoesExistentes: [] }];
+    expect(nomesDeFaltantes(sets, { a: "" })).toEqual({ a: "" });
   });
 });
 
@@ -105,6 +117,21 @@ describe("marcasDeExistentes", () => {
     // O usuário a deixou marcada; outra aba a pôs no grupo g3: tirá-la de lá não foi escolhido.
     const marcas = marcasDeExistentes([colecao("a", "g3")], antes, new Set(["a"]));
     expect(marcas.size).toBe(0);
+  });
+
+  it("perde a marca quando a coleção trocou de um grupo para outro", () => {
+    const antes = origensDaPrevia([colecao("a", "g2")]);
+    expect(marcasDeExistentes([colecao("a", "g3")], antes, new Set(["a"])).size).toBe(0);
+  });
+
+  it("quando a coleção saiu do grupo para nenhum, vale o padrão (marcada)", () => {
+    const antes = origensDaPrevia([colecao("a", "g2")]);
+    expect([...marcasDeExistentes([colecao("a", null)], antes, new Set())]).toEqual(["a"]);
+  });
+
+  it("a coleção que saiu da prévia leva a marca junto", () => {
+    const antes = origensDaPrevia([colecao("a", null), colecao("b", null)]);
+    expect([...marcasDeExistentes([colecao("b", null)], antes, new Set(["a", "b"]))]).toEqual(["b"]);
   });
 
   it("coleção nova na prévia segue o padrão", () => {

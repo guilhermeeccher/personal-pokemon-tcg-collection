@@ -30,7 +30,8 @@ import { pedirApi } from "./pedir-api";
  *   abri-la, sem presumir que ela é desta tentativa. Por isso tentar de novo
  *   depois de uma resposta perdida é seguro.
  * - **O grupo escolhido que a lista nova já não traz** (excluído em outra aba)
- *   vale como "sem grupo"; uma recusa relê a lista.
+ *   vale como "sem grupo"; uma recusa relê a lista, e campos e botão ficam
+ *   desligados (`relendo`) até ela chegar.
  */
 export function JanelaTema({
   sugestao,
@@ -40,8 +41,11 @@ export function JanelaTema({
   aoFechar,
   aoCriada,
   aoReler,
+  relendo,
 }: {
   sugestao: SugestaoDeTemaDTO;
+  /** A página está relendo a lista: nada se envia até ela chegar. */
+  relendo: boolean;
   /** O tema escrito no idioma da interface. */
   rotuloTema: string;
   nomePadrao: string;
@@ -60,7 +64,7 @@ export function JanelaTema({
 
   const grupoValido = grupos.some((g) => g.id === grupoId) ? grupoId : "";
   const nomeAparado = nome.trim();
-  const podeCriar = !enviando && nomeAparado !== "";
+  const podeCriar = !enviando && !relendo && nomeAparado !== "";
 
   async function criar(e: React.FormEvent) {
     e.preventDefault();
@@ -115,11 +119,11 @@ export function JanelaTema({
           value={nome}
           required
           autoComplete="off"
-          disabled={enviando}
+          disabled={enviando || relendo}
           onChange={(e) => setNome(e.target.value)}
         />
         {grupos.length > 0 && (
-          <Selecao rotulo={t("campoGrupo")} value={grupoValido} disabled={enviando} onChange={(e) => setGrupoId(e.target.value)}>
+          <Selecao rotulo={t("campoGrupo")} value={grupoValido} disabled={enviando || relendo} onChange={(e) => setGrupoId(e.target.value)}>
             <option value="">{t("semGrupo")}</option>
             {grupos.map((g) => (
               <option key={g.id} value={g.id}>
