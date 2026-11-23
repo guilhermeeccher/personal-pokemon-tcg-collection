@@ -719,8 +719,12 @@ Numbered after package 5a's rules; packages that land in parallel renumber at th
     **Checking the last step never finishes the task**: "every step is done, the task stays open"
     shows as a status next to "Mark done" (`avisoTodasFeitas`), and the click stays the user's.
     Order changes by up and down buttons only, each sending the whole list of ids; a stale list
-    (`dexOrdemEtapasInvalida`) is shown and reread, and after a move the focus stays on the same
-    button of the moved step. At 50 steps the "Add step" button is off with a note; the server's
+    (`dexOrdemEtapasInvalida`) is shown and reread. **The screen stays busy until the reread lands**,
+    not only until the response: before it, the list on screen is the old one, and a second move
+    computed on it would undo the first (both pass the whole-list check). After a move the focus
+    stays on the same button of the moved step; after saving or cancelling a step form it returns to
+    the button that opened it. A step form that was open when its task closed (here or in another
+    tab) disappears instead of sending. At 50 steps the "Add step" button is off with a note; the server's
     `dexEtapasDemais` (another tab filled the task) is shown and the reread list shows the note.
     Deleting a step asks through the confirmation dialog. Finishing a catch, evolve or trade task
     **offers** Register on the task's game (`hrefCadastroDaTarefa`: `jogo` and, for a single slot,
