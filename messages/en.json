@@ -3193,9 +3193,16 @@
       "tudoOuNada": "The batch is all or nothing: fix it and add again. The quantities are still in the list.",
       "incerto": "No answer from the server",
       "incertoTexto": "The batch may have gone in. What you have was read again: check it before adding again, so nothing is recorded twice.",
-      "fechar": "Close"
+      "fechar": "Close",
+      "incertoRelendo": "The batch may have gone in. Reading what you have again; adding comes back when the read arrives.",
+      "incertoSemReleitura": "The batch may have gone in, and what you have could not be read again. Read it again before adding, so nothing is recorded twice."
     },
     "jogoSaiu": "The chosen game left your list (stopped or removed elsewhere). Pick the batch's game above: the quantities stay.",
-    "listaSemJogo": "Pokémon to add"
+    "listaSemJogo": "Pokémon to add",
+    "releitura": {
+      "falhou": "Could not read again",
+      "falhouTexto": "What shows here is from the previous read, and the batch stays. Try reading again before adding.",
+      "tentar": "Read again"
+    }
   }
 }

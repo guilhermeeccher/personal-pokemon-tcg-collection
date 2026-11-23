@@ -696,17 +696,24 @@ D. **The pieces package 5a owns, and their interfaces** (delivered 2026-11-23). 
       as in the v1). While it is being sent, the list and the filters are `inert`.
     - **One refusal refuses the whole batch** (the route validates everything before its one
       transaction): the refusals are listed above the bar, the batch stays, the page rereads. No answer,
-      or a 5xx, is "the batch may have gone in": the batch stays, the page rereads, and the screen says
-      to check before sending again. Success is a floating notice, and the "have" counts reread.
+      or a 5xx, is "the batch may have gone in": the batch stays and the page rereads. The reread is
+      `router.refresh` in a transition, and "Register" stays disabled until it arrives; only then does
+      the screen say the counts were read again. **A reread the server cannot do keeps the screen**
+      (the page passes `leitura: null`, and the screen keeps its previous read and the typed batch,
+      saying so, with "Read again"); only a first load with nothing to show is the error page.
+      Success is a floating notice, and the "have" counts reread.
     - **Marks, never refusals**: outside the game's catalog (only with "Show all"), trade or event,
       locked behind a checkpoint, "cannot go to HOME", and — new in the v2 — "no shiny", as text in a
       one-line strip that ellipsizes so the cell keeps a fixed height. The name button opens the
       Pokémon card (`FolhaPokemon`) with every mark written in full, so nothing lives only in the cut.
     - **Each cell is a panel with the name, the marks and two steppers** (normal, shiny), 198 px tall
-      at every width; one column on the phone, two or three from 768 px. The fields are text with a
-      numeric keyboard, controlled (the value lives in the batch, so leaving the mounted range, turning
-      the phone or crossing 768 px keeps it), 16 px, and in the Tab order of every row as in the v1's
-      table; Enter goes to the same field of the next form. − and + are out of the Tab order.
+      at every width; the columns are what fits at 300 px each: one on a phone held upright and at
+      768 px beside the rail, two on a phone turned sideways, two or three on a desktop. The fields are
+      text with a numeric keyboard, controlled (the value lives in the batch, so leaving the mounted
+      range, turning the phone or crossing 768 px keeps it), 16 px. With focus inside the list every
+      field is in the Tab order, as in the v1's table (normal, shiny, the next form); from outside,
+      Tab enters at the grid's entry cell (rule 28), never at a spare row's field off screen. Enter
+      goes to the same field of the next form. − and + are out of the Tab order.
     - **The focused row and its neighbours stay mounted** (`manterMontadas`), as the v1's virtualizer
       kept them: scrolling with the iPhone keyboard open never unmounts the field being typed in.
 

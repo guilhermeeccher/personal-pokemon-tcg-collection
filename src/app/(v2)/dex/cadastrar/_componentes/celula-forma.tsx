@@ -43,6 +43,13 @@ interface PropsCelulaForma {
   tenhoNormal: number;
   tenhoShiny: number;
   celula: PropsCelula;
+  /**
+   * O foco está dentro da lista: todo campo entra no Tab (normal → shiny →
+   * forma seguinte). Fora dela, só os da célula de entrada da grade
+   * (`celula.tabIndex`), para o Tab de fora entrar na primeira forma à vista e
+   * não num campo de uma linha de sobra, fora da tela.
+   */
+  tabulavel: boolean;
   aoMudar: (formaId: string, trilha: TrilhaDex, valor: number) => void;
   aoEnter: (formaId: string, trilha: TrilhaDex) => void;
   aoAbrir: (formaId: string) => void;
@@ -90,9 +97,11 @@ export function useTextoSelo() {
  *   por extenso — a linha de marcas corta com reticências para a célula ter
  *   altura fixa, e nada fica só no corte (AGENTS.md, "Nothing only on hover
  *   or in `title`").
- * - **Os campos ficam na ordem do Tab, em todas as linhas**, como na tabela da
- *   v1: o Tab vai de normal a shiny e à forma seguinte, e o navegador rola o
- *   campo para a vista, o que monta as linhas seguintes da grade. O Enter vai
+ * - **Com o foco na lista, os campos ficam na ordem do Tab em todas as
+ *   linhas**, como na tabela da v1: o Tab vai de normal a shiny e à forma
+ *   seguinte, e o navegador rola o campo para a vista, o que monta as linhas
+ *   seguintes da grade. De fora, o Tab entra pela célula de entrada da grade
+ *   (`tabulavel`). O Enter vai
  *   ao mesmo campo da forma seguinte. − e + ficam fora do Tab: o teclado
  *   digita o número.
  * - **Quantidades controladas**: o número mora no lote da tela, nunca aqui. A
@@ -116,6 +125,7 @@ export const CelulaForma = memo(function CelulaForma({
   tenhoNormal,
   tenhoShiny,
   celula,
+  tabulavel,
   aoMudar,
   aoEnter,
   aoAbrir,
@@ -162,6 +172,7 @@ export const CelulaForma = memo(function CelulaForma({
           maxLength={3}
           placeholder="0"
           aria-label={t("quantidade", { nome, trilha: nomeTrilha })}
+          tabIndex={tabulavel ? 0 : celula.tabIndex}
           value={valor > 0 ? String(valor) : ""}
           onChange={(e) => aoMudar(forma.id, trilha, quantidadeDoTexto(e.target.value))}
           onFocus={(e) => e.target.select()}
@@ -239,6 +250,7 @@ function mesmasProps(a: PropsCelulaForma, b: PropsCelulaForma): boolean {
     a.tenhoShiny === b.tenhoShiny &&
     a.celula.tabIndex === b.celula.tabIndex &&
     a.celula[ATRIBUTO_CELULA] === b.celula[ATRIBUTO_CELULA] &&
+    a.tabulavel === b.tabulavel &&
     a.aoMudar === b.aoMudar &&
     a.aoEnter === b.aoEnter &&
     a.aoAbrir === b.aoAbrir

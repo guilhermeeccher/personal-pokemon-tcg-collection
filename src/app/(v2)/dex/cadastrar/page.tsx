@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { getTranslations } from "next-intl/server";
 
 import { exigirSessao } from "@/lib/acesso";
 import { db } from "@/lib/db/client";
@@ -8,9 +7,6 @@ import { lerSecoesDex, listarFormasDex, listarJogosPossuidos, listarRegistrosDex
 import { listarTrofeus } from "@/lib/db/dex-planejamento";
 import { compararPorNome } from "@/lib/dominio/dex-inventario";
 import { moduloLivingDexAtivo } from "@/lib/modulos";
-
-import { AvisoEmLinha } from "../../_componentes/primitivos/painel";
-import { TentarDeNovo } from "../_componentes/tentar-de-novo";
 
 import { CadastroPorJogo } from "./_componentes/cadastro-por-jogo";
 import type { TenhoDex } from "./_componentes/lote-dex";
@@ -25,12 +21,18 @@ import type { TenhoDex } from "./_componentes/lote-dex";
  * `?jogo=`, do fim de uma tarefa de plano, com o jogo dela — as mesmas chaves
  * da v1. A guarda do módulo vem antes de tudo (`rules.md`, "Dex shared
  * code", A): desligado, 404 direto, sem tocar no banco. Uma leitura que falha
- * vira erro na tela, com "Tentar de novo", nunca uma lista vazia.
+ * vira erro na tela, com "Tentar de novo", nunca uma lista vazia; numa
+ * releitura, a tela fica com a leitura anterior e o lote digitado
+ * (`CadastroPorJogo`, `leitura` nulo).
  */
 export default async function PaginaCadastrarDex({ searchParams }: PageProps<"/dex/cadastrar">) {
   await exigirSessao();
   await connection();
   if (!moduloLivingDexAtivo()) notFound();
+
+  const params = await searchParams;
+  const buscaInicial = typeof params.busca === "string" ? params.busca : "";
+  const jogoInicial = typeof params.jogo === "string" ? params.jogo : "";
 
   let lido;
   try {
@@ -43,21 +45,10 @@ export default async function PaginaCadastrarDex({ searchParams }: PageProps<"/d
     ]);
   } catch (erro) {
     console.error("cadastro da dex: falha ao ler", erro);
-    const t = await getTranslations("v2Dex");
-    return (
-      <AvisoEmLinha
-        tom="perigo"
-        papel="alert"
-        titulo={t("erroCarregar")}
-        acao={<TentarDeNovo rotulo={t("tentarDeNovo")} />}
-      >
-        {t("erroCarregarTexto")}
-      </AvisoEmLinha>
-    );
+    return <CadastroPorJogo leitura={null} buscaInicial={buscaInicial} jogoInicial={jogoInicial} />;
   }
 
   const [formas, jogos, registros, secoes, trofeus] = lido;
-  const params = await searchParams;
 
   const tenho: Record<string, { normal: number; shiny: number }> = {};
   for (const r of registros) {
@@ -68,13 +59,15 @@ export default async function PaginaCadastrarDex({ searchParams }: PageProps<"/d
 
   return (
     <CadastroPorJogo
-      formas={[...formas].sort(compararPorNome)}
-      jogos={jogos.filter((j) => j.ativo)}
-      tenho={tenho satisfies TenhoDex}
-      secoes={secoes}
-      checkpoints={trofeus.filter((t) => t.tipo === "checkpoint" && !t.obtido)}
-      buscaInicial={typeof params.busca === "string" ? params.busca : ""}
-      jogoInicial={typeof params.jogo === "string" ? params.jogo : ""}
+      leitura={{
+        formas: [...formas].sort(compararPorNome),
+        jogos: jogos.filter((j) => j.ativo),
+        tenho: tenho satisfies TenhoDex,
+        secoes,
+        checkpoints: trofeus.filter((t) => t.tipo === "checkpoint" && !t.obtido),
+      }}
+      buscaInicial={buscaInicial}
+      jogoInicial={jogoInicial}
     />
   );
 }

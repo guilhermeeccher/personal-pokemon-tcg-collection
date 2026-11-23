@@ -3185,9 +3185,16 @@
       "tudoOuNada": "O lote é tudo ou nada: ajuste e cadastre de novo. As quantidades continuam na lista.",
       "incerto": "Sem resposta do servidor",
       "incertoTexto": "O lote pode ter entrado. O que você tem foi relido: confira antes de cadastrar de novo, para não registrar duas vezes.",
-      "fechar": "Fechar"
+      "fechar": "Fechar",
+      "incertoRelendo": "O lote pode ter entrado. Relendo o que você tem; o cadastro volta quando a leitura chegar.",
+      "incertoSemReleitura": "O lote pode ter entrado, e não deu para reler o que você tem. Releia antes de cadastrar de novo, para não registrar duas vezes."
     },
     "jogoSaiu": "O jogo escolhido saiu da sua lista (parado ou removido em outro lugar). Escolha o jogo do lote acima: as quantidades continuam.",
-    "listaSemJogo": "Pokémon para cadastrar"
+    "listaSemJogo": "Pokémon para cadastrar",
+    "releitura": {
+      "falhou": "Não deu para reler",
+      "falhouTexto": "O que aparece aqui é da leitura anterior, e o lote continua. Tente reler antes de cadastrar.",
+      "tentar": "Reler"
+    }
   }
 }

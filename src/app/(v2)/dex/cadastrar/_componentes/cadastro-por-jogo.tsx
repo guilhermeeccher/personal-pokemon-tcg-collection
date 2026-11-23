@@ -54,6 +54,7 @@ import { Campo } from "../../../_componentes/primitivos/campo";
 import { AvisoEmLinha } from "../../../_componentes/primitivos/painel";
 import { Segmentado } from "../../../_componentes/primitivos/segmentado";
 import { type DadosCartaoPokemon, FolhaPokemon } from "../../_componentes/cartao-pokemon";
+import { TentarDeNovo } from "../../_componentes/tentar-de-novo";
 
 import estilos from "./cadastro.module.css";
 import {
@@ -80,7 +81,11 @@ import {
   totalDoLote,
 } from "./lote-dex";
 
-/** A largura mínima de uma célula: uma coluna no celular, duas ou três conforme a largura. */
+/**
+ * A largura mínima de uma célula: cabem as colunas que a largura der — uma no
+ * celular em pé e a 768 px ao lado do trilho, duas no celular deitado, duas ou
+ * três no desktop.
+ */
 const MIN_CELULA = 300;
 const VAO = 10;
 /*
@@ -106,15 +111,8 @@ function formaDoElemento(alvo: EventTarget | null): string | null {
   return alvo.closest<HTMLElement>(`[${ATRIBUTO_FORMA}]`)?.getAttribute(ATRIBUTO_FORMA) ?? null;
 }
 
-export function CadastroPorJogo({
-  formas,
-  jogos,
-  tenho,
-  secoes,
-  checkpoints,
-  buscaInicial,
-  jogoInicial,
-}: {
+/** O que a página lê no servidor para a tela. */
+export interface LeituraCadastroDex {
   /** O catálogo inteiro, em ordem de nome (`compararPorNome`). */
   formas: FormaDexDTO[];
   /** Os jogos possuídos e ativos. */
@@ -123,6 +121,59 @@ export function CadastroPorJogo({
   secoes: SecoesContadas;
   /** Troféus-checkpoint ainda não conquistados. */
   checkpoints: TrofeuDexDTO[];
+}
+
+/**
+ * A tela, com a última leitura boa guardada. `leitura` nulo é uma leitura que
+ * falhou no servidor. Na abertura, sem nada para mostrar, é o erro com
+ * "Tentar de novo". Numa releitura (depois de gravar, de uma recusa ou de uma
+ * resposta incerta), a tela **continua montada com a leitura anterior** e diz
+ * que não conseguiu reler: trocar a árvore pelo aviso de erro desmontaria o
+ * lote, e as quantidades digitadas se perderiam justo quando a pessoa precisa
+ * conferir antes de mandar de novo.
+ */
+export function CadastroPorJogo({
+  leitura,
+  buscaInicial,
+  jogoInicial,
+}: {
+  leitura: LeituraCadastroDex | null;
+  buscaInicial: string;
+  jogoInicial: string;
+}) {
+  const t = useTranslations("v2Dex");
+  const [ultima, setUltima] = useState(leitura);
+  if (leitura !== null && leitura !== ultima) setUltima(leitura);
+  const viva = leitura ?? ultima;
+  if (!viva) {
+    return (
+      <AvisoEmLinha
+        tom="perigo"
+        papel="alert"
+        titulo={t("erroCarregar")}
+        acao={<TentarDeNovo rotulo={t("tentarDeNovo")} />}
+      >
+        {t("erroCarregarTexto")}
+      </AvisoEmLinha>
+    );
+  }
+  return (
+    <TelaCadastro {...viva} releituraFalhou={leitura === null} buscaInicial={buscaInicial} jogoInicial={jogoInicial} />
+  );
+}
+
+function TelaCadastro({
+  formas,
+  jogos,
+  tenho,
+  secoes,
+  checkpoints,
+  releituraFalhou,
+  buscaInicial,
+  jogoInicial,
+}: LeituraCadastroDex & {
+  /** A última releitura falhou no servidor: o que está na tela é da leitura anterior. */
+  releituraFalhou: boolean;
   buscaInicial: string;
   jogoInicial: string;
 }) {
@@ -155,7 +206,10 @@ export function CadastroPorJogo({
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [aberta, setAberta] = useState<string | null>(null);
   const [foco, setFoco] = useState<string | null>(null);
-  const [, iniciarReleitura] = useTransition();
+  // A releitura é o `router.refresh` numa transição: `relendo` fica ligado
+  // até a nova renderização do servidor chegar, e só então a tela diz que
+  // releu (ou, com `releituraFalhou`, que não conseguiu).
+  const [relendo, iniciarReleitura] = useTransition();
 
   const lista = useRef<HTMLDivElement>(null);
   const controle = useRef<ControleGradeVirtual>(null);
@@ -251,12 +305,13 @@ export function CadastroPorJogo({
         tenhoNormal={tenho[f.id]?.normal ?? 0}
         tenhoShiny={tenho[f.id]?.shiny ?? 0}
         celula={celula}
+        tabulavel={foco !== null}
         aoMudar={aoMudar}
         aoEnter={aoEnter}
         aoAbrir={aoAbrir}
       />
     ),
-    [rotulo, catalogo, trancadas, quantidades, tenho, aoMudar, aoEnter, aoAbrir],
+    [rotulo, catalogo, trancadas, quantidades, tenho, foco, aoMudar, aoEnter, aoAbrir],
   );
 
   /* ---------- Gravação ---------- */
@@ -264,7 +319,7 @@ export function CadastroPorJogo({
   const reler = useCallback(() => iniciarReleitura(() => router.refresh()), [router]);
 
   async function cadastrar() {
-    if (total === 0 || enviando || !jogoId) return;
+    if (total === 0 || enviando || relendo || !jogoId) return;
     const corpo = corpoDoLote(jogoId, quantidades);
     const nome = nomeJogo;
     setEnviando(true);
@@ -461,6 +516,21 @@ export function CadastroPorJogo({
         </div>
       </div>
 
+      {releituraFalhou && (
+        <AvisoEmLinha
+          tom="alerta"
+          papel="alert"
+          titulo={t("releitura.falhou")}
+          acao={
+            <Botao pequeno carregando={relendo} onClick={reler}>
+              {t("releitura.tentar")}
+            </Botao>
+          }
+        >
+          {t("releitura.falhouTexto")}
+        </AvisoEmLinha>
+      )}
+
       <div className={estilos.rodape}>
         {resultado ? (
           <div className={estilos.resultado}>
@@ -493,7 +563,11 @@ export function CadastroPorJogo({
                   </Botao>
                 }
               >
-                {t("resultado.incertoTexto")}
+                {relendo
+                  ? t("resultado.incertoRelendo")
+                  : releituraFalhou
+                    ? t("resultado.incertoSemReleitura")
+                    : t("resultado.incertoTexto")}
               </AvisoEmLinha>
             )}
           </div>
@@ -517,7 +591,7 @@ export function CadastroPorJogo({
               ref={botaoCadastrar}
               variante="primario"
               carregando={enviando}
-              disabled={total === 0 || jogoId === null}
+              disabled={total === 0 || jogoId === null || relendo}
               onClick={() => void cadastrar()}
             >
               {td("cadastrar.cadastrar", { quantidade: String(total) })}
