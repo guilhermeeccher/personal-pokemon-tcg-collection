@@ -584,12 +584,17 @@ D. **The pieces package 5a owns, and their interfaces** (delivered 2026-11-23). 
      `dexConfirmarSemVolta` opens the v2 confirmation dialog with the route's sentence (it names the
      game), and only "Transfer" resends the same ids with `true`. "Cancel" and Esc send nothing. A
      409 of that key to a request that was already confirmed is a plain refusal, never a second
-     question (`lerRespostaMover`, pure and tested). Every other refusal comes back as `erro`,
+     question. The sequence lives in `criarFluxoMover` (`_comum/dex/mover-registros.ts`, pure, with
+     the POST injected), and its test follows it step by step: the first try with `false`, the 409
+     with no second POST, cancel with none, confirm with the same ids and destination and `true`,
+     a second click while one is in flight ignored. Every other refusal comes back as `erro`,
      translated by `recusa.ts`; while the dialog is open, an error shows inside it. `aoRecusar(status)`
      lets the screen reread on a 404 or 409 (the list is stale: another tab moved or deleted a
      record). One request at a time: a second click while one is in flight does nothing.
    - **"Take to HOME" is the Pokédex's** (`pokedex/_componentes/levar-ao-home.tsx`), not a shared
-     piece; the Dex inventory (5e) uses `useTransferencia` with its own location picker.
+     piece; the Dex inventory (5e) uses `useTransferencia` with its own location picker. An open game
+     shows 60 Pokémon at a time ("Show more"), so a game with hundreds to take never mounts them all
+     on the grid's page; "Send all" still sends the whole group.
 
 ### Overview and Pokédex (package 5a)
 

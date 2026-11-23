@@ -12,16 +12,16 @@
  *   único caminho até esse corpo, e só o clique da pessoa o chama.
  * - `cancelar()` descarta o pendente sem enviar nada.
  *
- * Um pedido por vez: enquanto `ocupado`, `mover` e `confirmar` não fazem
- * nada (dois cliques rápidos em "Enviar" não mandam dois lotes).
+ * A sequência mora em `criarFluxoMover` (`mover-registros.ts`, testada passo a
+ * passo); este hook só liga o `fetch`, o estado do React e as frases.
  */
 
 import { useTranslations } from "next-intl";
-import { useCallback, useRef, useState } from "react";
+import { useState } from "react";
 
 import { textoDaRecusa } from "@/app/_comum/recusa";
 
-import { corpoDoMover, lerRespostaMover, type PedidoMover } from "./mover-registros";
+import { criarFluxoMover, type EstadoFluxoMover, type PedidoMover, type ResultadoFluxoMover } from "./mover-registros";
 
 export interface PendenteSemVolta extends PedidoMover {
   /** A frase da recusa, já no idioma da interface ("O Pokémon sai de GO e não volta mais…"). */
@@ -37,6 +37,15 @@ export interface MoverRegistros {
   erro: string | null;
 }
 
+async function postMover(corpo: string) {
+  const r = await fetch("/api/dex/registros/mover", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: corpo,
+  });
+  return { status: r.status, corpo: (await r.json().catch(() => null)) as unknown };
+}
+
 /**
  * `aoConcluir(movidos)` roda depois de um movimento aceito (a tela relê o que
  * mudou). `erroPadrao` é a frase da tela quando a resposta não traz recusa
@@ -50,55 +59,22 @@ export function useMoverRegistros(
   aoRecusar?: (status: number) => void,
 ): MoverRegistros {
   const tr = useTranslations("recusas");
-  const [pendente, setPendente] = useState<PendenteSemVolta | null>(null);
-  const [ocupado, setOcupado] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-  // O "ocupado" de verdade, sem esperar o render: o segundo clique do mesmo
-  // quadro já o encontra ligado.
-  const emVoo = useRef(false);
+  const [estado, setEstado] = useState<EstadoFluxoMover>({ pendente: null, ocupado: false, falha: null });
+  // Um fluxo por montagem: ele guarda o pendente entre um clique e outro.
+  const [fluxo] = useState(() => criarFluxoMover({ post: postMover, aoMudar: setEstado }));
+  // Os retornos são os desta renderização: o fluxo só diz como terminou.
+  const tratar = (r: ResultadoFluxoMover) => {
+    if (r.tipo === "ok") aoConcluir(r.movidos);
+    else if (r.tipo === "recusa") aoRecusar?.(r.status);
+  };
 
-  const enviar = useCallback(
-    async (pedido: PedidoMover, confirmado: boolean) => {
-      if (emVoo.current) return;
-      emVoo.current = true;
-      setOcupado(true);
-      setErro(null);
-      try {
-        const r = await fetch("/api/dex/registros/mover", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: corpoDoMover(pedido, confirmado),
-        });
-        const corpo: unknown = await r.json().catch(() => null);
-        const resposta = lerRespostaMover(r.status, corpo, confirmado);
-        if (resposta.tipo === "confirmar") {
-          setPendente({ ids: pedido.ids, local: pedido.local, frase: textoDaRecusa(tr, resposta.corpo, erroPadrao) });
-          return;
-        }
-        setPendente(null);
-        if (resposta.tipo === "recusa") {
-          setErro(textoDaRecusa(tr, resposta.corpo, erroPadrao));
-          aoRecusar?.(r.status);
-          return;
-        }
-        aoConcluir(resposta.movidos);
-      } catch {
-        // A rede caiu: o pendente fica (a janela continua aberta para tentar
-        // de novo ou cancelar), como sempre foi na v1.
-        setErro(erroPadrao);
-      } finally {
-        emVoo.current = false;
-        setOcupado(false);
-      }
-    },
-    [tr, erroPadrao, aoConcluir, aoRecusar],
-  );
-
-  const mover = useCallback((ids: readonly string[], local: string) => enviar({ ids, local }, false), [enviar]);
-  const confirmar = useCallback(async () => {
-    if (pendente) await enviar(pendente, true);
-  }, [enviar, pendente]);
-  const cancelar = useCallback(() => setPendente(null), []);
-
-  return { mover, confirmar, cancelar, pendente, ocupado, erro };
+  const { pendente, ocupado, falha } = estado;
+  return {
+    mover: async (ids, local) => tratar(await fluxo.mover(ids, local)),
+    confirmar: async () => tratar(await fluxo.confirmar()),
+    cancelar: fluxo.cancelar,
+    pendente: pendente && { ids: pendente.ids, local: pendente.local, frase: textoDaRecusa(tr, pendente.corpo, erroPadrao) },
+    ocupado,
+    erro: falha === null ? null : falha === "rede" ? erroPadrao : textoDaRecusa(tr, falha.corpo, erroPadrao),
+  };
 }

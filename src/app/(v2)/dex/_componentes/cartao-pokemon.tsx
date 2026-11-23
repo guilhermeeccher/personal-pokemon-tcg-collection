@@ -15,7 +15,7 @@
  *   on hover or in `title`").
  * - **`useCartaoFlutuante`** — a pré-visão ao parar o mouse, como na v1. É
  *   realce: só com ponteiro de mouse, nunca com toque nem caneta, não pega
- *   foco nem clique, e some ao rolar. Tudo o que ela mostra a tela também
+ *   foco nem clique, e some ao rolar ou com Esc. Tudo o que ela mostra a tela também
  *   mostra por escrito ou pela folha.
  *
  * O render (~80 KB) só é baixado de quem a pessoa abriu ou parou em cima, um
@@ -171,10 +171,20 @@ export function useCartaoFlutuante(): {
     [],
   );
 
+  // Rolar a tira do lugar; Esc a fecha sem mexer o mouse. Não é camada da
+  // pilha (não prende foco nem rolagem, e nunca está aberta junto com uma
+  // janela): só fecha a si mesma.
   useEffect(() => {
     if (!alvo) return;
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.key === "Escape") fechar();
+    };
     window.addEventListener("scroll", fechar, { passive: true, once: true });
-    return () => window.removeEventListener("scroll", fechar);
+    window.addEventListener("keydown", aoTeclar);
+    return () => {
+      window.removeEventListener("scroll", fechar);
+      window.removeEventListener("keydown", aoTeclar);
+    };
   }, [alvo, fechar]);
   useEffect(() => () => window.clearTimeout(relogio.current), []);
 

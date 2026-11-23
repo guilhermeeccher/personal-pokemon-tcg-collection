@@ -356,10 +356,11 @@
   gap: 6px 8px;
 }
 
+/* 8 px entre linhas: várias são links de 44 px, e os alvos pedem esse vão. */
 .linhas {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;

@@ -2996,7 +2996,8 @@
       "enviar": "Send",
       "enviarRotulo": "Send {nome} to HOME",
       "enviarTodas": "Send all ({quantidade})",
-      "enviados": "{quantidade, plural, one {# Pokémon sent to HOME} other {# Pokémon sent to HOME}}"
+      "enviados": "{quantidade, plural, one {# Pokémon sent to HOME} other {# Pokémon sent to HOME}}",
+      "mostrarMais": "Show more ({restantes} left)"
     }
   }
 }

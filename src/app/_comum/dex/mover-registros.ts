@@ -48,3 +48,90 @@ export function lerRespostaMover(status: number, corpo: unknown, confirmado: boo
   if (status === 409 && chave === RECUSA_CONFIRMAR_SEM_VOLTA && !confirmado) return { tipo: "confirmar", corpo };
   return { tipo: "recusa", corpo };
 }
+
+/** O que o POST devolveu: o status e o corpo já lido (nulo quando não era JSON). */
+export interface RespostaHttp {
+  status: number;
+  corpo: unknown;
+}
+
+export interface EstadoFluxoMover {
+  /** O pedido que espera a confirmação, com o corpo do 409 (a frase sai dele). */
+  pendente: (PedidoMover & { corpo: unknown }) | null;
+  ocupado: boolean;
+  /** A última recusa, ou `"rede"` quando o pedido nem teve resposta; nulo depois de um sucesso. */
+  falha: RespostaHttp | "rede" | null;
+}
+
+/** Como terminou uma chamada do fluxo; quem usa decide o que fazer com cada caso. */
+export type ResultadoFluxoMover =
+  | { tipo: "ok"; movidos: number }
+  | { tipo: "pendente" }
+  | { tipo: "recusa"; status: number }
+  | { tipo: "rede" }
+  /** Nada saiu: havia um pedido em voo, ou nada pendente para confirmar. */
+  | { tipo: "ignorado" };
+
+export interface FluxoMover {
+  mover: (ids: readonly string[], local: string) => Promise<ResultadoFluxoMover>;
+  /** Reenvia o pendente com a confirmação. Só o clique em confirmar o chama. */
+  confirmar: () => Promise<ResultadoFluxoMover>;
+  /** Descarta o pendente sem enviar nada. */
+  cancelar: () => void;
+  estado: () => EstadoFluxoMover;
+}
+
+/**
+ * O fluxo inteiro de mover, sem React e sem `fetch`: quem usa injeta o POST e
+ * ouve as mudanças. É aqui, e não no hook, que mora a regra que importa — a
+ * primeira tentativa vai sem confirmação, o 409 de saída sem volta para e
+ * espera, cancelar não envia nada e só `confirmar()` manda `true`, com os
+ * mesmos ids e destino —, para um teste poder segui-la passo a passo.
+ *
+ * Um pedido por vez: com um em voo, `mover` e `confirmar` não fazem nada.
+ * Uma falha de rede mantém o pendente (a janela continua aberta para tentar de
+ * novo ou cancelar), como sempre foi na v1.
+ */
+export function criarFluxoMover(dep: {
+  post: (corpo: string) => Promise<RespostaHttp>;
+  aoMudar: (estado: EstadoFluxoMover) => void;
+}): FluxoMover {
+  let estado: EstadoFluxoMover = { pendente: null, ocupado: false, falha: null };
+  const mudar = (parcial: Partial<EstadoFluxoMover>) => {
+    estado = { ...estado, ...parcial };
+    dep.aoMudar(estado);
+  };
+
+  async function enviar(pedido: PedidoMover, confirmado: boolean): Promise<ResultadoFluxoMover> {
+    if (estado.ocupado) return { tipo: "ignorado" };
+    mudar({ ocupado: true, falha: null });
+    let resposta: RespostaHttp;
+    try {
+      resposta = await dep.post(corpoDoMover(pedido, confirmado));
+    } catch {
+      mudar({ ocupado: false, falha: "rede" });
+      return { tipo: "rede" };
+    }
+    const lida = lerRespostaMover(resposta.status, resposta.corpo, confirmado);
+    if (lida.tipo === "confirmar") {
+      mudar({ ocupado: false, pendente: { ids: pedido.ids, local: pedido.local, corpo: lida.corpo } });
+      return { tipo: "pendente" };
+    }
+    if (lida.tipo === "recusa") {
+      mudar({ ocupado: false, pendente: null, falha: resposta });
+      return { tipo: "recusa", status: resposta.status };
+    }
+    mudar({ ocupado: false, pendente: null });
+    return { tipo: "ok", movidos: lida.movidos };
+  }
+
+  return {
+    mover: (ids, local) => enviar({ ids: [...ids], local }, false),
+    confirmar: async () =>
+      estado.pendente ? enviar({ ids: estado.pendente.ids, local: estado.pendente.local }, true) : { tipo: "ignorado" },
+    cancelar: () => {
+      if (estado.pendente) mudar({ pendente: null });
+    },
+    estado: () => estado,
+  };
+}

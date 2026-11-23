@@ -36,6 +36,14 @@ import { useTransferencia } from "../../_componentes/use-transferencia";
 
 import estilos from "./pokedex.module.css";
 
+/*
+ * Quantos Pokémon de um jogo aberto aparecem por vez. Um jogo pode ter
+ * centenas para levar (o GO, depois de anos), e a lista aberta mora na mesma
+ * página da grade: montar todos estouraria o orçamento de nós da regra 13.
+ * "Enviar todas" continua valendo para o grupo inteiro, à vista ou não.
+ */
+const POR_VEZ = 60;
+
 export function LevarAoHome({ formas, registros }: { formas: FormaDexDTO[]; registros: RegistroDexDTO[] }) {
   const t = useTranslations("v2Dex.levar");
   const td = useTranslations("dex");
@@ -60,6 +68,8 @@ export function LevarAoHome({ formas, registros }: { formas: FormaDexDTO[]; regi
   );
   const { mover, ocupado, erro, dialogo } = useTransferencia(aoConcluir, { aoRecusar });
   const [abertos, setAbertos] = useState<ReadonlySet<string>>(new Set());
+  // Quantos itens de cada jogo aberto estão à vista ("Mostrar mais" soma POR_VEZ).
+  const [aVista, setAVista] = useState<Readonly<Record<string, number>>>({});
 
   const formaPorId = useMemo(() => new Map(formas.map((f) => [f.id, f])), [formas]);
   const grupos = useMemo(() => oportunidadesHome(registros, naoTransferiveis()), [registros]);
@@ -127,7 +137,7 @@ export function LevarAoHome({ formas, registros }: { formas: FormaDexDTO[]; regi
                 </div>
                 <ul id={idLista} className={estilos.itens} hidden={!aberto}>
                   {aberto &&
-                    g.itens.map((item) => {
+                    g.itens.slice(0, aVista[g.jogoId] ?? POR_VEZ).map((item) => {
                       const forma = formaPorId.get(item.formaId);
                       if (!forma) return null;
                       const shiny = item.trilha === "shiny";
@@ -149,6 +159,17 @@ export function LevarAoHome({ formas, registros }: { formas: FormaDexDTO[]; regi
                       );
                     })}
                 </ul>
+                {aberto && g.itens.length > (aVista[g.jogoId] ?? POR_VEZ) && (
+                  <Botao
+                    pequeno
+                    variante="fantasma"
+                    onClick={() =>
+                      setAVista((atual) => ({ ...atual, [g.jogoId]: (atual[g.jogoId] ?? POR_VEZ) + POR_VEZ }))
+                    }
+                  >
+                    {t("mostrarMais", { restantes: g.itens.length - (aVista[g.jogoId] ?? POR_VEZ) })}
+                  </Botao>
+                )}
               </li>
             );
           })}
