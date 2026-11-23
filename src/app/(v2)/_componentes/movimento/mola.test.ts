@@ -47,18 +47,42 @@ describe("passoEixo", () => {
   });
 });
 
+/** Passos dados em `n` quadros de `dtMs`, carregando o resto de um para o outro. */
+function passosEm(n: number, dtMs: number | ((q: number) => number)): number[] {
+  const passos: number[] = [];
+  let resto = 0;
+  for (let q = 0; q < n; q++) {
+    const r = subpassosDoQuadro(typeof dtMs === "number" ? dtMs : dtMs(q), resto);
+    passos.push(r.passos);
+    resto = r.restoMs;
+  }
+  return passos;
+}
+
+const soma = (v: number[]) => v.reduce((a, b) => a + b, 0);
+
 describe("subpassosDoQuadro", () => {
-  it("um passo a 60 Hz, dois a 30 Hz, um a 120 Hz", () => {
-    expect(subpassosDoQuadro(PASSO_REFERENCIA_MS)).toBe(1);
-    expect(subpassosDoQuadro(1000 / 30)).toBe(2);
-    expect(subpassosDoQuadro(1000 / 120)).toBe(1);
+  it("um passo por quadro a 60 Hz, dois a 30 Hz, um a cada dois quadros a 120 Hz", () => {
+    expect(passosEm(60, 1000 / 60)).toEqual(Array(60).fill(1));
+    expect(passosEm(30, 1000 / 30)).toEqual(Array(30).fill(2));
+    expect(soma(passosEm(120, 1000 / 120))).toBe(60);
+    expect(Math.max(...passosEm(120, 1000 / 120))).toBe(1);
   });
 
-  it("quadro muito longo tem teto; quadro inválido não anda", () => {
-    expect(subpassosDoQuadro(5000)).toBe(4);
-    expect(subpassosDoQuadro(0)).toBe(0);
-    expect(subpassosDoQuadro(-3)).toBe(0);
-    expect(subpassosDoQuadro(Number.NaN)).toBe(0);
+  it("um segundo a 144 Hz são 60 passos, como em qualquer taxa", () => {
+    expect(soma(passosEm(144, 1000 / 144))).toBe(60);
+  });
+
+  it("a 60 Hz com o dt real oscilando, nunca alterna zero e dois passos", () => {
+    const passos = passosEm(600, (q) => (q % 2 === 0 ? 16.6 : 16.74));
+    expect(passos.every((p) => p === 1)).toBe(true);
+  });
+
+  it("quadro muito longo tem teto e descarta o resto; quadro inválido não anda", () => {
+    expect(subpassosDoQuadro(5000)).toEqual({ passos: 4, restoMs: 0 });
+    expect(subpassosDoQuadro(0)).toEqual({ passos: 0, restoMs: 0 });
+    expect(subpassosDoQuadro(-3, 2)).toEqual({ passos: 0, restoMs: 2 });
+    expect(subpassosDoQuadro(Number.NaN).passos).toBe(0);
   });
 });
 
@@ -87,10 +111,14 @@ describe("avancarMola e assentou", () => {
     for (let i = 1; i < picos.length; i++) expect(picos[i]).toBeLessThan(picos[i - 1]);
   });
 
-  it("assenta no mesmo tempo a 30 Hz e a 60 Hz (não fica lento no modo de baixo consumo)", () => {
-    const a60 = simular(assentar(REPOUSO), CANTO, 1000 / 60).quadros * (1000 / 60);
-    const a30 = simular(assentar(REPOUSO), CANTO, 1000 / 30).quadros * (1000 / 30);
-    expect(Math.abs(a30 - a60)).toBeLessThanOrEqual(1000 / 30);
+  it("assenta no mesmo tempo a 30, 60, 120 e 144 Hz", () => {
+    const tempo = (hz: number) => simular(assentar(REPOUSO), CANTO, 1000 / hz).quadros * (1000 / hz);
+    const a60 = tempo(60);
+    // Não fica lento no modo de baixo consumo do iPhone...
+    expect(Math.abs(tempo(30) - a60)).toBeLessThanOrEqual(1000 / 30);
+    // ...nem rápido numa tela de 120 Hz ou 144 Hz.
+    expect(Math.abs(tempo(120) - a60)).toBeLessThanOrEqual(1000 / 60);
+    expect(Math.abs(tempo(144) - a60)).toBeLessThanOrEqual(1000 / 60);
   });
 
   it("assentar põe exatamente no alvo, sem resto: o estado final é o de quem nunca se moveu", () => {
@@ -112,6 +140,7 @@ describe("avancarMola e assentou", () => {
       x: { posicao: 0.5, velocidade: 0.01 },
       y: { posicao: 0.5, velocidade: 0 },
       intensidade: { posicao: 0, velocidade: 0 },
+      restoMs: 0,
     };
     expect(assentou(quase, REPOUSO)).toBe(false);
   });
@@ -164,7 +193,12 @@ describe("estiloDaInclinacao", () => {
 
   it("a ultrapassagem da mola não leva o brilho para fora de 0–1", () => {
     const e = estiloDaInclinacao(
-      { x: { posicao: 1.08, velocidade: 0 }, y: { posicao: -0.05, velocidade: 0 }, intensidade: { posicao: 1.1, velocidade: 0 } },
+      {
+        x: { posicao: 1.08, velocidade: 0 },
+        y: { posicao: -0.05, velocidade: 0 },
+        intensidade: { posicao: 1.1, velocidade: 0 },
+        restoMs: 0,
+      },
       10,
     );
     expect(e.px).toBe("1.000");

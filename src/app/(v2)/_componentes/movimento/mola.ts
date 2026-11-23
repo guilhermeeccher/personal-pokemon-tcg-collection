@@ -10,11 +10,15 @@
  * `v = (v + (alvo − x) · k) · amortecimento; x += v`. Rodada uma vez por
  * quadro, ela anda na metade da velocidade quando o iPhone limita o
  * `requestAnimationFrame` a 30 fps (modo de baixo consumo) e o dobro numa
- * tela de 120 Hz. Por isso o passo é sempre o de 60 Hz, e um quadro longo
- * roda vários passos (`avancarMola`): o tempo até a carta assentar é o
- * mesmo em qualquer taxa de quadros. O teto de subpassos impede que um
- * quadro muito atrasado (aba que voltou do fundo) vire uma rajada de
- * cálculo — nesse caso a mola só anda menos, o que não se vê.
+ * tela de 120 Hz. Por isso o passo é sempre o de 60 Hz: um quadro longo
+ * roda vários passos, e um quadro curto pode não rodar nenhum — o tempo
+ * que sobra ou falta fica guardado no estado (`restoMs`) e entra na conta
+ * do quadro seguinte (`subpassosDoQuadro`). Assim o tempo até a carta
+ * assentar é o mesmo a 30, 60, 120 ou 144 Hz; numa tela de 120 Hz a carta
+ * muda de posição a cada dois quadros, que é a cadência da referência.
+ * O teto de subpassos impede que um quadro muito atrasado (aba que voltou
+ * do fundo) vire uma rajada de cálculo — nesse caso a mola só anda menos,
+ * o que não se vê, e o resto é descartado.
  *
  * ## Por que a carta "assenta" e o laço para
  *
@@ -73,6 +77,8 @@ export interface EstadoInclinacao {
   x: Eixo;
   y: Eixo;
   intensidade: Eixo;
+  /** Tempo já vivido que ainda não virou passo (pode ser negativo, até meio passo). */
+  restoMs: number;
 }
 
 export interface AlvoInclinacao {
@@ -90,17 +96,25 @@ export function assentar(alvo: AlvoInclinacao = REPOUSO): EstadoInclinacao {
     x: { posicao: alvo.x, velocidade: 0 },
     y: { posicao: alvo.y, velocidade: 0 },
     intensidade: { posicao: alvo.intensidade, velocidade: 0 },
+    restoMs: 0,
   };
 }
 
 /**
- * Quantos passos de 1/60 s cabem num quadro de `dtMs`. Quadro inválido ou
- * nulo não anda; o primeiro quadro de um laço, que não tem anterior, deve
- * passar `PASSO_REFERENCIA_MS`.
+ * Quantos passos de 1/60 s cabem num quadro de `dtMs`, somado o resto do
+ * quadro anterior, e o novo resto. Arredonda em vez de truncar: a 60 Hz o
+ * `dt` real oscila em volta de 16,67 ms (16,6, 16,7…), e truncar daria
+ * quadros de zero e de dois passos alternados. O resto com sinal devolve a
+ * diferença no quadro seguinte. Quadro inválido ou nulo não anda; o
+ * primeiro quadro de um laço, que não tem anterior, deve passar
+ * `PASSO_REFERENCIA_MS`.
  */
-export function subpassosDoQuadro(dtMs: number): number {
-  if (!Number.isFinite(dtMs) || dtMs <= 0) return 0;
-  return Math.min(MAX_SUBPASSOS, Math.max(1, Math.round(dtMs / PASSO_REFERENCIA_MS)));
+export function subpassosDoQuadro(dtMs: number, restoMs = 0): { passos: number; restoMs: number } {
+  if (!Number.isFinite(dtMs) || dtMs <= 0) return { passos: 0, restoMs };
+  const total = restoMs + dtMs;
+  const passos = Math.max(0, Math.round(total / PASSO_REFERENCIA_MS));
+  if (passos > MAX_SUBPASSOS) return { passos: MAX_SUBPASSOS, restoMs: 0 };
+  return { passos, restoMs: total - passos * PASSO_REFERENCIA_MS };
 }
 
 /** Avança a mola pelo tempo de um quadro. */
@@ -111,12 +125,13 @@ export function avancarMola(
   parametros: ParametrosMola = MOLA_CARTA,
 ): EstadoInclinacao {
   let { x, y, intensidade } = estado;
-  for (let i = subpassosDoQuadro(dtMs); i > 0; i--) {
+  const { passos, restoMs } = subpassosDoQuadro(dtMs, estado.restoMs);
+  for (let i = passos; i > 0; i--) {
     x = passoEixo(x, alvo.x, parametros);
     y = passoEixo(y, alvo.y, parametros);
     intensidade = passoEixo(intensidade, alvo.intensidade, parametros);
   }
-  return { x, y, intensidade };
+  return { x, y, intensidade, restoMs };
 }
 
 /** A carta chegou ao alvo e pode sair do laço de quadros. */
