@@ -13,8 +13,9 @@
  * pergunta pelo diálogo de confirmação, e cancelar não envia nada. O que o
  * HOME não recebe daquele jogo nunca aparece aqui (`naoTransferiveis`).
  *
- * Depois de um envio aceito a página é lida de novo (`router.refresh`): os
- * registros vêm do servidor, e a grade abaixo muda de estado junto.
+ * Depois de um envio aceito, ou de uma recusa por lista velha (404, 409), a
+ * página é lida de novo (`router.refresh`): os registros vêm do servidor, e a
+ * grade abaixo muda de estado junto.
  */
 
 import { useRouter } from "next/navigation";
@@ -48,7 +49,16 @@ export function LevarAoHome({ formas, registros }: { formas: FormaDexDTO[]; regi
     },
     [avisar, router, t],
   );
-  const { mover, ocupado, erro, dialogo } = useTransferencia(aoConcluir);
+  // 404 ou 409: outra aba moveu ou apagou um registro do lote, e nada foi
+  // gravado. A frase fica; a lista é lida de novo, para o próximo clique
+  // partir do que o servidor tem.
+  const aoRecusar = useCallback(
+    (status: number) => {
+      if (status === 404 || status === 409) router.refresh();
+    },
+    [router],
+  );
+  const { mover, ocupado, erro, dialogo } = useTransferencia(aoConcluir, { aoRecusar });
   const [abertos, setAbertos] = useState<ReadonlySet<string>>(new Set());
 
   const formaPorId = useMemo(() => new Map(formas.map((f) => [f.id, f])), [formas]);

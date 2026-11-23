@@ -40,9 +40,15 @@ export interface MoverRegistros {
 /**
  * `aoConcluir(movidos)` roda depois de um movimento aceito (a tela relê o que
  * mudou). `erroPadrao` é a frase da tela quando a resposta não traz recusa
- * reconhecível (rede caída, 5xx).
+ * reconhecível (rede caída, 5xx). `aoRecusar(status)` roda depois de uma
+ * recusa, com a frase já em `erro`: num 404 ou 409 a tela está velha (outra
+ * aba moveu ou apagou o registro) e quem usa decide reler.
  */
-export function useMoverRegistros(aoConcluir: (movidos: number) => void, erroPadrao: string): MoverRegistros {
+export function useMoverRegistros(
+  aoConcluir: (movidos: number) => void,
+  erroPadrao: string,
+  aoRecusar?: (status: number) => void,
+): MoverRegistros {
   const tr = useTranslations("recusas");
   const [pendente, setPendente] = useState<PendenteSemVolta | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -72,6 +78,7 @@ export function useMoverRegistros(aoConcluir: (movidos: number) => void, erroPad
         setPendente(null);
         if (resposta.tipo === "recusa") {
           setErro(textoDaRecusa(tr, resposta.corpo, erroPadrao));
+          aoRecusar?.(r.status);
           return;
         }
         aoConcluir(resposta.movidos);
@@ -84,7 +91,7 @@ export function useMoverRegistros(aoConcluir: (movidos: number) => void, erroPad
         setOcupado(false);
       }
     },
-    [tr, erroPadrao, aoConcluir],
+    [tr, erroPadrao, aoConcluir, aoRecusar],
   );
 
   const mover = useCallback((ids: readonly string[], local: string) => enviar({ ids, local }, false), [enviar]);

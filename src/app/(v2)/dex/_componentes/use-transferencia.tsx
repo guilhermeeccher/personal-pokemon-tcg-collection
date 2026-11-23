@@ -37,7 +37,11 @@ import estilos from "./dex.module.css";
 
 export function useTransferencia(
   aoConcluir: (movidos: number) => void,
-  opcoes?: { devolverFocoPara?: ResolvedorFoco },
+  opcoes?: {
+    devolverFocoPara?: ResolvedorFoco;
+    /** Depois de uma recusa (a frase já está em `erro`); num 404 ou 409 a tela está velha e deve reler. */
+    aoRecusar?: (status: number) => void;
+  },
 ): {
   mover: (ids: readonly string[], local: string) => Promise<void>;
   ocupado: boolean;
@@ -45,7 +49,7 @@ export function useTransferencia(
   dialogo: ReactNode;
 } {
   const t = useTranslations("v2Dex.transferencia");
-  const { mover, confirmar, cancelar, pendente, ocupado, erro } = useMoverRegistros(aoConcluir, t("erro"));
+  const { mover, confirmar, cancelar, pendente, ocupado, erro } = useMoverRegistros(aoConcluir, t("erro"), opcoes?.aoRecusar);
 
   const dialogo = (
     <DialogoConfirmacao
