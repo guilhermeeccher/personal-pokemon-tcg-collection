@@ -155,7 +155,9 @@ export function PainelTrofeus({
     });
     if (ok) {
       avisar(t("planoCriado"), { tom: "sucesso" });
-      router.push("/dex/planos");
+      // Na mesma transição da releitura: a tela segue ocupada até os planos
+      // abrirem, e um segundo "Caçar" não cria outro plano no meio do caminho.
+      iniciarReleitura(() => router.push("/dex/planos"));
     }
   }
 

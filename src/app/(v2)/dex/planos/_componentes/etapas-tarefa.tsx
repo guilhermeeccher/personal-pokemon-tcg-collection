@@ -99,6 +99,11 @@ export function EtapasTarefa({
     if (!focar.current || ocupado || aberto) return;
     const seletores = focar.current;
     focar.current = null;
+    // Só devolve o foco que se perdeu (no `body`) ou que ficou neste checklist:
+    // se a pessoa abriu outra coisa durante a espera (o "Mais", um diálogo),
+    // o foco é dela, e puxá-lo para trás de uma camada modal quebraria a contenção.
+    const atual = document.activeElement;
+    if (atual && atual !== document.body && !raiz.current?.contains(atual)) return;
     for (const seletor of seletores) {
       const alvo = raiz.current?.querySelector<HTMLElement>(`${seletor}:not(:disabled)`);
       if (alvo) {
