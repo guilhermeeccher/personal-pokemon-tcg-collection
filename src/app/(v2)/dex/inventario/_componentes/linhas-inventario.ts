@@ -84,6 +84,15 @@ export function destinosDoGrupo(local: string, jogos: readonly JogoPossuidoDTO[]
 }
 
 /**
+ * "Mover 1 para…" aparece quando há um destino além do HOME — o HOME tem o
+ * botão próprio, "Enviar 1 ao HOME". A v1 pedia dois destinos quaisquer, e um
+ * Pokémon no HOME com um só jogo ativo ficava sem como sair de lá.
+ */
+export function temMoverPara(destinos: readonly string[]): boolean {
+  return destinos.some((d) => d !== LOCAL_HOME);
+}
+
+/**
  * O registro que "Enviar 1" e "Mover 1" movem é o mais antigo do grupo, e o
  * que "Apagar 1" apaga é o mais novo — o que a v1 faz. Apagar é para
  * lançamento errado, e o último lançado é o candidato natural; mover leva o

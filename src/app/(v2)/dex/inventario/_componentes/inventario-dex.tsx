@@ -22,12 +22,19 @@
  *
  * Tudo vem do servidor de uma vez e filtra local; depois de uma ação aceita,
  * ou de uma recusa que diz que a lista está velha (404, 409 — outra aba
- * moveu ou apagou), a página é lida de novo (`router.refresh`).
+ * moveu ou apagou), a página é lida de novo (`router.refresh`, numa
+ * transição). **Enquanto a releitura não chega, as ações ficam desligadas**:
+ * o `refresh` não espera os dados, e um segundo clique agiria sobre o grupo
+ * de antes (o id que já saiu, a correção com os valores velhos).
+ *
+ * O foco, ao fechar uma janela, volta ao controle que a abriu; se ele está
+ * desligado (a ação saiu e a lista está sendo relida) ou sumiu, vai ao
+ * título da página, nunca ao nada.
  */
 
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useId, useMemo, useState } from "react";
+import { useCallback, useId, useMemo, useRef, useState, useTransition } from "react";
 
 import { useRotuloForma } from "@/app/_comum/dex/use-rotulo-forma";
 import { textoDaRecusa } from "@/app/_comum/recusa";
@@ -53,6 +60,7 @@ import {
   idParaMover,
   type LinhaInventarioDex,
   linhasDoInventario,
+  temMoverPara,
   totalDePokemon,
 } from "./linhas-inventario";
 
@@ -82,6 +90,15 @@ export function InventarioDex({
   const rotulo = useRotuloForma(formas);
   const idPainelFiltros = useId();
   const { confirmar, dialogo: dialogoApagar } = useConfirmacao();
+  const [atualizando, iniciarAtualizacao] = useTransition();
+  const reler = useCallback(() => iniciarAtualizacao(() => router.refresh()), [router]);
+  const titulo = useRef<HTMLHeadingElement>(null);
+  // O último botão (ou seletor) que abriu uma janela: o foco volta a ele se ainda der.
+  const abridor = useRef<HTMLButtonElement | HTMLSelectElement | null>(null);
+  const devolverFoco = useCallback(() => {
+    const a = abridor.current;
+    return a && a.isConnected && !a.disabled ? a : titulo.current;
+  }, []);
 
   const [filtros, setFiltros] = useState<FiltrosInventarioDex>(FILTROS_INVENTARIO_VAZIOS);
   // Só a visibilidade do painel muda abaixo de 768 px; a partir dali o CSS o mostra sempre.
@@ -94,21 +111,24 @@ export function InventarioDex({
   const aoConcluir = useCallback(
     (movidos: number) => {
       avisar(t("movidos", { quantidade: movidos }), { tom: "sucesso" });
-      router.refresh();
+      reler();
     },
-    [avisar, router, t],
+    [avisar, reler, t],
   );
   // 404 ou 409: outra aba moveu ou apagou o registro, e nada foi gravado. A
   // frase fica; a lista é lida de novo, para o próximo clique partir do que
   // o servidor tem.
   const aoRecusar = useCallback(
     (status: number) => {
-      if (status === 404 || status === 409) router.refresh();
+      if (status === 404 || status === 409) reler();
     },
-    [router],
+    [reler],
   );
-  const { mover, ocupado: movendo, erro: erroMover, dialogo: dialogoMover } = useTransferencia(aoConcluir, { aoRecusar });
-  const ocupado = movendo || apagando;
+  const { mover, ocupado: movendo, erro: erroMover, dialogo: dialogoMover } = useTransferencia(aoConcluir, {
+    aoRecusar,
+    devolverFocoPara: devolverFoco,
+  });
+  const ocupado = movendo || apagando || atualizando;
 
   const linhas = useMemo(() => linhasDoInventario(registros, formas, filtros), [registros, formas, filtros]);
   const totalPokemon = totalDePokemon(linhas);
@@ -120,13 +140,16 @@ export function InventarioDex({
     setAVista(POR_VEZ);
   }
 
-  async function apagarUm(linha: LinhaInventarioDex) {
+  async function apagarUm(linha: LinhaInventarioDex, botao: HTMLButtonElement) {
+    if (ocupado) return;
+    abridor.current = botao;
     const nome = rotulo.nome(linha.forma);
     const ok = await confirmar({
       titulo: t("apagarTitulo", { nome }),
       descricao: t("apagarTexto"),
       rotuloConfirmar: t("apagarConfirmar"),
       perigoso: true,
+      devolverFocoPara: devolverFoco,
     });
     if (!ok) return;
     setApagando(true);
@@ -136,11 +159,11 @@ export function InventarioDex({
       if (!r.ok) {
         setErro(textoDaRecusa(tr, await r.json().catch(() => null), td("inventario.erro")));
         // 404: o registro já não existe (outra aba apagou ou moveu); a lista é lida de novo.
-        if (r.status === 404) router.refresh();
+        if (r.status === 404) reler();
         return;
       }
       avisar(t("apagado", { nome }), { tom: "sucesso" });
-      router.refresh();
+      reler();
     } catch {
       setErro(td("inventario.erro"));
     } finally {
@@ -155,7 +178,9 @@ export function InventarioDex({
       <header className={estilos.cabecalho}>
         <div>
           <p className={estilos.sobretitulo}>Living Dex</p>
-          <h1 className={estilos.titulo}>{td("inventario.titulo")}</h1>
+          <h1 ref={titulo} tabIndex={-1} className={estilos.titulo}>
+            {td("inventario.titulo")}
+          </h1>
           <p className={estilos.subtitulo}>{t("descricao")}</p>
         </div>
         <div className={estilos.acoesCab}>
@@ -290,19 +315,24 @@ export function InventarioDex({
                         className={estilos.enviar}
                         disabled={ocupado}
                         aria-label={t("enviarRotulo", { nome: nomeAcessivel })}
-                        onClick={() => mover([idParaMover(g)], LOCAL_HOME)}
+                        onClick={(e) => {
+                          abridor.current = e.currentTarget;
+                          void mover([idParaMover(g)], LOCAL_HOME);
+                        }}
                       >
                         {td("inventario.enviarHome")}
                       </Botao>
                     )}
-                    {destinos.length > 1 && (
+                    {temMoverPara(destinos) && (
                       <Selecao
                         aria-label={t("moverRotulo", { nome: nomeAcessivel })}
                         className={estilos.mover}
                         value=""
                         disabled={ocupado}
                         onChange={(e) => {
-                          if (e.target.value) void mover([idParaMover(g)], e.target.value);
+                          if (!e.target.value) return;
+                          abridor.current = e.currentTarget;
+                          void mover([idParaMover(g)], e.target.value);
                         }}
                       >
                         <option value="">{td("inventario.moverPara")}</option>
@@ -317,7 +347,10 @@ export function InventarioDex({
                       pequeno
                       disabled={ocupado}
                       aria-label={t("corrigirRotulo", { nome: nomeAcessivel, quantidade: g.ids.length })}
-                      onClick={() => setCorrigindo(linha)}
+                      onClick={(e) => {
+                        abridor.current = e.currentTarget;
+                        setCorrigindo(linha);
+                      }}
                     >
                       {td("inventario.corrigir")}
                     </Botao>
@@ -326,7 +359,7 @@ export function InventarioDex({
                       variante="perigo"
                       disabled={ocupado}
                       aria-label={t("apagarRotulo", { nome: nomeAcessivel })}
-                      onClick={() => void apagarUm(linha)}
+                      onClick={(e) => void apagarUm(linha, e.currentTarget)}
                     >
                       {td("inventario.apagar")}
                     </Botao>
@@ -349,15 +382,16 @@ export function InventarioDex({
         linha={corrigindo}
         nome={corrigindo ? rotulo.nome(corrigindo.forma) : ""}
         jogos={jogos}
+        devolverFocoPara={devolverFoco}
         aoFechar={(salvou) => {
           setCorrigindo(null);
           if (salvou) {
             avisar(t("corrigido"), { tom: "sucesso" });
-            router.refresh();
+            reler();
           }
         }}
         aoRecusar={(status) => {
-          if (status === 404) router.refresh();
+          if (status === 404) reler();
         }}
       />
     </div>

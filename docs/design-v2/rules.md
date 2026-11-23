@@ -690,7 +690,15 @@ Unnumbered on purpose: packages 5b to 5e run in parallel, and the numbers are gi
   `PATCH /api/dex/registros` for the whole group and never touches the location. Moving goes
   through `useTransferencia`, so leaving a send-only game always asks. "Move 1 to…" offers HOME and
   the active games but the current one, the v1's list: the screen does not second-guess the HOME
-  rules, and a destination the route refuses shows the route's sentence.
+  rules, and a destination the route refuses shows the route's sentence. It shows whenever one
+  destination besides HOME exists: the v1 asked for two of any kind, which left a Pokémon in HOME
+  with a single active game no way out (still so in the v1).
+- **After a write, the actions stay off until the reread arrives** (`router.refresh` inside a
+  transition, on both screens): the refresh does not wait for the data, and a second click in
+  between would act on the old group or open an edit with the values from before the save. A
+  dialog closing returns focus to the control that opened it, or to the page title when that
+  control is off or gone. `/dex/jogos` also rereads on a 409 (the game added or given a record in
+  another tab).
 - **The inventory mounts 60 groups at a time** ("Show more"; a filter change starts over), so a
   collection of years of GO never puts hundreds of rows with their buttons on one page (rule 13's
   node budget). The count at the top is always the whole list's.

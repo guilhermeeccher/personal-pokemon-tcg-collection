@@ -9,6 +9,7 @@ import {
   idParaApagar,
   idParaMover,
   linhasDoInventario,
+  temMoverPara,
   totalDePokemon,
 } from "./linhas-inventario";
 
@@ -136,6 +137,15 @@ describe("destinosDoGrupo", () => {
 
   it("um grupo num jogo parado ainda pode sair dele", () => {
     expect(destinosDoGrupo("sword", jogos)).toEqual(["home", "scarlet", "go"]);
+  });
+});
+
+describe("temMoverPara", () => {
+  it("aparece com um destino além do HOME, mesmo que seja um só", () => {
+    expect(temMoverPara(destinosDoGrupo("home", [jogo("scarlet")]))).toBe(true);
+    expect(temMoverPara(destinosDoGrupo("scarlet", [jogo("scarlet")]))).toBe(false);
+    expect(temMoverPara(destinosDoGrupo("home", [jogo("sword", false)]))).toBe(false);
+    expect(temMoverPara(destinosDoGrupo("scarlet", [jogo("scarlet"), jogo("go")]))).toBe(true);
   });
 });
 

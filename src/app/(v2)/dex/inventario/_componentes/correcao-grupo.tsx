@@ -25,6 +25,7 @@ import type { JogoPossuidoDTO } from "@/lib/dominio/tipos-cliente";
 import { Botao } from "../../../_componentes/primitivos/botao";
 import { Campo, Selecao } from "../../../_componentes/primitivos/campo";
 import { Modal } from "../../../_componentes/primitivos/modal";
+import type { ResolvedorFoco } from "../../../_componentes/primitivos/use-camada";
 import { AvisoEmLinha } from "../../../_componentes/primitivos/painel";
 
 import estilos from "./inventario-dex.module.css";
@@ -36,6 +37,7 @@ export function CorrecaoGrupo({
   jogos,
   aoFechar,
   aoRecusar,
+  devolverFocoPara,
 }: {
   /** O grupo em correção; nulo fecha a janela. */
   linha: LinhaInventarioDex | null;
@@ -43,6 +45,7 @@ export function CorrecaoGrupo({
   jogos: readonly JogoPossuidoDTO[];
   aoFechar: (salvou: boolean) => void;
   aoRecusar: (status: number) => void;
+  devolverFocoPara?: ResolvedorFoco;
 }) {
   const t = useTranslations("v2DexInventario");
   const td = useTranslations("dex");
@@ -59,6 +62,7 @@ export function CorrecaoGrupo({
       titulo={linha ? td("inventario.corrigirTitulo", { quantidade: String(linha.grupo.ids.length) }) : ""}
       descricao={linha ? t("corrigirTexto", { nome }) : undefined}
       fecharPeloVeu={false}
+      devolverFocoPara={devolverFocoPara}
       rodape={
         <>
           <Botao variante="fantasma" disabled={salvando} onClick={fechar}>

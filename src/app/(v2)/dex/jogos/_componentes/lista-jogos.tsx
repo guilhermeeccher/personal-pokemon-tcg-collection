@@ -16,14 +16,21 @@
  * - **Os troféus de um jogo** abrem a tela de troféus com `?jogo=` (JOG-05),
  *   que a v1 lê; enquanto ela é ponte, o 307 leva a query.
  *
- * Depois de uma escrita aceita a página é lida de novo (`router.refresh`);
- * um 404 (outra aba removeu o jogo) também relê.
+ * Depois de uma escrita aceita a página é lida de novo (`router.refresh`,
+ * numa transição); um 404 (outra aba removeu o jogo) ou um 409 (outra aba já
+ * o marcou, ou pôs um Pokémon nele) também relê, com a frase da recusa à
+ * vista. **Enquanto a releitura não chega, os botões ficam desligados**: o
+ * `refresh` não espera os dados, e editar de novo nesse meio-tempo abriria o
+ * rascunho com os valores de antes da gravação.
+ *
+ * O foco, ao fechar a confirmação de remover, volta ao botão que a abriu se
+ * ele ainda estiver ligado; senão, ao título da página.
  */
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useCallback, useRef, useState, useTransition } from "react";
 
 import { textoDaRecusa } from "@/app/_comum/recusa";
 import { JOGOS_DEX } from "@/lib/dominio/dex-jogos";
@@ -55,6 +62,9 @@ export function ListaJogos({
   const router = useRouter();
   const avisar = useAviso();
   const { confirmar, dialogo } = useConfirmacao();
+  const [atualizando, iniciarAtualizacao] = useTransition();
+  const reler = useCallback(() => iniciarAtualizacao(() => router.refresh()), [router]);
+  const titulo = useRef<HTMLHeadingElement>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState<Ocupado>(null);
   const [editando, setEditando] = useState<string | null>(null);
@@ -65,11 +75,12 @@ export function ListaJogos({
   // Outra aba pode ter marcado o jogo escolhido: o seletor nunca mostra um que já saiu da lista.
   const jogoNovo = disponiveis.some((j) => j.id === novo.jogoId) ? novo.jogoId : (disponiveis[0]?.id ?? "");
 
+  const travado = ocupado !== null || atualizando;
   const carregando = (acao: "salvar" | "ativo" | "remover", id: string) =>
     ocupado !== null && ocupado.acao === acao && "id" in ocupado && ocupado.id === id;
 
   async function enviar(url: string, method: string, corpo: unknown, qual: NonNullable<Ocupado>): Promise<boolean> {
-    if (ocupado) return false;
+    if (travado) return false;
     setOcupado(qual);
     setErro(null);
     try {
@@ -80,10 +91,10 @@ export function ListaJogos({
       });
       if (!r.ok) {
         setErro(textoDaRecusa(tr, await r.json().catch(() => null), td("jogos.erro")));
-        if (r.status === 404) router.refresh();
+        if (r.status === 404 || r.status === 409) reler();
         return false;
       }
-      router.refresh();
+      reler();
       return true;
     } catch {
       setErro(td("jogos.erro"));
@@ -119,12 +130,14 @@ export function ListaJogos({
     }
   }
 
-  async function remover(j: JogoPossuidoDTO) {
+  async function remover(j: JogoPossuidoDTO, botao: HTMLButtonElement) {
+    if (travado) return;
     const ok = await confirmar({
       titulo: td("jogos.confirmarRemover", { jogo: j.nome }),
       descricao: t("removerTexto"),
       rotuloConfirmar: td("jogos.remover"),
       perigoso: true,
+      devolverFocoPara: () => (botao.isConnected && !botao.disabled ? botao : titulo.current),
     });
     if (!ok) return;
     if (await enviar(`/api/dex/jogos/${j.id}`, "DELETE", undefined, { acao: "remover", id: j.id })) {
@@ -137,7 +150,9 @@ export function ListaJogos({
       <header className={estilos.cabecalho}>
         <div>
           <p className={estilos.sobretitulo}>Living Dex</p>
-          <h1 className={estilos.titulo}>{td("jogos.titulo")}</h1>
+          <h1 ref={titulo} tabIndex={-1} className={estilos.titulo}>
+            {td("jogos.titulo")}
+          </h1>
           <p className={estilos.subtitulo}>{t("descricao")}</p>
         </div>
         <div className={estilos.acoesCab}>
@@ -228,7 +243,7 @@ export function ListaJogos({
                       onChange={(e) => setRascunho((r) => ({ ...r, notas: e.target.value }))}
                     />
                     <div className={estilos.acoesForm}>
-                      <Botao variante="fantasma" pequeno disabled={ocupado !== null} onClick={() => setEditando(null)}>
+                      <Botao variante="fantasma" pequeno disabled={travado} onClick={() => setEditando(null)}>
                         {td("jogos.cancelar")}
                       </Botao>
                       <Botao
@@ -236,7 +251,7 @@ export function ListaJogos({
                         variante="primario"
                         pequeno
                         carregando={carregando("salvar", j.id)}
-                        disabled={ocupado !== null}
+                        disabled={travado}
                       >
                         {td("jogos.salvar")}
                       </Botao>
@@ -246,7 +261,7 @@ export function ListaJogos({
                   <div className={estilos.acoes}>
                     <Botao
                       pequeno
-                      disabled={ocupado !== null}
+                      disabled={travado}
                       aria-label={t("editarRotulo", { jogo: j.nome })}
                       onClick={() => {
                         setRascunho({ desde: j.desde ?? "", notas: j.notas ?? "" });
@@ -258,7 +273,7 @@ export function ListaJogos({
                     <Botao
                       pequeno
                       carregando={carregando("ativo", j.id)}
-                      disabled={ocupado !== null}
+                      disabled={travado}
                       onClick={() => void alternarAtivo(j)}
                     >
                       {j.ativo ? td("jogos.desativar") : td("jogos.reativar")}
@@ -267,9 +282,9 @@ export function ListaJogos({
                       pequeno
                       variante="perigo"
                       carregando={carregando("remover", j.id)}
-                      disabled={ocupado !== null}
+                      disabled={travado}
                       aria-label={t("removerRotulo", { jogo: j.nome })}
-                      onClick={() => void remover(j)}
+                      onClick={(e) => void remover(j, e.currentTarget)}
                     >
                       {td("jogos.remover")}
                     </Botao>
@@ -316,7 +331,7 @@ export function ListaJogos({
               type="submit"
               variante="primario"
               carregando={ocupado?.acao === "adicionar"}
-              disabled={ocupado !== null || !jogoNovo}
+              disabled={travado || !jogoNovo}
             >
               {td("jogos.adicionar")}
             </Botao>
