@@ -27,7 +27,7 @@
  * pendências, período) estão em `opcoes-compra.ts`, testadas sem banco.
  */
 
-import { ArrowLeft, CircleAlert, Download, ShoppingCart, WandSparkles } from "lucide-react";
+import { ArrowLeft, CircleAlert, FileSpreadsheet, FileText, WandSparkles } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
@@ -43,10 +43,9 @@ import { Carta } from "../../../../_componentes/carta/carta";
 import { useFormatos } from "../../../../_componentes/detalhe/formatos";
 import { useAviso } from "../../../../_componentes/primitivos/aviso-flutuante";
 import { Botao, BotaoLink } from "../../../../_componentes/primitivos/botao";
-import { Campo } from "../../../../_componentes/primitivos/campo";
+import { Campo, Selecao } from "../../../../_componentes/primitivos/campo";
 import { Modal } from "../../../../_componentes/primitivos/modal";
 import { AvisoEmLinha, Painel } from "../../../../_componentes/primitivos/painel";
-import { Segmentado } from "../../../../_componentes/primitivos/segmentado";
 import { type CorpoSelecao, type DesfechoDaSelecao, juntarCorpos } from "../../_componentes/compra-falta";
 import { enviarSelecao, enviosConcluidos, useEnvios } from "../../_componentes/envio-selecao";
 
@@ -518,37 +517,21 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
               erro={teto.valido ? undefined : t("erroTeto")}
             />
           </div>
-          {ehSet ? (
-            <div className={estilos.grupoOrdem}>
-              <span className={estilos.rotuloGrupo} id="v2-opcoes-ordem-vagas">
-                {t("parametros.ordenarLista")}
-              </span>
-              <Segmentado<OrdemVagasSet>
-                rotulo={t("parametros.ordenarLista")}
-                valor={ordemVagas}
-                aoMudar={setOrdemVagas}
-                pequeno
-                opcoes={[
-                  { valor: "numero", rotulo: t("parametros.ordemNumero") },
-                  { valor: "preco", rotulo: t("parametros.ordemMaisBarata") },
-                ]}
-              />
-            </div>
-          ) : (
-            <div className={estilos.grupoOrdem}>
-              <span className={estilos.rotuloGrupo}>{t("parametros.ordenarPor")}</span>
-              <Segmentado<Ordenacao>
-                rotulo={t("parametros.ordenarPor")}
-                valor={ordenacao}
-                aoMudar={setOrdenacao}
-                pequeno
-                opcoes={[
-                  { valor: "preferencia", rotulo: t("parametros.ordemPreferencia") },
-                  { valor: "preco", rotulo: t("parametros.ordemMaisBarata") },
-                ]}
-              />
-            </div>
-          )}
+          {/* Um seletor nativo, e não o controle segmentado: os dois rótulos
+              lado a lado não cabem a 320 px, e o seletor encolhe. */}
+          <div className={estilos.campoOrdem}>
+            {ehSet ? (
+              <Selecao rotulo={t("parametros.ordenarLista")} value={ordemVagas} onChange={(e) => setOrdemVagas(e.target.value as OrdemVagasSet)}>
+                <option value="numero">{t("parametros.ordemNumero")}</option>
+                <option value="preco">{t("parametros.ordemMaisBarata")}</option>
+              </Selecao>
+            ) : (
+              <Selecao rotulo={t("parametros.ordenarPor")} value={ordenacao} onChange={(e) => setOrdenacao(e.target.value as Ordenacao)}>
+                <option value="preferencia">{t("parametros.ordemPreferencia")}</option>
+                <option value="preco">{t("parametros.ordemMaisBarata")}</option>
+              </Selecao>
+            )}
+          </div>
           {/* No set toda opção é a carta do próprio set, no catálogo por
               construção; no Cardmarket, toda opção é do catálogo. */}
           {!ehSet && !cardmarket ? (
@@ -819,11 +802,13 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
             </span>
           </p>
           <div className={estilos.barraAcoes}>
-            <Botao pequeno icone={<Download aria-hidden />} disabled={atualizando} onClick={() => baixar(urlExportar(id, "formato=csv"))}>
-              {t("barra.baixarCsv")}
+            {/* No celular estreito o rótulo some da vista (o leitor de tela
+                ainda o lê) e o ícone diz qual é qual: a barra fica numa linha. */}
+            <Botao pequeno icone={<FileSpreadsheet aria-hidden />} disabled={atualizando} onClick={() => baixar(urlExportar(id, "formato=csv"))}>
+              <span className={estilos.rotuloBarra}>{t("barra.baixarCsv")}</span>
             </Botao>
-            <Botao pequeno icone={<ShoppingCart aria-hidden />} disabled={atualizando} onClick={() => baixar(urlExportar(id, "formato=texto"))}>
-              {t("barra.baixarTexto")}
+            <Botao pequeno icone={<FileText aria-hidden />} disabled={atualizando} onClick={() => baixar(urlExportar(id, "formato=texto"))}>
+              <span className={estilos.rotuloBarra}>{t("barra.baixarTexto")}</span>
             </Botao>
           </div>
         </div>

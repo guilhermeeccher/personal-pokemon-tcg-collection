@@ -65,7 +65,10 @@ export const VagaOpcoes = memo(function VagaOpcoes({
   const [todas, setTodas] = useState(false);
   const cardmarket = fonte === "cardmarket";
   const marcadas = vaga.opcoes.filter((o) => o.selecionada);
-  const visiveis = todas ? vaga.opcoes : vaga.opcoes.slice(0, OPCOES_POR_VAGA);
+  // As primeiras da ordem e, além delas, toda opção marcada: a escolha da
+  // vaga nunca fica escondida atrás de "Mostrar todas" (a sem preço, como uma
+  // escolha antiga, vai para o fim da ordem).
+  const visiveis = todas ? vaga.opcoes : vaga.opcoes.filter((o, i) => i < OPCOES_POR_VAGA || o.selecionada);
   const idCorpo = `v2-vaga-${vaga.chave}`;
 
   const contagem = [

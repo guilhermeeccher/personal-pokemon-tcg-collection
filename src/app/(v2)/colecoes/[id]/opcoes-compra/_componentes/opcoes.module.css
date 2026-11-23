@@ -71,6 +71,7 @@
    diante, lado a lado, quebrando quando não cabe. */
 .campos {
   display: flex;
+  min-width: 0;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 12px 20px;
@@ -81,20 +82,18 @@
 .campoTeto {
   flex: 0 1 200px;
 }
+.campoOrdem {
+  flex: 0 1 280px;
+}
 @media (max-width: 47.99rem) {
   .campos {
     flex-direction: column;
     align-items: stretch;
   }
-  .campoTeto {
+  .campoTeto,
+  .campoOrdem {
     flex: none;
   }
-}
-.grupoOrdem {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
 }
 .rotuloGrupo {
   font-size: 13px;
@@ -590,8 +589,7 @@
 .opcaoAcoes {
   display: flex;
   flex: none;
-  flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   gap: 8px;
 }
 .linkLiga {
@@ -729,14 +727,36 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+/* Celular estreito: uma linha só — o resumo à esquerda e os dois downloads
+   como botões de ícone de 44 px (o rótulo continua para o leitor de tela). */
 @media (max-width: 29.99rem) {
+  .barra {
+    flex-wrap: nowrap;
+    padding-left: 14px;
+  }
   .barraResumo {
-    flex-basis: 100%;
+    min-width: 0;
   }
   .barraAcoes {
-    flex: 1 1 100%;
+    flex-wrap: nowrap;
   }
   .barraAcoes > * {
-    flex: 1;
+    width: 44px;
+    padding: 0;
+  }
+  .rotuloBarra {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+/* Tela baixa (o celular deitado): fixa, a barra e a de abas cobririam metade
+   da janela. Ela fica no fim da lista, no fluxo da página. */
+@media (max-height: 30rem) {
+  .barra {
+    position: static;
   }
 }
