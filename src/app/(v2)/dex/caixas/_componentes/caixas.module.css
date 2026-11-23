@@ -191,8 +191,8 @@
 /*
  * A caixa ocupa a célula da grade virtual inteira (largura e altura que a
  * grade dá). O conteúdo soma exatamente a altura calculada: cabeçalho de
- * 44 px, respiro de 8 px acima e abaixo, cinco fileiras de vagas quadradas
- * e quatro vãos de 4 px.
+ * 44 px, respiro de 8 px em volta (acima e abaixo contam na altura), cinco
+ * fileiras de vagas quadradas e quatro vãos de 4 px.
  */
 .caixa {
   display: flex;
@@ -201,7 +201,7 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  padding: 0 var(--cx-respiro) var(--cx-respiro);
+  padding: var(--cx-respiro);
   border-radius: var(--v2-raio-painel);
   background: var(--v2-superficie-1);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09);

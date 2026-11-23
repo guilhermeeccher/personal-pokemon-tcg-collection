@@ -66,6 +66,27 @@ describe("guardarRecebidos", () => {
     expect(requisitar).toHaveBeenCalledTimes(1);
   });
 
+  it("primeiro lote guardado, segundo recusado, terceiro não sai", async () => {
+    const ids = Array.from({ length: MAX_IDS_GUARDAR * 2 + 1 }, (_, i) => `id-${i}`);
+    let chamada = 0;
+    const requisitar = vi.fn<Requisitar>(async () =>
+      ++chamada === 1 ? resposta(200, { ok: true, guardados: MAX_IDS_GUARDAR }) : resposta(503, { erro: "fora" }),
+    );
+    expect(await guardarRecebidos(ids, requisitar)).toEqual({ tipo: "recusa", status: 503, corpo: { erro: "fora" } });
+    expect(requisitar).toHaveBeenCalledTimes(2);
+  });
+
+  it("falha de rede depois de um lote guardado interrompe e avisa a falha", async () => {
+    const ids = Array.from({ length: MAX_IDS_GUARDAR + 1 }, (_, i) => `id-${i}`);
+    let chamada = 0;
+    const requisitar = vi.fn<Requisitar>(async () => {
+      if (++chamada === 1) return resposta(200, { ok: true, guardados: MAX_IDS_GUARDAR });
+      throw new Error("rede");
+    });
+    expect(await guardarRecebidos(ids, requisitar)).toEqual({ tipo: "falhaDeRede" });
+    expect(requisitar).toHaveBeenCalledTimes(2);
+  });
+
   it("emLotes não cria lote vazio", () => {
     expect(emLotes([], 3)).toEqual([]);
     expect(emLotes([1, 2, 3, 4], 2)).toEqual([[1, 2], [3, 4]]);

@@ -90,11 +90,16 @@ export function RecebidosHome({
   };
 
   // A caixa que se guardou sai da lista, e com ela o botão que tinha o foco:
-  // quando a leitura nova chega, o foco vai para a contagem, que diz o que
-  // sobrou. Sem isso ele cairia no `body`.
+  // quando a leitura nova chega, **se o foco se perdeu** (caiu no `body`), ele
+  // vai para a contagem, que diz o que sobrou, e a tela rola até ela. Um foco
+  // que a pessoa mudou de propósito durante a leitura, ou o do botão que
+  // continua na tela (uma recusa), fica onde está.
   const lendoAntes = useRef(false);
   useEffect(() => {
-    if (lendoAntes.current && !lendo) status.current?.focus({ preventScroll: true });
+    if (lendoAntes.current && !lendo) {
+      const foco = document.activeElement;
+      if (!foco || foco === document.body) status.current?.focus();
+    }
     lendoAntes.current = lendo;
   }, [lendo]);
 

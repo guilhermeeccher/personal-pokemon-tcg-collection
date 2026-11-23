@@ -41,7 +41,7 @@ import type { SecoesContadas } from "@/lib/dominio/dex-secoes";
 import type { FormaDexDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 
 import { BotaoLink } from "../../../_componentes/primitivos/botao";
-import { type ControleGradeVirtual, GradeVirtual } from "../../../_componentes/grade/grade-virtual";
+import { ATRIBUTO_CELULA, type ControleGradeVirtual, GradeVirtual } from "../../../_componentes/grade/grade-virtual";
 import { AvisoEmLinha } from "../../../_componentes/primitivos/painel";
 import { Segmentado } from "../../../_componentes/primitivos/segmentado";
 import { hrefCadastroDex } from "../../_componentes/caminhos";
@@ -231,7 +231,8 @@ export function CaixasHome({
           renderizar={(caixa, celula) => (
             <CaixaDoHome
               caixa={caixa}
-              celula={celula}
+              tabIndex={celula.tabIndex}
+              indice={celula[ATRIBUTO_CELULA]}
               trilha={trilha}
               estados={estados}
               textos={textos}

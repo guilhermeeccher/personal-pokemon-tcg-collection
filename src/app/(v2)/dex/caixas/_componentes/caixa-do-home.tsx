@@ -16,7 +16,10 @@
  * - **O número nacional fica escrito em toda vaga**: na v1 só o celular o
  *   mostrava, porque o mouse tinha o cartão; aqui nada é só de hover.
  * - O elemento focável da grade virtual (`celula`) é a própria caixa: as setas
- *   andam de caixa em caixa, e o Tab entra nas vagas dela.
+ *   andam de caixa em caixa, e o Tab entra nas vagas **da caixa ativa** — as
+ *   vagas das outras caixas montadas ficam fora da ordem do Tab (`tabIndex`
+ *   -1), como a grade pede de qualquer célula (regra 28): uma parada de Tab
+ *   por caixa a mais, e não 30 por caixa montada.
  */
 
 import { memo, type PointerEvent } from "react";
@@ -27,7 +30,7 @@ import { estadoDaVaga, type EstadoVagaDex, type MapaEstadosDex } from "@/lib/dom
 import type { TrilhaDex } from "@/lib/dominio/dex-grade";
 import type { FormaDexDTO } from "@/lib/dominio/tipos-cliente";
 
-import type { PropsCelula } from "../../../_componentes/grade/grade-virtual";
+import { ATRIBUTO_CELULA } from "../../../_componentes/grade/grade-virtual";
 import type { DadosCartaoPokemon } from "../../_componentes/cartao-pokemon";
 import { SpriteDex } from "../../_componentes/sprite-dex";
 
@@ -63,7 +66,13 @@ export interface VagaAberta {
 
 interface Props {
   caixa: CaixaDex<FormaDexDTO>;
-  celula: PropsCelula;
+  /**
+   * Os dois campos da `celula` da grade, em separado: o objeto da grade é
+   * novo a cada render e furaria o `memo`. `tabIndex` é 0 só na caixa ativa
+   * (a da entrada do Tab) e vale para a caixa e para as 30 vagas dela.
+   */
+  tabIndex: 0 | -1;
+  indice: number;
   trilha: TrilhaDex;
   estados: MapaEstadosDex;
   textos: TextosCaixa;
@@ -74,7 +83,7 @@ interface Props {
 
 export const chaveDaCaixa = (c: { numero: number }) => String(c.numero);
 
-function CaixaDoHomeBruta({ caixa, celula, trilha, estados, textos, aoAbrir, previsao, fecharPrevisao }: Props) {
+function CaixaDoHomeBruta({ caixa, tabIndex, indice, trilha, estados, textos, aoAbrir, previsao, fecharPrevisao }: Props) {
   const shiny = trilha === "shiny";
   const chaveCaixa = chaveDaCaixa(caixa);
   const nome = textos.nome(caixa);
@@ -84,7 +93,8 @@ function CaixaDoHomeBruta({ caixa, celula, trilha, estados, textos, aoAbrir, pre
 
   return (
     <section
-      {...celula}
+      tabIndex={tabIndex}
+      {...{ [ATRIBUTO_CELULA]: indice }}
       role="group"
       aria-labelledby={idTitulo}
       className={estilos.caixa}
@@ -114,6 +124,7 @@ function CaixaDoHomeBruta({ caixa, celula, trilha, estados, textos, aoAbrir, pre
                   type="button"
                   className={`${estilos.vaga} ${estilos.buraco}`}
                   data-v2-vaga={f.id}
+                  tabIndex={tabIndex}
                   aria-label={`${posicao}. ${nomeForma} — ${motivo}`}
                   aria-haspopup="dialog"
                   onClick={() => {
@@ -138,6 +149,7 @@ function CaixaDoHomeBruta({ caixa, celula, trilha, estados, textos, aoAbrir, pre
                 className={estilos.vaga}
                 data-estado={estado}
                 data-v2-vaga={f.id}
+                tabIndex={tabIndex}
                 aria-label={`${posicao}. ${nomeForma} — ${textoEstado}`}
                 aria-haspopup="dialog"
                 onClick={() => {

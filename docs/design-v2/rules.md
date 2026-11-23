@@ -722,23 +722,30 @@ E. **The piece package 5b owns: the box name** (delivered 2026-11-23). Ported fr
 
     | Boxes | Mounted | DOM nodes (page) | `<img>` in the grid | Loaded | Tap, worst / median |
     |---|---|---|---|---|---|
-    | all mounted (`limiar` raised for the test) | 51 | 6,349 | 1,387 | 408 | 256 / 176 ms |
-    | virtual (the shipped `LIMIAR_CAIXAS`) | 9 | 1,414 | 270 | 270 | 88–104 / 64–96 ms (three runs) |
+    | all mounted (`limiar` raised for the test) | 51 | 6,349 | 1,387 | 408 | 72–80 / 56 ms (two runs) |
+    | virtual (the shipped `LIMIAR_CAIXAS`) | 9 | 1,414 | 270 | 270 | 56–72 / 48–56 ms (three runs) |
 
-    Mounted whole, the tab is far outside the budget; virtual, it is inside it on nodes (under 2,500)
-    and on the tap, whose worst case sat at the 100 ms line (88, 104 and 96 ms in three runs). The image count is not the
-    card budget's (rule 38): a sprite is about 36 KB decoded, so 270 of them weigh like ~30 card
-    images, against ~60 allowed. A box is a **fixed-height item**: its height is affine in its width
-    (`geometria-caixa.ts`: ratio 5/6 plus a fixed 46 px, from an 8 px padding, 4 px gaps and a 44 px
-    header), so the grid places boxes without mounting them. Those three CSS measures
-    (`--cx-respiro`, `--cx-vao`, `--cx-cabecalho`) and the constants are one decision: a test checks
-    the formula against the drawing's sum, and changing one side alone cuts the last row.
+    Mounted whole, the tab has 2.5 times the node budget (6,349 against about 2,500) and 408 loaded
+    sprites; virtual, it is inside it. **The tap no longer tells the two apart, and that is the
+    `memo` of `CaixaDoHome`:** a first build that re-rendered every box on each state change took
+    256 / 176 ms mounted whole and 88–104 / 64–96 ms virtual, and the `memo` only works because the
+    grid's `celula` object (new on every render) is passed as two primitives (`tabIndex`, `indice`).
+    What virtual still buys is the node count and the images held in memory, both of rule 13's
+    budget; the tap alone no longer decides it, and the screen keeps the grid. The image count is not the card budget's (rule 38): a sprite is about 36 KB decoded, so 270
+    of them weigh like ~30 card images, against ~60 allowed. A box is a **fixed-height item**: its
+    height is affine in its width (`geometria-caixa.ts`: ratio 5/6 plus a fixed 46 px, from an 8 px
+    padding on all four sides, 4 px gaps and a 44 px header), so the grid places boxes without
+    mounting them. Those three CSS measures (`--cx-respiro`, `--cx-vao`, `--cx-cabecalho`) and the
+    constants are one decision: a test reads the stylesheet and checks them, and changing one side
+    alone cuts the last row or leaves a gap under it.
     - **`limiar` is 10 boxes** (300 slots, rule 13's threshold in slots). "Go to" (a group's first
       box) mounts it through `elementoDe`, focuses it (the focus keeps it mounted while the scroll
       arrives) and puts it at the top of the window; the grid's own `rolarAte` only scrolls until
       the item shows. At the end of the page (Cosmetic) the box ends up as high as the page allows.
     - **The focusable element of a grid cell is the box itself** (`role="group"`): the arrows go
-      from box to box, Home and End to the ends, and Tab enters the 30 slots of the focused box.
+      from box to box, Home and End to the ends, and Tab enters the 30 slots of the active box.
+      The slots of every other mounted box are out of the Tab order (`tabIndex` -1, passed down
+      from the box's own), so Tab goes through the 30 slots of the active box, not 30 per mounted box.
     - **At 320 px a slot is 42 px** (a 288 px box, 8 px padding, 4 px gaps), 44 px from a 300 px box
       and 54 px at 393 px. A HOME box is six columns, so below ~336 px the cell cannot be 44 px with
       8 px around it; the slot keeps the whole cell as its target and the box is the one exception
