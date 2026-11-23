@@ -10,6 +10,7 @@
  * tela só a desenha.
  */
 
+import { type TradutorDeRecusa, textoDaRecusa } from "@/app/_comum/recusa";
 import { TAMANHO_MAXIMO_NOME_GRUPO } from "@/lib/dominio/grupos-colecao";
 import type { SugestaoDTO } from "@/lib/dominio/tipos-cliente";
 
@@ -17,6 +18,22 @@ import type { SugestaoDTO } from "@/lib/dominio/tipos-cliente";
 export function chaveDaRecusa(corpo: unknown): string | null {
   const recusa = (corpo as { recusa?: { chave?: unknown } } | null)?.recusa;
   return typeof recusa?.chave === "string" ? recusa.chave : null;
+}
+
+/**
+ * O motivo de uma recusa, em frase. O 409 de lista velha
+ * (`ordemDeColecoesDesatualizada`) ganha a frase da v2 (`listaVelha`): a do
+ * catálogo de recusas manda recarregar a página, e aqui a tela já relê
+ * sozinha depois de toda recusa. O resto vai por `textoDaRecusa`, e um corpo
+ * sem recusa reconhecível dá texto vazio (a tela mostra só o que aconteceu).
+ */
+export function motivoDaRecusa(
+  corpo: unknown,
+  tRecusas: TradutorDeRecusa,
+  listaVelha: string,
+): string {
+  if (chaveDaRecusa(corpo) === "ordemDeColecoesDesatualizada") return listaVelha;
+  return textoDaRecusa(tRecusas, corpo, "");
 }
 
 /**

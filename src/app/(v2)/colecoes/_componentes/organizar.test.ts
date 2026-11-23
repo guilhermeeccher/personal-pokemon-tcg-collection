@@ -7,6 +7,7 @@ import {
   chaveDaRecusa,
   colecaoQueJaExiste,
   marcasDeExistentes,
+  motivoDaRecusa,
   marcasDeFaltantes,
   nomesDeFaltantes,
   origensDaPrevia,
@@ -202,5 +203,19 @@ describe("colecaoQueJaExiste", () => {
     expect(colecaoQueJaExiste(recusa("grupoColecaoNaoEncontrado"))).toBeNull();
     expect(colecaoQueJaExiste(recusa("temaJaTemColecao"))).toBeNull();
     expect(colecaoQueJaExiste(null)).toBeNull();
+  });
+});
+
+describe("motivoDaRecusa", () => {
+  const tRecusas = Object.assign((chave: string) => `[${chave}]`, { has: (chave: string) => chave !== "desconhecida" });
+
+  it("troca a frase do 409 de lista velha pela da v2, que relê sozinha", () => {
+    expect(motivoDaRecusa(recusa("ordemDeColecoesDesatualizada"), tRecusas, "nada aplicado")).toBe("nada aplicado");
+  });
+
+  it("traduz as outras recusas e dá vazio sem recusa reconhecível", () => {
+    expect(motivoDaRecusa(recusa("setJaTemColecao"), tRecusas, "x")).toBe("[setJaTemColecao]");
+    expect(motivoDaRecusa(recusa("desconhecida"), tRecusas, "x")).toBe("");
+    expect(motivoDaRecusa(null, tRecusas, "x")).toBe("");
   });
 });

@@ -12,7 +12,7 @@ import { Botao } from "../../_componentes/primitivos/botao";
 import { Modal } from "../../_componentes/primitivos/modal";
 import { AvisoEmLinha } from "../../_componentes/primitivos/painel";
 import estilos from "./organizar.module.css";
-import { chaveDaRecusa, marcasDeExistentes, origensDaPrevia, reacaoDaPrevia } from "./organizar";
+import { chaveDaRecusa, motivoDaRecusa, marcasDeExistentes, origensDaPrevia, reacaoDaPrevia } from "./organizar";
 import { pedirApi } from "./pedir-api";
 
 /**
@@ -50,6 +50,7 @@ export function JanelaExistentes({
 }) {
   const t = useTranslations("v2Organizar.existentes");
   const tRecusas = useTranslations("recusas");
+  const tOrganizar = useTranslations("v2Organizar");
   const [previa, setPrevia] = useState<ExistentesDoGrupoDTO | null>(null);
   const [marcadas, setMarcadas] = useState<Set<string>>(new Set());
   const [erroLeitura, setErroLeitura] = useState<string | null>(null);
@@ -59,12 +60,15 @@ export function JanelaExistentes({
   const sequencia = useRef(0);
   // De que grupo cada coleção saía na última leitura válida.
   const origens = useRef<Map<string, string | null> | null>(null);
-  // O estado e o callback mais recentes, sem refazer a leitura a cada render.
+  // O estado, o callback e os tradutores mais recentes, sem refazer a leitura a cada
+  // render (os tradutores mudam de identidade a cada releitura da página).
+  const textos = useRef({ t, tRecusas });
   const marcadasRef = useRef(marcadas);
   const encerrarRef = useRef(aoEncerrar);
   useEffect(() => {
     marcadasRef.current = marcadas;
     encerrarRef.current = aoEncerrar;
+    textos.current = { t, tRecusas };
   });
 
   // Em promessa encadeada, não `async`: o `setState` fica no `then`, nunca no corpo do efeito que a chama.
@@ -80,7 +84,7 @@ export function JanelaExistentes({
           return;
         }
         setPrevia(null);
-        setErroLeitura(textoDaRecusa(tRecusas, r.corpo, t("erroCarregar")));
+        setErroLeitura(textoDaRecusa(textos.current.tRecusas, r.corpo, textos.current.t("erroCarregar")));
         return;
       }
       const novas = marcasDeExistentes(lida.colecoes, origens.current, marcadasRef.current);
@@ -89,7 +93,7 @@ export function JanelaExistentes({
       setMarcadas(novas);
       setErroLeitura(null);
     });
-  }, [grupo.id, t, tRecusas]);
+  }, [grupo.id]);
 
   useEffect(() => {
     void carregar();
@@ -140,7 +144,7 @@ export function JanelaExistentes({
     setErro(
       r.status === null
         ? { motivo: "", texto: t("erroRede") }
-        : { motivo: textoDaRecusa(tRecusas, r.corpo, ""), texto: t("erroTrazer") },
+        : { motivo: motivoDaRecusa(r.corpo, tRecusas, tOrganizar("listaVelha")), texto: t("erroTrazer") },
     );
     reler();
   }

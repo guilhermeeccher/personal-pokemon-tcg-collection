@@ -2,7 +2,7 @@
 
 import { Lightbulb } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { textoDaRecusa } from "@/app/_comum/recusa";
 import { MAXIMO_SUGESTOES_VISIVEIS } from "@/lib/dominio/sugestoes-colecao";
@@ -98,6 +98,13 @@ export function SecaoSugestoes({
     () => false,
   );
 
+  // Os tradutores mudam de identidade a cada releitura da página: por ref, a
+  // leitura não se repete por isso — só quando `versao` ou "Tentar de novo" pedem.
+  const textos = useRef({ t, tRecusas });
+  useEffect(() => {
+    textos.current = { t, tRecusas };
+  });
+
   useEffect(() => {
     const controle = new AbortController();
     pedirApi("/api/sugestoes", "GET", undefined, controle.signal)
@@ -105,7 +112,7 @@ export function SecaoSugestoes({
         if (controle.signal.aborted) return;
         const d = r.corpo as Partial<ListaSugestoesDTO> | null;
         if (!r.ok || !Array.isArray(d?.sugestoes)) {
-          setErroLista(textoDaRecusa(tRecusas, r.corpo, t("erroCarregar")));
+          setErroLista(textoDaRecusa(textos.current.tRecusas, r.corpo, textos.current.t("erroCarregar")));
           return;
         }
         setLidas(d.sugestoes);
@@ -113,7 +120,7 @@ export function SecaoSugestoes({
       })
       .catch(() => {});
     return () => controle.abort();
-  }, [versao, pedido, t, tRecusas]);
+  }, [versao, pedido]);
 
   const reler = useCallback(() => setPedido((p) => p + 1), []);
 

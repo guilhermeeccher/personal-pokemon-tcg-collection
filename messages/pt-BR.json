@@ -1786,6 +1786,7 @@
     "relendo": "Relendo a lista…",
     "erroOperacao": "Não foi possível concluir. A lista foi relida.",
     "erroRede": "Sem resposta do servidor: a lista foi relida; confira antes de tentar de novo.",
+    "listaVelha": "A lista mudou em outra aba: nada foi aplicado.",
     "grupoSumiu": "O grupo “{grupo}” não existe mais: foi excluído em outra aba. A janela foi fechada.",
     "grupoSemSerie": "O grupo “{grupo}” não está mais ligado a uma série. A prévia foi fechada.",
     "grupoCriado": "Grupo “{grupo}” criado.",

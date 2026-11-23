@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ReactNode, startTransition, useCallback, useState, useTransition } from "react";
 
-import { textoDaRecusa } from "@/app/_comum/recusa";
 import type { ColecaoListaV2DTO, GrupoListaV2DTO, ListaColecoesV2DTO } from "@/lib/dominio/lista-colecoes-v2";
 import { moverNaOrdem } from "@/lib/dominio/ordem-colecoes";
 import type { TemaColecao } from "@/lib/dominio/tema-colecao";
@@ -24,6 +23,7 @@ import { JanelaFaltantes } from "./janela-faltantes";
 import { JanelaGrupo } from "./janela-grupo";
 import { JanelaTema } from "./janela-tema";
 import { ModoOrganizar } from "./modo-organizar";
+import { motivoDaRecusa } from "./organizar";
 import { pedirApi } from "./pedir-api";
 import { rotuloDoTema } from "./rotulo-tema";
 import { SecaoSugestoes } from "./secao-sugestoes";
@@ -111,7 +111,7 @@ export function PainelColecoes({ lista, vista }: { lista: ListaColecoesV2DTO; vi
       setErro(
         r.status === null
           ? { motivo: "", texto: t("erroRede") }
-          : { motivo: textoDaRecusa(tRecusas, r.corpo, ""), texto: t("erroOperacao") },
+          : { motivo: motivoDaRecusa(r.corpo, tRecusas, t("listaVelha")), texto: t("erroOperacao") },
       );
     }
     setEscrevendo(false);

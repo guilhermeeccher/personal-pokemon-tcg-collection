@@ -1794,6 +1794,7 @@
     "relendo": "Reloading the list…",
     "erroOperacao": "Could not finish. The list was reloaded.",
     "erroRede": "No response from the server: the list was reloaded; check it before trying again.",
+    "listaVelha": "The list changed in another tab: nothing was applied.",
     "grupoSumiu": "The group “{grupo}” no longer exists: it was deleted in another tab. The window was closed.",
     "grupoSemSerie": "The group “{grupo}” is no longer linked to a series. The preview was closed.",
     "grupoCriado": "Group “{grupo}” created.",

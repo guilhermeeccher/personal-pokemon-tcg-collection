@@ -13,7 +13,7 @@ import { Campo } from "../../_componentes/primitivos/campo";
 import { Modal } from "../../_componentes/primitivos/modal";
 import { AvisoEmLinha } from "../../_componentes/primitivos/painel";
 import estilos from "./organizar.module.css";
-import { chaveDaRecusa, marcasDeFaltantes, nomesDeFaltantes, reacaoDaPrevia } from "./organizar";
+import { chaveDaRecusa, motivoDaRecusa, marcasDeFaltantes, nomesDeFaltantes, reacaoDaPrevia } from "./organizar";
 import { pedirApi } from "./pedir-api";
 
 /**
@@ -54,6 +54,7 @@ export function JanelaFaltantes({
 }) {
   const t = useTranslations("v2Organizar.faltantes");
   const tRecusas = useTranslations("recusas");
+  const tOrganizar = useTranslations("v2Organizar");
   const [previa, setPrevia] = useState<FaltantesDoGrupoDTO | null>(null);
   const [marcados, setMarcados] = useState<Set<string>>(new Set());
   const [nomes, setNomes] = useState<Record<string, string>>({});
@@ -67,12 +68,15 @@ export function JanelaFaltantes({
   const sequencia = useRef(0);
   // As marcas da última leitura válida, com a série dela: só valem na mesma série.
   const anteriores = useRef<{ serieId: string; marcados: ReadonlySet<string> } | null>(null);
-  // O estado e o callback mais recentes, sem refazer a leitura a cada render.
+  // O estado, o callback e os tradutores mais recentes, sem refazer a leitura a cada
+  // render (os tradutores mudam de identidade a cada releitura da página).
+  const textos = useRef({ t, tRecusas });
   const marcadosRef = useRef(marcados);
   const encerrarRef = useRef(aoEncerrar);
   useEffect(() => {
     marcadosRef.current = marcados;
     encerrarRef.current = aoEncerrar;
+    textos.current = { t, tRecusas };
   });
 
   const encerrar = useCallback(
@@ -93,7 +97,7 @@ export function JanelaFaltantes({
           return;
         }
         setPrevia(null);
-        setErroLeitura(textoDaRecusa(tRecusas, r.corpo, t("erroCarregar")));
+        setErroLeitura(textoDaRecusa(textos.current.tRecusas, r.corpo, textos.current.t("erroCarregar")));
         return;
       }
       const antes = anteriores.current ? { ...anteriores.current, marcados: marcadosRef.current } : null;
@@ -104,7 +108,7 @@ export function JanelaFaltantes({
       setNomes((atuais) => nomesDeFaltantes(lida.sets, antes && antes.serieId === lida.serieId ? atuais : {}));
       setErroLeitura(null);
     });
-  }, [grupo.id, encerrar, t, tRecusas]);
+  }, [grupo.id, encerrar]);
 
   useEffect(() => {
     void carregar();
@@ -159,7 +163,7 @@ export function JanelaFaltantes({
     setErro(
       r.status === null
         ? { motivo: "", texto: t("erroRede") }
-        : { motivo: textoDaRecusa(tRecusas, r.corpo, ""), texto: t("erroCriar") },
+        : { motivo: motivoDaRecusa(r.corpo, tRecusas, tOrganizar("listaVelha")), texto: t("erroCriar") },
     );
     reler();
   }
