@@ -177,10 +177,16 @@ export function Carta({
 
   const [sobPonteiro, setSobPonteiro] = useState(false);
   const [comFoco, setComFoco] = useState(false);
-  // A mola ainda está voltando ao repouso depois de soltar: as camadas só
-  // desmontam quando ela assenta.
+  // A mola saiu do repouso (ponteiro, foco, ativa por fora) e ainda não
+  // voltou a ele: as camadas só desmontam quando ela assenta no repouso.
   const [voltando, setVoltando] = useState(false);
   const [visivel, setVisivel] = useState(true);
+
+  // Ativa por fora tira a mola do repouso como o foco tira: marca a volta,
+  // para que, quando `ativa` cair, as camadas fiquem até a carta assentar
+  // e o estilo escrito pelo laço seja apagado. Ajuste de estado durante o
+  // render, o padrão do React para estado que acompanha uma prop.
+  if (ativaPorFora && movimento.mola && !voltando) setVoltando(true);
 
   const sempreAtiva = modo !== "grade";
   const interagindo = sobPonteiro || comFoco || ativaPorFora;
@@ -223,7 +229,10 @@ export function Carta({
         const livre = !animador.noPonteiro;
         const alvoAgora = livre ? (passeando ? alvoAutomatico(tempo, fase) : parado) : animador.alvo;
         estado = avancarMola(estado, alvoAgora, dt);
-        if (livre && !passeando && assentou(estado, alvoAgora)) {
+        // Assenta em qualquer alvo parado: o repouso, a luz de foco e também
+        // o ponteiro que parou em cima da carta — o próximo movimento acorda
+        // o laço de novo. Só o passeio nunca assenta.
+        if (!(livre && passeando) && assentou(estado, alvoAgora)) {
           estado = assentar(alvoAgora);
           if (alvoAgora === REPOUSO) {
             // Voltou ao repouso: sem resto de estilo, e a carta desmonta as
