@@ -106,7 +106,6 @@ describe("pontes da v2, executadas", () => {
         "/cadastro/busca",
         "/cadastro/set",
         "/colecoes/[id]/opcoes-compra",
-        "/colecoes/falta",
         "/dex/[[...resto]]",
         "/inventario/precos",
       ].sort(),

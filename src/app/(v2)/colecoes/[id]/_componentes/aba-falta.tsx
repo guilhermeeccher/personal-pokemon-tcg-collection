@@ -1,38 +1,84 @@
 "use client";
 
 /**
- * A aba "O que falta" da coleção — **o ponto de encaixe do pacote 1e**.
+ * A aba "O que falta" da coleção — **pacote 1e**. A estrutura (a aba, a
+ * contagem, o encaixe) é do pacote 1d; o corpo é este componente, e a página
+ * não muda: ela renderiza `<AbaFalta {...}/>` quando a aba é "falta" e passa
+ * `secaoCompraDoDetalhe` ao `<DetalheCarta>` como `secaoCompra` (regra 29 de
+ * `docs/design-v2/rules.md`).
  *
- * O pacote 1d entrega a estrutura: a aba existe, conta as vagas vazias, e o
- * conteúdo dela é este componente. Até o 1e chegar, ele mostra as vagas
- * vazias (regra 6: o que falta é a razão de ser do sistema) na mesma grade
- * virtual da lista inteira, cada uma abrindo o detalhe, e um "Fazer na v1"
- * para marcar compras, copiar a lista e ver as opções de compra, que ainda
- * moram na tela da coleção da v1.
+ * ## O que a aba faz
  *
- * ## O contrato com o 1e
+ * - **Mostra toda vaga vazia** (regra 6), na grade virtual da página, com o
+ *   que a leitura `GET /api/colecoes/:id/falta` (pacote 1a) diz de cada uma:
+ *   se está na lista de compras, o preço com a fonte, se há cópia livre.
+ * - **Marca compra pela rota da v1** (`PATCH …/opcoes-compra/selecao`),
+ *   conforme a decisão 2: no set o toque marca a carta da vaga, e o arrasto
+ *   horizontal marca várias; na Pokédex o toque abre as opções da vaga. O
+ *   que cada toque faz, o arrasto e as marcas otimistas são puros e testados
+ *   (`compra-falta.ts`, `arrasto-compra.ts`).
+ * - **"Marcar a melhor de cada vaga"** é um atalho explícito: uma janela
+ *   mostra o critério e a carta de cada vaga antes de enviar.
+ * - **A lista para colar** na Compra por Lista da Liga, em abas de até 110
+ *   cartas (`lista.abasLiga`, montadas no servidor pela mesma função da tela
+ *   de opções e do arquivo), e "Copiar" que funciona por HTTP na rede local.
+ * - **Fonte Liga (decisão 3):** desde 2026-11-11 a Liga barra as consultas
+ *   automáticas. O que funciona sem rede fica — marcar sobre as opções das
+ *   varreduras salvas, desmarcar, copiar — e a tela diz que consulta nova
+ *   não há. Nada aqui dispara varredura nem contorna o bloqueio.
  *
- * O 1e substitui o corpo de `AbaFalta` mantendo a assinatura (`ContextoAbaFalta`)
- * e preenche `secaoCompraDoDetalhe`, que a página passa ao `<DetalheCarta>`
- * como `secaoCompra`. A página não muda: ela só renderiza `<AbaFalta {...}/>`
- * quando a aba é "falta" e lê `secaoCompraDoDetalhe` daqui. O contrato está
- * documentado em `docs/design-v2/rules.md`, regra 29.
+ * Buscar preços, o teto e a ordem, o "sem estoque" colado, os downloads e o
+ * resto da tela de opções de compra são do pacote 4a: até lá, "Fazer na v1".
  */
 
-import { ShoppingCart } from "lucide-react";
+import { CircleAlert, ListChecks, ShoppingCart, WandSparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { Ref } from "react";
+import {
+  type MouseEvent,
+  type PointerEvent,
+  type Ref,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-import type { GradeColecaoV2DTO, VagaGradeV2DTO } from "@/lib/dominio/tipos-cliente";
+import type { FaltaColecaoV2DTO, GradeColecaoV2DTO, VagaGradeV2DTO } from "@/lib/dominio/tipos-cliente";
 
 import type { PropsDetalheCarta } from "../../../_componentes/detalhe/detalhe-carta";
-import type { ControleGradeVirtual } from "../../../_componentes/grade/grade-virtual";
-import { BotaoLink } from "../../../_componentes/primitivos/botao";
+import { useFormatos } from "../../../_componentes/detalhe/formatos";
+import { ATRIBUTO_CELULA, type ControleGradeVirtual, GradeVirtual } from "../../../_componentes/grade/grade-virtual";
+import { useAviso } from "../../../_componentes/primitivos/aviso-flutuante";
+import { Botao, BotaoLink } from "../../../_componentes/primitivos/botao";
+import { Modal } from "../../../_componentes/primitivos/modal";
 import { AvisoEmLinha } from "../../../_componentes/primitivos/painel";
 
-import estilos from "./colecao.module.css";
-import { ListaInteira } from "./lista-inteira";
-import type { TamanhoInteiro } from "./vista-colecao";
+import { type EstadoArrasto, iniciarArrasto, moverArrasto } from "./arrasto-compra";
+import { AtalhoMelhor } from "./atalho-melhor";
+import { CelulaFalta, alturaDaLegenda } from "./celula-falta";
+import {
+  type AcaoDoToque,
+  type CorpoSelecao,
+  type DesfechoDaSelecao,
+  type Pendencia,
+  type PlanoDoAtalho,
+  acaoDoArrasto,
+  acaoDoToque,
+  comPendencia,
+  corpoDoAlvo,
+  juntarCorpos,
+  naListaDaVaga,
+  planoDoAtalho,
+  podarPendencias,
+  resumoComPendencias,
+} from "./compra-falta";
+import { enviarSelecao } from "./envio-selecao";
+import estilos from "./falta.module.css";
+import { ListaLiga, useCopiarAba } from "./lista-liga";
+import { textoDoCriterio } from "./preco-compra";
+import { SecaoCompraVaga } from "./secao-compra-vaga";
+import { type TamanhoInteiro, TAMANHOS_INTEIRO, densidadeDoTamanho, vaoDoTamanho } from "./vista-colecao";
 
 /** O que a página entrega à aba. */
 export interface ContextoAbaFalta {
@@ -55,40 +101,490 @@ export interface ContextoAbaFalta {
   controle: Ref<ControleGradeVirtual>;
 }
 
-/** O ponto de extensão de compra do detalhe na vaga vazia (regra 24). `undefined` até o 1e. */
-export const secaoCompraDoDetalhe: PropsDetalheCarta["secaoCompra"] = undefined;
+/**
+ * O ponto de extensão de compra do detalhe na vaga vazia (regra 24): as
+ * opções da vaga, o que dela está na lista e como tirar — o mesmo componente
+ * que o toque numa vaga da Pokédex abre aqui. A customizada não tem vaga
+ * vazia a comprar; lá o detalhe fica com o bloco dele.
+ */
+export const secaoCompraDoDetalhe: PropsDetalheCarta["secaoCompra"] = ({ colecao, vaga, aoMudar }) =>
+  colecao.tipo === "customizada" ? undefined : <SecaoCompraVaga colecaoId={colecao.id} tipo={colecao.tipo} vaga={vaga} aoMudar={aoMudar} />;
 
-export function AbaFalta({ colecao, vazias, abrirVaga, abertaId, parAtivo, tamanho, controle }: ContextoAbaFalta) {
-  const t = useTranslations("v2Colecao.falta");
+/** Quanto esperar, depois do último pedido, para reler: uma rajada de toques vira uma leitura só. */
+const ESPERA_RELEITURA_MS = 600;
+
+type LeituraFalta =
+  | { estado: "carregando" }
+  | { estado: "ok"; dados: FaltaColecaoV2DTO }
+  | { estado: "erro"; dados: FaltaColecaoV2DTO | null };
+
+const chaveDaVaga = (v: VagaGradeV2DTO) => v.id;
+
+export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abertaId, parAtivo, tamanho, controle }: ContextoAbaFalta) {
+  const t = useTranslations("v2Falta");
+  const tCriterio = useTranslations("v2Falta.criterio");
+  const formatos = useFormatos();
+  const avisar = useAviso();
+
+  /* ---------- A leitura da falta ---------- */
+
+  const [leitura, setLeitura] = useState<LeituraFalta>({ estado: "carregando" });
+  const [pedidoProprio, setPedidoProprio] = useState(0);
+
+  // Pendências: o estado de verdade mora na ref (o arrasto decide carta a
+  // carta, mais rápido que um render), e o estado só desenha.
+  const pendenciasRef = useRef<Map<string, Pendencia>>(new Map());
+  const [pendencias, setPendenciasEstado] = useState<ReadonlyMap<string, Pendencia>>(() => new Map());
+  const definirPendencias = useCallback((f: (atual: Map<string, Pendencia>) => Map<string, Pendencia>) => {
+    pendenciasRef.current = f(pendenciasRef.current);
+    setPendenciasEstado(pendenciasRef.current);
+  }, []);
+
+  const seq = useRef(0);
+  /** O maior gesto cujo pedido já terminou: uma leitura pedida agora o reflete. */
+  const confirmadasAte = useRef(0);
+
+  useEffect(() => {
+    const controle = new AbortController();
+    const reflete = confirmadasAte.current;
+    fetch(`/api/colecoes/${colecao.id}/falta`, { cache: "no-store", signal: controle.signal })
+      .then(async (r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return (await r.json()) as FaltaColecaoV2DTO;
+      })
+      .then((dados) => {
+        if (controle.signal.aborted) return;
+        setLeitura({ estado: "ok", dados });
+        definirPendencias((p) => podarPendencias(p, reflete));
+      })
+      .catch(() => {
+        if (controle.signal.aborted) return;
+        setLeitura((atual) => ({ estado: "erro", dados: atual.estado === "carregando" ? null : atual.dados }));
+      });
+    return () => controle.abort();
+  }, [colecao.id, versaoGrade, pedidoProprio, definirPendencias]);
+
+  const dados = leitura.estado === "carregando" ? null : leitura.dados;
+  const faltaPorId = useMemo(() => new Map((dados?.vagas ?? []).map((v) => [v.vagaId, v] as const)), [dados]);
+  const vagaPorId = useMemo(() => new Map(vazias.map((v) => [v.id, v] as const)), [vazias]);
+  const fonte = dados?.fonte ?? null;
+
+  /* ---------- Envio em fila ---------- */
+
+  const fila = useRef<Promise<void>>(Promise.resolve());
+  /** Sobe a cada recusa: o que estava na fila foi pensado sobre um estado que não existe mais. */
+  const geracao = useRef(0);
+  const relogio = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const emVoo = useRef(0);
+  useEffect(() => () => {
+    if (relogio.current) clearTimeout(relogio.current);
+  }, []);
+
+  const agendarReler = useCallback(() => {
+    if (relogio.current) clearTimeout(relogio.current);
+    relogio.current = setTimeout(() => {
+      relogio.current = null;
+      if (emVoo.current === 0) reler();
+    }, ESPERA_RELEITURA_MS);
+  }, [reler]);
+
+  const textoDaRecusa = useCallback(
+    (d: Exclude<DesfechoDaSelecao, { tipo: "ok" }>) => (d.tipo === "parcial" ? t("recusa.parcial") : t(`recusa.${d.motivo}`)),
+    [t],
+  );
+
+  const enfileirar = useCallback(
+    (corpos: CorpoSelecao[], seqs: number[], sucesso?: string) => {
+      const minhaGeracao = geracao.current;
+      emVoo.current++;
+      fila.current = fila.current.then(async () => {
+        try {
+          if (geracao.current !== minhaGeracao) return;
+          const desfecho = await enviarSelecao(colecao.id, juntarCorpos(corpos));
+          confirmadasAte.current = Math.max(confirmadasAte.current, ...seqs);
+          if (desfecho.tipo === "recusada") {
+            // Tudo o que a tela mostrava por conta própria cai: a releitura diz a verdade.
+            geracao.current++;
+            definirPendencias(() => new Map());
+            avisar(textoDaRecusa(desfecho), { tom: "erro" });
+            reler();
+            return;
+          }
+          if (desfecho.tipo === "parcial") {
+            avisar(textoDaRecusa(desfecho), { tom: "erro" });
+            reler();
+            return;
+          }
+          if (sucesso) avisar(sucesso, { tom: "sucesso" });
+        } finally {
+          emVoo.current--;
+        }
+        agendarReler();
+      });
+    },
+    [colecao.id, definirPendencias, avisar, textoDaRecusa, reler, agendarReler],
+  );
+
+  /* ---------- O toque ---------- */
+
+  /**
+   * O que o toque faria na vaga, sobre um mapa de pendências: no desenho, o
+   * do estado; nos eventos, o da ref, que o arrasto atualiza carta a carta
+   * antes de o React desenhar de novo.
+   */
+  const acaoCom = useCallback(
+    (v: VagaGradeV2DTO, mapa: ReadonlyMap<string, Pendencia>): AcaoDoToque =>
+      fonte === null
+        ? { tipo: "esperar" }
+        : acaoDoToque({
+            tipo: colecao.tipo,
+            fonte,
+            chave: v.chave,
+            livres: v.livres ?? 0,
+            cartaDaVaga: colecao.tipo === "set" ? (v.carta?.cartaId ?? null) : null,
+            falta: faltaPorId.get(v.id),
+            pendente: mapa.get(v.id),
+          }),
+    [colecao.tipo, fonte, faltaPorId],
+  );
+  const acaoDe = useCallback((v: VagaGradeV2DTO) => acaoCom(v, pendenciasRef.current), [acaoCom]);
+
+  const naListaPelaLeitura = useCallback(
+    (v: VagaGradeV2DTO) => naListaDaVaga(faltaPorId.get(v.id), v.escolhas?.length ?? 0, undefined),
+    [faltaPorId],
+  );
+
+  /** Põe a marca otimista de um gesto e devolve o número dele. */
+  const marcarNaTela = useCallback(
+    (v: VagaGradeV2DTO, acao: Extract<AcaoDoToque, { corpo: CorpoSelecao }>): number => {
+      const n = ++seq.current;
+      definirPendencias((p) =>
+        comPendencia(
+          p,
+          v.id,
+          { seq: n, selecionada: acao.tipo === "marcar", corpo: acao.corpo, desfazer: acao.desfazer, preco: acao.preco },
+          naListaPelaLeitura(v),
+        ),
+      );
+      return n;
+    },
+    [definirPendencias, naListaPelaLeitura],
+  );
+
+  const [opcoesDe, setOpcoesDe] = useState<string | null>(null);
+
+  const tocar = useCallback(
+    (v: VagaGradeV2DTO) => {
+      const acao = acaoDe(v);
+      switch (acao.tipo) {
+        case "esperar":
+          return;
+        case "abrirDetalhe":
+          abrirVaga(v);
+          return;
+        case "abrirOpcoes":
+          setOpcoesDe(v.id);
+          return;
+        default:
+          enfileirar([acao.corpo], [marcarNaTela(v, acao)]);
+      }
+    },
+    [acaoDe, abrirVaga, enfileirar, marcarNaTela],
+  );
+
+  /* ---------- O arrasto (só no set, onde o toque marca) ---------- */
+
+  // A grade é a da página (`controle`, um `useRef` dela): a aba a lê nos
+  // eventos, para o arrasto (`indiceNoPonto`) e o foco (`elementoDe`).
+  const lerGrade = useCallback(
+    (): ControleGradeVirtual | null => (controle && typeof controle === "object" ? controle.current : null),
+    [controle],
+  );
+
+  const arrasto = useRef<{ estado: EstadoArrasto; id: number; tocados: Set<number>; corpos: CorpoSelecao[]; seqs: number[] } | null>(null);
+  const engolirClique = useRef(false);
+
+  function indiceDoAlvo(alvo: EventTarget | null): number | null {
+    const el = (alvo as Element | null)?.closest?.(`[${ATRIBUTO_CELULA}]`);
+    if (!el) return null;
+    const i = Number(el.getAttribute(ATRIBUTO_CELULA));
+    return Number.isInteger(i) ? i : null;
+  }
+
+  function aoApertar(e: PointerEvent<HTMLDivElement>) {
+    if (colecao.tipo !== "set" || !e.isPrimary || e.button !== 0) return;
+    const i = indiceDoAlvo(e.target);
+    const v = i === null ? undefined : vazias[i];
+    if (i === null || !v) return;
+    const acao = acaoDe(v);
+    if (acao.tipo !== "marcar" && acao.tipo !== "desmarcar") return;
+    const estado = iniciarArrasto(e.clientX, e.clientY, i, acao.tipo === "marcar");
+    arrasto.current = estado ? { estado, id: e.pointerId, tocados: new Set(), corpos: [], seqs: [] } : null;
+  }
+
+  function aoMover(e: PointerEvent<HTMLDivElement>) {
+    const a = arrasto.current;
+    const grade = lerGrade();
+    if (!a || e.pointerId !== a.id || !grade) return;
+    const eraPronto = a.estado.fase === "pronto";
+    const { estado, novos } = moverArrasto(a.estado, e.clientX, e.clientY, grade.indiceNoPonto);
+    a.estado = estado;
+    if (estado.fase !== "pintando") return;
+    // O mouse que sai da grade continua mandando eventos para ela.
+    if (eraPronto && e.pointerType === "mouse") e.currentTarget.setPointerCapture(e.pointerId);
+    for (const i of novos) {
+      if (a.tocados.has(i)) continue;
+      a.tocados.add(i);
+      const v = vazias[i];
+      if (!v) continue;
+      const acao = acaoDoArrasto(estado.marcando, acaoDe(v));
+      if (!acao) continue;
+      a.seqs.push(marcarNaTela(v, acao));
+      a.corpos.push(acao.corpo);
+    }
+  }
+
+  function aoSoltar(e: PointerEvent<HTMLDivElement>) {
+    const a = arrasto.current;
+    if (!a || e.pointerId !== a.id) return;
+    arrasto.current = null;
+    if (a.estado.fase !== "pintando") return;
+    // O clique que o navegador ainda manda ao soltar não pode desfazer a última carta.
+    engolirClique.current = true;
+    setTimeout(() => {
+      engolirClique.current = false;
+    }, 0);
+    if (a.corpos.length === 0) return;
+    enfileirar(a.corpos, a.seqs);
+    if (a.seqs.length > 1) {
+      avisar(a.estado.marcando ? t("aba.arrastoMarcou", { total: a.seqs.length }) : t("aba.arrastoTirou", { total: a.seqs.length }));
+    }
+  }
+
+  function aoCliqueCaptura(e: MouseEvent<HTMLDivElement>) {
+    if (!engolirClique.current) return;
+    e.stopPropagation();
+    e.preventDefault();
+  }
+
+  /* ---------- Atalho, lista e opções ---------- */
+
+  const [plano, setPlano] = useState<PlanoDoAtalho | null>(null);
+  const [listaAberta, setListaAberta] = useState(false);
+  const { copiar, copiada } = useCopiarAba();
+
+  function abrirAtalho() {
+    if (!dados) return;
+    // O plano é o que a janela mostra: confirmado, é exatamente ele que sai.
+    setPlano(planoDoAtalho(dados.vagas, pendenciasRef.current));
+  }
+
+  function confirmarAtalho() {
+    if (!plano) return;
+    const corpos: CorpoSelecao[] = [];
+    const seqs: number[] = [];
+    for (const { vagaId, opcao } of plano.itens) {
+      const v = vagaPorId.get(vagaId);
+      const corpo = corpoDoAlvo(opcao.alvo, true);
+      if (!v || !corpo) continue;
+      seqs.push(marcarNaTela(v, { tipo: "marcar", corpo, desfazer: corpoDoAlvo(opcao.alvo, false), preco: opcao.preco?.valor ?? null }));
+      corpos.push(corpo);
+    }
+    setPlano(null);
+    if (corpos.length > 0) enfileirar(corpos, seqs, t("atalho.feito", { total: seqs.length }));
+  }
+
+  const vagaDasOpcoes = opcoesDe ? (vagaPorId.get(opcoesDe) ?? null) : null;
+  // A vaga preenchida em outra parte da tela sai da aba: a folha dela fecha
+  // (no próprio desenho, para não reabrir se a vaga voltar a ficar vazia).
+  if (opcoesDe && !vagaDasOpcoes) setOpcoesDe(null);
+
+  const focoNaVaga = useCallback((id: string) => async () => (await lerGrade()?.elementoDe(id)) ?? null, [lerGrade]);
+
+  /* ---------- Desenho ---------- */
+
+  const densidade = densidadeDoTamanho(tamanho);
+  const vao = vaoDoTamanho(tamanho);
+  const manter = [abertaId, parAtivo, opcoesDe].filter((x): x is string => x !== null);
+  const resumo = resumoComPendencias(dados?.lista ?? null, pendencias);
+  const atualizando = resumo.pendentes > 0 || leitura.estado === "carregando";
+  const lista = dados?.lista ?? null;
+  const umaAba = lista && lista.abasLiga.length === 1 ? lista.abasLiga[0] : null;
+  const estado = dados?.estado ?? null;
+  const cardmarket = fonte === "cardmarket";
+  const linkOpcoes = `/v1/colecoes/${colecao.id}/opcoes-compra`;
+
+  if (vazias.length === 0) {
+    return (
+      <div className={estilos.aba}>
+        <AvisoEmLinha tom="sucesso" titulo={t("aba.nada")}>
+          {t("aba.nadaTexto")}
+        </AvisoEmLinha>
+      </div>
+    );
+  }
+
   return (
-    <div className={estilos.abaFalta}>
-      <AvisoEmLinha
-        icone={<ShoppingCart aria-hidden />}
-        titulo={t("emBreve")}
-        acao={
-          <BotaoLink href={`/v1/colecoes/${colecao.id}`} pequeno>
-            {t("fazerNaV1")}
-          </BotaoLink>
+    <div className={estilos.aba}>
+      {leitura.estado === "erro" ? (
+        <AvisoEmLinha
+          tom="alerta"
+          papel="alert"
+          titulo={t("aba.erro")}
+          acao={
+            <Botao pequeno onClick={() => setPedidoProprio((p) => p + 1)}>
+              {t("aba.tentarDeNovo")}
+            </Botao>
+          }
+        >
+          {t("aba.erroTexto")}
+        </AvisoEmLinha>
+      ) : null}
+
+      {estado?.fonte === "liga" ? (
+        <AvisoEmLinha tom="alerta" icone={<CircleAlert aria-hidden />} titulo={t("fonte.ligaTitulo")}>
+          {t("fonte.ligaTexto")}{" "}
+          {estado.varredura
+            ? t("fonte.ligaVarredura", { data: formatos.instante(estado.varredura.concluidaEm ?? estado.varredura.criadoEm) })
+            : t("fonte.ligaSemVarredura")}
+        </AvisoEmLinha>
+      ) : null}
+      {estado?.fonte === "cardmarket" ? (
+        <AvisoEmLinha
+          icone={<ShoppingCart aria-hidden />}
+          titulo={t("fonte.cardmarketTitulo")}
+          acao={
+            <BotaoLink href={linkOpcoes} pequeno>
+              {t("fonte.buscarNaV1")}
+            </BotaoLink>
+          }
+        >
+          {t("fonte.cardmarketTexto", {
+            comPreco: estado.precosCandidatas.comPreco,
+            cartas: estado.precosCandidatas.cartas,
+            aBuscar: estado.precosCandidatas.aBuscar,
+            dias: estado.precosCandidatas.validadeDias,
+          })}
+          {estado.precosCandidatas.comPreco === 0 ? ` ${t("fonte.semPrecoNenhum")}` : ""}
+        </AvisoEmLinha>
+      ) : null}
+
+      <div className={`${estilos.painelCompra} v2-painel`}>
+        <div className={estilos.painelTexto}>
+          <p className={estilos.instrucao}>
+            {colecao.tipo === "set" ? t("aba.instrucaoSet") : t("aba.instrucaoPokedex")} {t("aba.instrucaoLivre")}
+          </p>
+          {dados?.criterio ? <p className={estilos.criterio}>{textoDoCriterio(tCriterio, dados.criterio, formatos)}</p> : null}
+        </div>
+        <div className={estilos.painelAcoes}>
+          <Botao icone={<WandSparkles aria-hidden />} disabled={!dados} onClick={abrirAtalho}>
+            {t("atalho.botao")}
+          </Botao>
+          <BotaoLink href={linkOpcoes}>{t("aba.opcoesNaV1")}</BotaoLink>
+        </div>
+      </div>
+
+      <div
+        className={estilos.areaGrade}
+        data-pinta={colecao.tipo === "set" ? "" : undefined}
+        onPointerDown={aoApertar}
+        onPointerMove={aoMover}
+        onPointerUp={aoSoltar}
+        onPointerCancel={aoSoltar}
+        onClickCapture={aoCliqueCaptura}
+      >
+        <GradeVirtual
+          ref={controle}
+          itens={vazias}
+          chaveDe={chaveDaVaga}
+          minCelula={TAMANHOS_INTEIRO[tamanho]}
+          vaoX={vao.x}
+          vaoY={vao.y}
+          alturaExtra={alturaDaLegenda(densidade)}
+          manterMontadas={manter}
+          rotulo={t("aba.rotuloLista", { total: vazias.length })}
+          renderizar={(v, celula) => {
+            const falta = faltaPorId.get(v.id);
+            const pendente = pendencias.get(v.id);
+            return (
+              <CelulaFalta
+                vaga={v}
+                tipo={colecao.tipo}
+                densidade={densidade}
+                falta={falta}
+                naLista={naListaDaVaga(falta, v.escolhas?.length ?? 0, pendente)}
+                pendente={pendente !== undefined}
+                acao={acaoCom(v, pendencias).tipo}
+                aberta={abertaId === v.id}
+                noParAtivo={parAtivo === v.id}
+                celula={celula}
+                formatos={formatos}
+                aoTocar={() => tocar(v)}
+                aoDetalhes={() => abrirVaga(v)}
+              />
+            );
+          }}
+        />
+      </div>
+
+      {lista ? (
+        <div className={estilos.barraCompra} role="region" aria-label={t("barra.rotulo")}>
+          <p className={estilos.barraResumo} aria-live="polite">
+            <b>{t("barra.cartas", { total: resumo.cartas })}</b>
+            <span className="v2-num">
+              {resumo.cartas > 0 ? (cardmarket ? t("barra.valorCardmarket", { valor: formatos.brl(resumo.total) }) : t("barra.valorLiga", { valor: formatos.brl(resumo.total) })) : null}
+              {atualizando ? ` · ${t("barra.atualizando")}` : ""}
+            </span>
+          </p>
+          <div className={estilos.barraAcoes}>
+            <Botao variante="secundario" icone={<ListChecks aria-hidden />} disabled={resumo.cartas === 0 && lista.selecionadas === 0} onClick={() => setListaAberta(true)}>
+              {t("barra.verLista")}
+            </Botao>
+            {umaAba ? (
+              <Botao variante="primario" disabled={atualizando} onClick={() => void copiar(umaAba)}>
+                {copiada === umaAba.id ? t("lista.copiado") : t("barra.copiar")}
+              </Botao>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {lista ? <ListaLiga aberto={listaAberta} lista={lista} atualizando={atualizando} onFechar={() => setListaAberta(false)} /> : null}
+
+      {plano ? (
+        <AtalhoMelhor
+          aberto
+          plano={plano}
+          criterio={dados?.criterio ?? null}
+          vagasPorId={vagaPorId}
+          onFechar={() => setPlano(null)}
+          onConfirmar={confirmarAtalho}
+        />
+      ) : null}
+
+      <Modal
+        aberto={vagaDasOpcoes !== null}
+        onFechar={() => setOpcoesDe(null)}
+        titulo={vagaDasOpcoes ? t("opcoes.tituloVaga", { numero: vagaDasOpcoes.numero, alvo: vagaDasOpcoes.especie ?? vagaDasOpcoes.cartaNome ?? "" }) : ""}
+        largura={600}
+        devolverFocoPara={opcoesDe ? focoNaVaga(opcoesDe) : undefined}
+        rodape={
+          vagaDasOpcoes ? (
+            <Botao
+              variante="secundario"
+              onClick={() => {
+                const v = vagaDasOpcoes;
+                setOpcoesDe(null);
+                abrirVaga(v);
+              }}
+            >
+              {t("opcoes.abrirVaga")}
+            </Botao>
+          ) : undefined
         }
       >
-        {t("emBreveTexto")}
-      </AvisoEmLinha>
-      {vazias.length === 0 ? (
-        <AvisoEmLinha tom="sucesso" titulo={t("nada")}>
-          {t("nadaTexto")}
-        </AvisoEmLinha>
-      ) : (
-        <ListaInteira
-          vagas={vazias}
-          tipo={colecao.tipo}
-          tamanho={tamanho}
-          rotulo={t("rotuloLista", { total: vazias.length })}
-          abertaId={abertaId}
-          parAtivo={parAtivo}
-          aoAbrir={abrirVaga}
-          controle={controle}
-        />
-      )}
+        {vagaDasOpcoes ? <SecaoCompraVaga colecaoId={colecao.id} tipo={colecao.tipo} vaga={vagaDasOpcoes} aoMudar={reler} /> : null}
+      </Modal>
     </div>
   );
 }

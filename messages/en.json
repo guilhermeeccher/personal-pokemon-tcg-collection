@@ -2423,14 +2423,6 @@
       "verTroca": "See the swap",
       "mostrarMais": "Show {total} more ({restantes} left)"
     },
-    "falta": {
-      "emBreve": "Marking purchases is still in v1",
-      "emBreveTexto": "These are this collection's empty slots. Marking what to buy, copying the Liga list and the buy options stay on the v1 collection screen until this tab gets its buy list.",
-      "fazerNaV1": "Do it in v1",
-      "nada": "Nothing is missing.",
-      "nadaTexto": "Every slot is filled.",
-      "rotuloLista": "{total, plural, =1 {1 empty slot} other {# empty slots}}"
-    },
     "ajustes": {
       "titulo": "Collection settings",
       "nome": "Name",
@@ -2502,6 +2494,176 @@
       "erroBuscar": "Could not search free copies.",
       "erroAdicionar": "Could not add.",
       "erroRede": "No answer from the server: there is no telling whether the copy went in. The list was reread."
+    }
+  },
+  "v2Falta": {
+    "aba": {
+      "nada": "Nothing missing.",
+      "nadaTexto": "Every slot of this collection is filled.",
+      "erro": "Could not read the buy list.",
+      "erroTexto": "The empty slots are still here; marking to buy comes back once the read works.",
+      "tentarDeNovo": "Try again",
+      "instrucaoSet": "Tap a card to put it on the buy list, and again to take it off. Drag sideways across several to mark them all at once.",
+      "instrucaoPokedex": "Tap a slot to see the cards that fit it and choose.",
+      "instrucaoLivre": "A slot with a free copy of yours opens the detail, to allocate it.",
+      "opcoesNaV1": "Buy options (v1)",
+      "rotuloLista": "{total, plural, =1 {1 empty slot} other {# empty slots}}",
+      "arrastoMarcou": "{total, plural, =1 {1 card went} other {# cards went}} on the list.",
+      "arrastoTirou": "{total, plural, =1 {1 card came} other {# cards came}} off the list."
+    },
+    "fonte": {
+      "ligaTitulo": "New Liga lookups are unavailable",
+      "ligaTexto": "LigaPokemon has blocked automated lookups since 2026-11-11, and the system does not work around the block. Marking over the options of scans already saved, unmarking and copying the list still work.",
+      "ligaVarredura": "Options from the scan saved on {data}.",
+      "ligaSemVarredura": "This collection has no saved scan: there are no options to mark. Choices already made stay on the list, and you can take them off.",
+      "cardmarketTitulo": "Cardmarket reference price",
+      "cardmarketTexto": "{comPreco} of {cartas} candidate cards priced; {aBuscar} to look up. Each price holds for {dias} days. Looking up prices is on the buy options screen, still in v1.",
+      "semPrecoNenhum": "With no price yet, the choice is yours, card by card: the shortcut only marks a priced card.",
+      "buscarNaV1": "Look up prices in v1"
+    },
+    "criterio": {
+      "linha": "Criterion: {ordem}, {teto} ({origem}).",
+      "preco": "lowest price",
+      "preferencia": "best card within the cap",
+      "semTeto": "no cap",
+      "teto": "cap of {valor}",
+      "origem": {
+        "padrao": "the buy options screen's default",
+        "pedido": "the one chosen",
+        "varredura": "the last Liga scan's"
+      }
+    },
+    "celula": {
+      "numero": "No. {numero}",
+      "naLista": "on the buy list",
+      "variasNaLista": "{total} cards on the buy list",
+      "foraDaLista": "not on the list",
+      "livres": "{total, plural, =1 {1 free copy of yours fits} other {# free copies of yours fit}}",
+      "livresCurto": "{total} free",
+      "salvando": "saving",
+      "abreOpcoes": "opens the buy options",
+      "abreDetalhe": "opens the detail to allocate",
+      "semOpcaoCurto": "no option",
+      "detalhes": "Details",
+      "detalhesDe": "Details of {alvo}"
+    },
+    "barra": {
+      "rotulo": "Buy list",
+      "cartas": "{total, plural, =0 {Nothing on the list} =1 {1 card on the list} other {# cards on the list}}",
+      "valorCardmarket": "{valor} reference (Cardmarket)",
+      "valorLiga": "{valor}, Liga's lowest price",
+      "atualizando": "updating…",
+      "verLista": "Liga list",
+      "copiar": "Copy list"
+    },
+    "atalho": {
+      "botao": "Mark the best of each slot…",
+      "titulo": "Mark the best of each slot",
+      "descricao": "In every slot with no choice yet, the first card by the criterion below — only a priced card. Check it: nothing is marked before your click.",
+      "vazio": "No slot to mark right now.",
+      "rotuloLista": "{total, plural, =1 {The card that goes in} other {The # cards that go in}}",
+      "vaga": "Slot {numero}",
+      "fora": {
+        "jaTemEscolha": "{total, plural, =1 {1 slot already has a choice} other {# slots already have a choice}} and stays as it is",
+        "semPreco": "{total, plural, =1 {1 slot with no price} other {# slots with no price}}: mark by hand",
+        "semOpcao": "{total, plural, =1 {1 slot with no option} other {# slots with no option}}",
+        "pendentes": "{total, plural, =1 {1 slot still saving} other {# slots still saving}}"
+      },
+      "mostrarMais": "Show more ({total})",
+      "cancelar": "Cancel",
+      "confirmar": "{total, plural, =0 {Mark} =1 {Mark 1 card} other {Mark # cards}}",
+      "feito": "{total, plural, =1 {1 card went} other {# cards went}} on the list."
+    },
+    "opcoes": {
+      "titulo": "Buy",
+      "tituloVaga": "No. {numero} {alvo}",
+      "naLista": "On your list",
+      "nenhumaNaLista": "Nothing from this slot on the list.",
+      "tirar": "Remove",
+      "tirarDe": "Take {nome} off the list",
+      "limpar": "Clear the slot",
+      "limparTitulo": "Take the {total} cards of this slot off the list?",
+      "limparDescricao": "Each one leaves the buy list. You can mark them again later.",
+      "limpa": "The slot left the list.",
+      "opcoesPokedex": "Cards that fit this slot",
+      "opcoesSet": "This slot's card",
+      "carregando": "Reading the options…",
+      "erro": "Could not read the options.",
+      "tentarDeNovo": "Try again",
+      "sumiu": "This slot is no longer empty.",
+      "vazioLigaSemVarredura": "With no saved scan, there is no Liga option to mark. New lookups are unavailable.",
+      "vazioPokedex": "No card of this species in the catalog within the cap.",
+      "vazioSet": "No option for this card: not in the catalog, or hidden by the filters.",
+      "semEstoque": "out of stock at Liga",
+      "soSai": "A choice from an old scan: it can only come off the list.",
+      "marcar": "Put on list",
+      "marcarDe": "Put {nome} on the list",
+      "naListaCurto": "On list",
+      "desmarcarDe": "Take {nome} off the list",
+      "mostrarMais": "Show more ({total})",
+      "escondidasTeto": "{total} above the cap",
+      "escondidasSemEstoque": "{total} out of stock at Liga",
+      "abrirVaga": "Open the slot"
+    },
+    "preco": {
+      "semPreco": "no price",
+      "semPrecoNoCardmarket": "no price at Cardmarket (looked up on {data})",
+      "fonteCardmarket": "Cardmarket",
+      "fonteLiga": "Liga",
+      "conversao": "{eur} × PTAX {cotacao} of {data}",
+      "media30": "· 30-day average (the trend, {tendencia}, was above 3×)",
+      "media": "· average (no trend)",
+      "ligaEm": "lowest price in the scan of {data}",
+      "liga": "lowest price in the scan"
+    },
+    "lista": {
+      "titulo": "List for Liga",
+      "descricao": "{total, plural, =0 {Nothing on the list} =1 {1 card} other {# cards}} · {valor}",
+      "abas": "List tabs",
+      "abaLista": "List",
+      "vazia": "Nothing on the list yet.",
+      "comoColar": "Paste it into their Buy by List. Under “Adicionar Detalhes”, Quality: <forte>NM</forte>. Grouping by store is done by Liga, under “Otimizar minha Lista de Compras”.",
+      "limitePorAba": "Their Buy by List takes up to {limite} cards per search: paste one tab at a time.",
+      "abaResumo": "In this tab: {total, plural, =1 {# card} other {# cards}} · {valor}.",
+      "multiplas": "More than one card for the same slot:",
+      "multiplasItem": "#{vaga} {rotulo} ({total})",
+      "semPrecoCardmarket": "{total, plural, =1 {1 card} other {# cards}} with no Cardmarket value: on the list, not in the total.",
+      "semPrecoLiga": "{total, plural, =1 {1 card} other {# cards}} with no known price: they stay on the list with last time's price, or none.",
+      "guardadas": "{total} already added, off the list: they come back if the copy leaves the slot.",
+      "listaGuardada": "The list is kept: it survives a new scan and shrinks on its own as you add the cards.",
+      "listaGuardadaCardmarket": "The list is kept, and it shrinks on its own as you add the cards.",
+      "precoMaisAntigo": "Oldest price on the list: {data}.",
+      "totalEhReferencia": "The {valor} add up the Cardmarket reference value converted at PTAX: close to Liga's lowest price, not a budget.",
+      "totalEhPiso": "The {valor} is the lowest price of each card in any condition — a floor for checking, not a budget in NM.",
+      "copiar": "Copy this tab",
+      "copiado": "Copied",
+      "copiadoAviso": "{total, plural, =1 {1 card copied} other {# cards copied}}. Paste it into Liga's Buy by List.",
+      "erroCopiar": "Could not copy on its own — select the list's text and copy it by hand.",
+      "atualizando": "Updating the list…"
+    },
+    "recusa": {
+      "parcial": "Part of the marking did not go in: the slot or the card changed (another tab, a filled slot). The list was read again.",
+      "colecao": "This collection no longer exists.",
+      "pedido": "The marking was refused: this slot's options changed. The list was read again.",
+      "servidor": "Could not save the marking. The list was read again.",
+      "rede": "No connection to the server: the marking was not saved."
+    },
+    "geral": {
+      "voltar": "Collections",
+      "titulo": "What's missing",
+      "resumo": "{vagas, plural, =1 {1 empty slot} other {# empty slots}} across {colecoes, plural, =1 {1 collection} other {# collections}}.",
+      "nadaTitulo": "Nothing missing",
+      "nadaFalta": "Every Pokédex and set collection is complete (or none has been created yet).",
+      "filtro": "Which slots to show",
+      "todas": "All",
+      "soAlocaveis": "Can allocate ({total})",
+      "jaDaParaAlocar": "{total} ready to allocate",
+      "faltando": "{total} missing",
+      "abrir": "Open",
+      "mostrarMais": "Show more ({total})",
+      "copiasSuas": "{total, plural, =1 {1 copy of yours} other {# copies of yours}}",
+      "erroCarregar": "Could not read what's missing.",
+      "erroCarregarTexto": "Try again in a moment."
     }
   }
 }

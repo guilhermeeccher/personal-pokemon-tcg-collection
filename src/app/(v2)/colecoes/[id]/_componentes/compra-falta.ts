@@ -307,7 +307,8 @@ export type DesfechoDaSelecao =
   | { tipo: "ok" }
   /** Passou, mas mudou menos do que pediu: a vaga ou a carta mudou por baixo. */
   | { tipo: "parcial" }
-  | { tipo: "recusada"; motivo: "colecao" | "pedido" | "servidor" };
+  /** `rede`: o pedido nem chegou (a tela o diz; `desfechoDaSelecao` nunca o devolve). */
+  | { tipo: "recusada"; motivo: "colecao" | "pedido" | "servidor" | "rede" };
 
 /**
  * A rota de seleção ainda responde as recusas em texto (`{ erro }`), não por

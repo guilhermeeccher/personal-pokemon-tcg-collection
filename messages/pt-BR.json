@@ -2415,14 +2415,6 @@
       "verTroca": "Ver troca",
       "mostrarMais": "Mostrar mais {total} (faltam {restantes})"
     },
-    "falta": {
-      "emBreve": "Marcar compras ainda é na v1",
-      "emBreveTexto": "Aqui estão as vagas vazias desta coleção. Marcar o que comprar, copiar a lista da Liga e ver as opções de compra continuam na tela da coleção da v1 até esta aba ganhar a lista de compras.",
-      "fazerNaV1": "Fazer na v1",
-      "nada": "Nada falta.",
-      "nadaTexto": "Todas as vagas estão preenchidas.",
-      "rotuloLista": "{total, plural, =1 {1 vaga vazia} other {# vagas vazias}}"
-    },
     "ajustes": {
       "titulo": "Ajustes da coleção",
       "nome": "Nome",
@@ -2494,6 +2486,176 @@
       "erroBuscar": "Falha ao buscar cópias livres.",
       "erroAdicionar": "Falha ao adicionar.",
       "erroRede": "Sem resposta do servidor: não dá para saber se a cópia entrou. A lista foi relida."
+    }
+  },
+  "v2Falta": {
+    "aba": {
+      "nada": "Nada falta.",
+      "nadaTexto": "Todas as vagas desta coleção estão preenchidas.",
+      "erro": "Não deu para ler a lista de compras.",
+      "erroTexto": "As vagas vazias continuam aqui; marcar compra volta quando a leitura der certo.",
+      "tentarDeNovo": "Tentar de novo",
+      "instrucaoSet": "Toque numa carta para pôr na lista de compras, e de novo para tirar. Arraste de lado por cima de várias para marcar todas de uma vez.",
+      "instrucaoPokedex": "Toque numa vaga para ver as cartas que servem nela e escolher.",
+      "instrucaoLivre": "A vaga com cópia sua livre abre o detalhe, para alocar.",
+      "opcoesNaV1": "Opções de compra (v1)",
+      "rotuloLista": "{total, plural, =1 {1 vaga vazia} other {# vagas vazias}}",
+      "arrastoMarcou": "{total, plural, =1 {1 carta entrou} other {# cartas entraram}} na lista.",
+      "arrastoTirou": "{total, plural, =1 {1 carta saiu} other {# cartas saíram}} da lista."
+    },
+    "fonte": {
+      "ligaTitulo": "Consultas novas à Liga estão indisponíveis",
+      "ligaTexto": "A LigaPokemon bloqueia as consultas automáticas desde 11/11/2026, e o sistema não contorna o bloqueio. Marcar sobre as opções das varreduras já salvas, desmarcar e copiar a lista continuam funcionando.",
+      "ligaVarredura": "Opções da varredura salva de {data}.",
+      "ligaSemVarredura": "Esta coleção não tem varredura salva: não há opções para marcar. As escolhas já feitas continuam na lista, e dá para tirá-las.",
+      "cardmarketTitulo": "Preço de referência do Cardmarket",
+      "cardmarketTexto": "{comPreco} de {cartas} cartas candidatas com preço; {aBuscar} a buscar. Cada preço vale {dias} dias. Buscar preços fica na tela de opções de compra, ainda na v1.",
+      "semPrecoNenhum": "Sem preço ainda, a escolha é sua, carta a carta: o atalho só marca carta com preço.",
+      "buscarNaV1": "Buscar preços na v1"
+    },
+    "criterio": {
+      "linha": "Critério: {ordem}, {teto} ({origem}).",
+      "preco": "menor preço",
+      "preferencia": "melhor carta dentro do teto",
+      "semTeto": "sem teto",
+      "teto": "teto de {valor}",
+      "origem": {
+        "padrao": "o padrão da tela de opções",
+        "pedido": "o escolhido",
+        "varredura": "o da última varredura da Liga"
+      }
+    },
+    "celula": {
+      "numero": "Nº {numero}",
+      "naLista": "na lista de compras",
+      "variasNaLista": "{total} cartas na lista de compras",
+      "foraDaLista": "fora da lista",
+      "livres": "{total, plural, =1 {1 cópia sua livre cabe} other {# cópias suas livres cabem}}",
+      "livresCurto": "{total, plural, =1 {1 livre} other {# livres}}",
+      "salvando": "salvando",
+      "abreOpcoes": "abre as opções de compra",
+      "abreDetalhe": "abre o detalhe para alocar",
+      "semOpcaoCurto": "sem opção",
+      "detalhes": "Detalhes",
+      "detalhesDe": "Detalhes de {alvo}"
+    },
+    "barra": {
+      "rotulo": "Lista de compras",
+      "cartas": "{total, plural, =0 {Nada na lista} =1 {1 carta na lista} other {# cartas na lista}}",
+      "valorCardmarket": "{valor} de referência (Cardmarket)",
+      "valorLiga": "{valor}, menor preço da Liga",
+      "atualizando": "atualizando…",
+      "verLista": "Lista da Liga",
+      "copiar": "Copiar lista"
+    },
+    "atalho": {
+      "botao": "Marcar a melhor de cada vaga…",
+      "titulo": "Marcar a melhor de cada vaga",
+      "descricao": "Em cada vaga ainda sem escolha, a primeira carta pelo critério abaixo — só carta com preço. Confira: nada é marcado antes do seu clique.",
+      "vazio": "Nenhuma vaga para marcar agora.",
+      "rotuloLista": "{total, plural, =1 {A carta que entra} other {As # cartas que entram}}",
+      "vaga": "Vaga {numero}",
+      "fora": {
+        "jaTemEscolha": "{total, plural, =1 {1 vaga já tem escolha} other {# vagas já têm escolha}} e fica como está",
+        "semPreco": "{total, plural, =1 {1 vaga sem preço} other {# vagas sem preço}}: marque à mão",
+        "semOpcao": "{total, plural, =1 {1 vaga sem opção} other {# vagas sem opção}}",
+        "pendentes": "{total, plural, =1 {1 vaga ainda salvando} other {# vagas ainda salvando}}"
+      },
+      "mostrarMais": "Mostrar mais ({total})",
+      "cancelar": "Cancelar",
+      "confirmar": "{total, plural, =0 {Marcar} =1 {Marcar 1 carta} other {Marcar # cartas}}",
+      "feito": "{total, plural, =1 {1 carta entrou} other {# cartas entraram}} na lista."
+    },
+    "opcoes": {
+      "titulo": "Comprar",
+      "tituloVaga": "Nº {numero} {alvo}",
+      "naLista": "Na sua lista",
+      "nenhumaNaLista": "Nada desta vaga na lista.",
+      "tirar": "Tirar",
+      "tirarDe": "Tirar {nome} da lista",
+      "limpar": "Limpar a vaga",
+      "limparTitulo": "Tirar as {total} cartas desta vaga da lista?",
+      "limparDescricao": "Cada uma sai da lista de compras. Dá para marcar de novo depois.",
+      "limpa": "A vaga saiu da lista.",
+      "opcoesPokedex": "Cartas que servem nesta vaga",
+      "opcoesSet": "A carta desta vaga",
+      "carregando": "Lendo as opções…",
+      "erro": "Não deu para ler as opções.",
+      "tentarDeNovo": "Tentar de novo",
+      "sumiu": "Esta vaga não está mais vazia.",
+      "vazioLigaSemVarredura": "Sem varredura salva, não há opção da Liga para marcar. Consultas novas estão indisponíveis.",
+      "vazioPokedex": "Nenhuma carta desta espécie no catálogo dentro do teto.",
+      "vazioSet": "Nenhuma opção para esta carta: fora do catálogo, ou escondida pelos filtros.",
+      "semEstoque": "sem estoque na Liga",
+      "soSai": "Escolha de uma varredura antiga: só sai da lista.",
+      "marcar": "Pôr na lista",
+      "marcarDe": "Pôr {nome} na lista",
+      "naListaCurto": "Na lista",
+      "desmarcarDe": "Tirar {nome} da lista",
+      "mostrarMais": "Mostrar mais ({total})",
+      "escondidasTeto": "{total, plural, =1 {1 acima do teto} other {# acima do teto}}",
+      "escondidasSemEstoque": "{total, plural, =1 {1 sem estoque na Liga} other {# sem estoque na Liga}}",
+      "abrirVaga": "Abrir a vaga"
+    },
+    "preco": {
+      "semPreco": "sem preço",
+      "semPrecoNoCardmarket": "sem preço no Cardmarket (consultado em {data})",
+      "fonteCardmarket": "Cardmarket",
+      "fonteLiga": "Liga",
+      "conversao": "{eur} × PTAX {cotacao} de {data}",
+      "media30": "· média de 30 dias (a tendência, {tendencia}, passava de 3×)",
+      "media": "· média (sem tendência)",
+      "ligaEm": "menor preço na varredura de {data}",
+      "liga": "menor preço na varredura"
+    },
+    "lista": {
+      "titulo": "Lista para a Liga",
+      "descricao": "{total, plural, =0 {Nada na lista} =1 {1 carta} other {# cartas}} · {valor}",
+      "abas": "Abas da lista",
+      "abaLista": "Lista",
+      "vazia": "Nada na lista ainda.",
+      "comoColar": "Cole na Compra por Lista deles. Em “Adicionar Detalhes”, Qualidade: <forte>NM</forte>. O agrupamento por loja quem faz é a Liga, em “Otimizar minha Lista de Compras”.",
+      "limitePorAba": "A Compra por Lista aceita até {limite} cartas por busca: cole uma aba de cada vez.",
+      "abaResumo": "Nesta aba: {total, plural, =1 {1 carta} other {# cartas}} · {valor}.",
+      "multiplas": "Mais de uma carta para a mesma vaga:",
+      "multiplasItem": "#{vaga} {rotulo} ({total})",
+      "semPrecoCardmarket": "{total, plural, =1 {1 carta} other {# cartas}} sem valor do Cardmarket: entram na lista, não no total.",
+      "semPrecoLiga": "{total, plural, =1 {1 carta} other {# cartas}} sem preço conhecido: ficam na lista com o preço da última vez, ou sem preço.",
+      "guardadas": "{total, plural, =1 {1 já cadastrada} other {# já cadastradas}}, fora da lista: voltam se a cópia sair da vaga.",
+      "listaGuardada": "A lista fica guardada: sobrevive a uma varredura nova e encolhe sozinha conforme você cadastra as cartas.",
+      "listaGuardadaCardmarket": "A lista fica guardada e encolhe sozinha conforme você cadastra as cartas.",
+      "precoMaisAntigo": "Preço mais antigo da lista: {data}.",
+      "totalEhReferencia": "Os {valor} somam o valor de referência do Cardmarket convertido pela PTAX: perto do menor preço da Liga, não um orçamento.",
+      "totalEhPiso": "Os {valor} são o menor preço de cada carta em qualquer condição — piso de conferência, não orçamento em NM.",
+      "copiar": "Copiar esta aba",
+      "copiado": "Copiado",
+      "copiadoAviso": "{total, plural, =1 {1 carta copiada} other {# cartas copiadas}}. Cole na Compra por Lista da Liga.",
+      "erroCopiar": "Não deu para copiar sozinho — selecione o texto da lista e copie à mão.",
+      "atualizando": "Atualizando a lista…"
+    },
+    "recusa": {
+      "parcial": "Parte da marcação não entrou: a vaga ou a carta mudou (outra aba, vaga preenchida). A lista foi relida.",
+      "colecao": "Esta coleção não existe mais.",
+      "pedido": "A marcação foi recusada: as opções desta vaga mudaram. A lista foi relida.",
+      "servidor": "Não deu para salvar a marcação. A lista foi relida.",
+      "rede": "Sem conexão com o servidor: a marcação não foi salva."
+    },
+    "geral": {
+      "voltar": "Coleções",
+      "titulo": "O que falta",
+      "resumo": "{vagas, plural, =1 {1 vaga vazia} other {# vagas vazias}} em {colecoes, plural, =1 {1 coleção} other {# coleções}}.",
+      "nadaTitulo": "Nada falta",
+      "nadaFalta": "Todas as coleções Pokédex e de set estão completas (ou nenhuma foi criada ainda).",
+      "filtro": "Que vagas mostrar",
+      "todas": "Todas",
+      "soAlocaveis": "Dá para alocar ({total})",
+      "jaDaParaAlocar": "{total, plural, =1 {1 já dá para alocar} other {# já dá para alocar}}",
+      "faltando": "{total} faltando",
+      "abrir": "Abrir",
+      "mostrarMais": "Mostrar mais ({total})",
+      "copiasSuas": "{total, plural, =1 {1 cópia sua} other {# cópias suas}}",
+      "erroCarregar": "Não deu para ler o que falta.",
+      "erroCarregarTexto": "Tente de novo daqui a pouco."
     }
   }
 }
