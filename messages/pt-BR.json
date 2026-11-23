@@ -1992,5 +1992,90 @@
       },
       "erroGrade": "Não foi possível ler a grade da coleção."
     }
+  },
+  "v2Inicio": {
+    "titulo": "Sua coleção",
+    "erroCarregar": "Não foi possível carregar o início",
+    "erroCarregarTexto": "A leitura do banco falhou. Nada foi alterado; tente de novo em instantes.",
+    "tentarDeNovo": "Tentar de novo",
+    "lead": {
+      "cadastradas": "{unidades, plural, =1 {<b>1 carta</b> entrou} other {<b># cartas</b> entraram}} no inventário nos últimos 7 dias.",
+      "nenhumaCadastrada": "Nenhuma carta entrou no inventário nos últimos 7 dias.",
+      "quaseLa": "<b>{divisao}</b> está a {faltam, plural, =1 {<b>1 vaga</b>} other {<b># vagas</b>}} de fechar.",
+      "vazio": "Cadastre as primeiras cartas e monte uma coleção: o que falta em cada uma aparece aqui."
+    },
+    "abrirColecao": "Abrir {nome}",
+    "atalhos": "Atalhos",
+    "atalho": {
+      "colecoes": "Coleções",
+      "inventario": "Inventário",
+      "cadastroSet": "Cadastro por set",
+      "visaoGeral": "Visão geral"
+    },
+    "numeros": {
+      "cartas": "{total, plural, =1 {carta} other {cartas}}",
+      "unidades": "{total, plural, =1 {unidade} other {unidades}}",
+      "colecoes": "{total, plural, =1 {coleção} other {coleções}}"
+    },
+    "vitrine": {
+      "rotulo": "Joias do inventário",
+      "abrir": "Abrir {nome}",
+      "legenda": "{set} · {numero}",
+      "vazioTitulo": "Nenhuma carta no inventário ainda",
+      "vazioTexto": "Comece pelo cadastro por set, marcando as cartas de uma expansão de uma vez, ou busque uma carta pelo nome.",
+      "cadastrarPorSet": "Cadastrar por set",
+      "buscarCarta": "Buscar uma carta"
+    },
+    "quaseLa": {
+      "titulo": "Quase lá",
+      "todas": "Todas as coleções",
+      "faltam": "{total, plural, =1 {falta 1} other {faltam #}}",
+      "progresso": "{percentual}% de {divisao}, {faltam, plural, =1 {falta 1} other {faltam #}}"
+    },
+    "cadastradas": {
+      "titulo": "Cadastradas nos últimos 7 dias",
+      "inventario": "Inventário",
+      "contagem": "{unidades, plural, =1 {1 unidade} other {# unidades}} · {cartas, plural, =1 {1 carta} other {# cartas}}",
+      "desde": "Desde {data}",
+      "hoje": "hoje",
+      "ontem": "ontem",
+      "quantidade": "×{total}",
+      "abrir": "Abrir {nome}, cadastrada {dia}",
+      "mais": "{total, plural, =1 {+1 cópia no inventário} other {+# cópias no inventário}}",
+      "vazio": "Nenhuma carta entrou no inventário nos últimos 7 dias.",
+      "nota": "Conta o dia em que cada cópia entrou no inventário, no horário de São Paulo. Unidades somadas no cadastro a uma cópia que já existia ficam com a data dela, e uma cópia separada de um lote antes de 23/11/2026 leva a data da separação."
+    },
+    "colecoes": {
+      "titulo": "Suas coleções",
+      "verTodas": "Ver todas ({total, number})",
+      "vazio": "Nenhuma coleção ainda.",
+      "criarPrimeira": "Criar a primeira coleção",
+      "cartas": "{total, plural, =1 {1 carta} other {# cartas}}",
+      "progresso": "{preenchidas, number} de {total, number}"
+    },
+    "dex": {
+      "titulo": "Living Dex",
+      "visaoGeral": "Visão geral",
+      "atalhos": "Atalhos da Living Dex",
+      "atalho": {
+        "planos": "Planos",
+        "trofeus": "Troféus",
+        "pokedex": "Pokédex"
+      },
+      "noHome": "{noHome, number} de {contam, number} no HOME",
+      "recebidos": "{total, plural, =1 {1 recebido para guardar} other {# recebidos para guardar}}",
+      "levarAoHome": "{total, plural, =1 {1 Pokémon para levar ao HOME} other {# Pokémon para levar ao HOME}}",
+      "planosAtivos": "Planos ativos",
+      "tarefas": "{feitas, number}/{total, plural, =1 {1 tarefa} other {# tarefas}}",
+      "etapas": "{feitas, number}/{total, plural, =1 {1 etapa} other {# etapas}}",
+      "maisTarefas": "{total, plural, =1 {+1 tarefa aberta} other {+# tarefas abertas}}",
+      "maisPlanos": "{total, plural, =1 {+1 plano ativo} other {+# planos ativos}}",
+      "semPlano": "Nenhum plano ativo.",
+      "abrirPlanos": "Abrir Planos",
+      "trofeus": "Troféus",
+      "proximoDoHome": "Próximo do HOME",
+      "todosDoHome": "Todos os troféus do HOME conquistados.",
+      "semJogos": "Marque os jogos que você tem"
+    }
   }
 }
