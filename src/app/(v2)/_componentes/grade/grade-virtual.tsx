@@ -58,10 +58,12 @@ import {
   PROPORCAO_CARTA,
   ancoraDaRolagem,
   alturaDaGrade,
+  celulaDeEntrada,
   deveVirtualizar,
   ehTeclaGrade,
   faixaVisivel,
   geometriaDaGrade,
+  geometriaMoveLinhas,
   indiceNoPonto,
   posicaoDoItem,
   proximoIndice,
@@ -152,6 +154,8 @@ export function GradeVirtual<T>({
     [largura, minCelula, vaoX, vaoY, proporcao, alturaExtra],
   );
   const [faixa, setFaixa] = useState<Faixa>({ inicio: 0, fim: 0 });
+  // O que está de fato à vista (sem as linhas de sobra): é dali que o Tab entra.
+  const [visivel, setVisivel] = useState<Faixa>({ inicio: 0, fim: 0 });
   const [ativo, setAtivo] = useState(0);
   const [focoDentro, setFocoDentro] = useState(false);
   // Índices pedidos por `elementoDe` (o foco que volta de uma camada): montados até chegarem.
@@ -173,6 +177,8 @@ export function GradeVirtual<T>({
     ancora.current = ancoraDaRolagem({ total: n, g: geo, topo });
     const nova = faixaVisivel({ total: n, g: geo, topo, alturaJanela: window.innerHeight, virtualizar: v });
     setFaixa((atual) => (atual.inicio === nova.inicio && atual.fim === nova.fim ? atual : nova));
+    const aVista = faixaVisivel({ total: n, g: geo, topo, alturaJanela: window.innerHeight, virtualizar: true, sobra: 0 });
+    setVisivel((atual) => (atual.inicio === aVista.inicio && atual.fim === aVista.fim ? atual : aVista));
   }, []);
 
   useLayoutEffect(() => {
@@ -186,17 +192,18 @@ export function GradeVirtual<T>({
     return () => observador.disconnect();
   }, []);
 
-  // Colunas mudaram (largura, tamanho das cartas): a âncora volta ao lugar
-  // antes de recalcular a faixa. Só com a grade já rolada para dentro.
-  const colunasAntes = useRef(g.colunas);
+  // A geometria mudou de um jeito que move as linhas (outras colunas, ou
+  // células de outra altura): a âncora volta ao lugar antes de recalcular a
+  // faixa. Só com a grade já rolada para dentro.
+  const geometriaAntes = useRef(g);
   useLayoutEffect(() => {
     estado.current = { total, g, virtualizar };
     const el = contenedor.current;
-    if (el && colunasAntes.current !== g.colunas && ancora.current && largura > 0) {
+    if (el && geometriaMoveLinhas(geometriaAntes.current, g) && ancora.current && largura > 0) {
       const topoNoDocumento = el.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({ top: rolagemDaAncora({ ...ancora.current, g, topoNoDocumento }), behavior: "instant" });
     }
-    colunasAntes.current = g.colunas;
+    geometriaAntes.current = g;
     recalcular();
   }, [total, g, virtualizar, largura, recalcular]);
 
@@ -242,9 +249,10 @@ export function GradeVirtual<T>({
     return [...conjunto].sort((a, b) => a - b);
   }, [faixa, total, manterMontadas, indicePorChave, pedidos, focoDentro, ativoValido]);
 
-  // A célula na ordem do Tab: a ativa, se montada; senão a primeira à vista
-  // (Tab de fora não salta para uma célula que a pessoa já rolou para longe).
-  const focavel = focoDentro || (ativoValido >= faixa.inicio && ativoValido < faixa.fim) ? ativoValido : faixa.inicio;
+  // A célula na ordem do Tab: a ativa, se à vista; senão a primeira à vista
+  // (Tab de fora não salta para uma célula que a pessoa já rolou para longe,
+  // nem para uma linha de sobra acima da janela).
+  const focavel = celulaDeEntrada({ ativo: ativoValido, focoDentro, visivel });
 
   /* ---------- Rolar e focar ---------- */
 

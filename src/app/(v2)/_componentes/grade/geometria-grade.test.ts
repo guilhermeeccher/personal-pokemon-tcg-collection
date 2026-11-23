@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   alturaDaGrade,
   ancoraDaRolagem,
+  celulaDeEntrada,
+  geometriaMoveLinhas,
   deveVirtualizar,
   faixaVisivel,
   geometriaDaGrade,
@@ -149,6 +151,34 @@ describe("âncora de troca de colunas", () => {
     const duas = geometriaDaGrade({ largura: 210, minCelula: 100, vaoX: 10, vaoY: 20, proporcao: 1.5 });
     // Duas colunas: o item 12 está na linha 6 (y 1020). A grade começa em 300 no documento.
     expect(rolagemDaAncora({ ...ancora, g: duas, topoNoDocumento: 300 })).toBe(300 + 1020 - 110);
+  });
+});
+
+describe("geometriaMoveLinhas", () => {
+  it("outras colunas, ou as mesmas colunas com outra altura de linha", () => {
+    const mais = geometriaDaGrade({ largura: 470, minCelula: 100, vaoX: 10, vaoY: 20, proporcao: 1.5 });
+    expect(mais.colunas).toBe(g.colunas);
+    expect(geometriaMoveLinhas(g, mais)).toBe(true);
+    expect(geometriaMoveLinhas(g, g)).toBe(false);
+  });
+
+  it("mesmas colunas, células maiores: a âncora volta ao lugar", () => {
+    const ancora = ancoraDaRolagem({ total: 400, g, topo: -170 * 50 + 30 })!;
+    const mais = geometriaDaGrade({ largura: 470, minCelula: 100, vaoX: 10, vaoY: 20, proporcao: 1.5 });
+    const y = rolagemDaAncora({ ...ancora, g: mais, topoNoDocumento: 0 });
+    // O item-âncora fica a `deslocamento` px do topo da janela com a geometria nova.
+    expect(posicaoDoItem(ancora.indice, mais).y - y).toBeCloseTo(ancora.deslocamento);
+  });
+});
+
+describe("celulaDeEntrada", () => {
+  const visivel = { inicio: 40, fim: 64 };
+  it("com o foco dentro, a ativa", () => {
+    expect(celulaDeEntrada({ ativo: 3, focoDentro: true, visivel })).toBe(3);
+  });
+  it("de fora: a ativa só se está à vista; senão a primeira à vista, nunca a sobra", () => {
+    expect(celulaDeEntrada({ ativo: 50, focoDentro: false, visivel })).toBe(50);
+    expect(celulaDeEntrada({ ativo: 3, focoDentro: false, visivel })).toBe(40);
   });
 });
 

@@ -20,24 +20,35 @@ const LARGURA_DUAS_PAGINAS = 720;
 const MAXIMO_PONTOS = 30;
 
 /**
- * Quantas páginas abertas cabem: uma no celular e no desktop estreito, duas
- * (o fichário aberto) quando o próprio fichário passa de 720 px. É medida do
- * componente, não o corte de 768 px da casca: com o trilho ao lado, a 1024 px
- * a área útil não comporta duas páginas legíveis. Recebe o elemento (não um
- * `ref`): ele só existe depois que a grade chega, e o efeito precisa rodar de
- * novo quando ele aparece.
+ * O respiro da página do fichário (`.folha`): 14 px a partir de 768 px, 10
+ * abaixo. A conta usa sempre o maior — errar para o lado de uma grade menor,
+ * nunca para bolsos abaixo de 44 px.
  */
-export function usePaginasPorVez(el: HTMLElement | null): 1 | 2 {
-  const [duas, setDuas] = useState(false);
+const RESPIRO_PAGINA = 14;
+const VAO_PAGINAS = 26;
+
+/**
+ * Quantas páginas abertas cabem e quanto sobra para os bolsos de cada uma:
+ * uma no celular e no desktop estreito, duas (o fichário aberto) quando o
+ * próprio fichário passa de 720 px. É medida do componente, não o corte de
+ * 768 px da casca: com o trilho ao lado, a 1024 px a área útil não comporta
+ * duas páginas legíveis. Recebe o elemento (não um `ref`): ele só existe
+ * depois que a grade chega, e o efeito precisa rodar de novo quando ele
+ * aparece.
+ */
+export function useMedidaFichario(el: HTMLElement | null): { paginasPorVez: 1 | 2; larguraUtil: number } {
+  const [largura, setLargura] = useState(0);
   useEffect(() => {
     if (!el) return;
-    const medir = (largura: number) => setDuas(largura >= LARGURA_DUAS_PAGINAS);
-    medir(el.clientWidth);
-    const observador = new ResizeObserver(([e]) => e && medir(e.contentRect.width));
+    // O `ResizeObserver` entrega uma primeira medida logo ao observar.
+    const observador = new ResizeObserver(([e]) => e && setLargura(e.contentRect.width));
     observador.observe(el);
     return () => observador.disconnect();
   }, [el]);
-  return duas ? 2 : 1;
+  const paginasPorVez = largura >= LARGURA_DUAS_PAGINAS ? 2 : 1;
+  const pagina = paginasPorVez === 2 ? (largura - VAO_PAGINAS) / 2 : largura;
+  // Antes da primeira medida, nada limita: a grade guardada vale.
+  return { paginasPorVez, larguraUtil: largura === 0 ? Infinity : pagina - 2 * RESPIRO_PAGINA };
 }
 
 /**

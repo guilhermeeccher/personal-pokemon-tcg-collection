@@ -391,7 +391,18 @@ rest are the technical foundations of the v2.
       field, or a wide horizontal swipe that never starts within 24 px of the left edge (rule 3);
       the dots are informative only, never targets. The new page slides in with a CSS animation
       marked `v2-anima`, so reduced motion and light mode drop it with the same final state; there
-      is no copy of the pages during the turn.
+      is no copy of the pages during the turn. The place in the binder is the first slot in view,
+      not a page number: changing the size, turning the phone or entering "Edit cards" keeps that
+      slot in view.
+    - **The binder never goes under 44 px pockets.** A size whose pockets would be narrower than
+      44 px with 8 px between them is disabled (`maiorGradeQueCabe`): at 320 px the 6×6 would give
+      38 px pockets, so it is off there and a stored 6×6 shows as 5×5. In "Edit cards" every pocket
+      carries the remove button (28 px drawn, 44 px of area, inside the pocket, 8 px from its
+      edges), so the binder goes up to 4×4 and the whole list starts at size L.
+    - **Upgrades mounts 100 rows at a time** (two cards each), with "Show more": the list is the
+      slots with a better free copy, almost always a few, and a row has no fixed height to
+      virtualize (on the phone its button wraps to a line of its own). A candidate is shown only if
+      it was computed against the copy in the slot now.
     - The divisions (Pokédex regions, a set's main and secret parts, the sets of a joined
       collection) are jumps: the binder turns to the page where the division starts, the whole list
       scrolls to it. The v1's region filter became this navigation; no slot is ever hidden.
@@ -430,12 +441,13 @@ rest are the technical foundations of the v2.
       visible rows plus three on each side. Cells are placed by `top`/`left` (no transform, no
       `will-change`, no `container-type`), with `role="list"`, and each cell is a `listitem` with
       `aria-setsize`/`aria-posinset`, so a screen reader knows the whole size.
-    - **Keyboard:** one cell in the Tab order (the active one, or the first in view when Tab comes
-      from outside); arrows move by cell or row, Home/End to the ends of the list, PageUp/PageDown
+    - **Keyboard:** one cell in the Tab order (the active one, or the first really in view — not a
+      spare row above the window — when Tab comes from outside); arrows move by cell or row, Home/End to the ends of the list, PageUp/PageDown
       by a window of rows; the target is mounted and scrolled in before it takes focus. The focused
       cell stays mounted when it scrolls away.
-    - **Column changes keep the anchor:** a width or size change puts the first item that was in
-      view back where it was.
+    - **Geometry changes keep the anchor:** a width or size change that moves the rows (other
+      columns, or the same columns with taller cells) puts the first item that was in view back
+      where it was.
     - **`elementoDe(key)`** scrolls the item in, waits two frames for it to mount and returns its
       focusable element: pass it, wrapped, as a layer's `devolverFocoPara`.
     - **`indiceNoPonto(clientX, clientY)`** maps a pointer to an item (the gaps belong to none): the

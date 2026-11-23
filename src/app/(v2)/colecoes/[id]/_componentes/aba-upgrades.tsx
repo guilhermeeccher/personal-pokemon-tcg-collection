@@ -25,8 +25,19 @@ import estilos from "./colecao.module.css";
  * A lista é a da grade (a marca `upgrade` de cada vaga, lida junto com ela);
  * a melhor candidata vem de `GET /api/colecoes/:id/melhorias`, relida a cada
  * leitura nova da grade. Se essa leitura falhar, a lista continua, com o
- * eixo e sem a imagem da candidata: o sinal é acessório, a vaga não.
+ * eixo e sem a imagem da candidata: o sinal é acessório, a vaga não. Uma
+ * candidata só é mostrada se foi calculada contra a cópia que está na vaga
+ * agora (`atual.copiaId`): a de uma leitura velha diria "de → para" errado.
+ *
+ * **Monta no máximo `POR_VEZ` linhas** (duas cartas cada), e "Mostrar mais"
+ * acrescenta outras tantas: a lista é de vagas com cópia livre melhor, quase
+ * sempre poucas, mas uma Pokédex pode passar do limiar da grade virtual, e
+ * uma linha de upgrade não tem altura fixa para virtualizar (no celular o
+ * botão desce para uma linha própria).
  */
+/** Quantas linhas montar de cada vez: 100 linhas são 200 cartas, abaixo do limiar de 300 da grade. */
+const POR_VEZ = 100;
+
 export function AbaUpgrades({
   colecaoId,
   vagas,
@@ -49,6 +60,7 @@ export function AbaUpgrades({
   const [melhorias, setMelhorias] = useState<Map<string, MelhoriaDaVagaDTO> | null>(null);
   const [falhou, setFalhou] = useState(false);
   const comUpgrade = vagas.filter((v) => v.upgrade && v.copia);
+  const [mostrar, setMostrar] = useState(POR_VEZ);
 
   useEffect(() => {
     const controle = new AbortController();
@@ -59,7 +71,10 @@ export function AbaUpgrades({
         setFalhou(false);
       })
       .catch(() => {
-        if (!controle.signal.aborted) setFalhou(true);
+        if (controle.signal.aborted) return;
+        // As candidatas da leitura anterior são de outra grade: some com elas.
+        setMelhorias(null);
+        setFalhou(true);
       });
     return () => controle.abort();
   }, [colecaoId, versaoGrade]);
@@ -84,8 +99,9 @@ export function AbaUpgrades({
       <p className={estilos.notaTopo}>{t("explica")}</p>
       {falhou && <AvisoEmLinha tom="alerta">{t("erroCandidatas")}</AvisoEmLinha>}
       <ul className={estilos.listaUpgrades}>
-        {comUpgrade.map((v) => {
-          const m = melhorias?.get(v.id);
+        {comUpgrade.slice(0, mostrar).map((v) => {
+          const lida = melhorias?.get(v.id);
+          const m = lida && lida.atual.copiaId === v.copia!.id ? lida : undefined;
           const melhor = m?.candidatas[0];
           const eixo = melhor?.eixo ?? v.upgrade!;
           const deAte = m && melhor ? valoresDoEixo(eixo, m.atual, melhor) : null;
@@ -135,6 +151,11 @@ export function AbaUpgrades({
           );
         })}
       </ul>
+      {comUpgrade.length > mostrar && (
+        <Botao onClick={() => setMostrar((n) => n + POR_VEZ)} className={estilos.mostrarMais}>
+          {t("mostrarMais", { total: Math.min(POR_VEZ, comUpgrade.length - mostrar), restantes: comUpgrade.length - mostrar })}
+        </Botao>
+      )}
     </div>
   );
 }

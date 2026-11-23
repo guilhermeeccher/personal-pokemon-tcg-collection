@@ -214,6 +214,27 @@ export function rolagemDaAncora(p: { indice: number; deslocamento: number; g: Ge
 }
 
 /**
+ * Se a rolagem precisa voltar à âncora: a geometria mudou de um jeito que
+ * move as linhas — outras colunas, ou o mesmo número de colunas com células
+ * de outra altura (a janela alargou sem caber mais uma coluna: a linha 50
+ * desce centenas de px).
+ */
+export function geometriaMoveLinhas(antes: Pick<Geometria, "colunas" | "passoLinha">, depois: Pick<Geometria, "colunas" | "passoLinha">): boolean {
+  return antes.colunas !== depois.colunas || Math.abs(antes.passoLinha - depois.passoLinha) > 0.5;
+}
+
+/**
+ * A célula que entra na ordem do Tab. Com o foco dentro da grade, a ativa
+ * (ela está montada). Vindo de fora, a ativa se ela está **à vista**; senão a
+ * primeira à vista — nunca uma das linhas de sobra acima da janela, que o
+ * navegador rolaria para mostrar.
+ */
+export function celulaDeEntrada(p: { ativo: number; focoDentro: boolean; visivel: Faixa }): number {
+  if (p.focoDentro) return p.ativo;
+  return p.ativo >= p.visivel.inicio && p.ativo < p.visivel.fim ? p.ativo : p.visivel.inicio;
+}
+
+/**
  * O `scrollY` que mostra um item inteiro, mexendo o mínimo: se já está à
  * vista, não rola; acima, alinha o topo dele com `margemTopo` (a barra fixa
  * de cima, se houver); abaixo, alinha a base com `alturaJanela - margemBase`

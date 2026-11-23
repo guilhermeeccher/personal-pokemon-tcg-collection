@@ -30,7 +30,7 @@ import { ATRIBUTO_VAGA } from "./_componentes/bolso";
 import { CabecalhoColecao } from "./_componentes/cabecalho-colecao";
 import { ATRIBUTO_COPIA_TEMA, BlocoTema, CartasDoTema } from "./_componentes/cartas-do-tema";
 import estilos from "./_componentes/colecao.module.css";
-import { Fichario, usePaginasPorVez } from "./_componentes/fichario";
+import { Fichario, useMedidaFichario } from "./_componentes/fichario";
 import { IncluirCarta } from "./_componentes/incluir-carta";
 import { ListaInteira } from "./_componentes/lista-inteira";
 import {
@@ -47,11 +47,13 @@ import {
   inicioDasDivisoes,
   lerGradeFichario,
   lerTamanhoInteiro,
-  paginaAposTrocarGrade,
+  porPagina,
   paginaDoIndice,
   totalDePaginas,
   vagaDoFoco,
   vagasDaAba,
+  gradeEfetiva,
+  tamanhoEfetivo,
 } from "./_componentes/vista-colecao";
 
 type Leitura = { estado: "carregando" } | { estado: "ok"; grade: GradeColecaoV2DTO } | { estado: "naoEncontrada" } | { estado: "erro" };
@@ -70,16 +72,21 @@ const EVENTO_PREFERENCIA = "v2-colecao-preferencia";
 const preferenciasDaVisita = new Map<string, string>();
 
 function lerPreferencia(chave: string): string | null {
+  // Uma gravação recusada nesta visita vence o que o armazenamento ainda tem
+  // de antes: senão a escolha nova não apareceria na tela.
+  const daVisita = preferenciasDaVisita.get(chave);
+  if (daVisita !== undefined) return daVisita;
   try {
-    return window.localStorage.getItem(chave) ?? preferenciasDaVisita.get(chave) ?? null;
+    return window.localStorage.getItem(chave);
   } catch {
-    return preferenciasDaVisita.get(chave) ?? null;
+    return null;
   }
 }
 
 function gravarPreferencia(chave: string, valor: string) {
   try {
     window.localStorage.setItem(chave, valor);
+    preferenciasDaVisita.delete(chave);
   } catch {
     preferenciasDaVisita.set(chave, valor);
   }
@@ -189,23 +196,36 @@ export function PaginaColecao({ id }: { id: string }) {
   const trocarAba = useCallback((nova: Aba) => {
     const url = new URL(window.location.href);
     url.searchParams.set("aba", nova);
-    // `replaceState` sem passar pelo roteador: a troca de aba não pede nada ao servidor.
-    window.history.replaceState(window.history.state, "", url);
+    // `replaceState` sem passar pelo roteador: a troca de aba não pede nada ao
+    // servidor. O estado vai `null`: o Next põe os metadados dele por conta
+    // própria, e repassar `history.state` (que já traz o marcador dele) faz o
+    // roteador ignorar a mudança — a URL troca e `useSearchParams` não.
+    window.history.replaceState(null, "", url);
   }, []);
 
-  const gradeFichario = lerGradeFichario(usePreferencia(CHAVE_GRADE_FICHARIO));
-  const tamanho = lerTamanhoInteiro(usePreferencia(CHAVE_TAMANHO_INTEIRO));
+  const gradePreferida = lerGradeFichario(usePreferencia(CHAVE_GRADE_FICHARIO));
+  const tamanhoPreferido = lerTamanhoInteiro(usePreferencia(CHAVE_TAMANHO_INTEIRO));
+  const [editandoCartas, setEditandoCartas] = useState(false);
 
   /* ---------- Fichário ---------- */
 
   const [area, setArea] = useState<HTMLDivElement | null>(null);
-  const paginasPorVez = usePaginasPorVez(area);
-  const [paginaPedida, setPaginaPedida] = useState(0);
+  const { paginasPorVez, larguraUtil } = useMedidaFichario(area);
+  // O que vale na tela: a preferência, até onde os alvos de 44 px cabem, e
+  // os limites do modo "Editar cartas" (`vista-colecao.ts`).
+  const gradeFichario = gradeEfetiva(gradePreferida, larguraUtil, editandoCartas);
+  const gradeQueCabe = gradeEfetiva(6, larguraUtil, editandoCartas);
+  const tamanho = tamanhoEfetivo(tamanhoPreferido, editandoCartas);
+  // O lugar no fichário é a primeira vaga à vista, não o número da página:
+  // trocar de grade, girar o aparelho ou entrar no modo de edição muda a
+  // página, e a vaga que estava à vista continua à vista.
+  const [primeiraPedida, setPrimeiraPedida] = useState(0);
   const totalPaginas = totalDePaginas(vagas.length, gradeFichario);
-  const pagina = inicioDaVista(paginaPedida, paginasPorVez, totalPaginas);
+  const pagina = inicioDaVista(paginaDoIndice(primeiraPedida, gradeFichario), paginasPorVez, totalPaginas);
+  const irParaPagina = (p: number) => setPrimeiraPedida(p * porPagina(gradeFichario));
 
   function trocarGradeFichario(nova: GradeFichario) {
-    setPaginaPedida(paginaAposTrocarGrade(pagina, gradeFichario, nova, paginasPorVez, vagas.length));
+    setPrimeiraPedida(pagina * porPagina(gradeFichario));
     gravarPreferencia(CHAVE_GRADE_FICHARIO, String(nova));
   }
 
@@ -223,7 +243,7 @@ export function PaginaColecao({ id }: { id: string }) {
       return;
     }
     if (aba !== "fichario") trocarAba("fichario");
-    setPaginaPedida(paginaDoIndice(inicio, gradeFichario));
+    setPrimeiraPedida(inicio);
   }
 
   /* ---------- Detalhe ---------- */
@@ -235,6 +255,10 @@ export function PaginaColecao({ id }: { id: string }) {
   // O que abriu o detalhe por último (a vaga e o lugar dela na aba), para o
   // foco voltar ao fechar. Não se apaga ao fechar: o resolvedor do foco roda
   // depois do commit que fecha.
+  // A vaga que uma desalocação numa customizada está tirando da grade: o
+  // detalhe fecha logo depois da escrita, antes de a releitura chegar, e o
+  // foco não pode voltar para um botão que vai sumir.
+  const vagaSaindo = useRef<string | null>(null);
   const origemDoDetalhe = useRef<{ tipo: "vaga"; id: string; posicao: number } | { tipo: "copia"; copiaId: string } | null>(null);
   const abaRef = useRef(aba);
   const vagasRef = useRef(vagas);
@@ -278,32 +302,27 @@ export function PaginaColecao({ id }: { id: string }) {
    * a que ficou no mesmo lugar da lista (`vagaDoFoco`). Lê o estado da hora em
    * que fecha, pelas refs.
    */
-  const gradeFicharioRef = useRef(gradeFichario);
-  useEffect(() => {
-    gradeFicharioRef.current = gradeFichario;
-  });
   const devolverFoco = useCallback(async (): Promise<HTMLElement | null> => {
     const origem = origemDoDetalhe.current;
     if (!origem) return null;
     if (origem.tipo === "copia") return document.querySelector<HTMLElement>(`[${ATRIBUTO_COPIA_TEMA}="${CSS.escape(origem.copiaId)}"]`);
     const abaAgora = abaRef.current;
-    const lista = vagasDaAba(abaAgora, vagasRef.current);
+    const lista = vagasDaAba(abaAgora, vagasRef.current).filter((v) => v.id !== vagaSaindo.current);
     const alvo = vagaDoFoco(lista, origem.id, origem.posicao);
     if (!alvo) return null;
     if (abaAgora === "inteiro" || abaAgora === "falta") return (await controleGrade.current?.elementoDe(alvo.id)) ?? null;
     if (abaAgora === "fichario") {
-      setPaginaPedida(paginaDoIndice(lista.indexOf(alvo), gradeFicharioRef.current));
+      setPrimeiraPedida(lista.indexOf(alvo));
       await doisQuadros();
     }
     return document.querySelector<HTMLElement>(`[${ATRIBUTO_VAGA}="${CSS.escape(alvo.id)}"]`);
-  }, [setPaginaPedida]);
+  }, [setPrimeiraPedida]);
 
   /* ---------- Operações da coleção ---------- */
 
   const [ajustesAbertos, setAjustesAbertos] = useState(false);
   const [adicionarAberto, setAdicionarAberto] = useState(false);
   const [temaAberto, setTemaAberto] = useState(false);
-  const [editandoCartas, setEditandoCartas] = useState(false);
 
   async function tirarVaga(v: VagaGradeV2DTO) {
     if (!grade) return;
@@ -472,7 +491,12 @@ export function PaginaColecao({ id }: { id: string }) {
           <Segmentado
             pequeno
             rotulo={t("fichario.tamanho")}
-            opcoes={GRADES_FICHARIO.map((g) => ({ valor: String(g), rotulo: `${g}×${g}`, rotuloAcessivel: t("fichario.porPagina", { total: g * g }) }))}
+            opcoes={GRADES_FICHARIO.map((g) => ({
+              valor: String(g),
+              rotulo: `${g}×${g}`,
+              rotuloAcessivel: t("fichario.porPagina", { total: g * g }),
+              desabilitada: g > gradeQueCabe,
+            }))}
             valor={String(gradeFichario)}
             aoMudar={(v) => trocarGradeFichario(lerGradeFichario(v))}
           />
@@ -481,7 +505,11 @@ export function PaginaColecao({ id }: { id: string }) {
           <Segmentado
             pequeno
             rotulo={t("inteiro.tamanho")}
-            opcoes={TAMANHOS_INTEIRO.map((_, i) => ({ valor: String(i), rotulo: t(`inteiro.tamanhos.${i}`) }))}
+            opcoes={TAMANHOS_INTEIRO.map((_, i) => ({
+              valor: String(i),
+              rotulo: t(`inteiro.tamanhos.${i}`),
+              desabilitada: tamanhoEfetivo(i as TamanhoInteiro, editandoCartas) !== i,
+            }))}
             valor={String(tamanho)}
             aoMudar={(v) => trocarTamanho(lerTamanhoInteiro(v))}
           />
@@ -499,7 +527,7 @@ export function PaginaColecao({ id }: { id: string }) {
               grade={gradeFichario}
               pagina={pagina}
               paginasPorVez={paginasPorVez}
-              aoIrPara={setPaginaPedida}
+              aoIrPara={irParaPagina}
               abertaId={abertaId}
               parAtivo={parAtivo}
               aoAbrir={abrirVaga}
@@ -553,7 +581,10 @@ export function PaginaColecao({ id }: { id: string }) {
       <DetalheCarta
         abertura={abertura}
         onFechar={() => setAberta(null)}
-        onMudou={reler}
+        onMudou={(evento) => {
+          if (evento.tipo === "desalocada" && grade.tipo === "customizada") vagaSaindo.current = evento.vagaId;
+          reler();
+        }}
         chaveTransicao={aberta?.tipo === "vaga" ? aberta.id : undefined}
         devolverFocoPara={devolverFoco}
         secaoCompra={secaoCompraDoDetalhe}

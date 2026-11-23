@@ -105,6 +105,38 @@ export function densidadeDoTamanho(tamanho: TamanhoInteiro): GradeFichario {
 
 /* --------------------------------------------------------------- Fichário */
 
+/** O alvo de toque mínimo e o vão mínimo entre dois (seção 1 de `rules.md`). */
+export const ALVO_TOQUE = 44;
+export const VAO_ALVOS = 8;
+
+/**
+ * A maior grade do fichário cujos bolsos ainda têm 44 px de largura com 8 px
+ * entre eles, numa página com esta largura útil (já sem o respiro da página).
+ * A 320 px o 6×6 daria bolsos de 38 px: ele fica indisponível ali, e quem o
+ * guardou como preferência vê o 5×5 até a página caber. Nunca menos que 3×3.
+ */
+export function maiorGradeQueCabe(larguraUtil: number): GradeFichario {
+  const cabe = (g: number) => g * ALVO_TOQUE + (g - 1) * VAO_ALVOS <= larguraUtil;
+  return ([6, 5, 4] as const).find(cabe) ?? 3;
+}
+
+/**
+ * No modo "Editar cartas" cada bolso leva o botão de tirar no canto (44 px de
+ * área): o fichário vai até 4×4 e a lista inteira começa no tamanho G, para
+ * sobrar carta para tocar ao lado do botão.
+ */
+export const GRADE_MAXIMA_EDITANDO: GradeFichario = 4;
+export const TAMANHO_MINIMO_EDITANDO: TamanhoInteiro = 2;
+
+export function gradeEfetiva(preferida: GradeFichario, larguraUtil: number, editando: boolean): GradeFichario {
+  const limite = Math.min(maiorGradeQueCabe(larguraUtil), editando ? GRADE_MAXIMA_EDITANDO : 6);
+  return Math.min(preferida, limite) as GradeFichario;
+}
+
+export function tamanhoEfetivo(preferido: TamanhoInteiro, editando: boolean): TamanhoInteiro {
+  return editando ? (Math.max(preferido, TAMANHO_MINIMO_EDITANDO) as TamanhoInteiro) : preferido;
+}
+
 export function porPagina(grade: GradeFichario): number {
   return grade * grade;
 }
@@ -132,22 +164,6 @@ export function inicioDaVista(pagina: number, paginasPorVez: 1 | 2, totalPaginas
 export function faixaDaPagina(pagina: number, grade: GradeFichario, totalVagas: number): { inicio: number; fim: number } {
   const inicio = pagina * porPagina(grade);
   return { inicio: Math.min(inicio, totalVagas), fim: Math.min(inicio + porPagina(grade), totalVagas) };
-}
-
-/**
- * Trocar o tamanho do fichário mantém à vista a primeira vaga que estava à
- * vista: de 3×3 na página 5 (vagas 37 a 45) para 6×6, a página nova é a que
- * contém a vaga 37.
- */
-export function paginaAposTrocarGrade(
-  pagina: number,
-  de: GradeFichario,
-  para: GradeFichario,
-  paginasPorVez: 1 | 2,
-  totalVagas: number,
-): number {
-  const primeira = pagina * porPagina(de);
-  return inicioDaVista(paginaDoIndice(primeira, para), paginasPorVez, totalDePaginas(totalVagas, para));
 }
 
 /**

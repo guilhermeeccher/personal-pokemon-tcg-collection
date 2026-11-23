@@ -2123,7 +2123,8 @@
         "variante": "Variante melhor"
       },
       "outras": "{total, plural, =1 {mais 1 candidata} other {mais # candidatas}}",
-      "verTroca": "Ver troca"
+      "verTroca": "Ver troca",
+      "mostrarMais": "Mostrar mais {total} (faltam {restantes})"
     },
     "falta": {
       "emBreve": "Marcar compras ainda é na v1",

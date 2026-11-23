@@ -153,7 +153,8 @@ export function Bolso({
             {vaga.copia!.idioma.toUpperCase()}
           </span>
         )}
-        {vaga.upgrade && (
+        {/* No modo de edição o canto é do botão de tirar; o upgrade segue no rótulo e na aba. */}
+        {vaga.upgrade && !aoTirar && (
           <span className={estilos.seloUpgrade} aria-hidden>
             <ArrowUp />
           </span>

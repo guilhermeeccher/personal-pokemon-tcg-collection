@@ -2131,7 +2131,8 @@
         "variante": "Better variant"
       },
       "outras": "{total, plural, =1 {1 more candidate} other {# more candidates}}",
-      "verTroca": "See the swap"
+      "verTroca": "See the swap",
+      "mostrarMais": "Show {total} more ({restantes} left)"
     },
     "falta": {
       "emBreve": "Marking purchases is still in v1",

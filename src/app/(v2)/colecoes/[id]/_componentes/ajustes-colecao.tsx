@@ -116,8 +116,23 @@ export function AjustesColecao({
     onFechar();
   }
 
+  /*
+   * O que o servidor já confirmou e a grade ainda não trouxe. Entre o 200 e a
+   * releitura, o próximo clique parte disto, não do parâmetro velho: sem isso,
+   * ligar Johto e logo depois Hoenn mandava `[kanto, hoenn]` e Johto saía sem
+   * a confirmação de remoção. Uma grade nova (parâmetro novo) zera os dois.
+   */
+  const [escopoConfirmado, setEscopoConfirmado] = useState<ParametroPokedex | null>(null);
+  const [secretasConfirmadas, setSecretasConfirmadas] = useState<boolean | null>(null);
+  const [parametroAntes, setParametroAntes] = useState(colecao.parametro);
+  if (parametroAntes !== colecao.parametro) {
+    setParametroAntes(colecao.parametro);
+    setEscopoConfirmado(null);
+    setSecretasConfirmadas(null);
+  }
+
   const parametroSet = colecao.tipo === "set" ? (colecao.parametro as { incluirSecretas?: boolean } | null) : null;
-  const secretas = parametroSet?.incluirSecretas === true;
+  const secretas = secretasConfirmadas ?? parametroSet?.incluirSecretas === true;
 
   async function alternarSecretas(ligar: boolean) {
     if (!ligar) {
@@ -134,11 +149,12 @@ export function AjustesColecao({
     const r = await enviar(`/api/colecoes/${colecao.id}/secretas`, "PATCH", { incluirSecretas: ligar });
     setOcupado(null);
     if (!r?.ok) return recusado(r, t("erroSecretas"));
+    setSecretasConfirmadas(ligar);
     avisar(ligar ? t("secretasLigadas") : t("secretasDesligadas"), { tom: "sucesso" });
     onMudou();
   }
 
-  const parametroPokedex = colecao.tipo === "pokedex" ? (colecao.parametro as ParametroPokedex) : null;
+  const parametroPokedex = colecao.tipo === "pokedex" ? (escopoConfirmado ?? (colecao.parametro as ParametroPokedex)) : null;
   const regioes = parametroPokedex ? regioesDoEscopo(parametroPokedex) : [];
 
   async function alternarRegiao(regiao: Regiao) {
@@ -163,6 +179,7 @@ export function AjustesColecao({
     const r = await enviar(`/api/colecoes/${colecao.id}/escopo`, "PATCH", novo);
     setOcupado(null);
     if (!r?.ok) return recusado(r, t("erroEscopo"));
+    setEscopoConfirmado(novo);
     const corpo = (r.corpo ?? {}) as { adicionadas?: number; removidas?: number };
     const partes = [
       corpo.adicionadas ? t("vagasAdicionadas", { total: corpo.adicionadas }) : null,

@@ -11,7 +11,6 @@ import {
   lerGradeFichario,
   lerTamanhoInteiro,
   marcasAposReler,
-  paginaAposTrocarGrade,
   paginaDoIndice,
   proximoEscopo,
   sentidoDoGesto,
@@ -20,6 +19,9 @@ import {
   vaoDoTamanho,
   vagaDoFoco,
   vagasDaAba,
+  gradeEfetiva,
+  maiorGradeQueCabe,
+  tamanhoEfetivo,
 } from "./vista-colecao";
 
 describe("abas", () => {
@@ -106,13 +108,30 @@ describe("fichário", () => {
     expect(faixaDaPagina(18, 3, 165)).toEqual({ inicio: 162, fim: 165 });
     expect(faixaDaPagina(19, 3, 165)).toEqual({ inicio: 165, fim: 165 });
   });
+});
 
-  it("trocar o tamanho mantém à vista a primeira vaga", () => {
-    // 3×3, página 5 → vagas 45..53; em 6×6 a vaga 45 está na página 1.
-    expect(paginaAposTrocarGrade(5, 3, 6, 1, 165)).toBe(1);
-    // Com duas abertas, normaliza para par.
-    expect(paginaAposTrocarGrade(5, 3, 4, 2, 165)).toBe(2);
-    expect(paginaAposTrocarGrade(0, 6, 3, 2, 165)).toBe(0);
+describe("grade que cabe", () => {
+  it("bolsos de 44 px com 8 px entre eles", () => {
+    // 320 px: 288 de conteúdo menos 2 × 10 de respiro da página = 268.
+    expect(maiorGradeQueCabe(268)).toBe(5);
+    // 393 px: 361 − 20 = 341.
+    expect(maiorGradeQueCabe(341)).toBe(6);
+    expect(maiorGradeQueCabe(304)).toBe(6);
+    expect(maiorGradeQueCabe(303)).toBe(5);
+    expect(maiorGradeQueCabe(100)).toBe(3);
+  });
+
+  it("a preferência vale até onde cabe, e editando vai até 4×4", () => {
+    expect(gradeEfetiva(6, 268, false)).toBe(5);
+    expect(gradeEfetiva(6, 600, false)).toBe(6);
+    expect(gradeEfetiva(6, 600, true)).toBe(4);
+    expect(gradeEfetiva(3, 268, true)).toBe(3);
+  });
+
+  it("editando, a lista inteira começa no tamanho G", () => {
+    expect(tamanhoEfetivo(0, true)).toBe(2);
+    expect(tamanhoEfetivo(3, true)).toBe(3);
+    expect(tamanhoEfetivo(0, false)).toBe(0);
   });
 });
 
