@@ -1,0 +1,425 @@
+/*
+ * O inventário da v2 (`/inventario`). As linhas são painéis (`.v2-painel`,
+ * sem desfoque: regra 5b, uma lista nunca gasta `backdrop-filter`), uma coluna
+ * no celular e duas a partir de 1024 px. Nenhuma camada de composição por
+ * linha: a carta em repouso é uma imagem simples, e só a que está sob o dedo
+ * ou o ponteiro se inclina (`carta.module.css`).
+ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------- Cabeçalho */
+
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 24px;
+}
+.titulo {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.contagem {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  color: var(--v2-tinta-3);
+}
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Os dois downloads: link com cara de botão secundário, 44 px de altura. */
+.baixar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--v2-tinta);
+  text-decoration: none;
+  background: var(--v2-superficie-2);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+  transition: background-color 0.2s;
+}
+.baixar:hover {
+  background: var(--v2-superficie-3);
+}
+.ajuda {
+  margin: -6px 0 0;
+  max-width: 70ch;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+}
+
+/* ---------------------------------------------------------- Filtros */
+
+.filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.linhaBusca {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+}
+.busca {
+  position: relative;
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.lupa {
+  position: absolute;
+  top: 13px;
+  left: 14px;
+  color: var(--v2-tinta-3);
+  pointer-events: none;
+  z-index: 1;
+}
+.campoBusca {
+  padding-left: 42px;
+}
+.painelFiltros {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
+  gap: 12px;
+}
+/* Abaixo de 768 px o painel recolhe atrás do botão "Filtros"; a partir dali
+   está sempre aberto, e o botão não existe. */
+@media (max-width: 47.99rem) {
+  .painelFiltros:not([data-aberto]) {
+    display: none;
+  }
+  .painelFiltros {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+  }
+}
+@media (min-width: 48rem) {
+  .botaoFiltros {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------- Lista */
+
+.barraLista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.marcarTodos {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding-right: 8px;
+  font-size: 13.5px;
+  color: var(--v2-tinta-2);
+  cursor: pointer;
+}
+/* A caixa da lista fica alinhada com as das linhas (centro a 22 px da borda). */
+.marcarTodos .caixa {
+  margin-left: 12px;
+}
+.carregando {
+  font-size: 13px;
+  color: var(--v2-tinta-3);
+}
+.caixa {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--v2-foco);
+  cursor: pointer;
+}
+
+.lista {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transition: opacity 0.2s;
+}
+.lista[aria-busy] {
+  opacity: 0.6;
+}
+@media (min-width: 64rem) {
+  .lista {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.linha {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: var(--v2-raio-painel);
+}
+.linha[data-selecionada] {
+  background: rgb(159 216 255 / 0.08);
+  box-shadow: inset 0 0 0 1.5px rgb(159 216 255 / 0.55);
+}
+.caixaLinha {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+}
+
+/* O botão que abre o detalhe: a miniatura e o texto, uma área de toque só. */
+.abrir {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 6px;
+  border: 0;
+  border-radius: 14px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+}
+.abrir:hover {
+  background: var(--v2-superficie-1);
+}
+.miniatura {
+  flex: none;
+  width: 58px;
+}
+@media (min-width: 48rem) {
+  .miniatura {
+    width: 66px;
+  }
+}
+/* O lugar da carta enquanto ela está no detalhe (mesmo tamanho). */
+.lugarCarta {
+  display: block;
+  aspect-ratio: 600 / 825;
+  border-radius: 4.6% / 3.4%;
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px var(--v2-aresta);
+}
+.semImagem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 4px;
+  box-sizing: border-box;
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--v2-tinta-3);
+}
+
+.texto {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding-top: 2px;
+}
+.nome {
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.especie {
+  font-weight: 450;
+  color: var(--v2-tinta-2);
+}
+.numero {
+  font-weight: 450;
+  font-size: 13px;
+  color: var(--v2-tinta-3);
+}
+.set {
+  font-size: 12.5px;
+  color: var(--v2-tinta-2);
+  overflow-wrap: anywhere;
+}
+.selos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+/* Selo informativo: não é alvo de toque (está dentro do botão da linha). */
+.selo {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-2);
+}
+.selo:is([data-variante="holo"], [data-variante="reverse"], [data-variante="primeira_edicao"]) {
+  color: var(--v2-tinta);
+  background:
+    linear-gradient(var(--v2-superficie-2), var(--v2-superficie-2)),
+    linear-gradient(100deg, rgb(159 227 255 / 0.28), rgb(199 168 255 / 0.28) 40%, rgb(255 180 221 / 0.28) 70%, rgb(255 217 160 / 0.28));
+}
+.selo[data-condicao="NM"] {
+  color: var(--v2-livre);
+}
+.selo:is([data-condicao="HP"], [data-condicao="DMG"]) {
+  color: var(--v2-perigo);
+}
+.onde {
+  font-size: 12.5px;
+  color: var(--v2-tinta-2);
+  overflow-wrap: anywhere;
+}
+.alocacao {
+  font-size: 12.5px;
+  color: var(--v2-tinta-2);
+  overflow-wrap: anywhere;
+}
+.alocacao[data-livre] {
+  color: var(--v2-livre);
+}
+.remover {
+  align-self: center;
+  color: var(--v2-tinta-3);
+}
+.remover:hover {
+  color: var(--v2-perigo);
+}
+
+.vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+}
+
+/* ---------------------------------------------------------- Seleção */
+
+/*
+ * Barra da seleção. `sticky`: ocupa a própria altura no fluxo (o fim da lista
+ * nunca fica atrás dela) e gruda no pé da janela enquanto a lista rola — no
+ * celular, logo acima da barra de abas, cuja altura e área segura já estão em
+ * `--v2-topo-abas`. Desenho de vidro sem `backdrop-filter`.
+ */
+.barraSelecao {
+  position: sticky;
+  bottom: calc(var(--v2-topo-abas) + 10px);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--v2-raio-vidro);
+}
+@media (min-width: 48rem) {
+  .barraSelecao {
+    bottom: max(16px, var(--v2-seguro-base));
+  }
+}
+.selecaoTexto {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.selecaoAcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Em pé, no celular estreito, os dois botões dividem a linha de baixo. */
+@media (max-width: 29.99rem) {
+  .selecaoTexto {
+    flex-basis: 100%;
+  }
+  .selecaoAcoes {
+    flex: 1;
+  }
+  .selecaoAcoes > * {
+    flex: 1;
+  }
+}
+
+/* ---------------------------------------------------------- Paginação */
+
+.paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13.5px;
+  color: var(--v2-tinta-2);
+}
+
+/* ---------------------------------------------------------- Edição em massa */
+
+.massa {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.campoMassa {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 6px 12px 12px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+.campoMassa[data-marcado] {
+  box-shadow: inset 0 0 0 1.5px rgb(159 216 255 / 0.55);
+}
+.campoMassa:disabled {
+  opacity: 0.7;
+}
+.marcarCampo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.dicaMassa {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--v2-tinta-3);
+}

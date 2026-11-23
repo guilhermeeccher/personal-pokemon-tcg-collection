@@ -2000,5 +2000,109 @@
       },
       "erroGrade": "Could not read the collection grid."
     }
+  },
+  "v2Inventario": {
+    "titulo": "Inventory",
+    "contagem": "{total, plural, =0 {No copies} one {# copy} other {# copies}}",
+    "baixarCsv": "Download CSV",
+    "exportarLiga": "Export to LigaPokemon",
+    "exportarLigaExplica": "The CSV has the whole inventory. The LigaPokemon export downloads a ZIP in the site's import format, in files of up to 995 cards. Neither follows the filters.",
+    "naoDeu": "That didn't work",
+    "tentarDeNovo": "Try again",
+    "limparFiltros": "Clear filters",
+    "erroCarregar": "Could not read the inventory.",
+    "erroRede": "No answer from the server. Check the connection and try again.",
+    "filtrosInvalidos": "A filter in the address has a value the inventory does not know. Clear the filters to see the list.",
+    "selecionarTodos": "Select all on this page",
+    "carregando": "Loading…",
+    "vazio": "No copies in the inventory yet.",
+    "vazioFiltrado": "No copies match these filters.",
+    "selecionar": "Select {carta} #{numero}",
+    "semImagem": "No photo",
+    "quantidade": "{total, plural, one {# unit} other {# units}}",
+    "localizacao": "In {local}",
+    "alocadaEm": "In {colecao}, slot {vaga}",
+    "livre": "Free, in no collection",
+    "idioma": {
+      "pt": "Portuguese",
+      "en": "English",
+      "jp": "Japanese"
+    },
+    "idiomaCurto": {
+      "pt": "PT",
+      "en": "EN",
+      "jp": "JP"
+    },
+    "filtros": {
+      "rotulo": "Inventory filters",
+      "busca": "Search by name",
+      "abrir": "Filters",
+      "abrirComTotal": "Filters ({total})",
+      "set": "Set",
+      "idioma": "Physical language",
+      "raridade": "Rarity",
+      "variante": "Variant",
+      "condicao": "Condition",
+      "graded": "Graded",
+      "alocacao": "Allocation",
+      "imagem": "Image",
+      "imagemDica": "No photo of your own and no usable catalog photo. Some still show a photo from another source.",
+      "localizacao": "Location",
+      "localizacaoExemplo": "Binder 1, page 3",
+      "todos": "All",
+      "todas": "All",
+      "gradedSim": "Graded only",
+      "gradedNao": "Not graded only",
+      "alocadas": "Allocated only",
+      "livres": "Free only",
+      "semImagem": "No catalog image"
+    },
+    "selecao": {
+      "rotulo": "Selection",
+      "total": "{total, plural, one {# copy selected} other {# copies selected}}",
+      "editar": "Edit selected",
+      "limpar": "Clear"
+    },
+    "paginacao": {
+      "rotulo": "Inventory pages",
+      "anterior": "Previous",
+      "proxima": "Next",
+      "texto": "Page {pagina} of {total}"
+    },
+    "remover": {
+      "rotulo": "Remove {carta} #{numero}",
+      "titulo": "Remove the copy of {carta}?",
+      "qual": "{set} #{numero}, {quantidade, plural, one {# unit} other {# units}}.",
+      "alocada": "It is in {colecao}: the slot becomes empty.",
+      "livre": "The row leaves the inventory.",
+      "confirmar": "Remove copy",
+      "feito": "Copy of {carta} removed.",
+      "jaRemovida": "This copy no longer existed (it may have been removed in another tab). The list was read again.",
+      "erro": "Could not remove the copy."
+    },
+    "massa": {
+      "titulo": "{total, plural, one {Edit # copy} other {Edit # copies}}",
+      "explica": "Tick only what you want to change; the rest stays as it is. No allocation is touched.",
+      "alterar": "Change {campo}",
+      "localizacaoDica": "Left blank, it clears the copies' location.",
+      "idiomaFisico": "Physical language",
+      "idiomaDica": "The language of the card in your hand, not of the catalog entry.",
+      "varianteDica": "Only the variants every card in the selection has in the catalog.",
+      "semVarianteComum": "The selection mixes cards with no variant in common in the catalog: change the variant copy by copy, in the detail.",
+      "cancelar": "Cancel",
+      "aplicar": "{total, plural, one {Apply to # copy} other {Apply to # copies}}",
+      "confirmarTitulo": "{total, plural, one {Change # copy?} other {Change # copies?}}",
+      "confirmarAlocacao": "All or nothing: if one copy cannot change, none does",
+      "muda": {
+        "condicao": "Condition: {valor}",
+        "localizacao": "Location: {valor}",
+        "semLocalizacao": "Location cleared",
+        "idioma": "Physical language: {valor}",
+        "variante": "Variant: {valor}"
+      },
+      "naoAplicou": "Nothing was changed",
+      "erro": "Could not apply the edit.",
+      "feito": "{total, plural, one {# copy updated.} other {# copies updated.}}"
+    }
   }
 }

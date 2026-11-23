@@ -1,9 +1,17 @@
 import { exigirSessao } from "@/lib/acesso";
 
-import { irParaV1 } from "@/app/(v2)/_ponte/ir-para-v1";
+import { filtrosDaUrl, paginaDaUrl } from "./_componentes/estado-inventario";
+import { Inventario } from "./_componentes/inventario";
 
-/** Ponte: a v2 ainda não tem esta tela (`_ponte/ir-para-v1.ts`). */
-export default async function PonteInventario({ searchParams }: PageProps<"/inventario">) {
+/**
+ * Inventário da v2 (pacote 2b). A lista e os filtros vivem no cliente, sobre
+ * `GET /api/copias`, como na v1; este invólucro de servidor confere a sessão e
+ * lê os filtros da URL — as mesmas chaves da v1 (`estado-inventario.ts`) —, para
+ * a primeira pintura já sair com o recorte pedido, sem ler `window.location`
+ * depois de montar.
+ */
+export default async function PaginaInventario({ searchParams }: PageProps<"/inventario">) {
   await exigirSessao();
-  irParaV1(["inventario"], await searchParams);
+  const busca = await searchParams;
+  return <Inventario filtrosIniciais={filtrosDaUrl(busca)} paginaInicial={paginaDaUrl(busca)} />;
 }

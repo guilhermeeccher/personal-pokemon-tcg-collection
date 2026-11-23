@@ -110,7 +110,6 @@ describe("pontes da v2, executadas", () => {
         "/colecoes/[id]/opcoes-compra",
         "/colecoes/falta",
         "/dex/[[...resto]]",
-        "/inventario",
         "/inventario/precos",
         "/inventario/repetidas",
         "/inventario/visao-geral",
