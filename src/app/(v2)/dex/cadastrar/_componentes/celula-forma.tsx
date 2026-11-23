@@ -100,7 +100,8 @@ export function useTextoSelo() {
  *   digitado continua (AGENTS.md, "Quantity steppers").
  * - **Poucos nós por célula** (~20): − e + são texto, não ícone SVG, e a seta
  *   do botão do nome é um pseudo-elemento. A célula é contada no orçamento de
- *   nós da regra 13, e o limiar desta lista sai dessa conta (regra 39).
+ *   nós da regra 13, e o limiar desta lista sai dessa conta (`rules.md`,
+ *   "Register by game (package 5c)").
  * - Nada só na cor: "fora do jogo", "troca", "trancada" e "não vai ao HOME"
  *   são texto; o destaque da linha marcada repete o número do campo.
  */

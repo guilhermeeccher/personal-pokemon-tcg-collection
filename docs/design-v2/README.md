@@ -232,7 +232,7 @@ mutations and confirmations are kept on all of them.
 | **5-0 Dex bridges** (done) | replaces the single Dex bridge with one bridge per screen, keeping the direct 404 with the module off; names the owner of the Dex shared components (below) | step 6 |
 | **5a Overview and Pokédex** (done) | `/dex`, `/dex/pokedex`, and the four shared Dex pieces below | after 5-0 |
 | **5b Boxes and received** | `/dex/caixas`, `/dex/recebidos` | after 5-0 |
-| **5c Register** | `/dex/cadastrar` (virtualized) | after 5-0 |
+| **5c Register** (done) | `/dex/cadastrar` (virtualized, its own measured threshold: `rules.md`, rule 39) | after 5-0 |
 | **5d New registration** | `/dex/novo-cadastro` (two steps), with its own definition of done | after 5-0 |
 | **5e Inventory, games, trophies and plans** | the four screens; the split is reassessed by size, and plans get their own definition of done | after 5-0 |
 

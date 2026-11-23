@@ -25,9 +25,10 @@
  *   com o HOME são ~1.220 formas, e na v1 um toque no stepper custava ~310 ms
  *   sem virtualizar (iPhone, CPU 4×). Acima do limiar ela monta só a faixa à
  *   vista; o limiar é desta lista (`LIMIAR_CADASTRO`), e a medição contra o
- *   orçamento está na regra 39. A linha com foco e
- *   as vizinhas ficam montadas (`manterMontadas`): rolar com o teclado do
- *   iPhone aberto não tira o campo da página, e o Enter acha a próxima.
+ *   orçamento está em `rules.md`, "Register by game (package 5c)". A linha
+ *   com foco e as vizinhas ficam montadas (`manterMontadas`): rolar com o
+ *   teclado do iPhone aberto não tira o campo da página, e o Enter acha a
+ *   próxima.
  * - **O lote mora aqui, por forma**: trocar de jogo, de vista ou de filtro não
  *   apaga o que se digitou, e a barra diz quantas formas do lote estão fora da
  *   lista à vista — elas vão junto no cadastro, como na v1.
@@ -86,9 +87,9 @@ const VAO = 10;
  * Quantas formas a lista monta inteira antes de virtualizar. Não é o 300 da
  * grade de cartas: uma forma aqui custa ~21 nós (nome, marcas e dois
  * steppers), contra ~8 de uma carta, e o orçamento da regra 13 é de ~2.500
- * nós por grade. Medido em 2026-11-23 (regra 39 de `rules.md`): 68 formas
- * montadas davam 1.572 nós, 171 davam 3.579, 253 (o catálogo do FireRed)
- * 5.269; o toque ficou abaixo de 100 ms em todos, então é a conta de nós que
+ * nós por grade. Medido em 2026-11-23 (`rules.md`, "Register by game
+ * (package 5c)"): 68 formas montadas davam 1.572 nós, 171 davam 3.579, 253
+ * (o catálogo do FireRed) 5.269; o toque ficou abaixo de 100 ms em todos, então é a conta de nós que
  * decide. Com 100, a lista inteira cabe em ~2.250 nós; acima, ~500 em
  * qualquer tamanho.
  */
