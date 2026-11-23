@@ -171,11 +171,13 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
+  max-width: 100%;
   padding: 0;
   border: 0;
   border-radius: 999px;
   background: none;
   font: inherit;
+  text-align: left;
   cursor: pointer;
 }
 .explicacaoPilula {
@@ -187,7 +189,7 @@
   font-size: 12px;
   font-weight: 600;
   line-height: 1.5;
-  white-space: nowrap;
+  min-width: 0;
   color: var(--v2-tinta-2);
   background: var(--v2-superficie-2);
 }
@@ -453,6 +455,9 @@
     max-width: none;
     align-items: flex-end;
   }
+  .preco .explicacaoPilula {
+    white-space: nowrap;
+  }
   .preco .explicacaoTexto {
     width: 260px;
     text-align: left;
@@ -629,6 +634,7 @@
   font-size: 14px;
 }
 .rodadaSituacao {
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
