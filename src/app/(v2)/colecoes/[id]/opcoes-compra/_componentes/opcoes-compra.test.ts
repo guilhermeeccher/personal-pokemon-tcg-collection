@@ -220,24 +220,31 @@ describe("recolher", () => {
 
 describe("pendências", () => {
   const vagas = [vaga("1", [opcao({ id: "a", preco: 10.1, numero: "1" }), opcao({ id: "b", preco: 0.2, numero: "2", selecionada: true })])];
-  const ka = chavePendencia(vagas[0].opcoes[0]);
-  const kb = chavePendencia(vagas[0].opcoes[1]);
+  const ka = chavePendencia(vagas[0].opcoes[0], "liga");
+  const kb = chavePendencia(vagas[0].opcoes[1], "liga");
 
-  it("a chave é a carta na vaga, não o id da linha: outra varredura não a perde", () => {
-    const antes = opcao({ id: "liga-1", chave: "25", edicaoSigla: "BS", numero: "58" });
-    const depois = { ...antes, id: "liga-2" };
-    expect(chavePendencia(antes)).toBe(chavePendencia(depois));
-    expect(chavePendencia(antes)).not.toBe(chavePendencia({ ...antes, numero: "59" }));
-    expect(chavePendencia(antes)).not.toBe(chavePendencia({ ...antes, chave: "26" }));
-    const p = new Map([[chavePendencia(antes), { seq: 1, selecionada: true }]]);
-    expect(comPendencias([vaga("25", [depois])], p)[0].opcoes[0].selecionada).toBe(true);
-    // A escolha avulsa é a própria escolha.
-    expect(chavePendencia(opcao({ id: "escolha|e1", escolhaId: "e1" }))).toContain("e1");
+  it("Liga: a chave é a identidade da carta na vaga, não o id da linha", () => {
+    const antes = opcao({ id: "liga-1", chave: "25", edid: 701, edicaoSigla: "BS", numero: "058", cartaId: null });
+    // Outra varredura: outro id, o número sem o zero.
+    expect(chavePendencia({ ...antes, numero: "58" }, "liga")).toBe(chavePendencia(antes, "liga"));
+    // Mesma sigla, outro `edid`: outra carta.
+    expect(chavePendencia({ ...antes, edid: 702 }, "liga")).not.toBe(chavePendencia(antes, "liga"));
+    expect(chavePendencia({ ...antes, numero: "59" }, "liga")).not.toBe(chavePendencia(antes, "liga"));
+    expect(chavePendencia({ ...antes, chave: "26" }, "liga")).not.toBe(chavePendencia(antes, "liga"));
+    const p = new Map([[chavePendencia(antes, "liga"), { seq: 1, selecionada: true }]]);
+    expect(comPendencias([vaga("25", [{ ...antes, id: "liga-2", numero: "58" }])], p, "liga")[0].opcoes[0].selecionada).toBe(true);
+  });
+
+  it("Cardmarket: a carta do catálogo na vaga; a escolha avulsa é a própria escolha", () => {
+    const c = opcao({ id: "25|x", chave: "25", cartaId: "x", edicaoNome: "Nome A" });
+    expect(chavePendencia({ ...c, edicaoNome: "Nome B" }, "cardmarket")).toBe(chavePendencia(c, "cardmarket"));
+    expect(chavePendencia({ ...c, cartaId: "y" }, "cardmarket")).not.toBe(chavePendencia(c, "cardmarket"));
+    expect(chavePendencia(opcao({ id: "escolha|e1", escolhaId: "e1" }), "cardmarket")).toContain("e1");
   });
 
   it("a marca otimista vence a leitura até ser podada", () => {
     const p = new Map([[ka, { seq: 3, selecionada: true }]]);
-    expect(comPendencias(vagas, p)[0].opcoes.map((o) => o.selecionada)).toEqual([true, true]);
+    expect(comPendencias(vagas, p, "liga")[0].opcoes.map((o) => o.selecionada)).toEqual([true, true]);
     expect(podarPendencias(p, 2).size).toBe(1);
     expect(podarPendencias(p, 3).size).toBe(0);
     expect(semSeqs(p, [3]).size).toBe(0);
@@ -249,11 +256,11 @@ describe("pendências", () => {
       [ka, { seq: 1, selecionada: true }],
       [kb, { seq: 2, selecionada: false }],
     ]);
-    expect(resumoComPendencias(dados, p)).toEqual({ cartas: 1, total: 10.1 });
+    expect(resumoComPendencias(dados, p, "liga")).toEqual({ cartas: 1, total: 10.1 });
     // Uma pendência igual ao que a leitura já diz não conta duas vezes.
-    expect(resumoComPendencias(dados, new Map([[kb, { seq: 1, selecionada: true }]]))).toEqual({ cartas: 1, total: 0.2 });
+    expect(resumoComPendencias(dados, new Map([[kb, { seq: 1, selecionada: true }]]), "liga")).toEqual({ cartas: 1, total: 0.2 });
     // Uma opção que saiu da leitura (vaga preenchida) não conta.
-    expect(resumoComPendencias(dados, new Map([["sumiu", { seq: 1, selecionada: true }]]))).toEqual({ cartas: 1, total: 0.2 });
+    expect(resumoComPendencias(dados, new Map([["sumiu", { seq: 1, selecionada: true }]]), "liga")).toEqual({ cartas: 1, total: 0.2 });
   });
 });
 
@@ -266,7 +273,7 @@ describe("marcar a melhor de cada vaga", () => {
       vaga("4", []),
       vaga("5", [opcao({ id: "5|e", chave: "5", cartaId: "e" })]),
     ];
-    const plano = planoMelhor(vagas, "cardmarket", new Map([[chavePendencia(vagas[4].opcoes[0]), { seq: 1, selecionada: true }]]));
+    const plano = planoMelhor(vagas, "cardmarket", new Map([[chavePendencia(vagas[4].opcoes[0], "cardmarket"), { seq: 1, selecionada: true }]]));
     expect(plano.itens.map((i) => i.opcao.id)).toEqual(["1|a"]);
     expect(plano.fora).toEqual({ jaTemEscolha: 1, semPreco: 1, semOpcao: 1, pendentes: 1 });
     expect(plano.corpos).toEqual([{ cartas: [{ chave: "1", cartaId: "a" }], selecionada: true }]);

@@ -62,6 +62,14 @@ interface Registro {
   venceEm: string;
 }
 
+/**
+ * Quanto a confirmação espera a resposta. Enquanto ela está no ar a página
+ * trava a marcação; uma conexão que nunca responde não pode travá-la para
+ * sempre. Passado o prazo, o resultado é incerto (a transação pode ter
+ * gravado): a trava solta, a página relê e a tela diz isso.
+ */
+const PRAZO_CONFIRMACAO_MS = 30_000;
+
 type Recado = { tom: "perigo" | "alerta"; texto: string; linhas?: string[] };
 
 export function PainelSemEstoque({
@@ -136,7 +144,7 @@ export function PainelSemEstoque({
       });
     } catch {
       setOcupado(false);
-      setRecado({ tom: "perigo", texto: t("erroRede") });
+      setRecado({ tom: "perigo", texto: t("erroRedeConferir") });
       return;
     }
     const corpo = (await resposta.json().catch(() => null)) as (Previa & { naoEntendidas?: string[] }) | null;
@@ -158,6 +166,7 @@ export function PainelSemEstoque({
     setOcupado(true);
     setRecado(null);
     aoGravar("inicio");
+    const prazo = AbortSignal.timeout(PRAZO_CONFIRMACAO_MS);
     let resposta: Response;
     try {
       resposta = await fetch(rota, {
@@ -165,13 +174,17 @@ export function PainelSemEstoque({
         headers: { "Content-Type": "application/json" },
         // Exatamente o texto que a prévia mostrou.
         body: JSON.stringify({ texto: previa.texto, confirmar: true }),
+        signal: prazo,
       });
     } catch {
       setOcupado(false);
-      setRecado({ tom: "perigo", texto: t("erroRede") });
+      setPrevia(null);
+      // Sem resposta, não se sabe se gravou: a releitura diz a verdade.
+      setRecado({ tom: "perigo", texto: prazo.aborted ? t("semResposta") : t("erroRede") });
       aoGravar("fim");
       return;
     }
+    // O corpo também está sob o prazo (o mesmo sinal interrompe a leitura dele).
     const corpo = (await resposta.json().catch(() => null)) as { registradas?: number; desmarcadas?: number; naoEntendidas?: string[] } | null;
     setOcupado(false);
     // Dê certo ou não, a página relê: uma recusa depois de confirmar não

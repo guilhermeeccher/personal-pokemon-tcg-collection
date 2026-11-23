@@ -3331,7 +3331,7 @@
       "gravado": "{registradas} card(s) recorded as out of stock · {desmarcadas} selection(s) unmarked.",
       "nadaReconhecido": "No card recognized in the pasted text.",
       "erroGravar": "Could not record it. Nothing was recorded or unmarked.",
-      "erroRede": "No connection to the server: nothing was sent.",
+      "erroRede": "No connection to the server: there is no telling whether anything was recorded. The list was read again.",
       "colecaoSumiu": "This collection no longer exists.",
       "erroCarregar": "Could not read the out-of-stock cards.",
       "erroRemover": "Could not offer this card again.",
@@ -3341,7 +3341,9 @@
       "voltar": "Offer again",
       "voltouAOferecer": "{nome} is offered again.",
       "triagemMudou": "The buy list changed after the check (a marking finished). Check again: the preview has to show what will be unmarked now.",
-      "conferirDeNovo": "Check again"
+      "conferirDeNovo": "Check again",
+      "semResposta": "The server did not answer in time: there is no telling whether the paste was recorded. The list was read again; check the cards on record before pasting again.",
+      "erroRedeConferir": "No connection to the server: nothing was checked."
     }
   }
 }

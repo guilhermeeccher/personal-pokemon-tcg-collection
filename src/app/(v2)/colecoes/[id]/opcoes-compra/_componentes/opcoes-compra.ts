@@ -17,6 +17,7 @@ import { compararChavesVaga } from "@/lib/dominio/chave-vaga-set";
 import { filtrarCandidatas } from "@/lib/dominio/candidatas-compra";
 import { FAIXA_REGIAO, regiaoDoNumero, type Regiao } from "@/lib/dominio/escopo-pokedex";
 import type { FontePreco } from "@/lib/dominio/fonte-preco";
+import { identidadeDaCarta } from "@/lib/dominio/identidade-carta";
 import { FILTROS_PADRAO, FILTROS_PADRAO_SET, type Filtros, type Ordenacao } from "@/lib/dominio/liga-opcoes";
 import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
 import type { CriterioValorCardmarket } from "@/lib/dominio/preco-cardmarket";
@@ -49,6 +50,8 @@ export interface OpcaoDTO {
   chave: string;
   nome: string;
   edicaoSigla?: string;
+  /** Liga: o `edid` deles (a coluna de `liga_opcao`), parte da identidade da carta. */
+  edid?: number | null;
   edicaoNome: string;
   numero: string;
   total: string | null;
@@ -228,24 +231,34 @@ export type PendenciasOpcao = ReadonlyMap<string, PendenciaOpcao>;
  * `id` é de `liga_opcao` e muda a cada varredura — durante uma rodada, uma
  * leitura traz a mesma carta com outro `id`, e uma pendência presa ao antigo
  * sumiria (a opção voltaria desmarcada e o toque seguinte repetiria o
- * pedido). Edição e número são a identidade que a Liga dá à carta, a mesma
- * da escolha (`identidade-carta.ts`). O `id` do momento continua sendo o que
- * vai no corpo do pedido.
+ * pedido). Por fonte, a identidade durável:
+ *
+ * - **Liga:** a identidade que a escolha usa (`identidadeDaCarta`: o `edid`
+ *   deles, ou a sigla, e o número sem zero à esquerda) — `003` e `3` são a
+ *   mesma carta, duas edições de mesma sigla e `edid` diferentes não.
+ * - **Cardmarket:** a carta do catálogo (`cartaId`), presa à vaga.
+ * - **Escolha avulsa:** a própria escolha.
+ *
+ * O `id` do momento continua sendo o que vai no corpo do pedido.
  */
-export function chavePendencia(o: Pick<OpcaoDTO, "chave" | "cartaId" | "edicaoSigla" | "edicaoNome" | "numero" | "escolhaId">): string {
+export function chavePendencia(
+  o: Pick<OpcaoDTO, "chave" | "cartaId" | "edid" | "edicaoSigla" | "edicaoNome" | "numero" | "escolhaId">,
+  fonte: FontePreco,
+): string {
   if (o.escolhaId) return `${o.chave}|escolha|${o.escolhaId}`;
-  return `${o.chave}|${o.cartaId ?? ""}|${o.edicaoSigla ?? o.edicaoNome}|${o.numero}`;
+  if (fonte === "cardmarket") return `${o.chave}|carta|${o.cartaId ?? ""}`;
+  return `${o.chave}|liga|${identidadeDaCarta({ edid: o.edid ?? null, edicaoSigla: o.edicaoSigla ?? o.edicaoNome, numero: o.numero })}`;
 }
 
 /** As vagas com a marca otimista de cada opção pendente por cima da leitura. */
-export function comPendencias(vagas: readonly VagaDTO[], pendencias: PendenciasOpcao): VagaDTO[] {
+export function comPendencias(vagas: readonly VagaDTO[], pendencias: PendenciasOpcao, fonte: FontePreco): VagaDTO[] {
   if (pendencias.size === 0) return [...vagas];
   return vagas.map((v) =>
-    v.opcoes.some((o) => pendencias.has(chavePendencia(o)))
+    v.opcoes.some((o) => pendencias.has(chavePendencia(o, fonte)))
       ? {
           ...v,
           opcoes: v.opcoes.map((o) => {
-            const p = pendencias.get(chavePendencia(o));
+            const p = pendencias.get(chavePendencia(o, fonte));
             return p ? { ...o, selecionada: p.selecionada } : o;
           }),
         }
@@ -277,13 +290,14 @@ export function semSeqs(pendencias: PendenciasOpcao, seqs: readonly number[]): M
 export function resumoComPendencias(
   dados: Pick<RespostaOpcoesDTO, "selecionadas" | "total" | "vagas">,
   pendencias: PendenciasOpcao,
+  fonte: FontePreco,
 ): { cartas: number; total: number } {
   let cartas = dados.selecionadas;
   let centavos = Math.round(dados.total * 100);
   if (pendencias.size > 0) {
     for (const v of dados.vagas) {
       for (const o of v.opcoes) {
-        const p = pendencias.get(chavePendencia(o));
+        const p = pendencias.get(chavePendencia(o, fonte));
         if (!p || p.selecionada === o.selecionada) continue;
         cartas += p.selecionada ? 1 : -1;
         if (o.preco !== null) centavos += (p.selecionada ? 1 : -1) * Math.round(o.preco * 100);
@@ -486,7 +500,7 @@ export function planoMelhor(vagas: readonly VagaDTO[], fonte: FontePreco, penden
   const fora = { jaTemEscolha: 0, semPreco: 0, semOpcao: 0, pendentes: 0 };
   const corpos: CorpoSelecao[] = [];
   for (const v of vagas) {
-    if (v.opcoes.some((o) => pendencias.has(chavePendencia(o)))) {
+    if (v.opcoes.some((o) => pendencias.has(chavePendencia(o, fonte)))) {
       fora.pendentes++;
       continue;
     }

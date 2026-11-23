@@ -248,7 +248,7 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
   /* ---------- A grade da tela ---------- */
 
   const teto = lerTeto(tetoTexto);
-  const vagasComMarcas = useMemo(() => comPendencias(dados?.vagas ?? [], pendencias), [dados, pendencias]);
+  const vagasComMarcas = useMemo(() => comPendencias(dados?.vagas ?? [], pendencias, fonte), [dados, pendencias, fonte]);
   const vagasTela = useMemo(
     () => vagasDaTela(vagasComMarcas, { fonte, tipo: dados?.tipo ?? "pokedex", teto: teto.valor, ordenacao }),
     [vagasComMarcas, fonte, dados?.tipo, teto.valor, ordenacao],
@@ -373,7 +373,7 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
       const corpo = corpoDaMarcacao(opcao, fonte, nova);
       if (!corpo) return;
       const n = ++seq.current;
-      definirPendencias((p) => new Map(p).set(chavePendencia(opcao), { seq: n, selecionada: nova }));
+      definirPendencias((p) => new Map(p).set(chavePendencia(opcao, fonte), { seq: n, selecionada: nova }));
       enfileirar([corpo], [n]);
     },
     [fonte, definirPendencias, enfileirar],
@@ -420,7 +420,7 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
     if (corpos.length === 0) return;
     const seqs = itens.map(({ opcao }) => {
       const n = ++seq.current;
-      definirPendencias((p) => new Map(p).set(chavePendencia(opcao), { seq: n, selecionada: true }));
+      definirPendencias((p) => new Map(p).set(chavePendencia(opcao, fonte), { seq: n, selecionada: true }));
       return n;
     });
     enfileirar(corpos, seqs, t("atalho.feito", { total: itens.length }));
@@ -510,7 +510,7 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
 
   /* ---------- Desenho ---------- */
 
-  const resumo = dados ? resumoComPendencias(dados, pendencias) : { cartas: 0, total: 0 };
+  const resumo = dados ? resumoComPendencias(dados, pendencias, fonte) : { cartas: 0, total: 0 };
   const listaVelha =
     (concluidosLidos !== null && envios.concluidos !== concluidosLidos) || gravando || escritasTerminadas !== escritasLidas;
   const atualizando = pendencias.size > 0 || envios.emVoo > 0 || listaVelha || leitura === "carregando";

@@ -3323,7 +3323,7 @@
       "gravado": "{registradas} carta(s) registrada(s) sem estoque · {desmarcadas} seleção(ões) desmarcada(s).",
       "nadaReconhecido": "Nenhuma carta reconhecida no texto colado.",
       "erroGravar": "Não deu para gravar. Nada foi registrado nem desmarcado.",
-      "erroRede": "Sem conexão com o servidor: nada foi enviado.",
+      "erroRede": "Sem conexão com o servidor: não dá para saber se algo foi gravado. A lista foi relida.",
       "colecaoSumiu": "Esta coleção não existe mais.",
       "erroCarregar": "Não deu para ler as cartas sem estoque.",
       "erroRemover": "Não deu para voltar a oferecer esta carta.",
@@ -3333,7 +3333,9 @@
       "voltar": "Voltar a oferecer",
       "voltouAOferecer": "{nome} volta a ser oferecida.",
       "triagemMudou": "A lista de compras mudou depois da conferência (uma marcação terminou). Confira de novo: a prévia precisa mostrar o que será desmarcado agora.",
-      "conferirDeNovo": "Conferir de novo"
+      "conferirDeNovo": "Conferir de novo",
+      "semResposta": "O servidor não respondeu a tempo: não dá para saber se a colagem foi gravada. A lista foi relida; confira as registradas antes de colar de novo.",
+      "erroRedeConferir": "Sem conexão com o servidor: nada foi conferido."
     }
   }
 }
