@@ -129,7 +129,9 @@ export function faixaVisivel(p: {
   if (!p.virtualizar) return { inicio: 0, fim: total };
   const sobra = p.sobra ?? SOBRA_LINHAS;
   const linhas = linhasDaGrade(total, g);
-  const primeira = Math.floor(-p.topo / g.passoLinha) - sobra;
+  // A primeira linha cuja célula (não o vão abaixo dela) ainda aparece: com o
+  // topo da janela caindo no vão, a linha de cima já saiu inteira.
+  const primeira = Math.floor((-p.topo - g.alturaCelula) / g.passoLinha) + 1 - sobra;
   const ultima = Math.ceil((p.alturaJanela - p.topo) / g.passoLinha) + sobra;
   const de = Math.min(Math.max(0, primeira), linhas - 1);
   const ate = Math.max(de + 1, Math.min(linhas, ultima));

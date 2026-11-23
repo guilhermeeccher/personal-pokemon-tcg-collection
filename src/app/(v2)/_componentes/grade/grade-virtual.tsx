@@ -76,6 +76,8 @@ import estilos from "./grade-virtual.module.css";
 
 /** O atributo que marca o elemento focável de cada célula, com o índice. */
 export const ATRIBUTO_CELULA = "data-v2-celula";
+/** O atributo da célula (o `listitem`) com a chave do item. */
+const ATRIBUTO_CHAVE = "data-v2-chave";
 
 /** O que a célula espalha no elemento focável dela (o botão da carta). */
 export interface PropsCelula {
@@ -156,13 +158,16 @@ export function GradeVirtual<T>({
   const [faixa, setFaixa] = useState<Faixa>({ inicio: 0, fim: 0 });
   // O que está de fato à vista (sem as linhas de sobra): é dali que o Tab entra.
   const [visivel, setVisivel] = useState<Faixa>({ inicio: 0, fim: 0 });
-  const [ativo, setAtivo] = useState(0);
+  // A célula ativa (a do Tab) pela chave, com o índice de quando foi ativada
+  // para o caso de a chave sumir da lista: uma vaga que sai antes dela não
+  // pode passar o "ativo" para a vizinha.
+  const [ativo, setAtivo] = useState<{ chave: string | null; indice: number }>({ chave: null, indice: 0 });
   const [focoDentro, setFocoDentro] = useState(false);
-  // Índices pedidos por `elementoDe` (o foco que volta de uma camada): montados até chegarem.
-  const [pedidos, setPedidos] = useState<readonly number[]>([]);
+  // Chaves pedidas por `elementoDe` (o foco que volta de uma camada): montadas até chegarem.
+  const [pedidos, setPedidos] = useState<readonly string[]>([]);
 
   // Os valores mais recentes, para os ouvintes da janela não se refazerem a cada render.
-  const estado = useRef({ total, g, virtualizar });
+  const estado = useRef({ total, g, virtualizar, itens, chaveDe });
   // A âncora da última rolagem, medida com a geometria de então.
   const ancora = useRef<{ indice: number; deslocamento: number } | null>(null);
   const focoPendente = useRef<number | null>(null);
@@ -197,7 +202,7 @@ export function GradeVirtual<T>({
   // faixa. Só com a grade já rolada para dentro.
   const geometriaAntes = useRef(g);
   useLayoutEffect(() => {
-    estado.current = { total, g, virtualizar };
+    estado.current = { total, g, virtualizar, itens, chaveDe };
     const el = contenedor.current;
     if (el && geometriaMoveLinhas(geometriaAntes.current, g) && ancora.current && largura > 0) {
       const topoNoDocumento = el.getBoundingClientRect().top + window.scrollY;
@@ -205,7 +210,7 @@ export function GradeVirtual<T>({
     }
     geometriaAntes.current = g;
     recalcular();
-  }, [total, g, virtualizar, largura, recalcular]);
+  }, [total, g, virtualizar, largura, recalcular, itens, chaveDe]);
 
   useEffect(() => {
     let quadro = 0;
@@ -225,9 +230,6 @@ export function GradeVirtual<T>({
     };
   }, [recalcular]);
 
-  // A lista encolheu (uma vaga saiu): o ativo não pode apontar além do fim.
-  const ativoValido = Math.min(ativo, Math.max(0, total - 1));
-
   /* ---------- O que montar ---------- */
 
   const indicePorChave = useMemo(() => {
@@ -235,6 +237,19 @@ export function GradeVirtual<T>({
     itens.forEach((item, i) => mapa.set(chaveDe(item), i));
     return mapa;
   }, [itens, chaveDe]);
+  // O mapa mais recente, para `elementoDe` resolver a chave de novo depois de esperar.
+  const indicesAgora = useRef(indicePorChave);
+  useLayoutEffect(() => {
+    indicesAgora.current = indicePorChave;
+  });
+
+  // O índice da ativa na lista de agora; se a chave saiu, o mesmo lugar, dentro do fim.
+  const ativoValido =
+    (ativo.chave !== null ? indicePorChave.get(ativo.chave) : undefined) ?? Math.min(ativo.indice, Math.max(0, total - 1));
+  const ativar = useCallback((indice: number) => {
+    const item = estado.current.itens[indice];
+    setAtivo({ chave: item === undefined ? null : estado.current.chaveDe(item), indice });
+  }, []);
 
   const montados = useMemo(() => {
     const conjunto = new Set<number>();
@@ -243,7 +258,10 @@ export function GradeVirtual<T>({
       const i = indicePorChave.get(chave);
       if (i !== undefined) conjunto.add(i);
     }
-    for (const i of pedidos) if (i < total) conjunto.add(i);
+    for (const chave of pedidos) {
+      const i = indicePorChave.get(chave);
+      if (i !== undefined) conjunto.add(i);
+    }
     if (focoDentro && total > 0) conjunto.add(ativoValido);
     // Na ordem visual: é a ordem do Tab e a do leitor de tela.
     return [...conjunto].sort((a, b) => a - b);
@@ -280,19 +298,32 @@ export function GradeVirtual<T>({
     el.focus({ preventScroll: true });
   });
 
+  /*
+   * Monta o item pela chave, rola até ele, espera e devolve o elemento
+   * focável. A lista pode mudar durante a espera (a releitura que a escrita
+   * pediu chega): o índice é resolvido de novo depois, e o elemento é achado
+   * pela chave da célula, nunca pelo índice de antes.
+   */
   const elementoDe = useCallback(
     async (chave: string): Promise<HTMLElement | null> => {
-      const indice = indicePorChave.get(chave);
-      if (indice === undefined) return null;
-      setPedidos((atuais) => (atuais.includes(indice) ? atuais : [...atuais, indice]));
-      setAtivo(indice);
-      rolarAte(indice);
-      await doisQuadros();
-      const el = contenedor.current?.querySelector<HTMLElement>(`[${ATRIBUTO_CELULA}="${indice}"]`) ?? null;
-      setPedidos((atuais) => atuais.filter((i) => i !== indice));
+      if (!indicesAgora.current.has(chave)) return null;
+      setPedidos((atuais) => (atuais.includes(chave) ? atuais : [...atuais, chave]));
+      let el: HTMLElement | null = null;
+      for (let tentativa = 0; tentativa < 2 && !el; tentativa++) {
+        const indice = indicesAgora.current.get(chave);
+        if (indice === undefined) break;
+        setAtivo({ chave, indice });
+        rolarAte(indice);
+        await doisQuadros();
+        el =
+          contenedor.current
+            ?.querySelector(`[${ATRIBUTO_CHAVE}="${CSS.escape(chave)}"]`)
+            ?.querySelector<HTMLElement>(`[${ATRIBUTO_CELULA}]`) ?? null;
+      }
+      setPedidos((atuais) => atuais.filter((c) => c !== chave));
       return el;
     },
-    [indicePorChave, rolarAte],
+    [rolarAte],
   );
 
   useImperativeHandle(
@@ -321,14 +352,14 @@ export function GradeVirtual<T>({
     e.preventDefault();
     if (destino === atual) return;
     focoPendente.current = destino;
-    setAtivo(destino);
+    ativar(destino);
     rolarAte(destino);
   }
 
   function aoFocar(e: FocusEvent<HTMLDivElement>) {
     setFocoDentro(true);
     const celula = (e.target as HTMLElement).closest(`[${ATRIBUTO_CELULA}]`);
-    if (celula) setAtivo(Number(celula.getAttribute(ATRIBUTO_CELULA)));
+    if (celula) ativar(Number(celula.getAttribute(ATRIBUTO_CELULA)));
   }
 
   function aoDesfocar(e: FocusEvent<HTMLDivElement>) {
@@ -355,6 +386,7 @@ export function GradeVirtual<T>({
           return (
             <div
               key={chaveDe(item)}
+              {...{ [ATRIBUTO_CHAVE]: chaveDe(item) }}
               role="listitem"
               aria-setsize={total}
               aria-posinset={i + 1}

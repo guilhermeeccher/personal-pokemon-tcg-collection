@@ -2088,7 +2088,8 @@
       "livres": "{total, plural, =1 {1 cópia livre cabe} other {# cópias livres cabem}}",
       "livresCurto": "{total, plural, =1 {1 livre} other {# livres}}",
       "naLista": "Na lista",
-      "tirar": "Tirar {alvo} da coleção"
+      "tirar": "Tirar {alvo} da coleção",
+      "tirarCurto": "Tirar"
     },
     "tirar": {
       "titulo": "Tirar {alvo} da coleção?",
@@ -2103,7 +2104,8 @@
     "tema": {
       "alocadas": "{total, plural, =1 {1 carta alocada} other {# cartas alocadas}} neste tema.",
       "ampliar": "Ver {carta} maior",
-      "tentarDeNovo": "Tentar de novo"
+      "tentarDeNovo": "Tentar de novo",
+      "mostrarMais": "Mostrar mais {total} (faltam {restantes})"
     },
     "upgrades": {
       "nenhum": "Nenhuma vaga tem upgrade.",

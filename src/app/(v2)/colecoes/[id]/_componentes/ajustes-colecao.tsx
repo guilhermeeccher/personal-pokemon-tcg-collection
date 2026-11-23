@@ -90,10 +90,12 @@ export function AjustesColecao({
     }
   }
 
-  /** Recusa: a frase, e a releitura quando o estado mudou por baixo. */
+  /** Recusa: a frase, e a releitura quando o estado mudou por baixo (ou pode ter mudado). */
   function recusado(r: Resposta, padrao: string) {
     if (!r) {
       setErro(t("erroRede"));
+      setIndeterminado(true);
+      onMudou();
       return;
     }
     setErro(textoDaRecusa(tRecusas, r.corpo, padrao));
@@ -124,11 +126,15 @@ export function AjustesColecao({
    */
   const [escopoConfirmado, setEscopoConfirmado] = useState<ParametroPokedex | null>(null);
   const [secretasConfirmadas, setSecretasConfirmadas] = useState<boolean | null>(null);
+  // Uma escrita sem resposta (a rede caiu) pode ter sido gravada: escopo e
+  // secretas ficam travados até a grade relida dizer como ficou.
+  const [indeterminado, setIndeterminado] = useState(false);
   const [parametroAntes, setParametroAntes] = useState(colecao.parametro);
   if (parametroAntes !== colecao.parametro) {
     setParametroAntes(colecao.parametro);
     setEscopoConfirmado(null);
     setSecretasConfirmadas(null);
+    setIndeterminado(false);
   }
 
   const parametroSet = colecao.tipo === "set" ? (colecao.parametro as { incluirSecretas?: boolean } | null) : null;
@@ -256,7 +262,7 @@ export function AjustesColecao({
                   type="checkbox"
                   role="switch"
                   checked={secretas}
-                  disabled={ocupado !== null}
+                  disabled={ocupado !== null || indeterminado}
                   onChange={(e) => void alternarSecretas(e.target.checked)}
                 />
                 <span>{t("secretasRotulo")}</span>
@@ -275,7 +281,7 @@ export function AjustesColecao({
                     type="button"
                     className={estilos.chipRegiao}
                     aria-pressed={regioes.includes(r)}
-                    disabled={ocupado !== null}
+                    disabled={ocupado !== null || indeterminado}
                     onClick={() => void alternarRegiao(r)}
                   >
                     {NOME_REGIAO[r]}

@@ -7,7 +7,7 @@ import type { VagaGradeV2DTO } from "@/lib/dominio/tipos-cliente";
 
 import { type ControleGradeVirtual, GradeVirtual } from "../../../_componentes/grade/grade-virtual";
 
-import { Bolso } from "./bolso";
+import { ALTURA_TIRAR, Bolso } from "./bolso";
 import { type TamanhoInteiro, TAMANHOS_INTEIRO, densidadeDoTamanho, vaoDoTamanho } from "./vista-colecao";
 
 const chaveDaVaga = (v: VagaGradeV2DTO) => v.id;
@@ -52,6 +52,7 @@ export function ListaInteira({
       minCelula={TAMANHOS_INTEIRO[tamanho]}
       vaoX={vao.x}
       vaoY={vao.y}
+      alturaExtra={aoTirar ? ALTURA_TIRAR : 0}
       manterMontadas={manter}
       rotulo={rotulo}
       renderizar={(v, celula) => (

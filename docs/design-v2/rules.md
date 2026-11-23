@@ -397,8 +397,9 @@ rest are the technical foundations of the v2.
     - **The binder never goes under 44 px pockets.** A size whose pockets would be narrower than
       44 px with 8 px between them is disabled (`maiorGradeQueCabe`): at 320 px the 6×6 would give
       38 px pockets, so it is off there and a stored 6×6 shows as 5×5. In "Edit cards" every pocket
-      carries the remove button (28 px drawn, 44 px of area, inside the pocket, 8 px from its
-      edges), so the binder goes up to 4×4 and the whole list starts at size L.
+      gets a remove button of its own under the card (44 px tall, 8 px below it — two targets,
+      never one over the other), so the binder goes up to 4×4 and the whole list starts at size L
+      for the label to fit.
     - **Upgrades mounts 100 rows at a time** (two cards each), with "Show more": the list is the
       slots with a better free copy, almost always a few, and a row has no fixed height to
       virtualize (on the phone its button wraps to a line of its own). A candidate is shown only if

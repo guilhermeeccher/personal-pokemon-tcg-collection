@@ -15,6 +15,9 @@ import { TransicaoVista } from "../../../_componentes/movimento/transicao-vista"
 import estilos from "./colecao.module.css";
 import type { GradeFichario } from "./vista-colecao";
 
+/** O que o botão de tirar soma à altura do bolso: 8 px de vão e 44 de alvo. */
+export const ALTURA_TIRAR = 52;
+
 /** O atributo com o id da vaga no botão do bolso: é por ele que o foco volta do detalhe. */
 export const ATRIBUTO_VAGA = "data-v2-vaga";
 
@@ -33,6 +36,8 @@ export const ATRIBUTO_VAGA = "data-v2-vaga";
  *   leitor de tela e, nas grades largas, em texto visível; nada só no hover
  *   nem só no brilho (regra 1 de `rules.md`). Nas grades densas (5×5, 6×6) a
  *   legenda some e o rótulo do botão continua.
+ * - **No modo "Editar cartas"** o bolso ganha embaixo o botão de tirar (44 px
+ *   de altura, 8 px abaixo da carta): a célula fica `ALTURA_TIRAR` mais alta.
  * - **A carta aberta no detalhe sai daqui** (fica o lugar dela, do mesmo
  *   tamanho) e só ela leva o nome da transição de vista (regra 25).
  */
@@ -115,6 +120,7 @@ export function Bolso({
         .filter(Boolean)
         .join(" ")}
       data-densidade={densidade}
+      data-editando={aoTirar ? "" : undefined}
     >
       <button
         type="button"
@@ -153,16 +159,23 @@ export function Bolso({
             {vaga.copia!.idioma.toUpperCase()}
           </span>
         )}
-        {/* No modo de edição o canto é do botão de tirar; o upgrade segue no rótulo e na aba. */}
-        {vaga.upgrade && !aoTirar && (
+        {vaga.upgrade && (
           <span className={estilos.seloUpgrade} aria-hidden>
             <ArrowUp />
           </span>
         )}
       </button>
+      {/* "Editar cartas": um botão próprio embaixo da carta, 8 px abaixo dela —
+          nunca por cima, onde dividiria o toque com o de abrir. */}
       {aoTirar && (
-        <button type="button" className={estilos.tirar} aria-label={t("tirar", { alvo: nome ?? t("numero", { numero: vaga.numero }) })} onClick={aoTirar}>
+        <button
+          type="button"
+          className={estilos.tirar}
+          aria-label={t("tirar", { alvo: nome ?? t("numero", { numero: vaga.numero }) })}
+          onClick={aoTirar}
+        >
           <X aria-hidden />
+          <span>{t("tirarCurto")}</span>
         </button>
       )}
     </div>

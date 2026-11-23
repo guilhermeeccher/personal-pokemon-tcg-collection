@@ -25,6 +25,9 @@ import { estadoDaCartaDoTema, marcasAposReler } from "./vista-colecao";
 /** O atributo da miniatura de uma cópia na lista: é por ele que o foco volta do detalhe. */
 export const ATRIBUTO_COPIA_TEMA = "data-v2-copia-tema";
 
+/** Quantas linhas montar de cada vez. */
+const LINHAS_POR_VEZ = 100;
+
 /** O mínimo do `t` do next-intl para rotular o tema (`useRotuloDoTema` na página). */
 export type RotularTema = (tema: TemaColecao, rotulo?: string) => string;
 
@@ -93,6 +96,10 @@ export function BlocoTema({
  * - **Tudo ou nada.** Cada item leva o que a prévia mostrou; uma recusa
  *   (409), ou uma falha sem resposta, relê a lista e só mantém a marca das
  *   linhas que não mudaram (`marcasAposReler`).
+ * - **Monta 100 linhas de cada vez** ("Mostrar mais"): as marcas são do
+ *   estado, por cópia, e valem para a lista inteira — "Marcar todas" e o
+ *   lote alcançam as linhas ainda não mostradas, como na v1. O limite é o
+ *   do orçamento de montagem (regra 13 de `rules.md`), não o do lote.
  * - **Ver a carta maior sem perder as marcas** (COL-22): a miniatura abre o
  *   detalhe de carta no modo cópia, por cima desta janela; as marcas moram
  *   aqui e não são tocadas. Uma edição feita no detalhe chega como leitura
@@ -127,6 +134,7 @@ export function CartasDoTema({
   const [erro, setErro] = useState<string | null>(null);
   const [erroLeitura, setErroLeitura] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [mostrar, setMostrar] = useState(LINHAS_POR_VEZ);
   const sequencia = useRef(0);
   const estadoLido = useRef<Map<string, string> | null>(null);
 
@@ -251,7 +259,7 @@ export function CartasDoTema({
         </div>
       )}
       <ul className={estilos.listaTema}>
-        {cartas.map((c) => (
+        {cartas.slice(0, mostrar).map((c) => (
           <li key={c.copiaId} className={estilos.linhaTema}>
             {/* Dois alvos de 44 px, a 8 px um do outro: o rótulo (caixa + texto)
                 marca; a miniatura abre a carta maior. */}
@@ -289,6 +297,11 @@ export function CartasDoTema({
           </li>
         ))}
       </ul>
+      {cartas.length > mostrar && (
+        <Botao pequeno onClick={() => setMostrar((n) => n + LINHAS_POR_VEZ)}>
+          {tGeral("mostrarMais", { total: Math.min(LINHAS_POR_VEZ, cartas.length - mostrar), restantes: cartas.length - mostrar })}
+        </Botao>
+      )}
       {demais && <AvisoEmLinha tom="alerta">{t("demais", { maximo: MAXIMO_COPIAS_POR_LOTE_TEMA })}</AvisoEmLinha>}
       {erroLeitura && (
         <AvisoEmLinha

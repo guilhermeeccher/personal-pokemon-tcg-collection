@@ -2096,7 +2096,8 @@
       "livres": "{total, plural, =1 {1 free copy fits} other {# free copies fit}}",
       "livresCurto": "{total} free",
       "naLista": "On the list",
-      "tirar": "Remove {alvo} from the collection"
+      "tirar": "Remove {alvo} from the collection",
+      "tirarCurto": "Remove"
     },
     "tirar": {
       "titulo": "Remove {alvo} from the collection?",
@@ -2111,7 +2112,8 @@
     "tema": {
       "alocadas": "{total, plural, =1 {1 card allocated} other {# cards allocated}} to this theme.",
       "ampliar": "See {carta} larger",
-      "tentarDeNovo": "Try again"
+      "tentarDeNovo": "Try again",
+      "mostrarMais": "Show {total} more ({restantes} left)"
     },
     "upgrades": {
       "nenhum": "No slot has an upgrade.",

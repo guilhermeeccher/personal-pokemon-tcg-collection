@@ -309,7 +309,9 @@ export function PaginaColecao({ id }: { id: string }) {
     const abaAgora = abaRef.current;
     const lista = vagasDaAba(abaAgora, vagasRef.current).filter((v) => v.id !== vagaSaindo.current);
     const alvo = vagaDoFoco(lista, origem.id, origem.posicao);
-    if (!alvo) return null;
+    // A aba ficou vazia (a última carta de uma customizada saiu): o painel da
+    // aba, que fica — nunca o botão que abriu, que a releitura vai tirar.
+    if (!alvo) return document.getElementById(`painel-${abaAgora}`);
     if (abaAgora === "inteiro" || abaAgora === "falta") return (await controleGrade.current?.elementoDe(alvo.id)) ?? null;
     if (abaAgora === "fichario") {
       setPrimeiraPedida(lista.indexOf(alvo));
@@ -516,7 +518,7 @@ export function PaginaColecao({ id }: { id: string }) {
         )}
       </div>
 
-      <section id={`painel-${aba}`} role={opcoesAbas.length > 1 ? "tabpanel" : undefined} aria-label={opcoesAbas.find((o) => o.valor === aba)?.rotuloAcessivel}>
+      <section id={`painel-${aba}`} tabIndex={-1} className={estilos.painelAba} role={opcoesAbas.length > 1 ? "tabpanel" : undefined} aria-label={opcoesAbas.find((o) => o.valor === aba)?.rotuloAcessivel}>
         {aba === "fichario" &&
           (vagas.length === 0 ? (
             <AvisoEmLinha titulo={t("semVagas")}>{t("semVagasTexto")}</AvisoEmLinha>

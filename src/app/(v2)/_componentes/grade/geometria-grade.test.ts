@@ -71,6 +71,12 @@ describe("faixaVisivel", () => {
     expect(f.fim).toBe(4 * (Math.ceil((800 + 1700) / 170) + 3));
   });
 
+  it("o topo da janela no vão: a linha de cima já saiu inteira", () => {
+    // Célula de 150, passo 170: com topo -165 a linha 0 termina 15 px acima da janela.
+    expect(faixaVisivel({ total: 1025, g, topo: -165, alturaJanela: 800, virtualizar: true, sobra: 0 }).inicio).toBe(4);
+    expect(faixaVisivel({ total: 1025, g, topo: -149, alturaJanela: 800, virtualizar: true, sobra: 0 }).inicio).toBe(0);
+  });
+
   it("no fim: não passa do total", () => {
     const f = faixaVisivel({ total: 1025, g, topo: -1e6, alturaJanela: 800, virtualizar: true });
     expect(f.fim).toBe(1025);

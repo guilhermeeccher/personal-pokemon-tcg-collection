@@ -255,6 +255,10 @@
   }
 }
 
+.painelAba {
+  outline: none;
+}
+
 /* ---------------------------------------------------------- Bolso */
 
 .bolso {
@@ -480,40 +484,50 @@
   box-shadow: inset 0 0 0 1px var(--v2-aresta);
 }
 
-/* Tirar da coleção ("Editar cartas"): o desenho tem 28 px e a área de toque
-   44, inteira dentro do bolso (8 px de cada borda): ela nunca passa para o
-   vão nem para a carta vizinha. No modo de edição o fichário vai até 4×4 e a
-   lista começa no G (`vista-colecao.ts`), para sobrar carta para tocar. */
-.tirar {
-  position: absolute;
-  z-index: 4;
-  top: 8px;
-  right: 8px;
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  color: var(--v2-tinta);
-  background: #2a2b36;
-  box-shadow:
-    0 2px 8px rgb(0 0 0 / 0.5),
-    inset 0 0 0 1px var(--v2-aresta);
-  cursor: pointer;
+/* Tirar da coleção ("Editar cartas"): um botão próprio embaixo da carta,
+   44 px de altura e 8 px abaixo dela, na largura do bolso — dois alvos
+   separados, nunca um por cima do outro. No modo de edição o fichário vai até
+   4×4 e a lista começa no G (`vista-colecao.ts`), para o texto caber. */
+.bolso[data-editando] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
-.tirar::before {
-  content: "";
-  position: absolute;
-  inset: -8px;
+.bolso[data-editando] .alvoBolso {
+  height: auto;
+  flex: none;
+}
+.tirar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px var(--v2-superficie-2);
+  cursor: pointer;
+  overflow: hidden;
 }
 .tirar:hover {
   color: var(--v2-perigo);
 }
 .tirar svg {
-  width: 15px;
-  height: 15px;
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+.tirar span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ---------------------------------------------------------- Fichário */
