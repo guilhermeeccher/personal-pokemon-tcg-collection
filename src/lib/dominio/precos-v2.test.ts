@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   CARTAS_POR_PAGINA,
   batidaDeveReler,
+  chaveDasCartas,
   PERIODO_MAXIMO_MS,
   PERIODO_MINIMO_MS,
   criterioForaDaTendencia,
@@ -146,6 +147,17 @@ describe("idsParaPedir", () => {
   it("tira repetidos e vazios, e respeita o teto", () => {
     expect(idsParaPedir(["a", "b", "a", ""])).toEqual(["a", "b"]);
     expect(idsParaPedir(Array.from({ length: 300 }, (_, i) => `c${i}`))).toHaveLength(100);
+  });
+});
+
+describe("chaveDasCartas", () => {
+  it("a mesma página em outra ordem tem a mesma chave: a reordenação não refaz a leitura", () => {
+    expect(chaveDasCartas(["b", "a", "c"])).toBe(chaveDasCartas(["c", "b", "a"]));
+  });
+
+  it("outra carta na página muda a chave", () => {
+    expect(chaveDasCartas(["a", "b"])).not.toBe(chaveDasCartas(["a", "c"]));
+    expect(chaveDasCartas([])).toBe("");
   });
 });
 

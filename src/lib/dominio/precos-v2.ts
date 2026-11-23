@@ -260,6 +260,16 @@ export function idsParaPedir(cartaIds: readonly string[]): string[] {
 }
 
 /**
+ * A chave da página para a leitura das cartas: os mesmos ids, em qualquer
+ * ordem, dão a mesma chave. Durante uma rodada viva os preços novos reordenam a
+ * tabela a cada leitura, e uma chave que seguisse a ordem cancelaria e refaria
+ * a leitura das fotos a cada batida, com as mesmas cartas na página.
+ */
+export function chaveDasCartas(cartaIds: readonly string[]): string {
+  return idsParaPedir(cartaIds).sort().join("\n");
+}
+
+/**
  * Os `id=` de `GET /api/inventario/precos/cartas`, ou `null` quando o pedido
  * não é uma página da tabela: nenhum id, mais do que o teto, um id enorme ou
  * vazio. Recusar, e não cortar em silêncio, para um pedido errado aparecer.

@@ -41,8 +41,8 @@ import {
   type RespostaPrecosDTO,
   type RodadaListadaDTO,
   batidaDeveReler,
+  chaveDasCartas,
   fonteDaResposta,
-  idsParaPedir,
   paginar,
   periodoDeAtualizacaoMs,
   textoDaCotacao,
@@ -241,7 +241,7 @@ export function Precos({ fonte: fonteDoServidor }: { fonte?: FontePreco }) {
       : dados.itens.map((item) => ({ fonte: "liga" as const, item }));
   }, [dados]);
   const { itens: linhasDaPagina, pagina: paginaVisivel, totalPaginas } = paginar(linhas, pagina);
-  const idsDaPagina = idsParaPedir(linhasDaPagina.map((l) => l.item.cartaId)).join("\n");
+  const idsDaPagina = chaveDasCartas(linhasDaPagina.map((l) => l.item.cartaId));
 
   // A foto e a cópia das cartas da página. Pedida de novo só quando as cartas
   // mudam (outra página, a ordem trocou numa rodada) ou depois de uma escrita
