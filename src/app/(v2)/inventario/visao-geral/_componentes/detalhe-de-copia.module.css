@@ -1,0 +1,34 @@
+/*
+ * A carta de uma lista como botão. Sem fundo nem borda própria: quem se vê é a
+ * carta. A área é a da carta (nunca menor que 44 px: a menor, a das joias no
+ * celular, tem mais de 100). `touch-action` fica com a Carta (`pan-y`): o dedo
+ * sobre ela rola a página.
+ */
+
+.carta {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  border-radius: var(--v2-raio-carta);
+}
+.carta:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 4px;
+}
+
+/* O lugar da carta enquanto o detalhe a carrega: mesmo tamanho, nada dentro. */
+.lugar {
+  display: block;
+  aspect-ratio: 600 / 825;
+  border-radius: var(--v2-raio-carta);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px var(--v2-aresta);
+}

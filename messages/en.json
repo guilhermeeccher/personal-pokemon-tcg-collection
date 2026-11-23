@@ -2000,5 +2000,97 @@
       },
       "erroGrade": "Could not read the collection grid."
     }
+  },
+  "v2VisaoGeral": {
+    "titulo": "Overview",
+    "subtitulo": "Your inventory at a glance. Tap a collection to open it, or any number to open the inventory already filtered.",
+    "abrirInventario": "Open the inventory",
+    "verRepetidas": "See duplicates",
+    "erroCarregar": "Could not read the overview",
+    "erroCarregarTexto": "The read failed. Nothing was changed; try again in a moment.",
+    "tentarDeNovo": "Try again",
+    "totais": {
+      "cartasDistintas": "Distinct cards",
+      "unidadesTotais": "Total units",
+      "alocadas": "Allocated",
+      "livres": "Free"
+    },
+    "vazio": {
+      "titulo": "No cards entered yet",
+      "texto": "Enter the cards you own to see your gems, your collections and what is close to done here.",
+      "porSet": "Enter by set",
+      "porBusca": "Enter by search"
+    },
+    "joias": {
+      "titulo": "Collection gems",
+      "descricao": "The cards worth the most in the inventory; those with no price looked up follow the rarity.",
+      "notaLiga": "LigaPokemon prices, in reais, as the site gives them — not converted.",
+      "notaCardmarket": "International reference: the Cardmarket trend converted to reais by the PTAX of the day shown. It is not a Brazilian market value.",
+      "abrir": "Open {nome}, {set}",
+      "precoLiga": "Liga ~{valor}",
+      "precoCardmarket": "Cardmarket ~{valor}",
+      "origemCardmarket": "{eur} × PTAX {cotacao} on {data}"
+    },
+    "colecoes": {
+      "titulo": "Your collections",
+      "verTodas": "See all",
+      "nenhuma": "No collections yet.",
+      "criar": "Create a collection",
+      "tipo": {
+        "pokedex": "Pokédex",
+        "set": "Set",
+        "customizada": "Custom"
+      },
+      "cartas": "{total, plural, =1 {1 card} other {# cards}}",
+      "semVagas": "No slots yet",
+      "completa": "Complete",
+      "maisDivisoes": "{total, plural, =1 {+1 division} other {+# divisions}}"
+    },
+    "quaseLa": {
+      "titulo": "Almost there",
+      "descricao": "The divisions closest to done, with the first cards that are missing.",
+      "faltam": "{total, plural, =1 {1 missing} other {# missing}}"
+    },
+    "estatisticas": {
+      "titulo": "Statistics",
+      "descricao": "How the inventory is distributed. Tap a slice to open the inventory already filtered.",
+      "porExpansao": "By set",
+      "porRaridade": "By rarity",
+      "porIdioma": "By language (physical)",
+      "porCondicao": "By condition",
+      "porVariante": "By variant",
+      "nenhumaCopia": "No copies entered yet.",
+      "abrirFiltrado": "Open the inventory filtered by {rotulo}",
+      "repetidas": "Duplicates",
+      "repetidasDescricao": "What is left over to trade: total, allocated and free per card."
+    }
+  },
+  "v2Repetidas": {
+    "titulo": "Duplicates",
+    "descricao": "{total, plural, =0 {No cards} =1 {1 card} other {# cards}} with 2 or more units. Sorted by free units, most first.",
+    "voltarVisaoGeral": "Overview",
+    "abrirInventario": "Open the inventory",
+    "filtro": {
+      "rotulo": "Which duplicates to show",
+      "todas": "All",
+      "soLivres": "Only with free units"
+    },
+    "total": "Total",
+    "alocadas": "Allocated",
+    "livres": "Free",
+    "idiomasFisicos": "Physical languages of the copies",
+    "idiomaChip": "{idioma} · {livres}/{quantidade} free",
+    "abrir": "See copies",
+    "abrirCarta": "Open {nome}",
+    "vazio": "No duplicate cards (2 or more units) in the inventory.",
+    "vazioSoLivres": "No duplicate card with free units right now.",
+    "mostrarTodas": "Show all duplicates",
+    "paginacaoRotulo": "Duplicates pages",
+    "anterior": "Previous",
+    "proxima": "Next",
+    "paginacao": "Page {pagina} of {totalPaginas}",
+    "erroCarregar": "Could not read the duplicates",
+    "erroCarregarTexto": "The read failed. Nothing was changed; try again in a moment.",
+    "tentarDeNovo": "Try again"
   }
 }
