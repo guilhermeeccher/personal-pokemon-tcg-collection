@@ -725,6 +725,18 @@ E. **The piece package 5b owns: the box name** (delivered 2026-11-23). Ported fr
    One name for one box on every screen: Boxes, Received and the New registration (5d) read the same
    hook, so the user recognizes a box from one screen on the next. A screen never writes it by hand.
 
+F. **The piece package 5e-b owns** (delivered 2026-11-23), moved from
+   `src/app/(v1)/v1/dex/_componentes/hoje.ts` with its v1 importers updated in the same change.
+
+   ```ts
+   // src/app/_comum/dex/hoje.ts — skinless; the v1 imports it from here too
+   hojeLocal()        // "YYYY-MM-DD" in the local time zone, never UTC (21:00 in Brazil is already tomorrow in UTC)
+   hojeLocal(agora)   // the same for a given Date; the argument exists for the test
+   ```
+
+   It is the default date of an earned trophy and the start of a new plan or of a "Hunt" plan, on
+   both versions.
+
 ### Overview and Pokédex (package 5a)
 
 40. **`/dex` only reads and navigates.** The server page reads what the v1 page reads, with the same
@@ -933,6 +945,43 @@ E. **The piece package 5b owns: the box name** (delivered 2026-11-23). Ported fr
   of twelve virtual runs had one cold tap of 136 and 168 ms, the rest of each run at 32–56 ms. The
   v1 measured ~310 ms per tap on the same list without virtualizing (its header, "Lista virtual no
   celular").
+
+### Trophies and plans (package 5e-b)
+
+- **`/dex/trofeus` reads what the v1 reads and computes nothing new.** The server page reads the
+  same lists with the same functions (`comTrofeusDoHome` for HOME), and the counts are the v1's
+  (`progressoTrofeus`: platinum derived, never a row). The tabs are HOME first, then the user's games
+  that have trophies (`abasDeTrofeus`); `?jogo=` only picks the tab that opens, as in the v1, and an
+  unknown game opens the first. **A HOME trophy has no mark and no undo button**: it counts from the
+  records, the route refuses it (`dexTrofeuCalculado`), and only "Hunt" is offered while it is
+  missing (`acoesDoTrofeu`). A checkpoint not yet earned shows a lock and "Unlocks N species" in
+  text, plus "Locked"; every trophy writes its tier and its state, the colour is only emphasis.
+  Marking asks for the date in line, today (`hojeLocal`) already filled in; undoing asks through the
+  v2 confirmation dialog; "Hunt" creates a plan aimed at the trophy and goes to `/dex/planos`.
+- **`/dex/planos` shows a refusal next to what caused it, and only a keyed one.** The task, the plan
+  or the new-plan form carries the message; when that place left the screen (another tab closed
+  the plan and it went to the history, which is collapsed), it shows at the top. A 404 or 409
+  rereads the page. The forms check, before sending, what the routes would refuse with an English
+  `erro` (`erroDoPlano`, `erroDaEtapa`: empty title, end before start, 1 to 200 characters in a
+  step, up to 2,000 in its details), and both screens print only a refusal with a key, translated
+  (`fraseDaRecusa`); a keyless 400 shows the screen's generic sentence, never the route's English.
+  Tasks start collapsed (the title is the disclosure button) and closed plans live in a history
+  opened by a button, where a plan is reactivated.
+- **Task steps keep every rule of `AGENTS.md`, on screen.** Steps change only while the task is open
+  in an active plan (`etapasEditaveis`); elsewhere the boxes are disabled and a sentence says why.
+  **Checking the last step never finishes the task**: "every step is done, the task stays open"
+  shows as a status next to "Mark done" (`avisoTodasFeitas`), and the click stays the user's.
+  Order changes by up and down buttons only, each sending the whole list of ids; a stale list
+  (`dexOrdemEtapasInvalida`) is shown and reread. **The screen stays busy until the reread lands**,
+  not only until the response: before it, the list on screen is the old one, and a second move
+  computed on it would undo the first (both pass the whole-list check). After a move the focus
+  stays on the same button of the moved step; after saving or cancelling a step form it returns to
+  the button that opened it. A step form that was open when its task closed (here or in another
+  tab) disappears instead of sending. At 50 steps the "Add step" button is off with a note; the server's
+  `dexEtapasDemais` (another tab filled the task) is shown and the reread list shows the note.
+  Deleting a step asks through the confirmation dialog. Finishing a catch, evolve or trade task
+  **offers** Register on the task's game (`hrefCadastroDaTarefa`: `jogo` and, for a single slot,
+  `busca` with the species), in the task's own row; it never records.
 
 ## 8. Other rules, checked for the transition
 

@@ -3502,5 +3502,67 @@
       "falhouTexto": "O que aparece aqui é da leitura anterior, e o lote continua. Tente reler antes de cadastrar.",
       "tentar": "Reler"
     }
+  },
+  "v2DexTrofeus": {
+    "descricao": "A lista de cada jogo, na ordem da história. A platina vem quando todo o resto está conquistado; os do HOME contam sozinhos, pelos Pokémon que estão lá.",
+    "atalhos": "Atalhos da Living Dex",
+    "visaoGeral": "Visão geral",
+    "planos": "Planos",
+    "resumo": "Progresso dos troféus de {jogo}",
+    "platinaComo": "Vem quando todos os outros troféus do jogo estiverem conquistados.",
+    "platinaFeita": "Todos os troféus deste jogo conquistados.",
+    "contagem": "{obtidos} de {total}",
+    "porNivel": "Por nível",
+    "lista": "Troféus de {jogo}",
+    "nadaFalta": "Nada falta neste jogo.",
+    "calculado": "Calculado",
+    "conquistadoEm": "Conquistado em",
+    "trancado": "Trancado",
+    "falta": "Falta",
+    "dataInvalida": "Escolha a data da conquista.",
+    "marcado": "Troféu marcado.",
+    "desfeito": "Conquista desfeita.",
+    "planoCriado": "Plano criado com o troféu como alvo.",
+    "desfazerTitulo": "Desmarcar \"{trofeu}\"?",
+    "desfazerTexto": "A conquista sai da lista, com a data. Dá para marcar de novo a qualquer momento.",
+    "desfazerConfirmar": "Desmarcar"
+  },
+  "v2DexPlanos": {
+    "descricao": "O que fazer nos jogos a seguir: planos com tarefas, e cada tarefa com as suas etapas. Concluir uma captura oferece o cadastro; nada é registrado sozinho.",
+    "atalhos": "Atalhos da Living Dex",
+    "visaoGeral": "Visão geral",
+    "trofeus": "Troféus",
+    "ativos": "Planos ativos",
+    "statusTarefa": {
+      "aberta": "Aberta",
+      "feita": "Feita",
+      "descartada": "Descartada"
+    },
+    "concluirTarefa": "Concluir",
+    "todasFeitas": "Todas as etapas feitas. A tarefa segue aberta até você concluir.",
+    "vagasDaTarefa": "Pokémon da tarefa",
+    "tarefasContagem": "{feitas} de {total} tarefas feitas",
+    "tarefasDe": "Tarefas de {plano}",
+    "planoCriado": "Plano criado.",
+    "tarefaCriada": "Tarefa adicionada.",
+    "historicoNota": "Plano concluído ou encerrado é histórico: as tarefas e as etapas não mudam. Reative o plano para mexer de novo.",
+    "erroPlano": {
+      "tituloVazio": "Dê um título ao plano.",
+      "inicioVazio": "Escolha a data de início.",
+      "fimAntesDoInicio": "O fim não pode vir antes do início."
+    },
+    "editarEtapa": "Editar etapa",
+    "editarEtapaNome": "Editar \"{etapa}\"",
+    "excluirEtapaNome": "Excluir \"{etapa}\"",
+    "excluirEtapaTexto": "As etapas de baixo sobem uma posição. Não dá para desfazer.",
+    "excluirEtapaConfirmar": "Excluir etapa",
+    "contador": "{usados} de {maximo} caracteres",
+    "erroEtapa": {
+      "textoVazio": "Escreva a etapa.",
+      "textoLongo": "A etapa tem no máximo {maximo} caracteres.",
+      "detalheLongo": "O detalhe tem no máximo {maximo} caracteres."
+    },
+    "etapasFechadas": "As etapas só mudam com a tarefa aberta num plano ativo.",
+    "limiteEtapas": "Esta tarefa já tem {maximo} etapas, o máximo. Para seguir, divida o trabalho em outra tarefa."
   }
 }

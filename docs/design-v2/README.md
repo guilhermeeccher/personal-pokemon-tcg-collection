@@ -250,14 +250,16 @@ that needs it builds it, and the others take it from the branch of the owner.
 | Pokémon card (`cartao-pokemon.tsx`) | 5a, 5b, 5d | `src/app/(v2)/dex/_componentes/` | **5a** |
 | move-to-HOME flow (`use-transferencia.tsx`: request, one-way confirmation) | 5a, 5e | logic in `src/app/_comum/dex/`; its dialog is the v2's confirmation dialog, in `(v2)/dex/_componentes/` | **5a** |
 | box name hook (`use-nome-caixa.ts`) | 5b, 5d | `src/app/_comum/dex/` | **5b** |
-| "today" helper (`hoje.ts`) | 5e (plans, trophies) | `src/app/_comum/dex/` | **5e** |
+| "today" helper (`hoje.ts`) | 5e (plans, trophies) | `src/app/_comum/dex/` | **5e-b** (delivered) |
 | readable refusals (`novo-cadastro/recusas-legiveis.ts`) | 5d only | stays with 5d's screen | **5d** |
 
 Package 5a delivered its four pieces (2026-11-23); their interfaces are in `rules.md`, "Dex shared
 code", D. The v1 now takes the form label from `src/app/_comum/dex/` and its move-to-HOME request from
 `_comum/dex/use-mover-registros.ts`, keeping its own sprite, card and modal. Package 5b delivered the
 box name hook (2026-11-23), E; the v1's Boxes, Received and New registration take it from
-`src/app/_comum/dex/` too.
+`src/app/_comum/dex/` too. Package 5e-b moved the
+"today" helper to `src/app/_comum/dex/hoje.ts` (2026-11-23), with the v1's trophies and plans
+importing it from there; its interface is in `rules.md`, "Dex shared code", F.
 
 **Merge order: 5a, then 5b, then 5c, 5d and 5e in any order.** A package that needs a piece whose
 owner has not merged asks (`ask`) instead of writing its own copy; two pieces doing one job is what

@@ -37,8 +37,6 @@ vi.mock("@/lib/modulos", () => ({
    cai no 404 padrão do Next, ligado ou desligado o módulo. */
 const TELAS_DA_DEX = [
   "/dex/novo-cadastro",
-  "/dex/planos",
-  "/dex/trofeus",
 ];
 
 const PASTA_V2 = path.resolve(__dirname, "..");

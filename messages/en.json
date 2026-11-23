@@ -3510,5 +3510,67 @@
       "falhouTexto": "What shows here is from the previous read, and the batch stays. Try reading again before adding.",
       "tentar": "Read again"
     }
+  },
+  "v2DexTrofeus": {
+    "descricao": "Each game's list, in story order. Platinum comes when everything else is earned; HOME trophies count on their own, from the Pokémon in HOME.",
+    "atalhos": "Living Dex shortcuts",
+    "visaoGeral": "Overview",
+    "planos": "Plans",
+    "resumo": "Trophy progress for {jogo}",
+    "platinaComo": "Comes when every other trophy of the game is earned.",
+    "platinaFeita": "Every trophy of this game earned.",
+    "contagem": "{obtidos} of {total}",
+    "porNivel": "By tier",
+    "lista": "{jogo} trophies",
+    "nadaFalta": "Nothing left in this game.",
+    "calculado": "Calculated",
+    "conquistadoEm": "Earned on",
+    "trancado": "Locked",
+    "falta": "Not yet",
+    "dataInvalida": "Pick the date you earned it.",
+    "marcado": "Trophy marked.",
+    "desfeito": "Trophy unmarked.",
+    "planoCriado": "Plan created, aiming at the trophy.",
+    "desfazerTitulo": "Unmark \"{trofeu}\"?",
+    "desfazerTexto": "The trophy leaves the list, with its date. You can mark it again at any time.",
+    "desfazerConfirmar": "Unmark"
+  },
+  "v2DexPlanos": {
+    "descricao": "What to do next in your games: plans with tasks, and each task with its steps. Finishing a catch offers to register it; nothing is recorded on its own.",
+    "atalhos": "Living Dex shortcuts",
+    "visaoGeral": "Overview",
+    "trofeus": "Trophies",
+    "ativos": "Active plans",
+    "statusTarefa": {
+      "aberta": "Open",
+      "feita": "Done",
+      "descartada": "Dropped"
+    },
+    "concluirTarefa": "Mark done",
+    "todasFeitas": "Every step is done. The task stays open until you mark it done.",
+    "vagasDaTarefa": "Pokémon in this task",
+    "tarefasContagem": "{feitas} of {total} tasks done",
+    "tarefasDe": "Tasks of {plano}",
+    "planoCriado": "Plan created.",
+    "tarefaCriada": "Task added.",
+    "historicoNota": "A finished or closed plan is history: its tasks and steps no longer change. Reactivate the plan to change it again.",
+    "erroPlano": {
+      "tituloVazio": "Give the plan a title.",
+      "inicioVazio": "Pick a start date.",
+      "fimAntesDoInicio": "The end can't come before the start."
+    },
+    "editarEtapa": "Edit step",
+    "editarEtapaNome": "Edit \"{etapa}\"",
+    "excluirEtapaNome": "Delete \"{etapa}\"",
+    "excluirEtapaTexto": "The steps below move up one place. This can't be undone.",
+    "excluirEtapaConfirmar": "Delete step",
+    "contador": "{usados} of {maximo} characters",
+    "erroEtapa": {
+      "textoVazio": "Write the step.",
+      "textoLongo": "A step takes at most {maximo} characters.",
+      "detalheLongo": "The details take at most {maximo} characters."
+    },
+    "etapasFechadas": "Steps change only while the task is open in an active plan.",
+    "limiteEtapas": "This task already has {maximo} steps, the maximum. To go on, split the work into another task."
   }
 }
