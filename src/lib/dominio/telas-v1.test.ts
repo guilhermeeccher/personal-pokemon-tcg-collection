@@ -91,9 +91,9 @@ describe("pontes", () => {
     expect(ehCatchAll ? naV1.some((r) => rotaCobre(rota, r)) : naV1.includes(rota)).toBe(true);
   });
 
-  it("nenhum catch-all na raiz da v2 (pegaria os caminhos do módulo de acesso desligado)", () => {
-    const catchAllsNaRaiz = ROTAS_V2.filter((r) => /^\/\[/.test(r));
-    expect(catchAllsNaRaiz).toEqual([]);
+  it("nenhum catch-all na v2, na raiz nem abaixo de /dex (a raiz pegaria os caminhos do módulo de acesso desligado; a Dex tem uma ponte por tela, e o caminho que a v1 não tem cai no 404 padrão)", () => {
+    const catchAlls = ROTAS_V2.filter((r) => r.includes("[..."));
+    expect(catchAlls).toEqual([]);
   });
 });
 

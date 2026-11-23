@@ -279,7 +279,7 @@ rest are the technical foundations of the v2.
 17. **The v1 never links to the root**, and its screen paths all start with `/v1` (enforced by
     `telas-v1.test.ts`). The v2 may link to a root path that is still a bridge.
 18. **Bridges are 307**, call `exigirSessao()` first, keep the query, and exist only where a v2
-    screen does not; a Dex bridge returns 404 with the module off before any redirect. A bridge is
+    screen does not; a Dex bridge (one per screen, no catch-all) returns 404 with the module off before any redirect. A bridge is
     replaced by the real page only when every action of that screen is `delivered` in
     [`parity.md`](./parity.md), or `deferred` to a named package with a working "Do it in v1" link.
 19. **Display preferences** of the v2 (binder size, whole-set size, light-mode switch) are per
@@ -524,6 +524,27 @@ rest are the technical foundations of the v2.
     opens `<DetalheCarta>` in copy mode on the representative copy (`copia-representante.ts`), and a card
     with no copy any more (its price row is never deleted) says so and does not open. Deleting a round
     asks through the confirmation dialog.
+
+### Dex shared code (package 5-0)
+
+A. **One bridge per Dex screen, and no catch-all in the v2.** `/dex`, `/dex/pokedex`, `/dex/caixas`,
+   `/dex/recebidos`, `/dex/cadastrar`, `/dex/novo-cadastro`, `/dex/inventario`, `/dex/jogos`,
+   `/dex/trofeus` and `/dex/planos`: `await exigirSessao();`, then **module off → `notFound()`**, then
+   `irParaV1` with the query intact. A `/dex/...` path with no v1 screen gets Next's default 404, module
+   on or off. `pontes.test.ts` runs each bridge, and `telas-v1.test.ts` fails on any catch-all.
+   **With the module off the 404 is the right status with no 307 first, but not byte-identical to the
+   404 of a URL with no route** (measured 2026-11-23): `notFound()` in a v2 page renders inside the
+   v2 root layout, so the body is the layout's shell around Next's own "404 This page could not be
+   found." (about 152 KB, no ETag), against the static 7 KB page of an unknown path. A person sees a
+   readable 404 in the v2 shell, with no Dex tab. Equalizing it would need the proxy to mark `/dex/**`
+   and a `beforeFiles` rewrite like the password module's; decided against (2026-11-23), because
+   `AGENTS.md` asks for a direct 404, not for an indistinguishable one.
+B. **Skinless Dex logic goes to `src/app/_comum/dex/`; anything with a look goes to
+   `src/app/(v2)/dex/_componentes/`.** Rule 16 holds: no import from `(v1)/` or `_componentes/`, and a
+   piece both versions need moves with its v1 importers updated in the same change.
+C. **Every shared Dex piece has one owner package and a merge order**, in the table of
+   [`README.md`](./README.md) (Phase 5). A package never writes a second copy of a piece it needs:
+   it waits for the owner's branch or asks.
 
 ## 8. Other rules, checked for the transition
 

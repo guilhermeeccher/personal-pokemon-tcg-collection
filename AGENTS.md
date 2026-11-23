@@ -228,9 +228,9 @@ read its README before touching any screen, layout, component or route under `sr
   (`src/app/(v2)/`). The API, `/login`, the manifest, `robots.txt` and the PWA icons stay at the
   root. A root path whose v2 screen does not exist yet is a **bridge page**: `await
   exigirSessao();` then `irParaV1([...segments], await searchParams)`, a 307 (never 308) to
-  `/v1/<same screen>` with the query intact, built by `lib/dominio/destino-v1.ts`. No catch-all at
-  the v2 root; the only one is the Dex bridge, which answers 404 with the module off before any
-  redirect. `grep -rl irParaV1 'src/app/(v2)'` lists the screens still bridged.
+  `/v1/<same screen>` with the query intact, built by `lib/dominio/destino-v1.ts`. No catch-all
+  anywhere in the v2: the Dex has one bridge per screen, each answering 404 with the module off
+  before any redirect, and a `/dex/...` path the v1 does not have gets Next's default 404. `grep -rl irParaV1 'src/app/(v2)'` lists the screens still bridged.
 - **Where things are now.** The v1's screens live under `src/app/(v1)/v1/` (so a screen file cited
   in this document, such as `cadastro-por-jogo.tsx`, is there; `_componentes/` and `_acoes/` did
   not move), its stylesheet and tokens in `src/app/(v1)/` (the

@@ -16,9 +16,11 @@ import { destinoV1, type BuscaDaPonte } from "@/lib/dominio/destino-v1";
  * - **307, nunca 308.** O `redirect()` numa página responde 307; o 308 do
  *   `permanentRedirect` o navegador guarda para sempre, e continuaria indo
  *   para `/v1` depois que a tela da v2 existisse.
- * - **Nenhum catch-all na raiz.** Ele pegaria toda URL sem rota, inclusive os
- *   caminhos do módulo de acesso desligado, e trocaria o 404 deles por um 307.
- *   O único catch-all é o da Dex, abaixo de `/dex`.
+ * - **Nenhum catch-all na v2.** Na raiz, ele pegaria toda URL sem rota,
+ *   inclusive os caminhos do módulo de acesso desligado, e trocaria o 404 deles
+ *   por um 307. Abaixo de `/dex` ele existiu até o pacote 5-0 (2026-11-23) e
+ *   saiu: a Dex tem uma ponte por tela, e um caminho de Dex que a v1 não tem
+ *   cai no 404 padrão do Next, como qualquer URL inexistente.
  *
  * Quando a tela da v2 fica pronta, a página real substitui a ponte no mesmo
  * caminho; `grep -rl irParaV1 'src/app/(v2)'` lista o que falta.
