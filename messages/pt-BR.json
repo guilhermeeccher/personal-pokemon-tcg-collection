@@ -2173,5 +2173,111 @@
       "todosDoHome": "Todos os troféus do HOME conquistados.",
       "semJogos": "Marque os jogos que você tem"
     }
+  },
+  "v2Inventario": {
+    "titulo": "Inventário",
+    "contagem": "{total, plural, =0 {Nenhuma cópia} one {# cópia} other {# cópias}}",
+    "baixarCsv": "Baixar CSV",
+    "exportarLiga": "Exportar para a LigaPokemon",
+    "exportarLigaExplica": "O CSV traz o inventário inteiro. A exportação para a LigaPokemon baixa um ZIP no formato de importação do site, em arquivos de até 995 cartas. Os dois ignoram os filtros.",
+    "naoDeu": "Não deu certo",
+    "tentarDeNovo": "Tentar de novo",
+    "limparFiltros": "Limpar filtros",
+    "erroCarregar": "Não foi possível ler o inventário.",
+    "erroRede": "Sem resposta do servidor. Confira a conexão e tente de novo.",
+    "filtrosInvalidos": "Algum filtro do endereço tem um valor que o inventário não conhece. Limpe os filtros para ver a lista.",
+    "selecionarTodos": "Selecionar todas desta página",
+    "carregando": "Carregando…",
+    "vazio": "Nenhuma cópia no inventário ainda.",
+    "vazioFiltrado": "Nenhuma cópia com esses filtros.",
+    "selecionar": "Selecionar {carta} #{numero}",
+    "semImagem": "Sem foto",
+    "quantidade": "{total, plural, one {# unidade} other {# unidades}}",
+    "localizacao": "Em {local}",
+    "alocadaEm": "Em {colecao}, vaga {vaga}",
+    "livre": "Livre, em nenhuma coleção",
+    "idioma": {
+      "pt": "Português",
+      "en": "Inglês",
+      "jp": "Japonês"
+    },
+    "idiomaCurto": {
+      "pt": "PT",
+      "en": "EN",
+      "jp": "JP"
+    },
+    "filtros": {
+      "rotulo": "Filtros do inventário",
+      "busca": "Buscar por nome",
+      "abrir": "Filtros",
+      "abrirComTotal": "Filtros ({total})",
+      "set": "Set",
+      "idioma": "Idioma físico",
+      "raridade": "Raridade",
+      "variante": "Variante",
+      "condicao": "Condição",
+      "graded": "Graded",
+      "alocacao": "Alocação",
+      "imagem": "Imagem",
+      "imagemDica": "Sem foto própria nem foto utilizável no catálogo. Algumas ainda mostram foto de outra fonte.",
+      "localizacao": "Localização",
+      "localizacaoExemplo": "Fichário 1, página 3",
+      "todos": "Todos",
+      "todas": "Todas",
+      "gradedSim": "Só graded",
+      "gradedNao": "Só não graded",
+      "alocadas": "Só alocadas",
+      "livres": "Só livres",
+      "semImagem": "Sem imagem no catálogo"
+    },
+    "selecao": {
+      "rotulo": "Seleção",
+      "total": "{total, plural, one {# cópia selecionada} other {# cópias selecionadas}}",
+      "editar": "Editar selecionadas",
+      "limpar": "Limpar",
+      "limparRotulo": "Limpar seleção"
+    },
+    "paginacao": {
+      "rotulo": "Páginas do inventário",
+      "anterior": "Anterior",
+      "proxima": "Próxima",
+      "texto": "Página {pagina} de {total}"
+    },
+    "remover": {
+      "rotulo": "Remover {carta} #{numero}",
+      "titulo": "Remover a cópia de {carta}?",
+      "qual": "{set} #{numero}, {quantidade, plural, one {# unidade} other {# unidades}}.",
+      "alocada": "Ela está em {colecao}: a vaga fica vazia.",
+      "livre": "A linha sai do inventário.",
+      "confirmar": "Remover cópia",
+      "feito": "Cópia de {carta} removida.",
+      "jaRemovida": "Esta cópia já não existia (pode ter sido removida em outra aba). A lista foi relida.",
+      "erro": "Não foi possível remover a cópia."
+    },
+    "massa": {
+      "titulo": "{total, plural, one {Editar # cópia} other {Editar # cópias}}",
+      "explica": "Marque só o que quer mudar; o resto fica como está. Nenhuma alocação é tocada.",
+      "alterar": "Alterar {campo}",
+      "localizacaoDica": "Em branco, apaga a localização das cópias.",
+      "idiomaFisico": "Idioma físico",
+      "idiomaDica": "O idioma da carta que você tem na mão, não o da ficha do catálogo.",
+      "varianteDica": "Só as variantes que todas as cartas da seleção têm no catálogo.",
+      "semVarianteComum": "A seleção mistura cartas sem variante em comum no catálogo: mude a variante cópia a cópia, no detalhe.",
+      "cancelar": "Cancelar",
+      "aplicar": "{total, plural, one {Aplicar a # cópia} other {Aplicar a # cópias}}",
+      "confirmarTitulo": "{total, plural, one {Alterar # cópia?} other {Alterar # cópias?}}",
+      "confirmarAlocacao": "Tudo ou nada: se uma cópia não puder mudar, nenhuma muda.",
+      "muda": {
+        "condicao": "Condição: {valor}",
+        "localizacao": "Localização: {valor}",
+        "semLocalizacao": "Localização apagada",
+        "idioma": "Idioma físico: {valor}",
+        "variante": "Variante: {valor}"
+      },
+      "naoAplicou": "Nada foi alterado",
+      "erro": "Não foi possível aplicar a edição.",
+      "feito": "{total, plural, one {# cópia atualizada.} other {# cópias atualizadas.}}",
+      "selecaoMudou": "A seleção mudou enquanto a pergunta esperava (a lista foi relida). Confira as cópias e aplique de novo."
+    }
   }
 }
