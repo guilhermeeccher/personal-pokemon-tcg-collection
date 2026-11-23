@@ -3163,5 +3163,44 @@
       "enviados": "{quantidade, plural, one {# Pokémon sent to HOME} other {# Pokémon sent to HOME}}",
       "mostrarMais": "Show more ({restantes} left)"
     }
+  },
+  "v2DexInventario": {
+    "descricao": "The Pokémon you recorded, grouped when identical. Each action moves or deletes one Pokémon of the group; fixing applies to the whole group.",
+    "voltarVisaoGeral": "Overview",
+    "abrirJogos": "My games",
+    "filtros": "Inventory filters",
+    "maisFiltros": "More filters",
+    "filtrosAtivos": "{total, plural, one {Filters (# on)} other {Filters (# on)}}",
+    "limparFiltros": "Clear filters",
+    "total": "{grupos, plural, one {# group} other {# groups}} · {pokemon, plural, one {# Pokémon} other {# Pokémon}}",
+    "lista": "Recorded Pokémon",
+    "cadastrar": "Register Pokémon",
+    "enviarRotulo": "Send 1 {nome} to HOME",
+    "moverRotulo": "Move 1 {nome} to…",
+    "corrigirRotulo": "Fix {quantidade, plural, one {the record} other {the # records}} of {nome}",
+    "apagarRotulo": "Delete 1 {nome}",
+    "apagarTitulo": "Delete 1 record of {nome}?",
+    "apagarTexto": "Use it for a wrong entry. To take the Pokémon out of a game, move it: deleting cannot be undone.",
+    "apagarConfirmar": "Delete 1",
+    "apagado": "1 record of {nome} deleted",
+    "corrigirTexto": "{nome}. Shiny, origin, date and notes change on every record of the group; where it is does not change here.",
+    "corrigido": "Fix saved",
+    "movidos": "{quantidade, plural, one {# Pokémon moved} other {# Pokémon moved}}",
+    "mostrarMais": "Show more ({restantes} left)"
+  },
+  "v2DexJogos": {
+    "descricao": "Mark the games you own. The list is the catalog's, with how each one connects to HOME; if you stopped playing, mark the game as stopped: it keeps its records and takes no new ones.",
+    "voltarVisaoGeral": "Overview",
+    "abrirInventario": "Inventory",
+    "lista": "Your games",
+    "trofeusRotulo": "Trophies of {jogo}",
+    "editarRotulo": "Edit {jogo}",
+    "removerRotulo": "Remove {jogo}",
+    "removerTexto": "Only a game with no Pokémon in it leaves the list. If you stopped playing, mark it as stopped: its records stay, and nothing new comes in.",
+    "adicionado": "{jogo} added",
+    "salvo": "{jogo} saved",
+    "parado": "{jogo} marked as stopped",
+    "reativado": "{jogo} back to playing",
+    "removido": "{jogo} removed from your list"
   }
 }
