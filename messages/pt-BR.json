@@ -1977,7 +1977,7 @@
     },
     "laboratorio": {
       "titulo": "Detalhe de carta",
-      "explica": "Abre o detalhe com ids reais da instalação: ?colecao=<id> (e opcionalmente &vaga=<id>) para o modo vaga, ?carta=<id>&copia=<id> para o modo cópia. A grade é relida depois de cada escrita, como a tela da coleção fará.",
+      "explica": "Abre o detalhe com ids reais da instalação: ?colecao=ID (e opcionalmente &vaga=ID) para o modo vaga, ?carta=ID&copia=ID para o modo cópia. A grade é relida depois de cada escrita, como a tela da coleção fará.",
       "semParametros": "Passe ?colecao= ou ?carta=&copia= na URL.",
       "colecao": "Coleção {nome} · {total} vagas",
       "abrirVaga": "Abrir vaga {numero}",

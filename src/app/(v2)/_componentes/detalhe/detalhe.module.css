@@ -48,6 +48,12 @@
   background: rgb(10 11 18 / 0.78);
   box-shadow: inset 0 0 0 1px var(--v2-aresta);
 }
+/* No sprite da espécie a etiqueta desce para não cobrir o desenho. */
+.especie + .etiquetaFantasma {
+  top: auto;
+  bottom: 12%;
+  translate: -50% 0;
+}
 .especie {
   display: grid;
   place-items: center;

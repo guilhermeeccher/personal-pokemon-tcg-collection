@@ -93,7 +93,9 @@ export function Palco({
         alt={alt}
         variante={variante}
         raridade={raridade}
-        mostrarVariante={variante !== null}
+        // A variante sai em texto na linha da cópia, logo ao lado; escrita
+        // sobre a carta grande, cobriria o nome impresso. O leitor de tela a
+        // ouve da própria Carta.
         className={fantasma ? estilos.fantasma : undefined}
         fallback={<div className={estilos.semImagem}>{alt}</div>}
       />

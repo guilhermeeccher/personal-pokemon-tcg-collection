@@ -277,6 +277,61 @@ rest are the technical foundations of the v2.
     `parity.md`. A package that adds a shared component shows it there, and checks its layout in
     the laboratory at the widths of section 1.
 
+### Card detail (package 1b)
+
+23. **One component, two modes, no page.** `DetalheCarta`
+    (`src/app/(v2)/_componentes/detalhe/detalhe-carta.tsx`) is the layer the collection (1d), the
+    inventory (2b) and the home (2a) open from a card. It is the v2 dialog (`primitivos/modal`) at the
+    `detalhe` level of the layer stack, so it is a panel from 768 px and a bottom sheet below, with
+    Esc, focus and scroll lock from the stack; confirmations open above it at the `confirmacao` level.
+    Its forms and lists are inline sections, never a second dialog: a `janela` would sit **under** the
+    detail. No production screen opens it yet; `/laboratorio?colecao=<id>&vaga=<id>` and
+    `/laboratorio?carta=<id>&copia=<id>` (add `&abrir=1` to open on load) prove it with real ids.
+24. **Its interface.**
+
+    ```ts
+    <DetalheCarta
+      abertura={null | { modo: "vaga", colecao: { id, nome, tipo, idiomaExigido }, vaga: VagaGradeV2DTO }
+                     | { modo: "copia", cartaId, copiaId, previa?: { nome, imagemUrl, imagemOrigem?, raridade?, variante? } }}
+      onFechar={() => setAberta(null)}        // called inside startTransition
+      onMudou={(evento: EventoDetalhe) => …}  // after every successful write, and when a refusal or a
+                                              // read shows the state changed underneath ("desatualizada")
+      chaveTransicao?={key of the card that opened it}
+      devolverFocoPara?={ResolvedorFoco}      // the virtual grid's resolver (rule 13)
+      secaoCompra?={(ctx: { colecao, vaga, aoMudar }) => ReactNode}
+    />
+    ```
+
+    - **Slot mode takes the slot from the grid** (`GET /api/colecoes/:id/grade`) and the opener keeps
+      it current: on `onMudou` it re-reads the grid and passes the new `VagaGradeV2DTO` (same `id`).
+      Right after a write of its own, the detail reads the slot through the card detail
+      (`contexto.vaga.copiaId`) until the new slot arrives, so it never offers a stale action. A
+      custom collection's slot is deleted on deallocation; the detail then closes itself.
+    - **Copy mode reads everything itself** (`GET /api/cartas/:cartaId/detalhe?copia=`); `previa` only
+      lets the stage show the card before that read returns. Another copy of the same card can be
+      put in focus from the copy list.
+    - **The buy extension point.** In an empty slot the detail shows the slot's current buy choices
+      read-only (`vaga.escolhas`). When `secaoCompra` is given (package 1e), its output **replaces**
+      that block; `aoMudar()` makes the detail re-read and emit `{ tipo: "compra" }`. The detail
+      itself never marks or unmarks a purchase.
+25. **The view transition is the opener's half too.** The detail's stage card carries
+    `nomeTransicaoCarta(chaveTransicao, true)` while open. The opener gives the clicked card the same
+    name in an **urgent** update and, in the same handler, opens the detail inside
+    `startTransition` while that card leaves the grid (a placeholder of the same size takes its
+    place): React commits the urgent update first, so the name is in the DOM when the "before" view
+    is captured, and only that one card of the grid ever carries a name. Keep the name on that card
+    after closing, so the detail's card flies back to it; `onFechar` already runs inside
+    `startTransition`. `TransicaoVista` turns all of it off with reduced motion or light mode.
+26. **What it shows and decides.** The pure rules are in `estado-detalhe.ts` (what each slot state
+    shows, which read to ask, the order of the copies, the variants offered, the "from → to" of an
+    upgrade axis, and which refusal re-reads), `edicao-copia.ts` (the `PATCH /api/copias/:id` body:
+    the v1's keys, **only those that changed**, normalized like the route) and `serie-preco.ts` (the
+    short price series, x by time). A 400 keeps the screen; a 404, a 409, or a candidate taken by
+    another tab (`copiaJaAlocada`, `vagaJaPreenchida`…) re-reads everything and emits
+    `{ tipo: "desatualizada" }`; when the thing that was opened is gone, the detail says so and only
+    offers to close. The own-photo requests live in `src/app/_comum/imagem-local.ts`, skinless, so the
+    v2 does not import the v1's dialog.
+
 ## 8. Other rules, checked for the transition
 
 | Rule | Section of `AGENTS.md` | Scope | Note |

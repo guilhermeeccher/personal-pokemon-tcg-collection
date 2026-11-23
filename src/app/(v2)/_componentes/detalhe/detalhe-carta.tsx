@@ -45,6 +45,7 @@ import { type ReactNode, startTransition, useCallback, useEffect, useRef, useSta
 
 import { type FaltaNaImagemLocal, type ModoImagemLocal, pedidoDeEnvio, pedidoDeRemocao } from "@/app/_comum/imagem-local";
 import { textoDaRecusa } from "@/app/_comum/recusa";
+import { rotuloChaveVaga } from "@/lib/dominio/chave-vaga-set";
 import { urlSpritePokemon } from "@/lib/imagens";
 import { ehOrigemPropria } from "@/lib/dominio/origem-imagem";
 import type {
@@ -191,6 +192,7 @@ function DetalheAberto({
     avisarMudanca,
     fechar,
     erro,
+    limparErro: () => setErro(null),
     dialogo,
     devolverFocoPara,
   };
@@ -216,6 +218,8 @@ interface Comum {
   avisarMudanca: (evento: EventoDetalhe) => void;
   fechar: () => void;
   erro: string | null;
+  /** Tira da tela a recusa da ação anterior (a validação local barrou a seguinte). */
+  limparErro: () => void;
   dialogo: ReactNode;
   devolverFocoPara?: ResolvedorFoco;
 }
@@ -617,7 +621,7 @@ function ModoCopia({
     if (!r.ok) return;
     const dividida = r.corpo.dividida === true;
     const frase = d.vagaId
-      ? t("feito.alocadaNoDestino", { colecao: d.colecaoNome, numero: d.chave ?? "" })
+      ? t("feito.alocadaNoDestino", { colecao: d.colecaoNome, numero: d.chave ? rotuloChaveVaga(d.chave) : "" })
       : t("feito.adicionadaAColecao", { colecao: d.colecaoNome });
     avisar(dividida ? `${frase} ${t("feito.loteDividido")}` : frase, { tom: "sucesso" });
     setMostrandoDestinos(false);
@@ -634,7 +638,10 @@ function ModoCopia({
   async function enviarFoto(modo: ModoImagemLocal, arquivo: File | null, link: string): Promise<FaltaNaImagemLocal | null> {
     if (!ficha) return null;
     const p = pedidoDeEnvio(modo, { cartaId: ficha.cartaId, idiomaCatalogo: ficha.idioma, setId: ficha.setId, arquivo, link });
-    if (!p.ok) return p.falta;
+    if (!p.ok) {
+      comum.limparErro();
+      return p.falta;
+    }
     const r = await executar(p.pedido.url, p.pedido.init, modo === "mypcards" ? t("erro.mapear") : t("erro.foto"));
     if (!r.ok) return null;
     if (modo === "mypcards") {
@@ -743,6 +750,7 @@ function ModoCopia({
                     carta={ficha}
                     bloqueado={bloqueado}
                     aoSalvar={salvar}
+                    aoBarrar={comum.limparErro}
                   />
                 </div>
               ) : null}

@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 
 import { type FaltaNaImagemLocal, type ModoImagemLocal } from "@/app/_comum/imagem-local";
+import { rotuloChaveVaga } from "@/lib/dominio/chave-vaga-set";
 import { CONDICOES, IDIOMAS } from "@/lib/dominio/enums";
 import type { CopiaDoDetalheV2DTO, DestinoElegivelDaCopiaDTO, DetalheCartaV2DTO } from "@/lib/dominio/tipos-cliente";
 
@@ -108,7 +109,9 @@ export function SecaoOnde({
                           <span className={estilos.sutil}>
                             {[
                               t(`tipoColecao.${d.colecaoTipo}`),
-                              d.vagaId ? t("copia.vagaNumero", { numero: d.chave ?? "" }) : t("copia.semVagaFixa"),
+                              d.vagaId && d.chave
+                                ? t("copia.vagaNumero", { numero: rotuloChaveVaga(d.chave) })
+                                : t("copia.semVagaFixa"),
                             ].join(" · ")}
                           </span>
                           {d.foraDePadrao ? (
@@ -163,11 +166,14 @@ export function FormularioEdicao({
   carta,
   bloqueado,
   aoSalvar,
+  aoBarrar,
 }: {
   copia: CopiaDoDetalheV2DTO;
   carta: DetalheCartaV2DTO["carta"];
   bloqueado: boolean;
   aoSalvar: (corpo: CorpoEdicaoCopia) => void;
+  /** A validação local barrou o envio (a recusa da ação anterior sai da tela). */
+  aoBarrar: () => void;
 }) {
   const t = useTranslations("v2Detalhe.edicao");
   const tDet = useTranslations("v2Detalhe");
@@ -186,6 +192,7 @@ export function FormularioEdicao({
     e.preventDefault();
     if (!resultado.ok) {
       setErros(resultado.erros);
+      aoBarrar();
       return;
     }
     if (resultado.corpo) aoSalvar(resultado.corpo);

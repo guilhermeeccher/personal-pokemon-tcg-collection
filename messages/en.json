@@ -1985,7 +1985,7 @@
     },
     "laboratorio": {
       "titulo": "Card detail",
-      "explica": "Opens the detail with real ids of the install: ?colecao=<id> (and optionally &vaga=<id>) for slot mode, ?carta=<id>&copia=<id> for copy mode. The grid is reloaded after every write, as the collection screen will do.",
+      "explica": "Opens the detail with real ids of the install: ?colecao=ID (and optionally &vaga=ID) for slot mode, ?carta=ID&copia=ID for copy mode. The grid is reloaded after every write, as the collection screen will do.",
       "semParametros": "Pass ?colecao= or ?carta=&copia= in the URL.",
       "colecao": "Collection {nome} · {total} slots",
       "abrirVaga": "Open slot {numero}",

@@ -187,7 +187,10 @@ export function SecaoDetalhe({ parametros }: { parametros: ParametrosDetalhe }) 
             {aberta?.tipo === "copia" ? (
               <span className={estilos.lugarDaCarta} aria-hidden />
             ) : (
-              <TransicaoVista name={nomeTransicaoCarta(`copia:${parametros.copia}`, alvo === "copia")}>
+              <TransicaoVista
+                name={nomeTransicaoCarta(`copia:${parametros.copia}`, alvo === "copia")}
+                default={alvo === "copia" ? undefined : "none"}
+              >
                 <Carta
                   imagemUrl={previaCopia?.carta.imagemUrl ?? null}
                   origem={previaCopia?.carta.imagemOrigem ?? null}
@@ -251,7 +254,10 @@ function CartaDaGrade({
       {aberta ? (
         <span className={estilos.lugarDaCarta} aria-hidden />
       ) : (
-        <TransicaoVista name={nomeTransicaoCarta(vaga.id, noParAtivo)}>
+        // Fora do par ativo, nada de transição: sem nome, o React daria um nome
+        // automático a cada carta e animaria todas como "update" (orçamento de
+        // composição, regra 5 de `rules.md`).
+        <TransicaoVista name={nomeTransicaoCarta(vaga.id, noParAtivo)} default={noParAtivo ? undefined : "none"}>
           {sprite !== null || !vaga.carta ? (
             <span className={estilos.lugarDaCarta}>
               {sprite ? (
