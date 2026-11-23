@@ -3185,7 +3185,8 @@
       "rotulo": "Batch to add",
       "nada": "Type the quantities in the list",
       "total": "{total, plural, one {# Pokémon} other {# Pokémon}} for {jogo}",
-      "fora": "{total, plural, one {# form in the batch is outside the list shown} other {# forms in the batch are outside the list shown}}"
+      "fora": "{total, plural, one {# form in the batch is outside the list shown} other {# forms in the batch are outside the list shown}}",
+      "semJogo": "{total, plural, one {# Pokémon} other {# Pokémon}}: pick the game"
     },
     "resultado": {
       "recusado": "Nothing was added",
@@ -3193,6 +3194,8 @@
       "incerto": "No answer from the server",
       "incertoTexto": "The batch may have gone in. What you have was read again: check it before adding again, so nothing is recorded twice.",
       "fechar": "Close"
-    }
+    },
+    "jogoSaiu": "The chosen game left your list (stopped or removed elsewhere). Pick the batch's game above: the quantities stay.",
+    "listaSemJogo": "Pokémon to add"
   }
 }

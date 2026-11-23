@@ -198,8 +198,14 @@
   line-height: 16px;
   color: var(--v2-tinta-2);
 }
-.cabecaIcone {
+/* A seta de "abre": pseudo-elemento, para não pôr um nó a mais em cada célula. */
+.cabeca::after {
+  content: "›";
   flex: none;
+  width: 20px;
+  font-size: 22px;
+  line-height: 1;
+  text-align: center;
   color: var(--v2-tinta-3);
 }
 
@@ -256,6 +262,8 @@
   color: var(--v2-tinta);
   background: var(--v2-superficie-2);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  font-size: 22px;
+  line-height: 1;
   cursor: pointer;
   touch-action: manipulation;
 }

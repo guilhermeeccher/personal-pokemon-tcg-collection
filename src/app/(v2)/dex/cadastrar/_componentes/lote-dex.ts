@@ -84,6 +84,18 @@ export function jogoEscolhido(opcoes: readonly { id: string }[], pedido: string)
   return opcoes.some((o) => o.id === pedido) ? pedido : (opcoes[0]?.id ?? "");
 }
 
+/**
+ * O destino do lote depois da abertura: o jogo escolhido enquanto ele está
+ * entre as opções, senão nenhum. Diferente da abertura, aqui **não** cai na
+ * primeira opção: o jogo some da lista quando é parado ou removido em outra
+ * aba (a tela relê depois de uma recusa), e trocar o destino em silêncio faria
+ * o clique seguinte gravar o lote inteiro num jogo que a pessoa não escolheu.
+ * Sem jogo, a tela pede a escolha e o "Cadastrar" fica travado.
+ */
+export function jogoAtual(opcoes: readonly { id: string }[], escolhido: string): string | null {
+  return opcoes.some((o) => o.id === escolhido) ? escolhido : null;
+}
+
 export interface FiltroCadastroDex {
   vista: VistaDex;
   busca: string;

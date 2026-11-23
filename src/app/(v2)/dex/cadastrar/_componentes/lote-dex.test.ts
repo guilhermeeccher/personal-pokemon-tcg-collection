@@ -11,6 +11,7 @@ import {
   corpoDoLote,
   type FiltroCadastroDex,
   formasVisiveis,
+  jogoAtual,
   jogoEscolhido,
   lerRespostaCadastro,
   marcadasForaDaVista,
@@ -114,6 +115,10 @@ describe("jogoEscolhido", () => {
   });
   it("sem jogo possuído, o HOME é a única opção", () => {
     expect(jogoEscolhido([{ id: "home" }], "firered")).toBe("home");
+  });
+  it("depois da abertura, um jogo que sai da lista não vira outro destino", () => {
+    expect(jogoAtual(opcoes, "sv-scarlet")).toBe("sv-scarlet");
+    expect(jogoAtual([{ id: "firered" }, { id: "home" }], "sv-scarlet")).toBeNull();
   });
 });
 

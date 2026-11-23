@@ -3177,7 +3177,8 @@
       "rotulo": "Lote do cadastro",
       "nada": "Digite as quantidades na lista",
       "total": "{total, plural, one {# Pokémon} other {# Pokémon}} para {jogo}",
-      "fora": "{total, plural, one {# forma do lote está fora da lista à vista} other {# formas do lote estão fora da lista à vista}}"
+      "fora": "{total, plural, one {# forma do lote está fora da lista à vista} other {# formas do lote estão fora da lista à vista}}",
+      "semJogo": "{total, plural, one {# Pokémon} other {# Pokémon}}: escolha o jogo"
     },
     "resultado": {
       "recusado": "Nada foi cadastrado",
@@ -3185,6 +3186,8 @@
       "incerto": "Sem resposta do servidor",
       "incertoTexto": "O lote pode ter entrado. O que você tem foi relido: confira antes de cadastrar de novo, para não registrar duas vezes.",
       "fechar": "Fechar"
-    }
+    },
+    "jogoSaiu": "O jogo escolhido saiu da sua lista (parado ou removido em outro lugar). Escolha o jogo do lote acima: as quantidades continuam.",
+    "listaSemJogo": "Pokémon para cadastrar"
   }
 }

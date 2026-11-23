@@ -1,6 +1,5 @@
 "use client";
 
-import { Info, Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type KeyboardEvent, memo } from "react";
 
@@ -99,6 +98,9 @@ export function useTextoSelo() {
  * - **Quantidades controladas**: o número mora no lote da tela, nunca aqui. A
  *   célula sai da faixa montada e volta, o celular gira e cruza 768 px, e o
  *   digitado continua (AGENTS.md, "Quantity steppers").
+ * - **Poucos nós por célula** (~20): − e + são texto, não ícone SVG, e a seta
+ *   do botão do nome é um pseudo-elemento. A célula é contada no orçamento de
+ *   nós da regra 13, e o limiar desta lista sai dessa conta (regra 39).
  * - Nada só na cor: "fora do jogo", "troca", "trancada" e "não vai ao HOME"
  *   são texto; o destaque da linha marcada repete o número do campo.
  */
@@ -146,7 +148,7 @@ export const CelulaForma = memo(function CelulaForma({
           aria-label={t("menos", { nome, trilha: nomeTrilha })}
           onClick={() => aoMudar(forma.id, trilha, ajustarQuantidade(valor, -1))}
         >
-          <Minus aria-hidden size={18} />
+          −
         </button>
         <input
           {...{ [ATRIBUTO_QUANTIDADE]: `${forma.id}:${trilha}` }}
@@ -172,7 +174,7 @@ export const CelulaForma = memo(function CelulaForma({
           aria-label={t("mais", { nome, trilha: nomeTrilha })}
           onClick={() => aoMudar(forma.id, trilha, ajustarQuantidade(valor, 1))}
         >
-          <Plus aria-hidden size={18} />
+          +
         </button>
       </div>
     );
@@ -200,7 +202,6 @@ export const CelulaForma = memo(function CelulaForma({
             {rotulo ? <span> · {rotulo}</span> : null}
           </span>
         </span>
-        <Info aria-hidden size={18} className={estilos.cabecaIcone} />
       </button>
 
       <p className={estilos.selos} aria-hidden>

@@ -24,7 +24,8 @@
  * - **A lista é a `GradeVirtual`** (regra 13 de `docs/design-v2/rules.md`):
  *   com o HOME são ~1.220 formas, e na v1 um toque no stepper custava ~310 ms
  *   sem virtualizar (iPhone, CPU 4×). Acima do limiar ela monta só a faixa à
- *   vista; a medição contra o orçamento está na regra 39. A linha com foco e
+ *   vista; o limiar é desta lista (`LIMIAR_CADASTRO`), e a medição contra o
+ *   orçamento está na regra 39. A linha com foco e
  *   as vizinhas ficam montadas (`manterMontadas`): rolar com o teclado do
  *   iPhone aberto não tira o campo da página, e o Enter acha a próxima.
  * - **O lote mora aqui, por forma**: trocar de jogo, de vista ou de filtro não
@@ -67,6 +68,7 @@ import {
   comQuantidade,
   corpoDoLote,
   formasVisiveis,
+  jogoAtual,
   jogoEscolhido,
   lerRespostaCadastro,
   marcadasForaDaVista,
@@ -80,6 +82,17 @@ import {
 /** A largura mínima de uma célula: uma coluna no celular, duas ou três conforme a largura. */
 const MIN_CELULA = 300;
 const VAO = 10;
+/*
+ * Quantas formas a lista monta inteira antes de virtualizar. Não é o 300 da
+ * grade de cartas: uma forma aqui custa ~21 nós (nome, marcas e dois
+ * steppers), contra ~8 de uma carta, e o orçamento da regra 13 é de ~2.500
+ * nós por grade. Medido em 2026-11-23 (regra 39 de `rules.md`): 68 formas
+ * montadas davam 1.572 nós, 171 davam 3.579, 253 (o catálogo do FireRed)
+ * 5.269; o toque ficou abaixo de 100 ms em todos, então é a conta de nós que
+ * decide. Com 100, a lista inteira cabe em ~2.250 nós; acima, ~500 em
+ * qualquer tamanho.
+ */
+const LIMIAR_CADASTRO = 100;
 
 /** O que aparece acima da barra depois de um envio que não gravou com certeza. */
 type Resultado = { tipo: "recusado"; textos: string[] } | { tipo: "incerto" };
@@ -125,11 +138,12 @@ export function CadastroPorJogo({
     () => [...jogos.map((j) => ({ id: j.jogoId, nome: j.nome })), { id: ORIGEM_HOME, nome: td("cadastrar.home") }],
     [jogos, td],
   );
-  const [jogoPedido, setJogoPedido] = useState(jogoInicial);
-  // Um jogo que sai da lista (parado em outra aba, relido depois de uma
-  // recusa) cai na primeira opção, como um `?jogo=` que não é mais possuído.
-  const jogoId = jogoEscolhido(opcoes, jogoPedido);
-  const nomeJogo = opcoes.find((o) => o.id === jogoId)?.nome ?? jogoId;
+  // Na abertura, um `?jogo=` que não é possuído cai na primeira opção, como
+  // na v1. Depois, um jogo que sai da lista (parado em outra aba, relido após
+  // uma recusa) deixa a tela sem jogo, nunca com outro (`jogoAtual`).
+  const [jogoPedido, setJogoPedido] = useState(() => jogoEscolhido(opcoes, jogoInicial));
+  const jogoId = jogoAtual(opcoes, jogoPedido);
+  const nomeJogo = (jogoId && opcoes.find((o) => o.id === jogoId)?.nome) ?? "";
 
   const [busca, setBusca] = useState(buscaInicial);
   const [soQueNaoTenho, setSoQueNaoTenho] = useState(false);
@@ -149,8 +163,11 @@ export function CadastroPorJogo({
   // nulo, e o foco volta ao botão do nome dela pela grade.
   const ultimaAberta = useRef<string | null>(null);
 
-  const catalogo = useMemo(() => catalogoDoJogo(jogoId, formas), [jogoId, formas]);
-  const trancadas = useMemo(() => rotulosTrancadas(checkpoints, jogoId, idioma), [checkpoints, jogoId, idioma]);
+  const catalogo = useMemo(() => (jogoId ? catalogoDoJogo(jogoId, formas) : null), [jogoId, formas]);
+  const trancadas = useMemo(
+    () => (jogoId ? rotulosTrancadas(checkpoints, jogoId, idioma) : new Map<number, string>()),
+    [checkpoints, jogoId, idioma],
+  );
 
   const visiveis = useMemo(
     () => formasVisiveis(formas, { vista, busca, secoes, catalogo, mostrarTodas, soQueNaoTenho, tenho }),
@@ -246,7 +263,7 @@ export function CadastroPorJogo({
   const reler = useCallback(() => iniciarReleitura(() => router.refresh()), [router]);
 
   async function cadastrar() {
-    if (total === 0 || enviando) return;
+    if (total === 0 || enviando || !jogoId) return;
     const corpo = corpoDoLote(jogoId, quantidades);
     const nome = nomeJogo;
     setEnviando(true);
@@ -397,8 +414,15 @@ export function CadastroPorJogo({
               </button>
             ) : null}
           </div>
+          {jogoId === null && (
+            <AvisoEmLinha tom="alerta" papel="alert">
+              {t("jogoSaiu")}
+            </AvisoEmLinha>
+          )}
           <p className={estilos.nota} role="status">
-            {catalogo
+            {jogoId === null
+              ? t("exibindo", { total: visiveis.length })
+              : catalogo
               ? t(mostrarTodas ? "catalogoTodas" : "catalogoDoJogo", { jogo: nomeJogo, total: visiveis.length })
               : `${td(jogoId === ORIGEM_HOME ? "cadastrar.direto" : "cadastrar.semCatalogo")} ${t("exibindo", { total: visiveis.length })}`}
           </p>
@@ -428,8 +452,9 @@ export function CadastroPorJogo({
               vaoY={VAO}
               proporcao={0}
               alturaExtra={ALTURA_CELULA}
+              limiar={LIMIAR_CADASTRO}
               manterMontadas={manterMontadas}
-              rotulo={t("lista", { jogo: nomeJogo })}
+              rotulo={jogoId ? t("lista", { jogo: nomeJogo }) : t("listaSemJogo")}
             />
           )}
         </div>
@@ -474,7 +499,11 @@ export function CadastroPorJogo({
         ) : null}
         <div className={`${estilos.barra} v2-painel-flutuante`} role="region" aria-label={t("barra.rotulo")}>
           <span className={estilos.barraTexto} data-vazio={total === 0 || undefined} aria-live="polite">
-            {total === 0 ? t("barra.nada") : t("barra.total", { total, jogo: nomeJogo })}
+            {total === 0
+              ? t("barra.nada")
+              : jogoId
+                ? t("barra.total", { total, jogo: nomeJogo })
+                : t("barra.semJogo", { total })}
             {foraDaVista > 0 ? <span className={estilos.barraFora}>{t("barra.fora", { total: foraDaVista })}</span> : null}
           </span>
           <span className={estilos.barraAcoes}>
@@ -487,7 +516,7 @@ export function CadastroPorJogo({
               ref={botaoCadastrar}
               variante="primario"
               carregando={enviando}
-              disabled={total === 0}
+              disabled={total === 0 || jogoId === null}
               onClick={() => void cadastrar()}
             >
               {td("cadastrar.cadastrar", { quantidade: String(total) })}
