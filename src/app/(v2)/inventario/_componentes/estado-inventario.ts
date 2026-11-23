@@ -107,6 +107,11 @@ export function enderecoDaTela(filtros: FiltrosTela, pagina: number): string {
   return query ? `/inventario?${query}` : "/inventario";
 }
 
+/** Os mesmos valores nas dez chaves (o que os campos mostram é o que foi pedido à API?). */
+export function mesmosFiltros(a: FiltrosTela, b: FiltrosTela): boolean {
+  return CHAVES_FILTRO.every((c) => a[c] === b[c]);
+}
+
 /** Quantos filtros do painel estão em uso — todos menos a busca por nome, que fica sempre à vista. */
 export function filtrosNoPainel(filtros: FiltrosTela): number {
   return CHAVES_FILTRO.filter((c) => c !== "q" && filtros[c] !== "").length;

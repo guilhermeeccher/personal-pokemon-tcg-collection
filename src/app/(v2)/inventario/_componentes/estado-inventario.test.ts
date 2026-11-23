@@ -12,6 +12,7 @@ import {
   enderecoDaTela,
   filtrosDaUrl,
   filtrosNoPainel,
+  mesmosFiltros,
   paginaAlemDoFim,
   paginaDaUrl,
   podarSelecao,
@@ -116,6 +117,14 @@ describe("endereço na barra", () => {
     const busca = buscaDoNext(url.split("?")[1]);
     expect(filtrosDaUrl(busca)).toEqual(f);
     expect(paginaDaUrl(busca)).toBe(5);
+  });
+});
+
+describe("mesmos filtros", () => {
+  it("compara as dez chaves", () => {
+    expect(mesmosFiltros(FILTROS_VAZIOS, { ...FILTROS_VAZIOS })).toBe(true);
+    expect(mesmosFiltros(FILTROS_VAZIOS, { ...FILTROS_VAZIOS, q: "p" })).toBe(false);
+    expect(mesmosFiltros(filtrosDaUrl({ set: "a" }), filtrosDaUrl({ set: ["a", "b"] }))).toBe(true);
   });
 });
 

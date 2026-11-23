@@ -173,7 +173,8 @@
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
-  gap: 2px;
+  /* 8 px entre as três áreas de toque (caixa, abrir, remover). */
+  gap: 8px;
   padding: 6px 4px;
   border-radius: var(--v2-raio-painel);
 }
@@ -213,6 +214,15 @@
 .miniatura {
   flex: none;
   width: 58px;
+}
+/* A 320 px, com 8 px entre as três áreas, sobra pouco para o texto. */
+@media (max-width: 359.98px) {
+  .miniatura {
+    width: 48px;
+  }
+  .abrir {
+    gap: 10px;
+  }
 }
 @media (min-width: 48rem) {
   .miniatura {
@@ -401,7 +411,7 @@
 }
 .campoMassa {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
   margin: 0;
   padding: 6px 12px 12px;

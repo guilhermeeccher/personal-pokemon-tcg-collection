@@ -51,6 +51,7 @@ import {
   consultaDaLista,
   enderecoDaTela,
   filtrosNoPainel,
+  mesmosFiltros,
   paginaAlemDoFim,
   podarSelecao,
   totalDePaginas,
@@ -101,8 +102,39 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
   const [alvo, setAlvo] = useState<string | null>(null);
   const relogioTexto = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  /*
+   * Uma navegação para outro recorte de `/inventario` (um link da visão geral,
+   * a aba "Inventário" com a tela já aberta) chega como props novas sem
+   * remontar a tela: o App Router preserva o estado do cliente numa troca de
+   * query. Props que dizem outra coisa que a consulta atual mandam; as que
+   * só repetem o que a própria tela escreveu na barra não mexem em nada.
+   */
+  const enderecoDasProps = enderecoDaTela(filtrosIniciais, paginaInicial);
+  const [propsVistas, setPropsVistas] = useState(enderecoDasProps);
+  if (enderecoDasProps !== propsVistas) {
+    setPropsVistas(enderecoDasProps);
+    if (enderecoDasProps !== enderecoDaTela(consulta.filtros, consulta.pagina)) {
+      setFiltros(filtrosIniciais);
+      setConsulta({ filtros: filtrosIniciais, pagina: paginaInicial });
+      setSelecao(new Set());
+      setMassaAberta(false);
+    }
+  }
+  // ...e a busca digitada antes dela não chega depois para desfazê-la.
+  useEffect(() => {
+    if (relogioTexto.current) clearTimeout(relogioTexto.current);
+  }, [enderecoDasProps]);
+
   const chaveConsulta = `${consultaDaLista(consulta.filtros, consulta.pagina)}#${versao}`;
   const carregando = resultado?.chave !== chaveConsulta;
+  /*
+   * A lista na tela é a da consulta atual, e os campos dizem o mesmo que ela?
+   * Enquanto não (uma leitura a caminho, uma busca ainda esperando a pausa), a
+   * lista à vista é a do recorte anterior: selecionar, editar em massa,
+   * remover e abrir ficam desligados, para nada agir sobre linhas que já
+   * não são as pedidas.
+   */
+  const pronta = !carregando && mesmosFiltros(filtros, consulta.filtros);
 
   useEffect(() => {
     const controle = new AbortController();
@@ -144,7 +176,10 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
   useEffect(() => {
     const destino = enderecoDaTela(consulta.filtros, consulta.pagina);
     if (window.location.pathname + window.location.search !== destino) {
-      window.history.replaceState(window.history.state, "", destino);
+      // `null`, não `history.state`: o Next 16 intercepta o `replaceState`
+      // e, com o estado dele por cima, passaria direto ao nativo sem atualizar
+      // a URL que o roteador guarda; com `null` ele mesmo preserva o que é seu.
+      window.history.replaceState(null, "", destino);
     }
   }, [consulta]);
 
@@ -186,6 +221,9 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
   const selecionadas = useMemo(() => itens.filter((i) => selecao.has(i.id)), [itens, selecao]);
   const todasMarcadas = itens.length > 0 && itens.every((i) => selecao.has(i.id));
   const algumaMarcada = itens.some((i) => selecao.has(i.id));
+  // A edição em massa só existe com seleção: se uma releitura podou a
+  // seleção até zero, ela fecha de vez (e não reabre sozinha na próxima marca).
+  if (massaAberta && selecionadas.length === 0 && !carregando) setMassaAberta(false);
 
   function alternar(id: string) {
     setSelecao((atual) => {
@@ -312,19 +350,19 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
             ref={(el) => {
               if (el) el.indeterminate = algumaMarcada && !todasMarcadas;
             }}
-            disabled={itens.length === 0}
+            disabled={itens.length === 0 || !pronta}
             onChange={() => setSelecao((s) => alternarTodos(s, itens))}
           />
           <span>{t("selecionarTodos")}</span>
         </label>
-        {carregando ? (
+        {!pronta ? (
           <span className={estilos.carregando} role="status">
             {t("carregando")}
           </span>
         ) : null}
       </div>
 
-      <ul className={estilos.lista} aria-busy={carregando || undefined} aria-label={t("titulo")}>
+      <ul className={estilos.lista} aria-busy={!pronta || undefined} inert={!pronta} aria-label={t("titulo")}>
         {itens.map((c) => (
           <LinhaCopia
             key={c.id}
@@ -364,7 +402,7 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
             {t("selecao.total", { total: selecionadas.length })}
           </span>
           <div className={estilos.selecaoAcoes}>
-            <Botao variante="primario" onClick={() => setMassaAberta(true)}>
+            <Botao variante="primario" disabled={!pronta} onClick={() => setMassaAberta(true)}>
               {t("selecao.editar")}
             </Botao>
             <Botao variante="fantasma" icone={<X aria-hidden size={18} />} onClick={() => setSelecao(new Set())}>
