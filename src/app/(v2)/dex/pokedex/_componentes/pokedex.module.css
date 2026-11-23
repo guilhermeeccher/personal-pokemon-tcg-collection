@@ -1,0 +1,407 @@
+/*
+ * A Pokédex da Living Dex na v2. Painéis sem desfoque (regra 5b: a grade
+ * pode passar de mil vagas e nenhuma gasta `backdrop-filter`), sem camada de
+ * composição por célula (regra 5a: nada de `transform`, `will-change` nem
+ * `filter` animado na célula; o cinza do sprite em falta é estático).
+ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------- Cabeçalho */
+
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 24px;
+}
+.sobretitulo {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--v2-tinta-3);
+}
+.titulo {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.subtitulo {
+  margin: 8px 0 0;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+}
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.blocoTitulo {
+  margin: 0;
+  font-size: 17px;
+}
+.nota {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--v2-tinta-3);
+}
+.rotuloPequeno {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--v2-tinta-3);
+}
+
+/* ------------------------------------------------------ Levar ao HOME */
+
+.levar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--v2-raio-painel);
+}
+.levarCab {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+.grupos {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--v2-aresta);
+}
+.grupoCab {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+.grupoNome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.grupoAcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.seloAviso {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--v2-falta);
+  box-shadow: inset 0 0 0 1px rgb(255 183 102 / 0.5);
+}
+.seloShiny {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #1a1206;
+  background: var(--v2-iris-linear);
+}
+.itens {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.itens[hidden] {
+  display: none;
+}
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px;
+  border-radius: 16px;
+  text-align: center;
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+.itemNome {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------- Progresso e seções */
+
+.painelProgresso {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border-radius: var(--v2-raio-painel);
+}
+.progressoCab {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+.trilhas {
+  display: grid;
+  gap: 14px;
+}
+@media (min-width: 40rem) {
+  .trilhas {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.trilha {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+.barra {
+  position: relative;
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--v2-superficie-3);
+}
+.barra > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--v2-iris-linear);
+}
+.trilha[data-completa] .barra > span {
+  background: var(--v2-livre);
+}
+
+.secoes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.legenda {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+}
+.explicacao {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--v2-tinta-2);
+}
+
+/*
+ * Pílulas de escolha (seções e regiões). 44 px de altura em toda largura e
+ * 8 px entre elas (o `gap`), como os alvos de toque pedem.
+ */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  cursor: pointer;
+  transition:
+    background 160ms var(--v2-curva-suave),
+    color 160ms var(--v2-curva-suave);
+}
+.chip[data-ativo] {
+  color: #0b0c12;
+  background: var(--v2-tinta);
+  box-shadow: none;
+}
+.chip:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+@media (hover: hover) {
+  .chip:not([data-ativo]):not(:disabled):hover {
+    background: var(--v2-superficie-3);
+  }
+}
+.chipInfo {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  font-size: 11px;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+/* ------------------------------------------------------------ Filtros */
+
+.filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.campos {
+  display: grid;
+  gap: 10px;
+}
+@media (min-width: 40rem) {
+  .campos {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+    align-items: end;
+  }
+}
+
+/* ------------------------------------------------------------- Grade */
+
+/*
+ * A célula. Altura fixa e somada: 8 + 64 (sprite) + 14 + 17 + 15 + 14 (as
+ * quatro linhas de texto) + 44 (até duas linhas de selos) + 5 × 2 (vãos) + 8
+ * = 194, dentro dos 196 de `ALTURA_CELULA` em `grade-pokedex.tsx`. Cada linha
+ * de texto corta com reticências em vez de quebrar: uma quebra mudaria a
+ * altura, e a grade virtual põe as linhas pela altura calculada.
+ */
+.celula {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  padding: 8px 6px;
+  border: 0;
+  border-radius: 16px;
+  font: inherit;
+  color: inherit;
+  text-align: center;
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07);
+  cursor: pointer;
+  overflow: hidden;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition: background 160ms var(--v2-curva-suave);
+}
+.celula[data-estado="no_home"] {
+  box-shadow: inset 0 0 0 1px rgb(111 240 180 / 0.5);
+  background: rgb(111 240 180 / 0.07);
+}
+.celula[data-estado="no_jogo"] {
+  box-shadow: inset 0 0 0 1px rgb(255 183 102 / 0.5);
+}
+.celula[data-fora] {
+  opacity: 0.6;
+}
+@media (hover: hover) {
+  .celula:hover {
+    background: var(--v2-superficie-3);
+  }
+}
+.numero {
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--v2-tinta-3);
+}
+.especie,
+.forma,
+.lugar {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.especie {
+  font-size: 13.5px;
+  line-height: 17px;
+  font-weight: 600;
+}
+.forma {
+  font-size: 12px;
+  line-height: 15px;
+  color: var(--v2-tinta-2);
+}
+.lugar {
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--v2-tinta-3);
+}
+.selos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: flex-start;
+  gap: 4px;
+  max-height: 44px;
+  overflow: hidden;
+}
+.estado,
+.selo {
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 18px;
+  white-space: nowrap;
+  color: var(--v2-tinta-2);
+  box-shadow: inset 0 0 0 1px var(--v2-aresta);
+}
+.estado[data-estado="no_home"] {
+  color: #06231a;
+  background: var(--v2-livre);
+  box-shadow: none;
+}
+.estado[data-estado="no_jogo"] {
+  color: #2a1700;
+  background: var(--v2-falta);
+  box-shadow: none;
+}

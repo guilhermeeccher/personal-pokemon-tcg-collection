@@ -3112,5 +3112,56 @@
       "erroCarregar": "Could not read what's missing.",
       "erroCarregarTexto": "Try again in a moment."
     }
+  },
+  "v2Dex": {
+    "erroCarregar": "Could not open the Living Dex",
+    "erroCarregarTexto": "Reading the database failed. Nothing was changed; try again in a moment.",
+    "tentarDeNovo": "Try again",
+    "cartao": {
+      "shiny": "Shiny"
+    },
+    "transferencia": {
+      "titulo": "One-way transfer",
+      "confirmar": "Transfer",
+      "erro": "Could not send. Try again."
+    },
+    "visaoGeral": {
+      "titulo": "Overview",
+      "descricao": "Your HOME as a collection: what arrived, progress per region, trophies and what is still in a game.",
+      "atalhos": "Living Dex shortcuts",
+      "abrirPokedex": "Pokédex",
+      "abrirPlanos": "Plans",
+      "registrar": "add",
+      "progresso": "Progress in HOME",
+      "regioes": "Regions",
+      "percentual": "{valor}%",
+      "semJogos": "No game marked yet.",
+      "abrirJogos": "Mark my games",
+      "ate": "Until"
+    },
+    "pokedex": {
+      "descricao": "Every HOME slot, by region. Tap a slot to see the Pokémon, its box and add it.",
+      "voltarVisaoGeral": "Overview",
+      "progresso": "Progress",
+      "porqueBase": "Why the base always counts",
+      "baseSempre": "The base is one slot per species: it is the Living Dex itself, so it always counts. Regional, gender and special are yours to count or not; turning a section off deletes no record, and its slots stay in the grid, marked as not counted.",
+      "filtros": "Grid filters",
+      "grade": "Pokédex slots",
+      "lugar": "Box {caixa} · slot {posicao}",
+      "lugarCurto": "Box {caixa} · {posicao}"
+    },
+    "levar": {
+      "titulo": "Take to HOME",
+      "resumo": "{vagas, plural, one {# slot you can fill now} other {# slots you can fill now}}",
+      "nenhuma": "Nothing to take right now.",
+      "semVolta": "One-way",
+      "ver": "Show",
+      "ocultar": "Hide",
+      "enviar": "Send",
+      "enviarRotulo": "Send {nome} to HOME",
+      "enviarTodas": "Send all ({quantidade})",
+      "enviados": "{quantidade, plural, one {# Pokémon sent to HOME} other {# Pokémon sent to HOME}}",
+      "mostrarMais": "Show more ({restantes} left)"
+    }
   }
 }

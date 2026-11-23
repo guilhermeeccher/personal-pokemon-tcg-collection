@@ -10,6 +10,12 @@ import type { FormaDexDTO } from "@/lib/dominio/tipos-cliente";
  * Rótulo da forma nas telas da Living Dex, com macho e fêmea e o nome da
  * forma no idioma da interface (`rotuloDaForma`). Recebe o catálogo inteiro, porque saber se
  * uma vaga é o "macho" de um par depende da fêmea existir.
+ *
+ * Sem pele, por isso em `_comum/`: a v1 e a v2 usam o mesmo hook, e uma tela
+ * nova da Dex nunca escreve o rótulo à mão (o nome da PokeAPI para o macho
+ * varia de espécie para espécie). `forma(f)` é só o rótulo da forma (nulo na
+ * base sem par); `nome(f)` é "Espécie (forma)", o nome completo para
+ * `aria-label`, `alt` e título de janela.
  */
 export function useRotuloForma(formas: readonly FormaDexDTO[]) {
   const t = useTranslations("dex");

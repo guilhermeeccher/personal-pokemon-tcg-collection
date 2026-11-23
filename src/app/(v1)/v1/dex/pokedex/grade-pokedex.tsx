@@ -46,7 +46,7 @@ import type { FormaDexDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 import { urlSpriteDex } from "@/lib/imagens";
 
 import { useCartaoPokemon } from "../_componentes/cartao-pokemon";
-import { useRotuloForma } from "../_componentes/use-rotulo-forma";
+import { useRotuloForma } from "@/app/_comum/dex/use-rotulo-forma";
 import { PainelOportunidades } from "./painel-oportunidades";
 
 /* No celular a pílula chega a 44 de altura e largura (`max-md:`); o intervalo de 8px

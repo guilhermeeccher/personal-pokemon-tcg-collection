@@ -1,0 +1,529 @@
+/*
+ * A visão geral da Living Dex na v2. Painéis sem desfoque (regra 5b: é uma
+ * tela de dezenas de blocos e nunca gasta `backdrop-filter`), uma coluna no
+ * celular e grades que crescem onde cabem. Nenhuma camada de composição por
+ * item; o realce do ponteiro é só cor e borda. Números em `v2-num`.
+ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------- Cabeçalho */
+
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 24px;
+}
+.sobretitulo {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--v2-tinta-3);
+}
+.titulo {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.subtitulo {
+  margin: 8px 0 0;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+}
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ------------------------------------------------------------ Seções */
+
+.secao {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.secaoCab {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+.secaoTitulo {
+  margin: 0;
+  font-size: 22px;
+}
+.secaoNota {
+  margin: 0;
+  font-size: 13px;
+  color: var(--v2-tinta-3);
+}
+.bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: var(--v2-raio-painel);
+}
+.blocoTitulo {
+  margin: 0;
+  font-size: 16px;
+}
+.blocoLink {
+  color: inherit;
+  text-decoration: none;
+  transition: box-shadow 160ms var(--v2-curva-suave);
+}
+@media (hover: hover) {
+  .blocoLink:hover {
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.22);
+  }
+}
+.textoFraco {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--v2-tinta-2);
+}
+.nota {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--v2-tinta-3);
+}
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--v2-tinta);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.rotuloPequeno {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--v2-tinta-3);
+}
+.selo {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  color: var(--v2-tinta-2);
+  box-shadow: inset 0 0 0 1px var(--v2-aresta);
+}
+.duas {
+  display: grid;
+  gap: 14px;
+}
+@media (min-width: 64rem) {
+  .duas {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+/* ------------------------------------------------------------ Vitrine */
+
+.vitrine {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: var(--v2-raio-painel);
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgb(123 77 255 / 0.18), transparent 60%),
+    radial-gradient(120% 140% at 100% 100%, rgb(47 123 255 / 0.14), transparent 60%),
+    var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+.vitrineLista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.vitrineItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 8px;
+  border-radius: 16px;
+  color: inherit;
+  text-align: center;
+  text-decoration: none;
+  -webkit-touch-callout: none;
+}
+@media (hover: hover) {
+  .vitrineItem:hover {
+    background: var(--v2-superficie-2);
+  }
+}
+.vitrineRender {
+  width: 104px;
+  height: 104px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 14px rgb(0 0 0 / 0.45));
+  -webkit-user-select: none;
+  user-select: none;
+}
+.vitrineNome {
+  font-size: 14px;
+  font-weight: 600;
+}
+.estrela {
+  margin-left: 4px;
+  color: #ffd27a;
+}
+.vitrineLegenda {
+  font-size: 12px;
+  color: var(--v2-tinta-3);
+}
+
+/* ---------------------------------------------------------- Progresso */
+
+.progresso {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+  border-radius: var(--v2-raio-painel);
+}
+.trilhas {
+  display: grid;
+  gap: 18px;
+}
+@media (min-width: 40rem) {
+  .trilhas {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.numeroGrande {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.numeroLinha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-size: 13px;
+  color: var(--v2-tinta-2);
+}
+.percentual {
+  font-family: var(--v2-fonte-display);
+  font-size: clamp(36px, 8vw, 48px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--v2-tinta);
+}
+.percentualMedio {
+  font-family: var(--v2-fonte-display);
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--v2-tinta);
+}
+[data-completa] .percentual,
+[data-completa] .percentualMedio,
+.regiao[data-completa] .regiaoPct {
+  color: var(--v2-livre);
+}
+
+.barra {
+  position: relative;
+  display: block;
+  flex: none;
+  min-width: 40px;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--v2-superficie-3);
+}
+.barra > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--v2-iris-linear);
+}
+[data-completa] .barra > span {
+  background: var(--v2-livre);
+}
+.barraLinha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--v2-tinta-2);
+}
+/* Na linha, a barra ocupa o que sobra ao lado do número; numa coluna (o
+   cartão, a região), `flex: none` acima a impede de crescer na altura. */
+.barraLinha .barra {
+  flex: 1;
+}
+
+.regioes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.regiao {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+.regiao[data-completa] {
+  box-shadow: inset 0 0 0 1px rgb(111 240 180 / 0.45);
+}
+.regiaoTopo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.regiaoPct {
+  font-size: 14px;
+  color: var(--v2-tinta-2);
+}
+.iniciais {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* ---------------------------------------------------------- Conquistas */
+
+.conquistas {
+  display: grid;
+  gap: 14px;
+}
+@media (min-width: 64rem) {
+  .conquistas {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+.estante {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.estante li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--v2-tinta-2);
+}
+.estante b {
+  font-size: 22px;
+  color: var(--v2-tinta);
+}
+.trofeuLinha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+/* 8 px entre linhas: várias são links de 44 px, e os alvos pedem esse vão. */
+.linhas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.linhaLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: inherit;
+  text-decoration: none;
+  font-size: 13.5px;
+}
+@media (hover: hover) {
+  .linhaLink:hover .linhaNome {
+    text-decoration: underline;
+  }
+}
+.linhaNome {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.linhaNota {
+  font-size: 12px;
+  color: var(--v2-tinta-3);
+}
+.linhaValor {
+  margin-left: auto;
+  color: var(--v2-tinta-2);
+}
+
+/* ---------------------------------------------------------- Coleções */
+
+.cartoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cartao {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 200px;
+  padding: 16px;
+  border-radius: var(--v2-raio-painel);
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  transition: box-shadow 160ms var(--v2-curva-suave);
+}
+@media (hover: hover) {
+  .cartao:hover {
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.22);
+  }
+}
+.cartao[data-completa] {
+  box-shadow: inset 0 0 0 1px rgb(111 240 180 / 0.45);
+}
+.cartaoArte {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  opacity: 0.9;
+  pointer-events: none;
+  filter: drop-shadow(0 8px 14px rgb(0 0 0 / 0.45));
+}
+.cartaoCab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding-right: 84px;
+}
+.cartaoNome {
+  font-family: var(--v2-fonte-display);
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+.seloCompleta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #06231a;
+  background: var(--v2-livre);
+}
+.cartaoTexto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.5px;
+  color: var(--v2-tinta-2);
+}
+.trancada {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cartaoTrofeus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-top: auto;
+  font-size: 13px;
+  color: var(--v2-tinta-2);
+}
+.medalhas {
+  display: inline-flex;
+  gap: 8px;
+  font-size: 12px;
+}
+.medalhas > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* ------------------------------------------------- Plano e fora do HOME */
+
+.plano {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 0;
+  color: inherit;
+  text-decoration: none;
+}
+@media (hover: hover) {
+  .plano:hover .planoTitulo {
+    text-decoration: underline;
+  }
+}
+.planoTitulo {
+  font-family: var(--v2-fonte-display);
+  font-size: 16px;
+}
+.foraLinha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  font-size: 13.5px;
+}
+.sprites {
+  display: inline-flex;
+}
+.sprites > img + img {
+  margin-left: -8px;
+}

@@ -23,7 +23,7 @@ import { jogoDex, LOCAL_HOME } from "@/lib/dominio/dex-jogos";
 import type { FormaDexDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 
 import { SpriteDex } from "../_componentes/sprite-dex";
-import { useRotuloForma } from "../_componentes/use-rotulo-forma";
+import { useRotuloForma } from "@/app/_comum/dex/use-rotulo-forma";
 import { useTransferencia } from "../_componentes/use-transferencia";
 
 export function PainelOportunidades({

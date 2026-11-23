@@ -36,14 +36,12 @@ vi.mock("@/lib/modulos", () => ({
 /* Uma ponte por tela da Dex, sem catch-all: um caminho de Dex que a v1 não tem
    cai no 404 padrão do Next, ligado ou desligado o módulo. */
 const TELAS_DA_DEX = [
-  "/dex",
   "/dex/cadastrar",
   "/dex/caixas",
   "/dex/inventario",
   "/dex/jogos",
   "/dex/novo-cadastro",
   "/dex/planos",
-  "/dex/pokedex",
   "/dex/recebidos",
   "/dex/trofeus",
 ];
@@ -147,13 +145,17 @@ describe("pontes da v2, executadas", () => {
     }
   });
 
-  it("a Dex na raiz (/dex) vai para /v1/dex, sem query quando não veio nenhuma", async () => {
-    const dex = PONTES.find((p) => p.rota === "/dex")!;
+  /* `/dex` e `/dex/pokedex` já são telas da v2 (pacote 5a; o 404 delas com o
+     módulo desligado está em `dex/paginas-dex.test.ts`): o caso sem query
+     passa a uma ponte da Dex que ainda resta. */
+  it("uma ponte da Dex vai para a mesma tela em /v1, sem query quando não veio nenhuma", async () => {
+    const dex = PONTES.find((p) => p.rota.startsWith("/dex"));
+    if (!dex) return;
     const pagina = (await import(dex.arquivo)) as Pagina;
     const erro = await pagina
       .default({ params: Promise.resolve({}), searchParams: Promise.resolve({}) })
       .catch((e: { digest?: string }) => e);
-    expect((erro as { digest?: string }).digest).toBe("NEXT_REDIRECT;replace;/v1/dex;307;");
+    expect((erro as { digest?: string }).digest).toBe(`NEXT_REDIRECT;replace;/v1${dex.rota};307;`);
   });
 
   it("nenhuma ponte da Dex é catch-all", () => {

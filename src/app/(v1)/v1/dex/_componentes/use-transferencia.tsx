@@ -7,20 +7,17 @@
  * A rota responde 409 com `dexConfirmarSemVolta` quando algum registro sai
  * de um jogo só de envio; aqui a frase vira um modal, e só o clique reenvia
  * com `confirmarSemVolta`. A confirmação é sempre do usuário.
+ *
+ * O pedido e a leitura da resposta são os de `_comum/dex/use-mover-registros.ts`,
+ * os mesmos da v2; este arquivo é só a janela da v1.
  */
 
 import { useTranslations } from "next-intl";
-import { useId, useState, type ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 
 import { Botao } from "@/app/_componentes/botao";
 import { Modal } from "@/app/_componentes/modal";
-import { textoDaRecusa } from "@/app/_comum/recusa";
-
-interface Pendente {
-  ids: string[];
-  local: string;
-  frase: string;
-}
+import { useMoverRegistros } from "@/app/_comum/dex/use-mover-registros";
 
 export function useTransferencia(aoConcluir: () => void): {
   mover: (ids: string[], local: string) => Promise<void>;
@@ -29,48 +26,18 @@ export function useTransferencia(aoConcluir: () => void): {
   modal: ReactNode;
 } {
   const t = useTranslations("dex");
-  const tr = useTranslations("recusas");
-  const [pendente, setPendente] = useState<Pendente | null>(null);
-  const [ocupado, setOcupado] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
   const tituloId = useId();
-
-  async function enviar(ids: string[], local: string, confirmarSemVolta: boolean) {
-    setOcupado(true);
-    setErro(null);
-    try {
-      const r = await fetch("/api/dex/registros/mover", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids, local, confirmarSemVolta }),
-      });
-      const corpo = await r.json().catch(() => null);
-      if (r.status === 409 && corpo?.recusa?.chave === "dexConfirmarSemVolta") {
-        setPendente({ ids, local, frase: textoDaRecusa(tr, corpo, t("oportunidades.erro")) });
-        return;
-      }
-      setPendente(null);
-      if (!r.ok) {
-        setErro(textoDaRecusa(tr, corpo, t("oportunidades.erro")));
-        return;
-      }
-      aoConcluir();
-    } catch {
-      setErro(t("oportunidades.erro"));
-    } finally {
-      setOcupado(false);
-    }
-  }
+  const { mover, confirmar, cancelar, pendente, ocupado, erro } = useMoverRegistros(aoConcluir, t("oportunidades.erro"));
 
   const modal = pendente ? (
     // O Esc cancela (fecha sem transferir): a confirmação só acontece pelo clique em "Transferir".
     <Modal
       rotuloId={tituloId}
-      onFechar={() => setPendente(null)}
+      onFechar={cancelar}
       rodape={
         <div className="flex justify-end gap-2">
-          <Botao onClick={() => setPendente(null)}>{t("transferencia.cancelar")}</Botao>
-          <Botao variante="primario" disabled={ocupado} onClick={() => enviar(pendente.ids, pendente.local, true)}>
+          <Botao onClick={cancelar}>{t("transferencia.cancelar")}</Botao>
+          <Botao variante="primario" disabled={ocupado} onClick={confirmar}>
             {t("transferencia.confirmar")}
           </Botao>
         </div>
@@ -83,5 +50,5 @@ export function useTransferencia(aoConcluir: () => void): {
     </Modal>
   ) : null;
 
-  return { mover: (ids, local) => enviar(ids, local, false), ocupado, erro, modal };
+  return { mover, ocupado, erro, modal };
 }

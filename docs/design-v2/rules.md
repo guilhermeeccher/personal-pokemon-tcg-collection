@@ -254,7 +254,7 @@ rest are the technical foundations of the v2.
     the cost is flat: ~600 nodes and ~50 images at any size. The median tap does not move with the
     size, so the worst (cold) tap and the memory decide. The Dex screens have their own lists (forms,
     boxes) and measure them when their package ports them onto this grid (5a, 5c), against the same
-    budget.
+    budget; the Pokédex grid (5a) is measured in rule 37.
 14. **New components the v1 does not have.** The **card detail** absorbs the v1's allocate,
     upgrade, edit-copy and destination modals and the zoom, and is born with two modes, slot and
     copy. A glass **confirmation dialog** replaces the twelve `window.confirm` calls of the v1: a
@@ -591,6 +591,93 @@ B. **Skinless Dex logic goes to `src/app/_comum/dex/`; anything with a look goes
 C. **Every shared Dex piece has one owner package and a merge order**, in the table of
    [`README.md`](./README.md) (Phase 5). A package never writes a second copy of a piece it needs:
    it waits for the owner's branch or asks.
+D. **The pieces package 5a owns, and their interfaces** (delivered 2026-11-23). Ported from
+   `src/app/(v1)/v1/dex/_componentes/`, never imported from there.
+
+   ```ts
+   // src/app/_comum/dex/use-rotulo-forma.ts — skinless; the v1 imports it from here too
+   const rotulo = useRotuloForma(formas);   // the whole catalog: "male" depends on the female existing
+   rotulo.forma(f)  // the form label only (male/female in the interface language, forma_pt in pt), or null
+   rotulo.nome(f)   // "Species (form)": for aria-label, alt and a dialog title
+
+   // src/app/(v2)/dex/_componentes/sprite-dex.tsx
+   <SpriteDex sprite={f.sprite} shiny={…} tamanho={px} apagado?={…} alt?={…} />
+
+   // src/app/(v2)/dex/_componentes/cartao-pokemon.tsx
+   type DadosCartaoPokemon = { sprite, shiny, nome, linhas: readonly string[] };
+   <CartaoPokemon dados semNome? tamanhoRender?>{selos}</CartaoPokemon>   // content only
+   <FolhaPokemon dados={DadosCartaoPokemon | null} onFechar acoes?={rodapé} devolverFocoPara? />
+   const { abrir, fechar, cartao } = useCartaoFlutuante();
+   //   <button onPointerEnter={abrir(dados)} onPointerLeave={fechar} …> … {cartao}
+
+   // src/app/(v2)/dex/_componentes/use-transferencia.tsx (logic in _comum/dex/use-mover-registros.ts)
+   const { mover, ocupado, erro, dialogo } = useTransferencia(aoConcluir, { aoRecusar?, devolverFocoPara? });
+   //   mover(ids, local) → POST /api/dex/registros/mover; render {dialogo} and show {erro}
+
+   // src/app/(v2)/dex/_componentes/caminhos.ts
+   hrefCadastroDex(numero)  // /dex/cadastrar?busca=N
+   hrefTrofeus(jogoId)      // /dex/trofeus?jogo=…
+   ```
+
+   - **The Pokémon card has three paths, and hover is only one of them.** The v1 card opened only
+     under a mouse. `FolhaPokemon` is the touch and keyboard path: the v2 dialog (a panel from 768 px,
+     a bottom sheet below) with the HOME render, the lines and the screen's actions in the footer;
+     a tap on a slot opens it. `useCartaoFlutuante` is the mouse preview, an enhancement: only for
+     `pointerType === "mouse"` (an iPhone tap fires pointer-enter too), `aria-hidden`, no pointer
+     events, closed by scrolling. The render (~80 KB) is fetched only for the Pokémon opened or
+     hovered, one at a time; grids use the sprite.
+   - **The move flow never confirms on its own.** `mover` sends `confirmarSemVolta: false`; a 409
+     `dexConfirmarSemVolta` opens the v2 confirmation dialog with the route's sentence (it names the
+     game), and only "Transfer" resends the same ids with `true`. "Cancel" and Esc send nothing. A
+     409 of that key to a request that was already confirmed is a plain refusal, never a second
+     question. The sequence lives in `criarFluxoMover` (`_comum/dex/mover-registros.ts`, pure, with
+     the POST injected), and its test follows it step by step: the first try with `false`, the 409
+     with no second POST, cancel with none, confirm with the same ids and destination and `true`,
+     a second click while one is in flight ignored. Every other refusal comes back as `erro`,
+     translated by `recusa.ts`; while the dialog is open, an error shows inside it. `aoRecusar(status)`
+     lets the screen reread on a 404 or 409 (the list is stale: another tab moved or deleted a
+     record). One request at a time: a second click while one is in flight does nothing.
+   - **"Take to HOME" is the Pokédex's** (`pokedex/_componentes/levar-ao-home.tsx`), not a shared
+     piece; the Dex inventory (5e) uses `useTransferencia` with its own location picker. An open game
+     shows 60 Pokémon at a time ("Show more"), so a game with hundreds to take never mounts them all
+     on the grid's page; "Send all" still sends the whole group.
+
+### Overview and Pokédex (package 5a)
+
+35. **`/dex` only reads and navigates.** The server page reads what the v1 page reads, with the same
+    functions; the screen computes with the same domain functions (`progressoDex`,
+    `progressoPorRegiao`, `comTrofeusDoHome`, `pegueAgora`…), so the counts are the v1's. The
+    percentages follow the v2's rule (`percentualSemFechar`: whole numbers, 100% only when complete)
+    where the v1 printed one decimal. Every Pokémon of the showcase opens Register (`?busca=`), every
+    game card and trophy the trophies (`?jogo=`), the plan the plans; those screens are bridges until
+    their package lands, and the 307 carries the query.
+36. **`/dex/pokedex` keeps the v1's state on screen, not in the URL** (view, track, region — Kanto by
+    default —, search, state, category), as the v1 does. Sections are `PATCH /api/dex/secoes`, applied
+    on the 200, with the chips disabled while one is saving; the base section is a disclosure button
+    whose explanation opens by tap and keyboard. **A tap on a slot opens the Pokémon card**
+    (`FolhaPokemon`) with "Register" in its footer: one tap more than the v1, which navigated straight
+    to Register on a tap and showed the card only under a mouse, in exchange for the HOME render, the
+    box and position and the flags in writing on a phone. The cell is a fixed-height button
+    (`ALTURA_CELULA` in `grade-pokedex.tsx`, summed in `pokedex.module.css`), because the virtual grid
+    places rows by computed height: each text line ellipsizes instead of wrapping.
+37. **The Pokédex grid, measured against rule 13's budget** (2026-11-23, the same protocol: Chromium,
+    iPhone profile 393 × 852, DPR 3, touch, iPhone user agent, CPU 4×, production build, invented
+    data; "tap" is the longest Event Timing duration of a tap that opens the card, six taps in the
+    middle of the list, the first cold).
+
+    | View | Slots | Mounted | DOM nodes (page) | `<img>` in grid | Loaded | Tap, worst / median |
+    |---|---|---|---|---|---|---|
+    | Kanto, main (the default) | 210 | 210 | 2,254 | 210 | 132 | 96 / 80 ms |
+    | Paldea, main | 125 | 125 | 1,435 | 125 | 90 | 56 / 52 ms |
+    | All, cosmetic | 163 | 163 | 1,920 | 163 | 108 | 80 / 60 ms |
+    | All, main (virtual) | 1,224 | 36 | 641 | 36 | 36 | 40 / 32 ms |
+
+    Every view stays inside the budget with the 300 threshold unchanged: the largest region (Kanto,
+    with its forms) mounts whole at about 2,250 nodes and a cold tap under 100 ms, and "All" past a
+    thousand slots virtualizes flat. The image count is not the card budget's: a sprite is 96 × 96
+    (about 36 KB decoded, against ~0.3 MiB for a card's `low.webp`), so 210 of them weigh less than
+    25 card images. No region reaches 300 slots today; if one does (new forms), it virtualizes on its
+    own.
 
 ## 8. Other rules, checked for the transition
 

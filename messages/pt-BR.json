@@ -3104,5 +3104,56 @@
       "erroCarregar": "Não deu para ler o que falta.",
       "erroCarregarTexto": "Tente de novo daqui a pouco."
     }
+  },
+  "v2Dex": {
+    "erroCarregar": "Não foi possível abrir a Living Dex",
+    "erroCarregarTexto": "A leitura do banco falhou. Nada foi alterado; tente de novo daqui a pouco.",
+    "tentarDeNovo": "Tentar de novo",
+    "cartao": {
+      "shiny": "Shiny"
+    },
+    "transferencia": {
+      "titulo": "Transferência sem volta",
+      "confirmar": "Transferir",
+      "erro": "Não foi possível enviar. Tente de novo."
+    },
+    "visaoGeral": {
+      "titulo": "Visão geral",
+      "descricao": "O seu HOME como coleção: o que chegou, o progresso por região, os troféus e o que ainda está num jogo.",
+      "atalhos": "Atalhos da Living Dex",
+      "abrirPokedex": "Pokédex",
+      "abrirPlanos": "Planos",
+      "registrar": "registrar",
+      "progresso": "Progresso no HOME",
+      "regioes": "Regiões",
+      "percentual": "{valor}%",
+      "semJogos": "Nenhum jogo marcado ainda.",
+      "abrirJogos": "Marcar meus jogos",
+      "ate": "Até"
+    },
+    "pokedex": {
+      "descricao": "Todas as vagas do HOME, por região. Toque numa vaga para ver o Pokémon, a caixa e registrar.",
+      "voltarVisaoGeral": "Visão geral",
+      "progresso": "Progresso",
+      "porqueBase": "Por que a base conta sempre",
+      "baseSempre": "A base é uma vaga por espécie: é a Living Dex em si, por isso conta sempre. Regional, gênero e especial você escolhe se entram na conta; desligar uma seção não apaga nenhum registro, e as vagas dela continuam na grade, marcadas como fora da conta.",
+      "filtros": "Filtros da grade",
+      "grade": "Vagas da Pokédex",
+      "lugar": "Caixa {caixa} · posição {posicao}",
+      "lugarCurto": "Cx. {caixa} · {posicao}"
+    },
+    "levar": {
+      "titulo": "Levar ao HOME",
+      "resumo": "{vagas, plural, one {# vaga para preencher agora} other {# vagas para preencher agora}}",
+      "nenhuma": "Nada a levar agora.",
+      "semVolta": "Sem volta",
+      "ver": "Ver",
+      "ocultar": "Ocultar",
+      "enviar": "Enviar",
+      "enviarRotulo": "Enviar {nome} ao HOME",
+      "enviarTodas": "Enviar todas ({quantidade})",
+      "enviados": "{quantidade, plural, one {# Pokémon enviado ao HOME} other {# Pokémon enviados ao HOME}}",
+      "mostrarMais": "Mostrar mais ({restantes} restantes)"
+    }
   }
 }

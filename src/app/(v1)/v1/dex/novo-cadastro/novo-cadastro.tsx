@@ -116,7 +116,7 @@ import { urlSpriteDex } from "@/lib/imagens";
 import { useCartaoPokemon, type DadosCartaoPokemon } from "../_componentes/cartao-pokemon";
 import { SpriteDex } from "../_componentes/sprite-dex";
 import { useNomeCaixa } from "../_componentes/use-nome-caixa";
-import { useRotuloForma } from "../_componentes/use-rotulo-forma";
+import { useRotuloForma } from "@/app/_comum/dex/use-rotulo-forma";
 
 import { recusasLegiveis } from "./recusas-legiveis";
 

@@ -38,7 +38,7 @@ import { JOGOS_DEX, jogoDex, LOCAL_HOME, ORIGEM_HOME } from "@/lib/dominio/dex-j
 import type { FormaDexDTO, JogoPossuidoDTO, RegistroDexDTO } from "@/lib/dominio/tipos-cliente";
 
 import { SpriteDex } from "../_componentes/sprite-dex";
-import { useRotuloForma } from "../_componentes/use-rotulo-forma";
+import { useRotuloForma } from "@/app/_comum/dex/use-rotulo-forma";
 import { useTransferencia } from "../_componentes/use-transferencia";
 
 export function InventarioDex({

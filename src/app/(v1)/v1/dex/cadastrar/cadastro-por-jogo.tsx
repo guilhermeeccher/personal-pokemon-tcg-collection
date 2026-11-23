@@ -127,7 +127,7 @@ import { especiesTrancadas, type IdiomaTrofeu } from "@/lib/dominio/dex-trofeus"
 import type { FormaDexDTO, JogoPossuidoDTO, TrofeuDexDTO } from "@/lib/dominio/tipos-cliente";
 
 import { SpriteDex } from "../_componentes/sprite-dex";
-import { useRotuloForma } from "../_componentes/use-rotulo-forma";
+import { useRotuloForma } from "@/app/_comum/dex/use-rotulo-forma";
 
 type Quantidades = Record<string, { normal: number; shiny: number }>;
 type Trilha = "normal" | "shiny";
