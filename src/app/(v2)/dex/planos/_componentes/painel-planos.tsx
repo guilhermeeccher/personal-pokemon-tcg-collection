@@ -19,7 +19,8 @@
  * - **Plano fechado é histórico**, numa seção que abre por botão; é de lá que
  *   um plano se reativa.
  *
- * Um pedido por vez na tela inteira. A recusa vira frase por `recusa.ts` e
+ * Um pedido por vez na tela inteira, e a tela fica ocupada até a página
+ * relida chegar. A recusa vira frase por `recusa.ts` e
  * aparece junto do que a provocou (a tarefa, o plano, o formulário), ou no
  * topo quando aquilo saiu da vista; um 404 ou 409 relê a página, porque quer
  * dizer que outra aba mudou o que esta tela mostra.
@@ -29,7 +30,7 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useRef, useState, useTransition } from "react";
 
 import { hojeLocal } from "@/app/_comum/dex/hoje";
 import { progressoEtapas } from "@/lib/dominio/dex-etapas";
@@ -92,7 +93,15 @@ export function PainelPlanos({
   const idHistorico = useId();
 
   const [erro, setErro] = useState<Erro | null>(null);
-  const [ocupado, setOcupado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  /* A página relida chega depois da resposta: até ela chegar, as listas na
+     tela são as velhas, e um segundo "descer" calcularia a ordem sobre elas e
+     desfaria o primeiro. Por isso a tela fica ocupada até a releitura
+     aplicar, não só até a resposta. */
+  const [relendo, iniciarReleitura] = useTransition();
+  const ocupado = enviando || relendo;
+  /** Um pedido por vez, mesmo com dois cliques no mesmo quadro (antes do botão desligar). */
+  const emVoo = useRef(false);
   const [novoPlano, setNovoPlano] = useState<FormPlano | null>(null);
   const [erroPlano, setErroPlano] = useState<ErroPlano | null>(null);
   const [novaTarefa, setNovaTarefa] = useState<FormTarefa | null>(null);
@@ -116,8 +125,12 @@ export function PainelPlanos({
   }
   const erroEm = (onde: string) => (erro && (erro.onde === onde || (onde === NO_TOPO && !naTela.has(erro.onde))) ? erro.texto : null);
 
+  const reler = () => iniciarReleitura(() => router.refresh());
+
   const enviar: Enviar = async (url, method, corpo, onde = NO_TOPO) => {
-    setOcupado(true);
+    if (emVoo.current) return false;
+    emVoo.current = true;
+    setEnviando(true);
     setErro(null);
     try {
       const r = await fetch(url, {
@@ -126,16 +139,17 @@ export function PainelPlanos({
       });
       if (!r.ok) {
         setErro({ texto: fraseDaRecusa(tr, await r.json().catch(() => null), tp("erro")), onde });
-        if (telaVelha(r.status)) router.refresh();
+        if (telaVelha(r.status)) reler();
         return false;
       }
-      router.refresh();
+      reler();
       return true;
     } catch {
       setErro({ texto: tp("erro"), onde });
       return false;
     } finally {
-      setOcupado(false);
+      emVoo.current = false;
+      setEnviando(false);
     }
   };
 

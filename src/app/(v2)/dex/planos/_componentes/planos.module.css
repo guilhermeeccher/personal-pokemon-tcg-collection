@@ -349,16 +349,17 @@
   padding-left: 14px;
   border-left: 2px solid rgb(255 255 255 / 0.12);
 }
+/* 8 px entre os alvos de 44 px, nas duas direções (a caixa e os botões de organizar). */
 .listaEtapas {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 .etapa {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 4px 8px;
+  gap: 8px;
 }
 .etapaMarca {
   display: flex;

@@ -24,7 +24,7 @@
 import { Lock, Medal, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useRef, useState, useTransition } from "react";
 
 import { hojeLocal } from "@/app/_comum/dex/hoje";
 import { progressoTrofeus, type IdiomaTrofeu, type NivelTrofeu } from "@/lib/dominio/dex-trofeus";
@@ -73,7 +73,12 @@ export function PainelTrofeus({
   const [jogoId, setJogoId] = useState(() => jogoQueAbre(jogos, jogoInicial));
   const [soFalta, setSoFalta] = useState(false);
   const [marcando, setMarcando] = useState<{ id: string; data: string } | null>(null);
-  const [ocupado, setOcupado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  /* Ocupada até a página relida aplicar, não só até a resposta: antes disso a
+     lista na tela é a velha, e um troféu já desfeito ainda ofereceria "Desfazer". */
+  const [relendo, iniciarReleitura] = useTransition();
+  const ocupado = enviando || relendo;
+  const emVoo = useRef(false);
   const [erro, setErro] = useState<string | null>(null);
 
   const doJogo = useMemo(() => trofeus.filter((x) => x.jogoId === jogoId), [trofeus, jogoId]);
@@ -84,8 +89,12 @@ export function PainelTrofeus({
   const nomeJogo = jogos.find((j) => j.jogoId === jogoId)?.nome ?? jogoId;
 
   /** Um pedido por vez. `true` no 2xx; a recusa vira frase em `erro`. */
+  const reler = () => iniciarReleitura(() => router.refresh());
+
   async function enviar(url: string, method: string, corpo?: unknown): Promise<boolean> {
-    setOcupado(true);
+    if (emVoo.current) return false;
+    emVoo.current = true;
+    setEnviando(true);
     setErro(null);
     try {
       const r = await fetch(url, {
@@ -95,7 +104,7 @@ export function PainelTrofeus({
       if (!r.ok) {
         setErro(fraseDaRecusa(tr, await r.json().catch(() => null), td("erro")));
         // A lista desta tela está velha (outra aba desfez, o troféu saiu do arquivo): relê.
-        if (r.status === 404 || r.status === 409) router.refresh();
+        if (r.status === 404 || r.status === 409) reler();
         return false;
       }
       return true;
@@ -103,7 +112,8 @@ export function PainelTrofeus({
       setErro(td("erro"));
       return false;
     } finally {
-      setOcupado(false);
+      emVoo.current = false;
+      setEnviando(false);
     }
   }
 
@@ -118,7 +128,7 @@ export function PainelTrofeus({
     if (await enviar("/api/dex/trofeus", "POST", { trofeuId: marcando.id, obtidoEm: marcando.data })) {
       setMarcando(null);
       avisar(t("marcado"), { tom: "sucesso" });
-      router.refresh();
+      reler();
     }
   }
 
@@ -133,7 +143,7 @@ export function PainelTrofeus({
     if (!ok) return;
     if (await enviar(`/api/dex/trofeus/${encodeURIComponent(x.id)}`, "DELETE")) {
       avisar(t("desfeito"), { tom: "sucesso" });
-      router.refresh();
+      reler();
     }
   }
 
