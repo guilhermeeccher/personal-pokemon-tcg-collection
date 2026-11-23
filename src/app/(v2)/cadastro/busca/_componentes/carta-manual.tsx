@@ -51,7 +51,9 @@ export function CartaManual({
   const [aberto, setAberto] = useState(false);
   return (
     <>
-      <Botao onClick={() => setAberto(true)}>{t("abrir")}</Botao>
+      <Botao className={estilos.botaoManual} onClick={() => setAberto(true)}>
+        {t("abrir")}
+      </Botao>
       {aberto && (
         <JanelaCartaManual
           siglaSugerida={siglaSugerida}

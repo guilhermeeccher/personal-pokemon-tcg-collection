@@ -314,6 +314,20 @@
 
 /* ---------- Carta à mão ---------- */
 
+/* O rótulo é longo ("Cadastrar carta que não está no catálogo"): nos 320 px o
+   `nowrap` do botão o faria passar da borda do painel, justo na saída que a
+   busca sem resultado oferece. Quebra em duas linhas, com os 44 px de altura
+   como mínimo; o seletor com tag vence a classe do primitivo sem depender da
+   ordem das folhas. */
+button.botaoManual {
+  max-width: 100%;
+  height: auto;
+  padding-block: 10px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.25;
+}
+
 .formManual {
   display: flex;
   flex-direction: column;

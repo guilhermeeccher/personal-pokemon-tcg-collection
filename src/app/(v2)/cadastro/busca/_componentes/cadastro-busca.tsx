@@ -29,10 +29,12 @@ import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 
 import { textoDaRecusa } from "@/app/_comum/recusa";
 import {
+  type FiltrosBusca,
   type FormularioCopia,
   chaveDoResultado,
   corpoDaCopia,
   desfechoDaBuscaRapida,
+  escolhaAposGravar,
   escolhaContinuaValida,
   formularioInicial,
   paramsDaBusca,
@@ -72,8 +74,14 @@ export function CadastroBusca() {
 
   const [resultados, setResultados] = useState<CartaEncontradaDTO[] | null>(null);
   const [buscando, setBuscando] = useState<Tipo | null>(null);
-  // Qual das duas buscas foi a última: é a que pré-preenche a carta à mão.
-  const [ultimaBusca, setUltimaBusca] = useState<Tipo>("busca");
+  // O que a última busca **enviou**, não o que os campos dizem agora: é isso
+  // que pré-preenche a carta à mão. Mexer num campo sem buscar de novo não
+  // muda o que a pessoa procurou sem achar.
+  const [consulta, setConsulta] = useState<{ tipo: Tipo; filtros: FiltrosBusca; siglaNumero: string }>({
+    tipo: "busca",
+    filtros: { nome: "", set: "", numero: "" },
+    siglaNumero: "",
+  });
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<Aviso | null>(null);
 
@@ -83,6 +91,9 @@ export function CadastroBusca() {
   const [quantidadeInvalida, setQuantidadeInvalida] = useState(false);
 
   const [ampliada, setAmpliada] = useState<CartaEncontradaDTO | null>(null);
+  // O botão que abriu o zoom: o Safari não foca um botão tocado, e a pilha de
+  // camadas devolveria o foco a outro lugar.
+  const abridorZoom = useRef<HTMLElement | null>(null);
 
   const refTituloForm = useRef<HTMLHeadingElement | null>(null);
   const refAviso = useRef<HTMLDivElement | null>(null);
@@ -126,7 +137,6 @@ export function CadastroBusca() {
     const controle = new AbortController();
     buscaEmCurso.current = controle;
     setBuscando(tipo);
-    setUltimaBusca(tipo);
     setErro(null);
     setAviso(null);
     try {
@@ -159,6 +169,7 @@ export function CadastroBusca() {
       setErro(t("erroCriterio"));
       return;
     }
+    setConsulta({ tipo: "busca", filtros: { nome, set: setId, numero }, siglaNumero: "" });
     await pesquisar("busca", params);
   }
 
@@ -169,6 +180,7 @@ export function CadastroBusca() {
       setErro(t("erroSiglaNumero"));
       return;
     }
+    setConsulta({ tipo: "rapida", filtros: { nome: "", set: "", numero: "" }, siglaNumero });
     const cartas = await pesquisar("rapida", params);
     if (!cartas) return;
     // Uma candidata só resolve direto na carta; zero ou várias ficam na lista,
@@ -207,7 +219,10 @@ export function CadastroBusca() {
           : t("gravada", { carta: carta.nome }),
       });
       setResultados((lista) => (lista ? somarPossuidas(lista, carta.cartaId, pronto.corpo.quantidade) : lista));
-      setEscolhida(null);
+      // Só fecha o formulário se ainda for o desta carta: os botões da lista
+      // ficam desligados enquanto grava, mas a resposta de uma gravação
+      // nunca pode apagar a escolha de outra.
+      setEscolhida((atual) => escolhaAposGravar(atual, carta));
       pendente.current = "aviso";
       // A lista continua: o foco volta ao botão da carta que acabou de entrar,
       // pronto para a próxima cópia dela, e o aviso é lido pela região viva.
@@ -239,6 +254,7 @@ export function CadastroBusca() {
     setSetId(criada.setId);
     setNumero(criada.localId);
     const params = new URLSearchParams({ set: criada.setId, numero: criada.localId });
+    setConsulta({ tipo: "busca", filtros: { nome: "", set: criada.setId, numero: criada.localId }, siglaNumero: "" });
     const cartas = await pesquisar("busca", params);
     // `pesquisar` zera o aviso ao começar; o desta criação entra depois.
     if (cartas) {
@@ -247,7 +263,7 @@ export function CadastroBusca() {
     }
   }
 
-  const sugestao = sugestaoParaCartaManual({ nome, set: setId, numero }, siglaNumero, ultimaBusca);
+  const sugestao = sugestaoParaCartaManual(consulta.filtros, consulta.siglaNumero, consulta.tipo);
   const semResultado = resultados !== null && resultados.length === 0;
 
   return (
@@ -365,7 +381,10 @@ export function CadastroBusca() {
                       type="button"
                       className={estilos.miniatura}
                       aria-label={t("ampliar", { nome: carta.nome })}
-                      onClick={() => setAmpliada(carta)}
+                      onClick={(e) => {
+                        abridorZoom.current = e.currentTarget;
+                        setAmpliada(carta);
+                      }}
                     >
                       <Carta
                         imagemUrl={carta.imagemUrl}
@@ -395,6 +414,7 @@ export function CadastroBusca() {
                       pequeno
                       variante={ativa ? "primario" : "secundario"}
                       aria-pressed={ativa}
+                      disabled={gravando}
                       className={estilos.escolher}
                       ref={(el) => {
                         if (el) botoesEscolher.current.set(chave, el);
@@ -439,7 +459,7 @@ export function CadastroBusca() {
         </section>
       )}
 
-      <AmpliarCarta carta={ampliada} onFechar={() => setAmpliada(null)} />
+      <AmpliarCarta carta={ampliada} onFechar={() => setAmpliada(null)} devolverFocoPara={() => abridorZoom.current} />
     </div>
   );
 }

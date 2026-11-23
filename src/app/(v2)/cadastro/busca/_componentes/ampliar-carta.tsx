@@ -16,9 +16,19 @@ import estilos from "./cadastro-busca.module.css";
  * **cópia** ou uma vaga, e um resultado de busca ainda não é nenhuma das duas.
  *
  * A alta carrega uma de cada vez, por construção: só existe uma janela aberta.
- * O foco volta ao botão da miniatura que abriu a janela (o abridor da pilha).
+ * O foco volta à miniatura que abriu a janela, passada por quem a abriu: no
+ * Safari um toque não foca o botão, e o abridor que a pilha guarda seria outro.
  */
-export function AmpliarCarta({ carta, onFechar }: { carta: CartaEncontradaDTO | null; onFechar: () => void }) {
+export function AmpliarCarta({
+  carta,
+  onFechar,
+  devolverFocoPara,
+}: {
+  carta: CartaEncontradaDTO | null;
+  onFechar: () => void;
+  /** O botão da miniatura que abriu a janela. */
+  devolverFocoPara: () => HTMLElement | null;
+}) {
   const t = useTranslations("v2CadastroBusca");
   return (
     <Modal
@@ -27,6 +37,7 @@ export function AmpliarCarta({ carta, onFechar }: { carta: CartaEncontradaDTO | 
       titulo={carta?.nome ?? ""}
       descricao={carta ? t("ampliarDescricao", { set: carta.setNome, numero: carta.localId }) : undefined}
       largura={420}
+      devolverFocoPara={devolverFocoPara}
     >
       {carta && (
         <div className={estilos.zoom}>

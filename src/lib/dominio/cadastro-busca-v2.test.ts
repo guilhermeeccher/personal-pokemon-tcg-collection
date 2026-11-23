@@ -4,6 +4,7 @@ import {
   chaveDoResultado,
   corpoDaCopia,
   desfechoDaBuscaRapida,
+  escolhaAposGravar,
   escolhaContinuaValida,
   formularioInicial,
   paramsDaBusca,
@@ -193,5 +194,27 @@ describe("raridadeExibivel", () => {
 
   it("o resto passa como está", () => {
     expect(raridadeExibivel("Rara Dupla")).toBe("Rara Dupla");
+  });
+});
+
+describe("escolhaAposGravar", () => {
+  const a = carta();
+  const b = carta({ cartaId: "xyz1-005" });
+
+  it("fecha o formulário da carta que acabou de gravar", () => {
+    expect(escolhaAposGravar(a, a)).toBeNull();
+  });
+
+  it("a resposta de uma gravação não apaga a escolha de outra carta", () => {
+    expect(escolhaAposGravar(b, a)).toBe(b);
+  });
+
+  it("sem escolha, continua sem", () => {
+    expect(escolhaAposGravar<CartaEncontradaDTO>(null, a)).toBeNull();
+  });
+
+  it("a mesma carta em outra linha do catálogo é outra escolha", () => {
+    const en = carta({ idiomaCatalogo: "en" });
+    expect(escolhaAposGravar(en, a)).toBe(en);
   });
 });

@@ -147,6 +147,18 @@ export function somarPossuidas(
 }
 
 /**
+ * O que fica escolhido quando a resposta de uma gravação chega: o formulário
+ * só fecha se ainda é o da carta gravada. A pessoa pode ter escolhido outra
+ * linha enquanto a primeira gravava, e a resposta velha não apaga isso.
+ */
+export function escolhaAposGravar<T extends { cartaId: string; idiomaCatalogo: Idioma }>(
+  atual: T | null,
+  gravada: { cartaId: string; idiomaCatalogo: Idioma },
+): T | null {
+  return atual && chaveDoResultado(atual) === chaveDoResultado(gravada) ? null : atual;
+}
+
+/**
  * A carta escolhida continua escolhida só enquanto a lista a tiver: uma nova
  * busca que a tira da tela não pode deixar um formulário órfão de uma carta
  * que a pessoa já não vê.
