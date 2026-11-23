@@ -728,9 +728,23 @@
   color: var(--v2-tinta-2);
 }
 
-/* ---------------------------------------------------------- Abaixo de 768 px */
+/* ---------------------------------------------------- Vitrine em uma coluna */
 
-@media (max-width: 47.99rem) {
+/* As cadastradas e o painel da Dex lado a lado pedem ~760 px de conteúdo. */
+@media (max-width: 67.49rem) {
+  .duas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/*
+ * Lado a lado, texto e leque pedem uns 820 px de conteúdo. Com o trilho de
+ * vidro (768 px e acima) o conteúdo perde ~320 px, então a vitrine empilha
+ * até ~1140 px de janela, e não só abaixo de 768 px: entre os dois, o leque
+ * de tamanho cheio passava da borda. Media query, e não container query: a
+ * casca proíbe `container-type` acima de barra fixa (regra 5d de `rules.md`).
+ */
+@media (max-width: 71.24rem) {
   .vitrine {
     grid-template-columns: minmax(0, 1fr);
     gap: 4px;
@@ -758,6 +772,19 @@
   .direita {
     transform: translate(84px, 18px) rotate(11deg);
   }
+}
+@media (max-width: 71.24rem) and (hover: hover) {
+  .leque:hover .esquerda {
+    transform: translate(-112px, 24px) rotate(-14deg);
+  }
+  .leque:hover .direita {
+    transform: translate(112px, 24px) rotate(14deg);
+  }
+}
+
+/* ---------------------------------------------------------- Abaixo de 768 px */
+
+@media (max-width: 47.99rem) {
   .lead {
     font-size: 16px;
   }
@@ -781,9 +808,6 @@
   }
   .trilho > li {
     scroll-snap-align: start;
-  }
-  .duas {
-    grid-template-columns: minmax(0, 1fr);
   }
   .cadastradas {
     grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));

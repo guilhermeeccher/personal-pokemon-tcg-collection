@@ -64,8 +64,8 @@ export function Vitrine({ dados, cartas }: { dados: InicioV2DTO; cartas: CartasD
         <p className={estilos.lead}>
           {semCartas
             ? tl("vazio")
-            : cadastradas.unidades > 0
-              ? tl.rich("cadastradas", { unidades: cadastradas.unidades, b: negrito })
+            : cadastradas.copias > 0
+              ? tl.rich("cadastradas", { cartas: cadastradas.cartas, b: negrito })
               : tl("nenhumaCadastrada")}{" "}
           {primeira && tl.rich("quaseLa", { divisao: rotuloDivisao(primeira.divisao), faltam: primeira.faltam, b: negrito })}
         </p>

@@ -2007,7 +2007,7 @@
     "erroCarregarTexto": "Reading the database failed. Nothing was changed; try again in a moment.",
     "tentarDeNovo": "Try again",
     "lead": {
-      "cadastradas": "{unidades, plural, =1 {<b>1 card</b>} other {<b># cards</b>}} entered the inventory in the last 7 days.",
+      "cadastradas": "{cartas, plural, =1 {<b>1 card</b>} other {<b># cards</b>}} entered the inventory in the last 7 days.",
       "nenhumaCadastrada": "No card entered the inventory in the last 7 days.",
       "quaseLa": "<b>{divisao}</b> is {faltam, plural, =1 {<b>1 slot</b>} other {<b># slots</b>}} away from complete.",
       "vazio": "Enter your first cards and build a collection: what each one is missing shows up here."

@@ -1999,7 +1999,7 @@
     "erroCarregarTexto": "A leitura do banco falhou. Nada foi alterado; tente de novo em instantes.",
     "tentarDeNovo": "Tentar de novo",
     "lead": {
-      "cadastradas": "{unidades, plural, =1 {<b>1 carta</b> entrou} other {<b># cartas</b> entraram}} no inventário nos últimos 7 dias.",
+      "cadastradas": "{cartas, plural, =1 {<b>1 carta</b> entrou} other {<b># cartas</b> entraram}} no inventário nos últimos 7 dias.",
       "nenhumaCadastrada": "Nenhuma carta entrou no inventário nos últimos 7 dias.",
       "quaseLa": "<b>{divisao}</b> está a {faltam, plural, =1 {<b>1 vaga</b>} other {<b># vagas</b>}} de fechar.",
       "vazio": "Cadastre as primeiras cartas e monte uma coleção: o que falta em cada uma aparece aqui."
