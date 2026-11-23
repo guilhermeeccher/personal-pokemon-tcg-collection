@@ -10,6 +10,7 @@ import type { CopiaDoDetalheV2DTO, DestinoElegivelDaCopiaDTO, DetalheCartaV2DTO 
 
 import { Botao } from "../primitivos/botao";
 import { AreaTexto, Campo, Selecao } from "../primitivos/campo";
+import { AvisoEmLinha } from "../primitivos/painel";
 import { Segmentado } from "../primitivos/segmentado";
 
 import estilos from "./detalhe.module.css";
@@ -35,6 +36,8 @@ export function SecaoOnde({
   formatos,
   destinos,
   carregandoDestinos,
+  falhaDestinos,
+  aoTentarDeNovo,
   mostrandoDestinos,
   escolhido,
   bloqueado,
@@ -47,6 +50,9 @@ export function SecaoOnde({
   formatos: Formatos;
   destinos: DestinoElegivelDaCopiaDTO[] | null;
   carregandoDestinos: boolean;
+  /** A recusa da lista de destinos, já em frase. */
+  falhaDestinos: string | null;
+  aoTentarDeNovo: () => void;
   mostrandoDestinos: boolean;
   escolhido: string | null;
   bloqueado: boolean;
@@ -90,6 +96,20 @@ export function SecaoOnde({
             <div id="v2-detalhe-destinos" className={estilos.bloco}>
               <p className={estilos.sutil}>{t("copia.destinosExplica")}</p>
               {carregandoDestinos && destinos === null ? <p className={estilos.sutil}>{t("carregando")}</p> : null}
+              {falhaDestinos ? (
+                <AvisoEmLinha
+                  tom="perigo"
+                  papel="alert"
+                  titulo={t("naoDeu")}
+                  acao={
+                    <Botao pequeno onClick={aoTentarDeNovo}>
+                      {t("tentarDeNovo")}
+                    </Botao>
+                  }
+                >
+                  {falhaDestinos}
+                </AvisoEmLinha>
+              ) : null}
               {destinos && destinos.length > 0 ? (
                 <div role="radiogroup" aria-label={t("copia.destinos")} className={estilos.lista}>
                   {destinos.map((d) => {
@@ -202,6 +222,9 @@ export function FormularioEdicao({
 
   return (
     <form className={estilos.formulario} onSubmit={enviar} noValidate>
+      {/* Desabilitado enquanto salva ou relê: o que se digitasse agora seria
+          apagado quando o formulário remonta com a cópia relida. */}
+      <fieldset className={estilos.semMoldura} disabled={bloqueado}>
       <div className={estilos.duas}>
         <Campo
           rotulo={t("quantidade")}
@@ -272,6 +295,7 @@ export function FormularioEdicao({
         </div>
       </fieldset>
       <AreaTexto rotulo={t("notas")} rows={2} value={f.notas} onChange={(e) => mudar("notas", e.target.value)} />
+      </fieldset>
       <div className={estilos.acoes}>
         <Botao type="submit" variante="primario" disabled={bloqueado || !mudou}>
           {t("salvar")}
@@ -331,6 +355,9 @@ export function SecaoFoto({
         aoMudar={(m) => {
           setModo(m);
           setFalta(null);
+          // O seletor de arquivo desmonta fora do modo arquivo e volta vazio:
+          // o arquivo escolhido antes não pode ir escondido no próximo envio.
+          if (m !== "arquivo") setArquivo(null);
         }}
         opcoes={[
           { valor: "arquivo", rotulo: t("modoArquivo") },

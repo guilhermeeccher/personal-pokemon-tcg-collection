@@ -30,6 +30,7 @@ import type {
   CopiaAlocadaNaVagaDTO,
   CopiaDoDetalheV2DTO,
   DetalheCartaV2DTO,
+  MelhoriaDaVagaDTO,
   VagaGradeV2DTO,
 } from "@/lib/dominio/tipos-cliente";
 import { variantesDisponiveis } from "@/lib/dominio/variantes-catalogo";
@@ -99,6 +100,63 @@ export function vagaMudouDesdeAGrade(vaga: VagaGradeV2DTO, detalhe: DetalheCarta
   const agora = detalhe?.contexto.vaga;
   if (!agora || agora.id !== vaga.id) return false;
   return agora.copiaId !== (vaga.copia?.id ?? null);
+}
+
+/**
+ * Qual cópia está na vaga agora, entre três fontes, nesta ordem:
+ *
+ * 1. **A leitura do detalhe** (`contexto.vaga.copiaId`), quando há uma em
+ *    vigor — é o banco de agora.
+ * 2. **A última escrita do próprio detalhe** (`sobrescrita`), enquanto a
+ *    releitura não chegou ou falhou: alocar ou trocar deixa a cópia nova na
+ *    vaga; desalocar a deixa vazia. Sem isto, uma releitura que falha depois
+ *    de uma alocação que deu certo mostraria a vaga vazia e ofereceria alocar
+ *    de novo numa vaga ocupada.
+ * 3. **A grade** que quem abriu passou.
+ *
+ * Quem chama só passa `contexto` de uma leitura feita **depois** da vaga
+ * recebida (a releitura acompanha cada grade nova), e bloqueia as ações
+ * enquanto ela não chega.
+ */
+export function copiaNaVagaAgora(
+  vaga: VagaGradeV2DTO,
+  sobrescrita: { copiaId: string | null } | null,
+  contexto: { copiaId: string | null } | null,
+): string | null {
+  if (contexto) return contexto.copiaId;
+  if (sobrescrita) return sobrescrita.copiaId;
+  return vaga.copia?.id ?? null;
+}
+
+/** Uma sugestão descartada nesta abertura do detalhe, com o lado que ela queria substituir. */
+export interface Descartada {
+  atual: MelhoriaDaVagaDTO["atual"];
+  candidata: CandidataMelhoriaDTO;
+}
+
+/**
+ * A lista de melhoria que o detalhe mostra: a da leitura e, ao fim, as
+ * descartadas nesta abertura que a leitura não traz mais (o servidor deixa
+ * de listar uma candidata descartada). É o que mantém o "Restaurar" à vista
+ * enquanto o detalhe está aberto, mesmo depois de uma releitura. Só valem as
+ * descartadas contra a cópia que está na vaga agora.
+ */
+export function melhoriaComDescartadas(
+  melhoria: MelhoriaDaVagaDTO | null,
+  descartadas: readonly Descartada[],
+  vaga: { id: string; chave: string },
+  copiaNaVaga: string | null,
+): MelhoriaDaVagaDTO | null {
+  const validas = descartadas.filter((d) => d.atual.copiaId === copiaNaVaga);
+  if (!melhoria && validas.length === 0) return null;
+  const ids = new Set(melhoria?.candidatas.map((c) => c.id) ?? []);
+  const sobra = validas.filter((d) => !ids.has(d.candidata.id)).map((d) => d.candidata);
+  return {
+    vagaId: vaga.id,
+    chave: vaga.chave,
+    atual: melhoria?.atual ?? validas[0].atual,
+    candidatas: [...(melhoria?.candidatas ?? []), ...sobra],
+  };
 }
 
 /**

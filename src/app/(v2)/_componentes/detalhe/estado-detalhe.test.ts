@@ -4,6 +4,8 @@ import type { CopiaDoDetalheV2DTO, DetalheCartaV2DTO, VagaGradeV2DTO } from "@/l
 
 import {
   chaveDaRecusa,
+  copiaNaVagaAgora,
+  melhoriaComDescartadas,
   estadoDaVaga,
   opcoesDeVariante,
   ordenarCopias,
@@ -167,5 +169,69 @@ describe("valoresDoEixo", () => {
     expect(valoresDoEixo("raridade", atual, candidata)).toEqual({ de: "Comum", para: "Rara Dupla" });
     expect(valoresDoEixo("idioma", atual, candidata)).toEqual({ de: "pt", para: "en" });
     expect(valoresDoEixo("variante", atual, candidata)).toEqual({ de: "normal", para: "reverse" });
+  });
+});
+
+describe("copiaNaVagaAgora", () => {
+  it("a leitura do detalhe vence a escrita e a grade", () => {
+    expect(copiaNaVagaAgora(VAGA_PREENCHIDA, { copiaId: "escrita" }, { copiaId: "lida" })).toBe("lida");
+    expect(copiaNaVagaAgora(VAGA_PREENCHIDA, null, { copiaId: null })).toBeNull();
+  });
+  it("sem leitura (falhou ou não chegou), vale a última escrita: alocada não vira vazia", () => {
+    expect(copiaNaVagaAgora(VAGA_VAZIA_SET, { copiaId: "alocada" }, null)).toBe("alocada");
+    expect(copiaNaVagaAgora(VAGA_PREENCHIDA, { copiaId: null }, null)).toBeNull();
+  });
+  it("sem leitura nem escrita, a grade", () => {
+    expect(copiaNaVagaAgora(VAGA_PREENCHIDA, null, null)).toBe(VAGA_PREENCHIDA.copia!.id);
+    expect(copiaNaVagaAgora(VAGA_VAZIA_SET, null, null)).toBeNull();
+  });
+});
+
+describe("melhoriaComDescartadas", () => {
+  const atual = {
+    copiaId: "na-vaga",
+    cartaNome: "Carta Inventada",
+    cartaLocalId: "001",
+    setNome: "Set Inventado",
+    raridade: "Comum",
+    idioma: "pt" as const,
+    variante: "normal" as const,
+    condicao: "NM" as const,
+    imagemUrl: null,
+    imagemOrigem: null,
+  };
+  const candidata = (id: string) => ({
+    id,
+    cartaId: "tst-001",
+    idiomaCatalogo: "pt" as const,
+    cartaNome: "Carta Inventada",
+    cartaLocalId: "001",
+    setId: "tst",
+    setNome: "Set Inventado",
+    raridade: "Comum",
+    idioma: "en" as const,
+    variante: "normal" as const,
+    condicao: "NM" as const,
+    quantidade: 1,
+    imagemUrl: null,
+    imagemOrigem: null,
+    eixo: "idioma" as const,
+  });
+  const vaga = { id: "v", chave: "tst/001" };
+
+  it("a descartada que a releitura não traz continua na lista, ao fim", () => {
+    const lida = { vagaId: "v", chave: "tst/001", atual, candidatas: [candidata("a")] };
+    const r = melhoriaComDescartadas(lida, [{ atual, candidata: candidata("b") }], vaga, "na-vaga");
+    expect(r?.candidatas.map((c) => c.id)).toEqual(["a", "b"]);
+  });
+  it("sem leitura nenhuma, as descartadas sozinhas mantêm a seção", () => {
+    const r = melhoriaComDescartadas(null, [{ atual, candidata: candidata("b") }], vaga, "na-vaga");
+    expect(r?.atual.copiaId).toBe("na-vaga");
+    expect(r?.candidatas.map((c) => c.id)).toEqual(["b"]);
+  });
+  it("não repete a que a leitura ainda traz, e ignora descarte contra outra cópia", () => {
+    const lida = { vagaId: "v", chave: "tst/001", atual, candidatas: [candidata("a")] };
+    expect(melhoriaComDescartadas(lida, [{ atual, candidata: candidata("a") }], vaga, "na-vaga")?.candidatas).toHaveLength(1);
+    expect(melhoriaComDescartadas(null, [{ atual, candidata: candidata("b") }], vaga, "outra")).toBeNull();
   });
 });

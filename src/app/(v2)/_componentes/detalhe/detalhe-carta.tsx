@@ -69,7 +69,10 @@ import type { CorpoEdicaoCopia } from "./edicao-copia";
 import {
   type AberturaDetalhe,
   type ColecaoDaVaga,
+  type Descartada,
   chaveDaRecusa,
+  copiaNaVagaAgora,
+  melhoriaComDescartadas,
   ordenarCopias,
   seguimentoDaRecusa,
   urlDoDetalhe,
@@ -298,6 +301,19 @@ function Sumiu({ t, texto, fechar }: { t: Comum["t"]; texto: string; fechar: () 
 interface Sobrescrita {
   base: VagaGradeV2DTO;
   carta: VagaGradeV2DTO["carta"] | null;
+  /** A cópia que a escrita deixou na vaga (`null` depois de desalocar). */
+  copiaId: string | null;
+}
+
+/** Avisa quem abriu, uma vez, que o que estava aberto sumiu (a tela dele relê). */
+function useAvisoDeSumico(sumiu: boolean, avisarMudanca: (e: EventoDetalhe) => void) {
+  const avisou = useRef(false);
+  useEffect(() => {
+    if (sumiu && !avisou.current) {
+      avisou.current = true;
+      avisarMudanca({ tipo: "desatualizada" });
+    }
+  }, [sumiu, avisarMudanca]);
 }
 
 function ModoVaga({
@@ -315,32 +331,43 @@ function ModoVaga({
   const tComp = useTranslations("componentes");
   const [sobrescrita, setSobrescrita] = useState<Sobrescrita | null>(null);
   const [escolhida, setEscolhida] = useState<string | null>(null);
-  const [descartadas, setDescartadas] = useState<string[]>([]);
+  const [descartadas, setDescartadas] = useState<Descartada[]>([]);
   const [viuMelhoria, setViuMelhoria] = useState(false);
+
+  // Cada grade nova que quem abriu passa relê o detalhe: a URL pode ser a
+  // mesma (outra cópia da mesma carta na vaga) e a leitura velha não pode
+  // continuar valendo. Enquanto a releitura não chega, as ações ficam
+  // bloqueadas (`leituraEmCurso`).
+  const [vagaRecebida, setVagaRecebida] = useState({ vaga, geracao: 0 });
+  if (vagaRecebida.vaga !== vaga) setVagaRecebida({ vaga, geracao: vagaRecebida.geracao + 1 });
+  const chaveLeitura = `${versao}:${vagaRecebida.geracao}`;
 
   const sobrescritaValida = sobrescrita !== null && sobrescrita.base === vaga;
   const cartaDaVaga = sobrescritaValida ? sobrescrita.carta : (vaga.carta ?? null);
   const urlDetalhe = urlDoDetalhe({ modo: "vaga", colecao, vaga: { ...vaga, carta: cartaDaVaga ?? undefined } }, null);
-  const detalhe = useLeitura<DetalheCartaV2DTO>(urlDetalhe, versao);
+  const detalhe = useLeitura<DetalheCartaV2DTO>(urlDetalhe, chaveLeitura);
 
-  // A cópia na vaga: a do detalhe (lido agora), senão a da grade.
   const contexto = detalhe.dados?.contexto.vaga ?? null;
-  const copiaNaVaga = contexto ? contexto.copiaId : sobrescritaValida ? null : (vaga.copia?.id ?? null);
+  const copiaNaVaga = copiaNaVagaAgora(vaga, sobrescritaValida ? sobrescrita : null, contexto);
   const vazia = copiaNaVaga === null;
 
-  const candidatos = useLeitura<{ itens: CandidatoVagaDTO[] }>(vazia ? `/api/vagas/${vaga.id}/candidatos` : null, versao);
+  const candidatos = useLeitura<{ itens: CandidatoVagaDTO[] }>(vazia ? `/api/vagas/${vaga.id}/candidatos` : null, chaveLeitura);
   const pedeMelhoria = !vazia && (vaga.upgrade !== undefined || sobrescritaValida || descartadas.length > 0 || viuMelhoria);
   const melhorias = useLeitura<{ itens: MelhoriaDaVagaDTO[] }>(
     pedeMelhoria ? `/api/colecoes/${colecao.id}/melhorias` : null,
-    versao,
+    chaveLeitura,
   );
-  const melhoria = melhorias.dados?.itens.find((m) => m.vagaId === vaga.id && m.atual.copiaId === copiaNaVaga) ?? null;
+  const melhoriaLida = melhorias.dados?.itens.find((m) => m.vagaId === vaga.id && m.atual.copiaId === copiaNaVaga) ?? null;
   // Depois de ver a lista uma vez, ela fica pedida: um descarte que apaga o
   // sinal da grade não pode levar junto o "Restaurar".
-  if (melhoria && !viuMelhoria) setViuMelhoria(true);
+  if (melhoriaLida && !viuMelhoria) setViuMelhoria(true);
+  const melhoria = melhoriaComDescartadas(melhoriaLida, descartadas, vaga, copiaNaVaga);
 
-  // Outra aba mexeu na vaga desde a grade: avisa quem abriu, uma vez por leitura.
-  const desatualizada = !sobrescritaValida && vagaMudouDesdeAGrade(vaga, detalhe.dados);
+  // Outra aba mexeu na vaga desde a grade: avisa quem abriu, uma vez por
+  // leitura. Só com a leitura em dia: durante a releitura, a resposta velha
+  // contra a grade nova acusaria uma mudança que não houve.
+  const desatualizada =
+    !sobrescritaValida && !detalhe.relendo && !detalhe.carregando && vagaMudouDesdeAGrade(vaga, detalhe.dados);
   const avisouDe = useRef<DetalheCartaV2DTO | null>(null);
   useEffect(() => {
     if (desatualizada && detalhe.dados && avisouDe.current !== detalhe.dados) {
@@ -386,11 +413,16 @@ function ModoVaga({
       return;
     }
     const dividida = r.corpo.dividida === true;
-    setSobrescrita({ base: vaga, carta: { cartaId: c.cartaId, idiomaCatalogo: c.idiomaCatalogo, raridade: null } });
+    const alocadaId = typeof r.corpo.copiaAlocadaId === "string" ? r.corpo.copiaAlocadaId : c.id;
+    setSobrescrita({
+      base: vaga,
+      carta: { cartaId: c.cartaId, idiomaCatalogo: c.idiomaCatalogo, raridade: null },
+      copiaId: alocadaId,
+    });
     setEscolhida(null);
     avisar(dividida ? t("feito.alocadaDividida", { carta: c.cartaNome, numero: vaga.numero }) : t("feito.alocada", { carta: c.cartaNome, numero: vaga.numero }), { tom: "sucesso" });
     reler();
-    avisarMudanca({ tipo: "alocada", vagaId: vaga.id, colecaoId: colecao.id, copiaId: String(r.corpo.copiaAlocadaId ?? c.id), dividida });
+    avisarMudanca({ tipo: "alocada", vagaId: vaga.id, colecaoId: colecao.id, copiaId: alocadaId, dividida });
   }
 
   async function desalocar() {
@@ -408,7 +440,7 @@ function ModoVaga({
       fechar();
       return;
     }
-    setSobrescrita({ base: vaga, carta: ehPokedex ? null : cartaDaVaga });
+    setSobrescrita({ base: vaga, carta: ehPokedex ? null : cartaDaVaga, copiaId: null });
     setDescartadas([]);
     reler();
   }
@@ -427,11 +459,16 @@ function ModoVaga({
     const r = await executar(`/api/vagas/${vaga.id}/trocar`, JSON_POST({ copiaId: c.id }), t("erro.trocar"));
     if (!r.ok) return;
     const dividida = r.corpo.dividida === true;
-    setSobrescrita({ base: vaga, carta: { cartaId: c.cartaId, idiomaCatalogo: c.idiomaCatalogo, raridade: c.raridade } });
+    const alocadaId = typeof r.corpo.copiaAlocadaId === "string" ? r.corpo.copiaAlocadaId : c.id;
+    setSobrescrita({
+      base: vaga,
+      carta: { cartaId: c.cartaId, idiomaCatalogo: c.idiomaCatalogo, raridade: c.raridade },
+      copiaId: alocadaId,
+    });
     setDescartadas([]);
     avisar(dividida ? t("feito.trocadaDividida", { numero: vaga.numero }) : t("feito.trocada", { numero: vaga.numero }), { tom: "sucesso" });
     reler();
-    avisarMudanca({ tipo: "trocada", vagaId: vaga.id, copiaId: String(r.corpo.copiaAlocadaId ?? c.id), dividida });
+    avisarMudanca({ tipo: "trocada", vagaId: vaga.id, copiaId: alocadaId, dividida });
   }
 
   async function alternarDescarte(c: CandidataMelhoriaDTO, descartar: boolean) {
@@ -442,16 +479,24 @@ function ModoVaga({
     );
     if (!r.ok) return;
     // Sem reler a lista: a descartada fica nela, apagada, com "Restaurar".
-    setDescartadas((atuais) => (descartar ? [...atuais, c.id] : atuais.filter((id) => id !== c.id)));
+    const atual = melhoria?.atual;
+    setDescartadas((atuais) =>
+      descartar
+        ? atual
+          ? [...atuais.filter((d) => d.candidata.id !== c.id), { atual, candidata: c }]
+          : atuais
+        : atuais.filter((d) => d.candidata.id !== c.id),
+    );
     avisarMudanca({ tipo: descartar ? "melhoriaDescartada" : "melhoriaRestaurada", vagaId: vaga.id, copiaId: c.id });
   }
 
   /* ---------- Desenho ---------- */
 
   const sumiu =
-    detalhe.falha?.status === 404 || candidatos.falha?.status === 404
+    detalhe.falha?.status === 404 || candidatos.falha?.status === 404 || melhorias.falha?.status === 404
       ? t("sumiu.vaga")
       : null;
+  useAvisoDeSumico(sumiu !== null, avisarMudanca);
   if (sumiu) {
     return (
       <Moldura comum={comum} titulo={titulo} descricao={descricao}>
@@ -460,15 +505,15 @@ function ModoVaga({
     );
   }
 
-  const falhaLeitura = detalhe.falha ?? candidatos.falha;
+  const falhaLeitura = detalhe.falha ?? candidatos.falha ?? melhorias.falha;
   const sprite = vazia && !cartaDaVaga ? urlSpritePokemon(vaga.chave) : undefined;
 
   return (
     <Moldura comum={comum} titulo={titulo} descricao={descricao}>
     <div className={estilos.grade}>
       <Palco
-        imagemUrl={ficha?.imagemUrl ?? (sobrescritaValida ? null : (vaga.imagemUrl ?? null))}
-        origem={ficha?.imagemOrigem ?? vaga.imagemOrigem ?? null}
+        imagemUrl={ficha ? ficha.imagemUrl : sobrescritaValida ? null : (vaga.imagemUrl ?? null)}
+        origem={ficha ? ficha.imagemOrigem : sobrescritaValida ? null : (vaga.imagemOrigem ?? null)}
         alt={nomeVaga}
         variante={copiaAtual?.variante ?? (vazia ? null : (vaga.copia?.variante ?? null))}
         raridade={ficha?.raridade ?? cartaDaVaga?.raridade ?? null}
@@ -515,7 +560,7 @@ function ModoVaga({
             copia={copiaAtual}
             melhoria={melhoria}
             carregandoMelhoria={melhorias.carregando}
-            descartadas={descartadas}
+            descartadas={descartadas.map((d) => d.candidata.id)}
             bloqueado={bloqueado}
             formatos={formatos}
             aoTrocar={trocar}
@@ -560,6 +605,17 @@ function ModoCopia({
     versao,
   );
   const bloqueado = ocupado || detalhe.carregando || detalhe.relendo || destinos.relendo;
+  const tRecusas = useTranslations("recusas");
+  // A lista de destinos falhou: a frase da recusa, e o caminho de tentar de
+  // novo. Um 404 é a cópia que sumiu: a leitura principal relida mostra isso.
+  const falhaDestinos = destinos.falha ? textoDaRecusa(tRecusas, destinos.falha.corpo, t("erro.ler")) : null;
+  const destinosSumiram = destinos.falha?.status === 404;
+  useEffect(() => {
+    if (destinosSumiram) {
+      reler();
+      avisarMudanca({ tipo: "desatualizada" });
+    }
+  }, [destinosSumiram, reler, avisarMudanca]);
 
   const ficha = dados?.carta ?? null;
   const titulo = ficha?.nome ?? abertura.previa?.nome ?? t("carregando");
@@ -677,6 +733,7 @@ function ModoCopia({
 
   /* ---------- Desenho ---------- */
 
+  useAvisoDeSumico(detalhe.falha?.status === 404, avisarMudanca);
   if (detalhe.falha?.status === 404) {
     return (
       <Moldura comum={comum} titulo={titulo} descricao={descricao}>
@@ -692,11 +749,13 @@ function ModoCopia({
     <Moldura comum={comum} titulo={titulo} descricao={descricao}>
     <div className={estilos.grade}>
       <Palco
-        imagemUrl={ficha?.imagemUrl ?? previa?.imagemUrl ?? null}
-        origem={ficha?.imagemOrigem ?? previa?.imagemOrigem ?? null}
+        // A prévia só vale até a leitura chegar; depois, a ficha manda,
+        // nulos inclusive (a foto própria removida não volta pela prévia).
+        imagemUrl={ficha ? ficha.imagemUrl : (previa?.imagemUrl ?? null)}
+        origem={ficha ? ficha.imagemOrigem : (previa?.imagemOrigem ?? null)}
         alt={ficha?.nome ?? previa?.nome ?? ""}
-        variante={copia?.variante ?? previa?.variante ?? null}
-        raridade={ficha?.raridade ?? previa?.raridade ?? null}
+        variante={copia ? copia.variante : (previa?.variante ?? null)}
+        raridade={ficha ? ficha.raridade : (previa?.raridade ?? null)}
         fantasma={false}
         chaveTransicao={chaveTransicao}
       />
@@ -716,6 +775,8 @@ function ModoCopia({
               formatos={formatos}
               destinos={destinos.dados?.itens ?? null}
               carregandoDestinos={destinos.carregando}
+              falhaDestinos={falhaDestinos}
+              aoTentarDeNovo={reler}
               mostrandoDestinos={mostrandoDestinos}
               escolhido={destinoEscolhido}
               bloqueado={bloqueado}

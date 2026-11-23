@@ -10,14 +10,15 @@ export interface FalhaLeitura {
 
 interface Resultado<T> {
   url: string;
-  versao: number;
+  versao: number | string;
   dados: T | null;
   falha: FalhaLeitura | null;
 }
 
 /**
  * `useLeitura(url, versao)` — um `GET` do detalhe, relido quando `versao`
- * muda (depois de uma escrita) ou a URL muda (outra cópia em foco).
+ * muda (depois de uma escrita, ou quando chega uma grade nova) ou a URL muda
+ * (outra cópia em foco).
  *
  * - **Enquanto relê, mostra o que já tinha da mesma URL**: depois de salvar,
  *   o detalhe não pisca vazio; `relendo` diz que há leitura em curso.
@@ -26,7 +27,7 @@ interface Resultado<T> {
  * - **`url` nula** não lê nada (a vaga vazia de Pokédex não tem carta).
  * - Sem cache do navegador: o detalhe mostra o que está no banco agora.
  */
-export function useLeitura<T>(url: string | null, versao: number) {
+export function useLeitura<T>(url: string | null, versao: number | string) {
   const [resultado, setResultado] = useState<Resultado<T> | null>(null);
 
   useEffect(() => {

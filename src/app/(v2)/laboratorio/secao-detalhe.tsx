@@ -67,15 +67,23 @@ export function SecaoDetalhe({ parametros }: { parametros: ParametrosDetalhe }) 
       .catch(() => setErroGrade(true));
   }, [colecaoId, parametros.vaga, parametros.carta]);
 
+  // Cada `onMudou` relê a grade; a leitura anterior é abortada, para uma
+  // resposta velha nunca chegar depois da nova e devolver ao detalhe uma vaga
+  // de antes da última escrita.
   useEffect(() => {
     if (!colecaoId) return;
-    fetch(`/api/colecoes/${colecaoId}/grade`, { cache: "no-store" })
+    const controle = new AbortController();
+    fetch(`/api/colecoes/${colecaoId}/grade`, { cache: "no-store", signal: controle.signal })
       .then((r) => (r.ok ? (r.json() as Promise<GradeColecaoV2DTO>) : Promise.reject(new Error(String(r.status)))))
       .then((g) => {
+        if (controle.signal.aborted) return;
         setGrade(g);
         setErroGrade(false);
       })
-      .catch(() => setErroGrade(true));
+      .catch(() => {
+        if (!controle.signal.aborted) setErroGrade(true);
+      });
+    return () => controle.abort();
   }, [colecaoId, versaoGrade]);
 
   // A prévia da cópia (a carta que o detalhe "cresce" a partir dela).
