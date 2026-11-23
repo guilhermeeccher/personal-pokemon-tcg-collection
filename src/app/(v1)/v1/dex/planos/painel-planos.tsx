@@ -29,6 +29,7 @@ import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { Icone } from "@/app/_componentes/icone";
 import { Painel } from "@/app/_componentes/painel";
+import { hojeLocal } from "@/app/_comum/dex/hoje";
 import { textoDaRecusa } from "@/app/_comum/recusa";
 import { progressoEtapas, todasFeitas } from "@/lib/dominio/dex-etapas";
 import { jogoDex } from "@/lib/dominio/dex-jogos";
@@ -36,7 +37,6 @@ import { TIPOS_TAREFA, type StatusPlanoDex, type StatusTarefaDex } from "@/lib/d
 import type { IdiomaTrofeu } from "@/lib/dominio/dex-trofeus";
 import type { FormaDexDTO, JogoPossuidoDTO, PlanoDexDTO, TarefaDexDTO, TrofeuDexDTO } from "@/lib/dominio/tipos-cliente";
 
-import { hojeLocal } from "../_componentes/hoje";
 import { SpriteDex } from "../_componentes/sprite-dex";
 
 import { EtapasDaTarefa } from "./etapas-tarefa";

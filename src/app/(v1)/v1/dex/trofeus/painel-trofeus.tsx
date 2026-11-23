@@ -20,11 +20,10 @@ import { BarraProgresso } from "@/app/_componentes/ds/barra-progresso";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { Icone } from "@/app/_componentes/icone";
 import { Painel } from "@/app/_componentes/painel";
+import { hojeLocal } from "@/app/_comum/dex/hoje";
 import { textoDaRecusa } from "@/app/_comum/recusa";
 import { progressoTrofeus, type IdiomaTrofeu, type NivelTrofeu } from "@/lib/dominio/dex-trofeus";
 import type { TrofeuDexDTO } from "@/lib/dominio/tipos-cliente";
-
-import { hojeLocal } from "../_componentes/hoje";
 
 const COR_NIVEL: Record<NivelTrofeu | "platina", string> = {
   bronze: "var(--trophy-bronze)",
