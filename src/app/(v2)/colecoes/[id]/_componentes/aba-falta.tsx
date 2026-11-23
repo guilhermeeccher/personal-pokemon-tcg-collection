@@ -28,7 +28,8 @@
  *   não há. Nada aqui dispara varredura nem contorna o bloqueio.
  *
  * Buscar preços, o teto e a ordem, o "sem estoque" colado, os downloads e o
- * resto da tela de opções de compra são do pacote 4a: até lá, "Fazer na v1".
+ * resto da tela de opções de compra são da página do pacote 4a
+ * (`/colecoes/[id]/opcoes-compra`), aberta pelo botão do painel de cima.
  */
 
 import { CircleAlert, ListChecks, ShoppingCart, WandSparkles } from "lucide-react";
@@ -487,7 +488,7 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
   const umaAba = lista && lista.abasLiga.length === 1 ? lista.abasLiga[0] : null;
   const estado = dados?.estado ?? null;
   const cardmarket = fonte === "cardmarket";
-  const linkOpcoes = `/v1/colecoes/${colecao.id}/opcoes-compra`;
+  const linkOpcoes = `/colecoes/${colecao.id}/opcoes-compra`;
 
   if (vazias.length === 0) {
     return (
@@ -547,7 +548,7 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
           <Botao icone={<WandSparkles aria-hidden />} disabled={!dados} onClick={abrirAtalho}>
             {t("atalho.botao")}
           </Botao>
-          <BotaoLink href={linkOpcoes}>{t("aba.opcoesNaV1")}</BotaoLink>
+          <BotaoLink href={linkOpcoes}>{t("aba.opcoesCompra")}</BotaoLink>
         </div>
       </div>
 

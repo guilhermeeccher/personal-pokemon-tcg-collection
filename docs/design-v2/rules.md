@@ -486,7 +486,10 @@ rest are the technical foundations of the v2.
     - **Optimistic, then checked.** A mark shows at once as a pending mark per slot. Requests go
       through **one queue per collection, shared by the tab and the card detail**
       (`envio-selecao.ts`), entered at the gesture, so the server sees the user's gestures in
-      order. The queue also keeps, per collection, the requests in flight, the requests finished
+      order. Package 4a's out-of-stock confirm (it records and unmarks in one server transaction)
+      goes through the same queue, by `escreverNaFila`: a mark made after it, on any screen, waits
+      for it, and it counts in flight and finished like a mark, so every screen sees the list stale
+      until a later read (rule 38). The queue also keeps, per collection, the requests in flight, the requests finished
       and a generation that a refusal from either side bumps: the list is not copied while a
       request is in flight, nor until a read started after the last finished request arrives
       (a failed read keeps it stale), and a request queued before a refusal is dropped unsent. A
@@ -509,7 +512,7 @@ rest are the technical foundations of the v2.
     - **`PRECO_FONTE=liga`** (decision 3): a notice says new lookups are unavailable; marking works
       only over the options of saved scans, unmarking and copying always. Nothing starts a scan.
     - The buy options page itself (price round, ceiling and order, out-of-stock paste, downloads) is
-      package 4a's; until then the tab links to `/v1/colecoes/<id>/opcoes-compra`.
+      package 4a's (rules 35 to 38); the tab's top panel links to it, `/colecoes/<id>/opcoes-compra`.
     - `secaoCompraDoDetalhe` renders the same slot options component (`secao-compra-vaga.tsx`) inside
       the card detail.
 
@@ -570,6 +573,69 @@ rest are the technical foundations of the v2.
     opens `<DetalheCarta>` in copy mode on the representative copy (`copia-representante.ts`), and a card
     with no copy any more (its price row is never deleted) says so and does not open. Deleting a round
     asks through the confirmation dialog.
+
+### Buy options page (package 4a)
+
+35. **One page, the v1's routes, the same files.** `/colecoes/[id]/opcoes-compra`
+    (`src/app/(v2)/colecoes/[id]/opcoes-compra/`) replaced the last bridge outside the Dex, at the same
+    URL, opened from the "What's missing" tab. It reads `GET /api/colecoes/:id/opcoes-compra` and
+    writes through the v1's requests, unchanged: `POST` on the same route starts the round, `PATCH
+    …/selecao` marks, `…/sem-estoque` records the Liga's out-of-stock notice, `…/exportar` downloads.
+    The list tabs are the server's `abasLiga`, and the three downloads are the same route the v1
+    calls, so a file is byte for byte the v1's for the same collection. Marking goes through package
+    1e's **one queue per collection** (`envio-selecao.ts`), the same the tab and the card detail
+    use, so the server sees the user's gestures in order whichever screen made them; copying is 1e's
+    `useCopiarAba`, over `copiarTexto` (plain HTTP). The pure decisions are in `opcoes-compra.ts`,
+    tested without a database.
+36. **The round is the server's; the screen reads the snapshot.** While a round lives (the Liga scan,
+    or this collection's Cardmarket candidates round) the page rereads the snapshot every
+    `periodoDeLeituraMs`: on the Liga, `clamp(interval × 250 ms, 5 s, 60 s)` through 2d's
+    `periodoDeAtualizacaoMs`, never a fixed number; on Cardmarket, which has no `robots.txt` interval,
+    10 s (`PERIODO_CANDIDATAS_MS`, the v1's value on this screen, inside the rule's range — the read
+    carries thousands of candidates on a Pokédex). One read at a time, and a hidden tab skips its
+    tick (`batidaDeveReler`). The start button is off while a round lives; any refusal of the `POST`
+    is shown through `recusa.ts` and rereads, so `varreduraEmAndamento` and `precosEmAndamento` show
+    the live round. On the Liga source a notice says, always, that a new scan will probably stop at
+    the first refused request (decision 3): the round's `erro` is shown as the server wrote it, and
+    **a block is never worked around**. Nothing on the page talks to the Liga, TCGdex or the BCB.
+37. **Ceiling and order, and the shortcut.** On Cardmarket they are a screen filter
+    (`filtrarCandidatas`), applied with the optimistic marks already on, so a card just marked is
+    never hidden; a card with no price stays, last. On the Liga they are the next scan's parameters,
+    and the options shown are the last scan's — the screen says so. "Mark the best of each slot" is
+    the v1's shortcut made explicit (decision 2): a dialog shows the criterion the screen is using and,
+    slot by slot, the card that would go in (`planoMelhor`: the first option in the screen's order,
+    priced on Cardmarket, only in a slot with no choice and no pending mark), plus how many slots stay
+    out and why; confirm sends exactly that plan, and if the read changed while the dialog was open it
+    sends nothing and shows the new plan to confirm again.
+38. **Marks per option; the list waits for the reread.** Several choices per slot stay allowed. A tap
+    shows at once as a pending mark per option; a tap again before the reread sends the inverse. A
+    pending mark is dropped only by a read asked after its request finished, or by any refusal (which
+    rereads). Copying, the per-tab download and the CSV and text downloads wait while a mark is pending,
+    in flight, or not reread yet. The out-of-stock paste is a preview, then a confirm that records and
+    unmarks in one transaction on the server. The preview belongs to the text that was checked and to
+    the triage of that moment (`estadoDaPrevia`): confirm sends exactly that text, an answer for a text
+    that has since changed is dropped, and a mark finished after the check (from any screen) asks for
+    a new check, since the server recomputes what it unmarks. Confirm waits while a mark is in flight, and
+    goes through 1e's per-collection queue (`escreverNaFila`, rule 30): a mark made after it — here,
+    on the tab or in the detail, even after leaving this page — waits for it, and it counts in the
+    queue's in-flight and finished requests, so every screen keeps the list stale until a read started
+    after it succeeds. While it is in flight this page also locks its own mark buttons and the shortcut;
+    with no answer in 30 s the lock is released, the page rereads and says the result is unknown. Cancel sends nothing, and the keys of the slots it would unmark
+    are labelled (`rotuloChaveVaga`), never raw. Pending marks are keyed by the slot and the card
+    (`chavePendencia`), not by the row id, which a new Liga scan changes. A request another screen
+    left in flight when this page opened rereads the page when it finishes.
+    - **The slot list is not virtualized**, and says why: each slot has its own height (collapsed, or
+      open with N options) and the virtual grid needs uniform cells. It mounts 60 slots at a time with
+      "Show more", and 6 options per open slot with "Show all" — the same path as the Upgrades tab —
+      which keeps a national Pokédex with thousands of candidates inside rule 13's budget.
+    - Collapsed and expanded (all, a group, a slot) is a device preference
+      (`v2-opcoes-compra-recolhidas:<id>`, rule 19); a slot never touched follows the v1's default
+      (collapsed when it has a selection).
+    - The explanations the v1 kept in `title` or `Dica` (no price, out of stock, outside the catalog,
+      an older choice, the list's unpriced and stored cards) open by tap and keyboard through 2d's
+      `Explicacao`; the price detail (euro, PTAX, its date, the criterion) is visible text
+      (`LinhaPreco`). The thumbnail opens a zoom dialog with the card in `palco` mode and the `high`
+      image; "See offers" opens the Liga's own search page (`cards/search`) in another tab.
 
 ### Dex shared code (package 5-0)
 

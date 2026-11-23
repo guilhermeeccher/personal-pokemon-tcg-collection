@@ -1,0 +1,762 @@
+/*
+ * A tela de opções de compra da v2 (pacote 4a).
+ *
+ * Orçamento de composição (regra 5 de `docs/design-v2/rules.md`): nenhum
+ * `backdrop-filter` aqui — painéis, vagas e a barra da lista são opacos, e as
+ * três superfícies de vidro ficam com a casca e o véu das janelas. Nenhum
+ * `will-change` por vaga e nenhum `container-type` (a barra da lista é
+ * `sticky`, e um contêiner a prenderia à caixa dele). A cor de "na lista" é o
+ * âmbar da v2 (`--v2-falta`), sempre com o texto junto, nunca só a cor.
+ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.voltar {
+  align-self: flex-start;
+}
+
+.cabecalho {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.titulo {
+  margin: 0;
+  font-size: clamp(30px, 6vw, 48px);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.subtituloPagina {
+  margin: 0;
+  max-width: 70ch;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--v2-tinta-3);
+}
+.subtitulo {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+}
+.sutil {
+  margin: 0;
+  max-width: 78ch;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--v2-tinta-3);
+}
+.texto {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--v2-tinta-2);
+}
+
+/* ---------------------------------------------------------- Parâmetros */
+
+.parametros {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+/* No celular uma coluna só, cada controle na largura toda; do tablet em
+   diante, lado a lado, quebrando quando não cabe. */
+.campos {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 20px;
+}
+.campos > * {
+  min-width: 0;
+}
+.campoTeto {
+  flex: 0 1 200px;
+}
+.campoOrdem {
+  flex: 0 1 280px;
+}
+@media (max-width: 47.99rem) {
+  .campos {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .campoTeto,
+  .campoOrdem {
+    flex: none;
+  }
+}
+.rotuloGrupo {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+}
+/* A caixa de marcar nativa, com 44 px de alvo pela linha inteira. */
+.marcavel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--v2-tinta-2);
+  cursor: pointer;
+}
+.marcavel input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--v2-falta);
+}
+.acaoPrincipal {
+  max-width: 100%;
+  height: auto;
+  min-height: 44px;
+  white-space: normal;
+}
+
+/* ---------------------------------------------------------- Rodada */
+
+.rodada {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rodadaTopo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+.selo {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-2);
+}
+.selo[data-tom="aviso"] {
+  color: var(--v2-falta);
+  background: rgb(255 183 102 / 0.14);
+}
+.selo[data-tom="perigo"] {
+  color: var(--v2-perigo);
+  background: rgb(255 138 138 / 0.14);
+}
+.progresso {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--v2-superficie-2);
+}
+.progressoBarra {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--v2-iris-linear);
+  transition: width 0.4s var(--v2-curva-suave);
+}
+@media (prefers-reduced-motion: reduce) {
+  .progressoBarra {
+    transition: none;
+  }
+}
+:global(html[data-v2-efeitos="leve"]) .progressoBarra {
+  transition: none;
+}
+.erroRodada {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--v2-perigo);
+  overflow-wrap: anywhere;
+}
+
+/* ---------------------------------------------------------- Linha de ações */
+
+.linhaAcoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+/* ---------------------------------------------------------- Lista para colar */
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px;
+}
+.listaTopo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+.listaBotoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+@media (max-width: 29.99rem) {
+  .listaBotoes {
+    flex: 1 1 100%;
+  }
+  .listaBotoes > * {
+    flex: 1;
+  }
+}
+/* Uma fileira só, com rolagem de lado própria: a página nunca rola de lado. */
+.abas {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding: 2px;
+}
+.abas::-webkit-scrollbar {
+  display: none;
+}
+.aba {
+  flex: none;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+  cursor: pointer;
+}
+.aba[aria-selected="true"] {
+  color: #1a1006;
+  background: var(--v2-falta);
+  box-shadow: none;
+}
+.aba:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 2px;
+}
+.aba :global(.v2-num) {
+  margin-left: 4px;
+  opacity: 0.75;
+}
+.textoLista {
+  max-height: 18rem;
+  margin: 0;
+  overflow: auto;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-family: var(--v2-fonte-num);
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre;
+  color: var(--v2-tinta);
+  background: rgb(0 0 0 / 0.35);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ---------------------------------------------------------- Sem estoque */
+
+.semEstoqueSecao {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 12px;
+}
+.semEstoque {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 4px 12px;
+}
+.semEstoque[hidden] {
+  display: none;
+}
+.semEstoqueAbrir {
+  justify-content: space-between;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 650;
+  text-align: left;
+  color: var(--v2-tinta);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.semEstoqueAbrir:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+.semEstoqueAbrir svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s var(--v2-curva-suave);
+}
+.semEstoqueAbrir[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .semEstoqueAbrir svg {
+    transition: none;
+  }
+}
+.campoColagem {
+  font-family: var(--v2-fonte-num);
+}
+.previa {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgb(0 0 0 / 0.28);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+.previaLista,
+.registros {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.naoEntendidas {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--v2-fonte-num);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+/* O segundo passo: no celular a linha de confirmar gruda no pé da tela
+   enquanto a prévia está à vista, logo acima da barra de abas. */
+.previaAcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+@media (max-width: 47.99rem) {
+  .previaAcoes {
+    position: sticky;
+    bottom: calc(var(--v2-topo-abas) + 8px);
+    z-index: 4;
+    padding: 8px;
+    border-radius: 14px;
+    background: rgb(20 21 30 / 0.98);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+  }
+  .previaAcoes > * {
+    flex: 1;
+  }
+}
+.registro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 6px 4px 6px 12px;
+  border-radius: 14px;
+  background: var(--v2-superficie-1);
+}
+.registroTexto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------- Vagas */
+
+.ferramentas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.grupoTopo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgb(255 183 102 / 0.35);
+}
+.grupoTitulo {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+}
+.grupoFaixa {
+  margin-left: 8px;
+  font-family: var(--v2-fonte-num);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--v2-tinta-3);
+}
+.grupoBotoes {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.vaga {
+  overflow: hidden;
+  border-radius: var(--v2-raio-painel);
+}
+.vagaTopo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 14px;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--v2-tinta);
+  cursor: pointer;
+}
+.vagaTopo:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: -2px;
+}
+.vagaTopo > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--v2-tinta-3);
+  transition: transform 0.2s var(--v2-curva-suave);
+}
+.vagaTopo[aria-expanded="true"] > svg {
+  transform: rotate(90deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vagaTopo > svg {
+    transition: none;
+  }
+}
+.vagaNome {
+  font-size: 14.5px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.vagaContagem {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--v2-tinta-3);
+}
+.etiqueta {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--v2-falta);
+  background: rgb(255 183 102 / 0.12);
+}
+.vagaResumo {
+  margin: 0;
+  padding: 0 14px 12px 40px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--v2-tinta-2);
+  overflow-wrap: anywhere;
+}
+.vagaCorpo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 0 10px 12px;
+}
+.opcoes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.opcao {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 8px;
+  border-radius: 16px;
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+.opcaoMarcada {
+  background: rgb(255 183 102 / 0.08);
+  box-shadow: inset 0 0 0 1px rgb(255 183 102 / 0.4);
+}
+/* A miniatura abre o zoom: um botão de 48 × 66, acima dos 44 de alvo. */
+.miniatura {
+  flex: none;
+  width: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  cursor: zoom-in;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+.miniatura:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 2px;
+}
+.semFoto {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  aspect-ratio: 600 / 825;
+  border-radius: 6px;
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--v2-tinta-3);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+}
+.opcaoTexto {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.opcaoNome {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.opcaoNome span {
+  font-weight: 400;
+  color: var(--v2-tinta-3);
+}
+.etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 8px;
+}
+.etiquetas:empty {
+  display: none;
+}
+.opcaoAcoes {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+.linkLiga {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+  text-decoration: none;
+}
+.linkLiga:hover {
+  color: var(--v2-tinta);
+  text-decoration: underline;
+}
+.linkLiga:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 2px;
+}
+.linkLiga svg {
+  width: 14px;
+  height: 14px;
+}
+/* No celular estreito, as ações descem para uma linha só delas. */
+@media (max-width: 29.99rem) {
+  .opcao {
+    flex-wrap: wrap;
+  }
+  .opcaoAcoes {
+    flex: 1 1 100%;
+    flex-direction: row;
+  }
+  .opcaoAcoes > * {
+    flex: 1;
+  }
+}
+
+/* ---------------------------------------------------------- Atalho */
+
+.atalho {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.listaAtalho,
+.listaFora {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.listaFora {
+  gap: 2px;
+  font-size: 13px;
+  color: var(--v2-tinta-2);
+}
+.linhaAtalho {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 10px;
+  border-radius: 16px;
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+.miniaturaFixa {
+  flex: none;
+  width: 48px;
+}
+
+/* ---------------------------------------------------------- Zoom */
+
+.zoom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.zoomCarta {
+  width: min(320px, 72vw);
+}
+
+/* ---------------------------------------------------------- Barra da lista */
+
+/*
+ * `sticky`: ocupa a própria altura no fluxo (o fim da lista nunca fica atrás
+ * dela) e gruda no pé da janela — no celular, logo acima da barra de abas.
+ * Opaca, sem desfoque.
+ */
+.barra {
+  position: sticky;
+  bottom: calc(var(--v2-topo-abas) + 10px);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 8px 8px 8px 18px;
+  border-radius: var(--v2-raio-vidro);
+  background: linear-gradient(180deg, rgb(30 31 44 / 0.98), rgb(14 15 22 / 0.99));
+  box-shadow:
+    inset 0 0 0 1px rgb(255 183 102 / 0.22),
+    var(--v2-sombra-vidro);
+}
+@media (min-width: 48rem) {
+  .barra {
+    bottom: max(16px, var(--v2-seguro-base));
+  }
+}
+.barraResumo {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  line-height: 1.3;
+}
+.barraResumo b {
+  font-size: 14.5px;
+  font-weight: 650;
+}
+.barraResumo span {
+  font-size: 12.5px;
+  color: var(--v2-tinta-3);
+}
+.barraAcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Celular estreito: uma linha só — o resumo à esquerda e os dois downloads
+   como botões de ícone de 44 px (o rótulo continua para o leitor de tela). */
+@media (max-width: 29.99rem) {
+  .barra {
+    flex-wrap: nowrap;
+    padding-left: 14px;
+  }
+  .barraResumo {
+    min-width: 0;
+  }
+  .barraAcoes {
+    flex-wrap: nowrap;
+  }
+  .barraAcoes > * {
+    width: 44px;
+    padding: 0;
+  }
+  .rotuloBarra {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+/* Tela baixa (o celular deitado): fixa, a barra e a de abas cobririam metade
+   da janela. Ela fica no fim da lista, no fluxo da página. */
+@media (max-height: 30rem) {
+  .barra {
+    position: static;
+  }
+}

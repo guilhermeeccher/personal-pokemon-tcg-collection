@@ -87,6 +87,28 @@ export function enviarSelecao(colecaoId: string, corpos: readonly CorpoSelecao[]
   }).finally(() => mudar(colecaoId, (e) => ({ ...e, emVoo: e.emVoo - 1 })));
 }
 
+/**
+ * Uma escrita da triagem que não é marcação — a confirmação do "sem estoque"
+ * da tela de opções de compra (pacote 4a), que grava o registro e desmarca
+ * escolhas numa transação do servidor — pela **mesma fila da coleção**: uma
+ * marcação feita depois dela, nesta tela ou noutra (a aba, o detalhe), espera
+ * a vez e não a ultrapassa, e ela não ultrapassa uma marcação já na fila.
+ * Conta em `emVoo` enquanto espera e roda, e em `concluidos` ao terminar,
+ * dê certo ou não: toda tela que mostra a lista para colar sabe que ela ficou
+ * velha. Não mexe na geração — quem a chama lê o próprio resultado e relê.
+ * Uma exceção da tarefa volta para quem chamou e não trava a fila.
+ */
+export function escreverNaFila<T>(colecaoId: string, tarefa: () => Promise<T>): Promise<T> {
+  mudar(colecaoId, (e) => ({ ...e, emVoo: e.emVoo + 1 }));
+  return filaDaColecao(colecaoId, async () => {
+    try {
+      return await tarefa();
+    } finally {
+      mudar(colecaoId, (e) => ({ ...e, concluidos: e.concluidos + 1 }));
+    }
+  }).finally(() => mudar(colecaoId, (e) => ({ ...e, emVoo: e.emVoo - 1 })));
+}
+
 async function enviarAgora(colecaoId: string, corpos: readonly CorpoSelecao[]): Promise<DesfechoDaSelecao> {
   let parcial = false;
   for (const corpo of corpos) {

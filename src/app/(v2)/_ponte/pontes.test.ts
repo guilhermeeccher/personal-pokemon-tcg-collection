@@ -111,10 +111,7 @@ describe("pontes da v2, executadas", () => {
      entrega uma tela tira a linha dela daqui (e só a dela). */
   it("encontra as pontes que ainda restam", () => {
     expect(PONTES.map((p) => p.rota).sort()).toEqual(
-      [
-        "/colecoes/[id]/opcoes-compra",
-        ...TELAS_DA_DEX,
-      ].sort(),
+      [...TELAS_DA_DEX].sort(),
     );
   });
 
