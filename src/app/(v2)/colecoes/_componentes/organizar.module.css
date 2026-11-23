@@ -1,0 +1,229 @@
+/*
+ * O modo "Organizar", as sugestões e as janelas em lote de `/colecoes`
+ * (pacote 4b). Painéis sem desfoque (regra 5b: uma lista nunca gasta
+ * `backdrop-filter`); todo controle tem 44 px de alvo e 8 px entre um e
+ * outro, que é o `gap` das fileiras. Nada só no hover.
+ */
+
+.mudo {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+}
+
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------------------------------------------------------- Organizar */
+
+.ajudaOrganizar {
+  margin: 0;
+  max-width: 64ch;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--v2-tinta-2);
+}
+
+.cabecalhoGrupo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.linhas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * Uma coleção no modo "Organizar": o nome em cima e os controles embaixo no
+ * celular; lado a lado de 768 px para cima. Sem link: aqui a linha é para
+ * mover, e um link com botão dentro seria markup inválido.
+ */
+.linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 12px 14px;
+  border-radius: var(--v2-raio-painel);
+}
+.linhaTexto {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.linhaNome {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 650;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.linhaControles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+/* O seletor de grupo encolhe no celular em vez de empurrar a página para o lado. */
+.seletorGrupo {
+  flex: 1 1 180px;
+  min-width: 0;
+  max-width: 260px;
+}
+@media (max-width: 47.99rem) {
+  .linhaControles {
+    width: 100%;
+  }
+  .seletorGrupo {
+    max-width: none;
+  }
+}
+
+/* ---------------------------------------------------------- Sugestões */
+
+.sugestoes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sugestoesTopo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.sugestoesTitulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+.contagem {
+  padding: 1px 9px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-2);
+}
+.gradeSugestoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sugestao {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  border-radius: var(--v2-raio-painel);
+}
+.sugestaoTipo {
+  align-self: flex-start;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-2);
+}
+.sugestaoRazao {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.sugestaoRazao strong {
+  font-weight: 650;
+}
+
+/* ---------------------------------------------------------- Prévias em lote */
+
+.listaPrevia {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.itemPrevia {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.itemApagado {
+  opacity: 0.6;
+}
+/* O rótulo inteiro marca: caixa e texto num alvo só de 44 px. */
+.rotuloMarca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.rotuloMarca:has(input:disabled) {
+  cursor: default;
+}
+.caixa {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  accent-color: #c8b4ff;
+}
+.textoMarca {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+.textoMarca b {
+  font-weight: 600;
+}
+/* O que vem abaixo da caixa (nome editável, motivo) alinha com o texto, não com a caixa. */
+.recuo {
+  padding-left: 32px;
+}
+.etiqueta,
+.etiquetaAlerta {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-2);
+}
+.etiquetaAlerta {
+  color: var(--v2-falta);
+  background: rgb(255 183 102 / 0.12);
+}

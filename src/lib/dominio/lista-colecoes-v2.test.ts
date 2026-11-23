@@ -184,12 +184,14 @@ describe("montarListaV2", () => {
     ];
     const lista = montarListaV2(
       vitrine,
-      [{ id: "g1", nome: "Grupo", serieRotulo: null }],
+      [{ id: "g1", nome: "Grupo", serieId: "sv", serieRotulo: "Escarlate e Violeta" }],
       new Map([["a", [{ url: "u", rotulo: "001", silhueta: false }]]]),
       resolver,
     );
     expect(lista.totalColecoes).toBe(2);
     expect(lista.secoes.map((s) => s.grupo?.nome ?? null)).toEqual(["Grupo", null]);
+    // A série vai junto: é ela que acende as ações em lote do grupo no modo "Organizar".
+    expect(lista.secoes[0].grupo).toEqual({ id: "g1", nome: "Grupo", serieId: "sv", serieRotulo: "Escarlate e Violeta" });
     const a = lista.secoes[0].colecoes[0];
     expect(a.capa).toEqual({ nome: "Carta", url: "cdn/c/low.webp" });
     expect(a.avisoCatalogoIncompleto).toBe(true);

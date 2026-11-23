@@ -4,45 +4,27 @@ import { serieDistintaDoNome, type ListaColecoesV2DTO } from "@/lib/dominio/list
 
 import { Painel } from "../../_componentes/primitivos/painel";
 import { BotaoLink } from "../../_componentes/primitivos/botao";
-import { AvisoElegiveis } from "./aviso-elegiveis";
 import { CartaoColecao } from "./cartao-colecao";
 import estilos from "./colecoes.module.css";
+import { PainelColecoes } from "./painel-colecoes";
 
 /**
- * `/colecoes`, modo "ver": as seções por grupo na ordem em que a leitura as
- * entrega — **nunca reordenada aqui** (`listarColecoes` é a única fonte da
- * ordem) —, cada coleção como um cartão que leva a ela.
+ * `/colecoes`: as seções por grupo na ordem em que a leitura as entrega —
+ * **nunca reordenada aqui** (`listarColecoes` é a única fonte da ordem) —,
+ * cada coleção como um cartão que leva a ela.
  *
- * "Organizar" (subir, descer, mudar de grupo, criar e excluir grupo, ações em
- * lote), as sugestões e a coleção temática são do pacote 4b. Até lá a v1 faz
- * tudo isso, e a tela diz onde: o botão "Organizar na v1" leva a `/v1/colecoes`
- * (regra "Fazer na v1" do `docs/design-v2/README.md`).
+ * Os cartões ("ver") são desenhados aqui, no servidor, e entram prontos no
+ * `PainelColecoes`, que é do cliente: ele guarda o cabeçalho, as sugestões, o
+ * modo "Organizar" (pacote 4b) e as janelas, e troca os cartões pelos
+ * controles quando se organiza. Uma escrita relê esta mesma leitura
+ * (`router.refresh`), e os dois modos voltam com a ordem nova do servidor.
  */
 export async function ListaColecoes({ lista }: { lista: ListaColecoesV2DTO }) {
   const t = await getTranslations("v2Colecoes");
   const comGrupos = lista.secoes.some((s) => s.grupo !== null);
 
-  return (
-    <div className={estilos.pagina}>
-      <header className={estilos.cabecalho}>
-        <div>
-          <h1 className={estilos.titulo}>{t("titulo")}</h1>
-          <p className={`${estilos.contagem} v2-num`}>{t("contagem", { total: lista.totalColecoes })}</p>
-        </div>
-        <div className={estilos.acoes}>
-          <BotaoLink href="/colecoes/nova" variante="primario">
-            {t("nova")}
-          </BotaoLink>
-          <BotaoLink href="/colecoes/falta">{t("oQueFalta")}</BotaoLink>
-          <BotaoLink href="/v1/colecoes">
-            {t("organizarNaV1")}
-          </BotaoLink>
-        </div>
-      </header>
-      <p className={estilos.ajuda}>{t("ajudaOrganizar")}</p>
-
-      <AvisoElegiveis />
-
+  const vista = (
+    <>
       {lista.totalColecoes === 0 && !comGrupos && (
         <Painel className={estilos.estado}>
           <h2 className={estilos.estadoTitulo}>{t("vazio")}</h2>
@@ -78,6 +60,8 @@ export async function ListaColecoes({ lista }: { lista: ListaColecoesV2DTO }) {
           </section>
         );
       })}
-    </div>
+    </>
   );
+
+  return <PainelColecoes lista={lista} vista={vista} />;
 }

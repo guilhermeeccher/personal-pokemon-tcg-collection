@@ -13,8 +13,9 @@ import { rotuloDoTema } from "./rotulo-tema";
  * O cartão de uma coleção: capa, nome, o que ela é, o anel de progresso e, no
  * rodapé, "faltam N" com as primeiras vagas vazias como silhueta. O cartão
  * inteiro é um link só para `/colecoes/<id>` — um alvo de toque grande, e sem
- * botão dentro de link. As ações de organizar (mover, agrupar) são do pacote
- * 4b e, até lá, vivem na v1.
+ * botão dentro de link. As ações de organizar (mover, agrupar) não moram no
+ * cartão: o modo "Organizar" troca os cartões por linhas com os controles
+ * (`modo-organizar.tsx`).
  *
  * - **A capa é a carta mais vistosa já alocada**; sem nenhuma, o logo do set;
  *   sem nenhum, um ícone. Capa e logo vêm em `low.webp`.

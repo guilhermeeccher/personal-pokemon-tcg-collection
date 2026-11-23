@@ -51,6 +51,12 @@ export interface ColecaoListaV2DTO {
 export interface GrupoListaV2DTO {
   id: string;
   nome: string;
+  /**
+   * A série ligada (`set_serie_id`), `null` sem série. É o que acende as duas
+   * ações em lote do grupo no modo "Organizar" e o que a janela de edição
+   * mostra escolhido; comparada como gravada, sem normalizar caixa.
+   */
+  serieId: string | null;
   /** O nome da série ligada, como o seletor de expansão o escreve; `null` sem série. */
   serieRotulo: string | null;
 }
@@ -174,7 +180,7 @@ export interface ColecaoDaVitrine {
 
 export function montarListaV2(
   vitrine: readonly ColecaoDaVitrine[],
-  grupos: readonly { id: string; nome: string; serieRotulo: string | null }[],
+  grupos: readonly { id: string; nome: string; serieId: string | null; serieRotulo: string | null }[],
   miniaturas: ReadonlyMap<string, MiniaturaVagaV2[]>,
   resolver: Pick<ResolvedoresDeImagem, "imagemDaCarta">,
 ): ListaColecoesV2DTO {
@@ -200,7 +206,9 @@ export function montarListaV2(
     };
   });
   const secoes = secoesDaLista(itens, grupos).map((s) => ({
-    grupo: s.grupo ? { id: s.grupo.id, nome: s.grupo.nome, serieRotulo: s.grupo.serieRotulo } : null,
+    grupo: s.grupo
+      ? { id: s.grupo.id, nome: s.grupo.nome, serieId: s.grupo.serieId, serieRotulo: s.grupo.serieRotulo }
+      : null,
     colecoes: s.colecoes.map((i) => i.colecao),
   }));
   return { secoes, totalColecoes: vitrine.length };
@@ -211,7 +219,7 @@ export function montarListaV2(
  * grupo não diz: um grupo chamado "Escarlate e Violeta" ligado à série de
  * mesmo nome não precisa repetir.
  */
-export function serieDistintaDoNome(grupo: GrupoListaV2DTO): string | null {
+export function serieDistintaDoNome(grupo: Pick<GrupoListaV2DTO, "id" | "nome" | "serieRotulo">): string | null {
   const serie = grupo.serieRotulo?.trim();
   if (!serie) return null;
   return serie.toLowerCase() === grupo.nome.trim().toLowerCase() ? null : serie;
