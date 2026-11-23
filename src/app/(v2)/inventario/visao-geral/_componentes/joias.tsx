@@ -24,6 +24,8 @@ import type { PrecoDaJoia } from "@/lib/dominio/visao-geral-v2";
 
 import { useFormatos } from "../../../_componentes/detalhe/formatos";
 
+import type { PreviaDaCarta } from "../../../_componentes/detalhe/detalhe-carta";
+
 import { CartaQueAbre, useDetalheDeCopia } from "./detalhe-de-copia";
 import estilos from "./visao-geral.module.css";
 
@@ -38,13 +40,15 @@ export interface JoiaDaTela {
   raridade: string;
   raridadeCrua: string | null;
   imagemUrl: string;
+  /** De onde veio a foto: governa o selo de foto emprestada (outro idioma, mypcards). */
+  imagemOrigem: PreviaDaCarta["imagemOrigem"];
   preco: PrecoDaJoia | null;
 }
 
 export function Joias({ joias, fonte }: { joias: readonly JoiaDaTela[]; fonte: "liga" | "cardmarket" }) {
   const t = useTranslations("v2VisaoGeral.joias");
   const formatos = useFormatos();
-  const { abrir, detalhe, abertaCopiaId, alvoCopiaId } = useDetalheDeCopia();
+  const { abrir, detalhe, abertaCartaId, alvoCartaId } = useDetalheDeCopia();
 
   return (
     <section className={estilos.secao} aria-labelledby="vg-joias">
@@ -63,18 +67,19 @@ export function Joias({ joias, fonte }: { joias: readonly JoiaDaTela[]; fonte: "
           <li key={j.cartaId} className={estilos.joia}>
             {j.copiaId ? (
               <CartaQueAbre
-                copiaId={j.copiaId}
+                cartaId={j.cartaId}
                 nome={j.nome}
                 imagemUrl={j.imagemUrl}
+                imagemOrigem={j.imagemOrigem}
                 raridade={j.raridadeCrua}
                 rotulo={t("abrir", { nome: j.nome, set: j.setNome })}
-                aberta={abertaCopiaId === j.copiaId}
-                noParAtivo={alvoCopiaId === j.copiaId}
+                aberta={abertaCartaId === j.cartaId}
+                noParAtivo={alvoCartaId === j.cartaId}
                 aoAbrir={() =>
                   abrir({
                     cartaId: j.cartaId,
                     copiaId: j.copiaId as string,
-                    previa: { nome: j.nome, imagemUrl: j.imagemUrl, raridade: j.raridadeCrua },
+                    previa: { nome: j.nome, imagemUrl: j.imagemUrl, imagemOrigem: j.imagemOrigem, raridade: j.raridadeCrua },
                   })
                 }
               />
@@ -94,6 +99,9 @@ export function Joias({ joias, fonte }: { joias: readonly JoiaDaTela[]; fonte: "
                       ? t("precoCardmarket", { valor: formatos.brl(j.preco.valor) })
                       : t("precoLiga", { valor: formatos.brl(j.preco.valor) })}
                   </span>
+                  {j.preco.fonte === "cardmarket" && j.preco.criterio && j.preco.criterio !== "tendencia" && (
+                    <span className={estilos.precoOrigem}>{t(`criterio.${j.preco.criterio}`)}</span>
+                  )}
                   {j.preco.fonte === "cardmarket" && j.preco.valorEur !== null && j.preco.cotacao !== null && (
                     <span className={`${estilos.precoOrigem} v2-num`}>
                       {t("origemCardmarket", {

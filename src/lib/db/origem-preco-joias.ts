@@ -30,13 +30,19 @@ export async function lerOrigemPrecoCardmarket(
       valorEur: precoCartaCardmarket.valorEur,
       cotacao: precoCartaCardmarket.cotacao,
       cotacaoData: precoCartaCardmarket.cotacaoData,
+      criterioValor: precoCartaCardmarket.criterioValor,
     })
     .from(precoCartaCardmarket)
     .where(inArray(precoCartaCardmarket.cartaId, [...cartaIds]));
   return new Map(
     linhas.map((l) => [
       l.cartaId,
-      { valorEur: numero(l.valorEur), cotacao: numero(l.cotacao), cotacaoData: l.cotacaoData },
+      {
+        criterioValor: l.criterioValor,
+        valorEur: numero(l.valorEur),
+        cotacao: numero(l.cotacao),
+        cotacaoData: l.cotacaoData,
+      },
     ]),
   );
 }

@@ -3,6 +3,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { fonteDePreco } from "@/lib/dominio/fonte-preco";
 import type { ResumoInventario } from "@/lib/db/resumo-inventario";
 import { hrefInventario, precoDaJoia } from "@/lib/dominio/visao-geral-v2";
+import type { OrigemImagem } from "@/lib/dominio/origem-imagem";
 import type { OrigemPrecoCardmarket } from "@/lib/dominio/visao-geral-v2";
 
 import { BotaoLink } from "../../../_componentes/primitivos/botao";
@@ -30,10 +31,13 @@ export async function VisaoGeral({
   resumo,
   copiaPorCarta,
   origemCardmarket,
+  origemImagem,
 }: {
   resumo: ResumoInventario;
   copiaPorCarta: ReadonlyMap<string, string>;
   origemCardmarket: ReadonlyMap<string, OrigemPrecoCardmarket>;
+  /** `cartaId|idioma` → de onde veio a foto da joia. */
+  origemImagem: ReadonlyMap<string, OrigemImagem | null>;
 }) {
   const t = await getTranslations("v2VisaoGeral");
   const tRaridades = await getTranslations("raridadesCarta");
@@ -69,6 +73,7 @@ export async function VisaoGeral({
     raridade: rotuloDaRaridade(tRaridades, tCom("semRaridade"), j.raridade),
     raridadeCrua: j.raridade,
     imagemUrl: j.imagemUrl,
+    imagemOrigem: origemImagem.get(`${j.cartaId}|${j.idioma}`) ?? null,
     preco: precoDaJoia(fonte, j.preco, origemCardmarket.get(j.cartaId)),
   }));
 

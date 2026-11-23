@@ -562,9 +562,11 @@
   font-size: 13.5px;
   color: var(--v2-tinta-3);
 }
+/* 8 px entre os alvos de toque: o padding de `.linha` é área clicável, não separação. */
 .linhas {
   display: flex;
   flex-direction: column;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;

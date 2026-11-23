@@ -39,11 +39,14 @@ export interface PedidoDetalhe {
 export function useDetalheDeCopia() {
   const router = useRouter();
   const [aberto, setAberto] = useState<PedidoDetalhe | null>(null);
-  // A cópia cuja carta é o par ativo da transição: continua depois de fechar.
+  // A **carta** que é o par ativo da transição: continua depois de fechar. É a
+  // carta, não a cópia, que dá a identidade: depois de uma escrita a página é
+  // relida e a cópia representante da carta pode ser outra (a livre que acabou
+  // de ser alocada, por exemplo), e a transição de volta não pode perder o par.
   const [alvo, setAlvo] = useState<string | null>(null);
 
   const abrir = useCallback((pedido: PedidoDetalhe) => {
-    setAlvo(pedido.copiaId);
+    setAlvo(pedido.cartaId);
     startTransition(() => setAberto(pedido));
   }, []);
   const fechar = useCallback(() => setAberto(null), []);
@@ -57,11 +60,11 @@ export function useDetalheDeCopia() {
       }
       onFechar={fechar}
       onMudou={aoMudar}
-      chaveTransicao={alvo ? `copia:${alvo}` : undefined}
+      chaveTransicao={alvo ? `carta:${alvo}` : undefined}
     />
   );
 
-  return { abrir, detalhe, abertaCopiaId: aberto?.copiaId ?? null, alvoCopiaId: alvo };
+  return { abrir, detalhe, abertaCartaId: aberto?.cartaId ?? null, alvoCartaId: alvo };
 }
 
 /**
@@ -75,7 +78,7 @@ export function useDetalheDeCopia() {
  * do leitor de tela, para o mesmo comando não aparecer duas vezes.
  */
 export function CartaQueAbre({
-  copiaId,
+  cartaId,
   nome,
   imagemUrl,
   imagemOrigem,
@@ -87,7 +90,7 @@ export function CartaQueAbre({
   soPonteiro = false,
   className,
 }: {
-  copiaId: string;
+  cartaId: string;
   nome: string;
   imagemUrl: string | null;
   imagemOrigem?: PreviaDaCarta["imagemOrigem"];
@@ -116,7 +119,7 @@ export function CartaQueAbre({
       ) : (
         // Fora do par ativo, nada de transição: sem nome o React daria um nome
         // automático a cada carta e animaria todas (orçamento da regra 5).
-        <TransicaoVista name={nomeTransicaoCarta(`copia:${copiaId}`, noParAtivo)} default={noParAtivo ? undefined : "none"}>
+        <TransicaoVista name={nomeTransicaoCarta(`carta:${cartaId}`, noParAtivo)} default={noParAtivo ? undefined : "none"}>
           <Carta
             imagemUrl={imagemUrl}
             origem={imagemOrigem ?? null}

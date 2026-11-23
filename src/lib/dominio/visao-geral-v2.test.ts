@@ -48,22 +48,23 @@ describe("hrefInventario", () => {
 describe("precoDaJoia", () => {
   it("sem valor não há preço (nunca R$ 0)", () => {
     expect(precoDaJoia("liga", null, undefined)).toBeNull();
-    expect(precoDaJoia("cardmarket", null, { valorEur: 1, cotacao: 6, cotacaoData: "2026-11-20" })).toBeNull();
+    expect(precoDaJoia("cardmarket", null, { criterioValor: "tendencia", valorEur: 1, cotacao: 6, cotacaoData: "2026-11-20" })).toBeNull();
     expect(precoDaJoia("liga", Number.NaN, undefined)).toBeNull();
   });
   it("na Liga o valor segue em reais, sem euro nem cotação", () => {
-    expect(precoDaJoia("liga", 12.5, { valorEur: 2, cotacao: 6, cotacaoData: "2026-11-20" })).toEqual({
+    expect(precoDaJoia("liga", 12.5, { criterioValor: "tendencia", valorEur: 2, cotacao: 6, cotacaoData: "2026-11-20" })).toEqual({
       fonte: "liga",
       valor: 12.5,
     });
   });
-  it("no Cardmarket leva a fonte, o euro, a cotação e o dia dela", () => {
-    expect(precoDaJoia("cardmarket", 130, { valorEur: 21.5, cotacao: 6.05, cotacaoData: "2026-11-20" })).toEqual({
+  it("no Cardmarket leva a fonte, o euro, a cotação, o dia dela e o critério que decidiu o valor", () => {
+    expect(precoDaJoia("cardmarket", 130, { criterioValor: "media30", valorEur: 21.5, cotacao: 6.05, cotacaoData: "2026-11-20" })).toEqual({
       fonte: "cardmarket",
       valor: 130,
       valorEur: 21.5,
       cotacao: 6.05,
       cotacaoData: "2026-11-20",
+      criterio: "media30",
     });
   });
   it("no Cardmarket sem a linha de origem ainda mostra o valor, sem inventar cotação", () => {
@@ -73,6 +74,7 @@ describe("precoDaJoia", () => {
       valorEur: null,
       cotacao: null,
       cotacaoData: null,
+      criterio: null,
     });
   });
 });

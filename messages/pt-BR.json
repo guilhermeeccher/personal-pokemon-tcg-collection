@@ -2017,11 +2017,15 @@
       "titulo": "Joias da coleção",
       "descricao": "As cartas que mais valem no inventário; as sem preço consultado seguem pela raridade.",
       "notaLiga": "Preços da LigaPokemon, em reais, como o site os dá — sem conversão.",
-      "notaCardmarket": "Referência internacional: tendência do Cardmarket convertida em reais pela PTAX do dia indicado. Não é um valor de mercado brasileiro.",
+      "notaCardmarket": "Referência internacional: o valor do Cardmarket (a tendência; a média de 30 dias quando a tendência destoa dela, ou a média quando não há tendência) convertido em reais pela PTAX do dia indicado. Não é um valor de mercado brasileiro.",
       "abrir": "Abrir {nome}, {set}",
       "precoLiga": "Liga ~{valor}",
       "precoCardmarket": "Cardmarket ~{valor}",
-      "origemCardmarket": "{eur} × PTAX {cotacao} em {data}"
+      "origemCardmarket": "{eur} × PTAX {cotacao} em {data}",
+      "criterio": {
+        "media30": "média de 30 dias (a tendência destoava)",
+        "media": "média (sem tendência)"
+      }
     },
     "colecoes": {
       "titulo": "Suas coleções",

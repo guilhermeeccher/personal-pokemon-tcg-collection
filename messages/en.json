@@ -2025,11 +2025,15 @@
       "titulo": "Collection gems",
       "descricao": "The cards worth the most in the inventory; those with no price looked up follow the rarity.",
       "notaLiga": "LigaPokemon prices, in reais, as the site gives them — not converted.",
-      "notaCardmarket": "International reference: the Cardmarket trend converted to reais by the PTAX of the day shown. It is not a Brazilian market value.",
+      "notaCardmarket": "International reference: the Cardmarket value (the trend; the 30-day average when the trend strays from it, or the average when there is no trend) converted to reais by the PTAX of the day shown. It is not a Brazilian market value.",
       "abrir": "Open {nome}, {set}",
       "precoLiga": "Liga ~{valor}",
       "precoCardmarket": "Cardmarket ~{valor}",
-      "origemCardmarket": "{eur} × PTAX {cotacao} on {data}"
+      "origemCardmarket": "{eur} × PTAX {cotacao} on {data}",
+      "criterio": {
+        "media30": "30-day average (the trend strayed)",
+        "media": "average (no trend)"
+      }
     },
     "colecoes": {
       "titulo": "Your collections",

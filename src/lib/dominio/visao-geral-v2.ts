@@ -5,6 +5,7 @@
  * leituras são de `lib/db/resumo-inventario.ts` e `origem-preco-joias.ts`.
  */
 
+import type { CriterioValorCardmarket } from "./preco-cardmarket";
 import type { FontePreco } from "./fonte-preco";
 
 /**
@@ -50,9 +51,12 @@ export type PrecoDaJoia =
       /** A PTAX de fechamento (venda) que converteu a linha, e o dia dela. */
       cotacao: number | null;
       cotacaoData: string | null;
+      /** O que decidiu o valor: a tendência, ou a média (de 30 dias, ou a simples) quando a tendência destoa ou falta. */
+      criterio: CriterioValorCardmarket | null;
     };
 
 export interface OrigemPrecoCardmarket {
+  criterioValor: CriterioValorCardmarket | null;
   valorEur: number | null;
   cotacao: number | null;
   cotacaoData: string | null;
@@ -79,5 +83,6 @@ export function precoDaJoia(
     valorEur: origemCardmarket?.valorEur ?? null,
     cotacao: origemCardmarket?.cotacao ?? null,
     cotacaoData: origemCardmarket?.cotacaoData ?? null,
+    criterio: origemCardmarket?.criterioValor ?? null,
   };
 }

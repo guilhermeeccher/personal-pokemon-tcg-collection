@@ -59,7 +59,7 @@ export function ListaRepetidas({
   const t = useTranslations("v2Repetidas");
   const router = useRouter();
   const [trocando, iniciar] = useTransition();
-  const { abrir, detalhe, abertaCopiaId, alvoCopiaId } = useDetalheDeCopia();
+  const { abrir, detalhe, abertaCartaId, alvoCartaId } = useDetalheDeCopia();
 
   function irPara(estado: { soLivres: boolean; pagina: number }) {
     iniciar(() => router.push(hrefRepetidas(estado)));
@@ -111,14 +111,14 @@ export function ListaRepetidas({
                 <div className={estilos.miniatura}>
                   {c.copiaId && aoAbrir ? (
                     <CartaQueAbre
-                      copiaId={c.copiaId}
+                      cartaId={c.cartaId}
                       nome={c.nome}
                       imagemUrl={c.imagemUrl}
                       imagemOrigem={c.imagemOrigem}
                       raridade={c.raridadeCrua}
                       rotulo={t("abrirCarta", { nome: c.nome })}
-                      aberta={abertaCopiaId === c.copiaId}
-                      noParAtivo={alvoCopiaId === c.copiaId}
+                      aberta={abertaCartaId === c.cartaId}
+                      noParAtivo={alvoCartaId === c.cartaId}
                       aoAbrir={aoAbrir}
                       soPonteiro
                     />
