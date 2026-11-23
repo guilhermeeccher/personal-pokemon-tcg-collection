@@ -204,8 +204,8 @@ export function GradePokedex({
         <SpriteDex sprite={f.sprite} shiny={trilha === "shiny"} tamanho={64} apagado={r.apagado} />
         <span className={`${estilos.numero} v2-num`}>{numeroDex(f.numero)}</span>
         <span className={estilos.especie}>{f.especie}</span>
-        <span className={estilos.forma}>{d.forma ?? " "}</span>
-        <span className={`${estilos.lugar} v2-num`}>{d.lugarCurto ?? " "}</span>
+        <span className={estilos.forma}>{d.forma ?? "\u00a0"}</span>
+        <span className={`${estilos.lugar} v2-num`}>{d.lugarCurto ?? "\u00a0"}</span>
         <span className={estilos.selos}>
           <span className={estilos.estado} data-estado={r.estado}>
             {d.estado}

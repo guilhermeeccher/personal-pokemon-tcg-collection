@@ -530,7 +530,7 @@ function TileRegiao({ regiao, p }: { regiao: Regiao; p: Record<"normal" | "shiny
       </span>
       <span className={estilos.iniciais} style={{ filter: `grayscale(${1 - fracao})`, opacity: 0.55 + 0.45 * fracao }}>
         {INICIAIS[regiao].map((n) => (
-          <SpriteDex key={n} sprite={String(n)} shiny={false} tamanho={48} />
+          <SpriteDex key={n} sprite={String(n)} shiny={false} tamanho={56} />
         ))}
       </span>
       <Barra valor={p.normal.noHome} maximo={p.normal.contam} />

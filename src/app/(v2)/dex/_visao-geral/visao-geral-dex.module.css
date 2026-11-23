@@ -252,7 +252,7 @@
 .barra {
   position: relative;
   display: block;
-  flex: 1;
+  flex: none;
   min-width: 40px;
   height: 8px;
   border-radius: 999px;
@@ -274,6 +274,11 @@
   gap: 10px;
   font-size: 12.5px;
   color: var(--v2-tinta-2);
+}
+/* Na linha, a barra ocupa o que sobra ao lado do número; numa coluna (o
+   cartão, a região), `flex: none` acima a impede de crescer na altura. */
+.barraLinha .barra {
+  flex: 1;
 }
 
 .regioes {
