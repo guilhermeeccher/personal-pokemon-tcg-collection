@@ -3105,6 +3105,40 @@
       "erroCarregarTexto": "Tente de novo daqui a pouco."
     }
   },
+  "v2DexCaixas": {
+    "descricao": "As caixas do HOME como o app as monta, com a posição de cada vaga. Toque numa vaga para ver o Pokémon, a caixa e registrar.",
+    "visaoGeral": "Visão geral",
+    "pokedex": "Pokédex",
+    "recebidos": "Recebidos",
+    "grade": "Caixas do HOME",
+    "caixa": "Caixa {numero}, {nome}",
+    "legenda": "Legenda das vagas",
+    "legendaBuraco": "Tracejada",
+    "legendaBuracoTexto": "a posição existe no HOME, mas nada se guarda nela nesta trilha",
+    "reservadas": {
+      "dica": "De 0 a 20. Muda só o número das caixas, nunca uma posição.",
+      "aplicar": "Aplicar",
+      "invalido": "Use um número inteiro de 0 a 20.",
+      "salvas": "{quantidade, plural, =0 {Nenhuma caixa reservada} one {# caixa reservada} other {# caixas reservadas}}",
+      "erro": "Não foi possível salvar. Tente de novo."
+    }
+  },
+  "v2DexRecebidos": {
+    "descricao": "O que chegou ao HOME e ainda não foi guardado, por caixa de destino. As posições a guardar vêm acesas.",
+    "visaoGeral": "Visão geral",
+    "caixas": "Caixas",
+    "legenda": "Legenda das posições",
+    "aGuardarLegenda": "A guardar",
+    "jaGuardadaLegenda": "Já guardado",
+    "listaCaixa": "Caixa {numero}: o que guardar",
+    "guardeiCaixa": "Guardei os {quantidade} da caixa {numero}",
+    "guardeiSemLugar": "Guardei os {quantidade} sem lugar",
+    "guardados": "{quantidade, plural, one {# Pokémon guardado} other {# Pokémon guardados}}",
+    "nadaMudou": "Nada mudou: esses já tinham sido guardados. A lista foi lida de novo.",
+    "confirmarTitulo": "Guardar a rodada inteira?",
+    "confirmarTexto": "Isso tira da lista os {quantidade} Pokémon desta rodada, inclusive os sem lugar nas caixas. Não dá para desfazer por aqui.",
+    "mostrarMais": "Mostrar mais ({restantes} restantes)"
+  },
   "v2Dex": {
     "erroCarregar": "Não foi possível abrir a Living Dex",
     "erroCarregarTexto": "A leitura do banco falhou. Nada foi alterado; tente de novo daqui a pouco.",
