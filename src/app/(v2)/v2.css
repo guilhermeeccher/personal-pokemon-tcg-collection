@@ -432,6 +432,17 @@ h3 {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+  /*
+   * O `*` não alcança os pseudo-elementos da View Transition: sem isto o
+   * React ainda chama a transição do documento e a raiz faz o crossfade
+   * padrão, mesmo com movimento reduzido. Sem animação, a troca é imediata e
+   * o estado final é o mesmo.
+   */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }
 
 html[data-v2-efeitos="leve"] .v2-ambiente i,

@@ -176,8 +176,12 @@ rest are the technical foundations of the v2.
    search button) and one on the desktop (rail); a dialog's veil is the third. The dialog panel,
    the floating notice, buttons and segmented controls have no `backdrop-filter`.
 6. **Reduced motion and light mode are reactive.** Both listen for changes at runtime and turn off
-   view transitions, springs, the page turn and continuous animation, with **the same final state**
-   of the screen. Reduced motion works on its own, regardless of the light-mode heuristic. Light
+   springs, the page turn and continuous animation, with **the same final state** of the screen.
+   **Only reduced motion turns off view transitions**, the root crossfade included (`v2.css`
+   stops every `::view-transition-*` animation under it). Light mode keeps them: they are short,
+   one at a time, run on the compositor and carry the card from the grid to the detail; what light
+   mode cuts is the cost of every frame (`preferencias-movimento.ts` has the reasoning).
+   Reduced motion works on its own, regardless of the light-mode heuristic. Light
    mode is automatic by heuristic, with a switch that always wins (decision 7); package 0b
    specifies the signals, the behaviour without them, the persistence and the precedence. **The
    shell reads one attribute only, `html[data-v2-efeitos="leve"]`** (written by
