@@ -167,7 +167,6 @@ export function CaixasHome({
             {td("caixas.contagem", { caixas: String(caixas.length), vagas: String(totalVagas) })}
           </p>
         </div>
-        <CampoReservadas valor={caixasReservadas} />
         {saltos.length > 0 && (
           <nav className={estilos.chips} aria-label={td("caixas.irPara")}>
             {saltos.map(({ grupo, chave }) => (
@@ -177,7 +176,6 @@ export function CaixasHome({
             ))}
           </nav>
         )}
-        <p className={estilos.nota}>{td("caixas.folga")}</p>
         {trilha === "shiny" && (
           <p className={estilos.nota}>
             {td("caixas.shiny", {
@@ -201,6 +199,16 @@ export function CaixasHome({
             </span>
           </li>
         </ul>
+        {/* O ajuste raro fica recolhido: o resumo diz o nome e o valor de agora. */}
+        <details className={estilos.ajustes}>
+          <summary className={estilos.resumo}>
+            {td("caixas.reservadas")}: <b className="v2-num">{caixasReservadas}</b>
+          </summary>
+          <div className={estilos.ajustesCorpo}>
+            <CampoReservadas valor={caixasReservadas} />
+            <p className={estilos.nota}>{td("caixas.folga")}</p>
+          </div>
+        </details>
       </section>
 
       {formas.length === 0 ? (

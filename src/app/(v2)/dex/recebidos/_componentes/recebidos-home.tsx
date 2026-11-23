@@ -108,18 +108,19 @@ export function RecebidosHome({
         avisar(t("guardados", { quantidade: r.guardados }), { tom: "sucesso" });
         break;
       case "nadaMudou":
-        // 200 sem nada a guardar: outra aba já tinha guardado. Lê de novo.
+        // 200 sem nada a guardar: outra aba já tinha guardado.
         avisar(t("nadaMudou"));
         break;
       case "recusa":
         setErro(textoDaRecusa(tr, r.corpo, td("recebidos.erro")));
-        // Uma lista velha (registro apagado, 404) ou conflito: lê de novo, para o próximo clique partir do que o servidor tem.
-        if (r.status === 404 || r.status === 409) iniciarLeitura(() => router.refresh());
-        return;
+        break;
       case "falhaDeRede":
         setErro(td("recebidos.erro"));
-        return;
+        break;
     }
+    // Em todo desfecho a tela lê de novo, nunca confia na lista que tinha: uma
+    // lista velha (outra aba), ou um lote que já tinha ido antes de um pedido
+    // recusado no meio de uma rodada grande, deixam a lista mentindo.
     iniciarLeitura(() => router.refresh());
   }
 
@@ -199,12 +200,16 @@ export function RecebidosHome({
               return (
                 <Painel key={chave} as="section" className={estilos.caixa} aria-labelledby={`recebidos-${chave}`}>
                   <header className={estilos.cabecalhoCaixa}>
-                    <h2 id={`recebidos-${chave}`} className={estilos.tituloCaixa}>
-                      <span className="v2-num">{td("caixas.caixaN", { numero: String(caixa.numero) })}</span>
-                      <span className={estilos.nomeCaixa}>{nomeCaixa.nome(caixa)}</span>
-                    </h2>
-                    {shiny && <span className={estilos.seloShiny}>{td("trilha.shiny")}</span>}
-                    <span className={estilos.nota}>{td("recebidos.nestaCaixa", { quantidade: String(itens.length) })}</span>
+                    <div className={estilos.tituloBloco}>
+                      <h2 id={`recebidos-${chave}`} className={estilos.tituloCaixa}>
+                        <span className="v2-num">{td("caixas.caixaN", { numero: String(caixa.numero) })}</span>
+                        <span className={estilos.nomeCaixa}>{nomeCaixa.nome(caixa)}</span>
+                      </h2>
+                      <p className={estilos.meta}>
+                        {shiny && <span className={estilos.seloShiny}>{td("trilha.shiny")}</span>}
+                        <span className={estilos.nota}>{td("recebidos.nestaCaixa", { quantidade: String(itens.length) })}</span>
+                      </p>
+                    </div>
                     <Botao
                       pequeno
                       className={estilos.guardei}

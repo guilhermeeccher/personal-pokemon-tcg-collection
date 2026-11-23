@@ -693,6 +693,77 @@ E. **The piece package 5b owns: the box name** (delivered 2026-11-23). Ported fr
     25 card images. No region reaches 300 slots today; if one does (new forms), it virtualizes on its
     own.
 
+### Boxes and Received (package 5b)
+
+39. **`/dex/caixas` computes the boxes and stores nothing.** The server page reads what the v1 page
+    reads (`listarFormasDex`, `lerSecoesDex`, `listarRegistrosDex`, `lerCaixasReservadas`) and the
+    screen builds the boxes with `montarCaixasDex`, the same function as the v1, so the counts and
+    the numbers are the v1's (51 boxes and 1,387 slots in the normal track, 1,350 in the shiny one,
+    the first box of each group at 1/46/52/60/65 and 91/136/142/150/155: equal on both screens). The
+    numbering keeps its gaps on purpose, the shiny track keeps its +90 from `ANCORA_SHINY`, and a
+    group of an off section leaves without renumbering the others.
+    - **A slot is a button, and a tap opens the Pokémon card** (`FolhaPokemon`) with "Register" in
+      its footer, at every width: one tap more than the v1's desktop (which went straight to
+      Register), the same path as the Pokédex (rule 37). **A hole opens the card too, with the
+      reason and no action**: the v1 showed it only under a mouse. The national number is written in
+      every slot, not only on a phone, and a legend spells out what each frame means (missing, in a
+      game, in HOME, dashed): nothing is information by colour or by hover alone.
+    - **The only write is "Boxes before National 1"** (`PATCH /api/dex/preferencias`). It sits in a
+      collapsed section whose summary says the name and the current value. The v1 wrote on every
+      keystroke, disabled the field while saving (on a phone that drops its focus) and swallowed
+      every refusal; the v2 applies by a button (or Enter), one request at a time, refuses a value
+      outside 0–20 before sending and shows a refusal in text, keeping the field as typed. The field
+      follows the server's value when the page is read again.
+40. **The boxes are the virtual grid's items, measured against rule 13's budget** (2026-11-23, the
+    same protocol: Chromium, iPhone profile 393 × 852, DPR 3, touch, iPhone user agent, CPU 4×,
+    production build, invented data; the whole catalog is in the page, so this is the real size:
+    51 boxes, 1,387 slots; "tap" is the longest Event Timing duration of a tap that opens the card,
+    six taps in the middle of the list, the first cold).
+
+    | Boxes | Mounted | DOM nodes (page) | `<img>` in the grid | Loaded | Tap, worst / median |
+    |---|---|---|---|---|---|
+    | all mounted (`limiar` raised for the test) | 51 | 6,349 | 1,387 | 408 | 256 / 176 ms |
+    | virtual (the shipped `LIMIAR_CAIXAS`) | 9 | 1,414 | 270 | 270 | 88–104 / 64–96 ms (three runs) |
+
+    Mounted whole, the tab is far outside the budget; virtual, it is inside it on nodes (under 2,500)
+    and on the tap, whose worst case sat at the 100 ms line (88, 104 and 96 ms in three runs). The image count is not the
+    card budget's (rule 38): a sprite is about 36 KB decoded, so 270 of them weigh like ~30 card
+    images, against ~60 allowed. A box is a **fixed-height item**: its height is affine in its width
+    (`geometria-caixa.ts`: ratio 5/6 plus a fixed 46 px, from an 8 px padding, 4 px gaps and a 44 px
+    header), so the grid places boxes without mounting them. Those three CSS measures
+    (`--cx-respiro`, `--cx-vao`, `--cx-cabecalho`) and the constants are one decision: a test checks
+    the formula against the drawing's sum, and changing one side alone cuts the last row.
+    - **`limiar` is 10 boxes** (300 slots, rule 13's threshold in slots). "Go to" (a group's first
+      box) mounts it through `elementoDe`, focuses it (the focus keeps it mounted while the scroll
+      arrives) and puts it at the top of the window; the grid's own `rolarAte` only scrolls until
+      the item shows. At the end of the page (Cosmetic) the box ends up as high as the page allows.
+    - **The focusable element of a grid cell is the box itself** (`role="group"`): the arrows go
+      from box to box, Home and End to the ends, and Tab enters the 30 slots of the focused box.
+    - **At 320 px a slot is 42 px** (a 288 px box, 8 px padding, 4 px gaps), 44 px from a 300 px box
+      and 54 px at 393 px. A HOME box is six columns, so below ~336 px the cell cannot be 44 px with
+      8 px around it; the slot keeps the whole cell as its target and the box is the one exception
+      to the 44 px rule, declared here. Every other control of the screen (chips, the summary, the
+      field and its button) is 44 px or more.
+41. **`/dex/recebidos` reads `a_guardar` as stored and writes only "Put away"**
+    (`POST /api/dex/registros/guardar`). The grouping is `montarRecebidos` (same boxes, same order,
+    same extra copies as the v1: 39 to put away, five boxes and the "no place" panel with two extra
+    copies, on both screens). The box grid is drawing only (`aria-hidden`); the list under it,
+    "position · name", is what a screen reader and a phone read.
+    - **"All put away" asks first**, through the confirmation dialog (focus on "Cancel", Esc
+      and Cancel send nothing): it takes the whole round off the list and cannot be undone from the
+      screen. The v1 did not ask. A box's "Put away" and the "no place" panel's stay direct, the
+      everyday gesture.
+    - **The route ignores what is not "to put away" and still answers 200**: a stale list (another
+      tab already put it away) comes back with `guardados` 0 or smaller. The screen tells "nothing
+      changed" instead of a success and reads the page again; it never trusts the list it had.
+    - **A request carries at most 2,000 ids** (the route's ceiling): a first load of both tracks
+      can pass it, so the ids go in batches, one after the other, and a refusal in the middle stops
+      the rest (what was put away stays put away; the screen reads again and shows what is left).
+    - **Twelve boxes at a time** ("Show more") and sixty "no place" lines: each box mounts its 30
+      cells and its list, and a first load of the whole HOME is dozens of boxes. "All put away"
+      covers the whole round, in view or not. After a put-away the focus goes to the
+      count (the button that had it left the list with its box).
+
 ## 8. Other rules, checked for the transition
 
 | Rule | Section of `AGENTS.md` | Scope | Note |
