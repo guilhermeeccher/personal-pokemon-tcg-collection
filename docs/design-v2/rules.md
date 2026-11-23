@@ -486,7 +486,10 @@ rest are the technical foundations of the v2.
     - **Optimistic, then checked.** A mark shows at once as a pending mark per slot. Requests go
       through **one queue per collection, shared by the tab and the card detail**
       (`envio-selecao.ts`), entered at the gesture, so the server sees the user's gestures in
-      order. The queue also keeps, per collection, the requests in flight, the requests finished
+      order. Package 4a's out-of-stock confirm (it records and unmarks in one server transaction)
+      goes through the same queue, by `escreverNaFila`: a mark made after it, on any screen, waits
+      for it, and it counts in flight and finished like a mark, so every screen sees the list stale
+      until a later read (rule 38). The queue also keeps, per collection, the requests in flight, the requests finished
       and a generation that a refusal from either side bumps: the list is not copied while a
       request is in flight, nor until a read started after the last finished request arrives
       (a failed read keeps it stale), and a request queued before a refusal is dropped unsent. A
@@ -612,9 +615,12 @@ rest are the technical foundations of the v2.
     unmarks in one transaction on the server. The preview belongs to the text that was checked and to
     the triage of that moment (`estadoDaPrevia`): confirm sends exactly that text, an answer for a text
     that has since changed is dropped, and a mark finished after the check (from any screen) asks for
-    a new check, since the server recomputes what it unmarks. Confirm waits while a mark is in flight;
-    while the confirm is in flight, marking and the shortcut wait, and the list counts as stale until a
-    read started after it succeeds. Cancel sends nothing, and the keys of the slots it would unmark
+    a new check, since the server recomputes what it unmarks. Confirm waits while a mark is in flight, and
+    goes through 1e's per-collection queue (`escreverNaFila`, rule 30): a mark made after it — here,
+    on the tab or in the detail, even after leaving this page — waits for it, and it counts in the
+    queue's in-flight and finished requests, so every screen keeps the list stale until a read started
+    after it succeeds. While it is in flight this page also locks its own mark buttons and the shortcut;
+    with no answer in 30 s the lock is released, the page rereads and says the result is unknown. Cancel sends nothing, and the keys of the slots it would unmark
     are labelled (`rotuloChaveVaga`), never raw. Pending marks are keyed by the slot and the card
     (`chavePendencia`), not by the row id, which a new Liga scan changes. A request another screen
     left in flight when this page opened rereads the page when it finishes.

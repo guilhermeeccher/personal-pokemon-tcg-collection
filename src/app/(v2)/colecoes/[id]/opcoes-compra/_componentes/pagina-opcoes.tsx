@@ -169,23 +169,20 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
   const concluidosDaLeituraEmCurso = useRef(0);
 
   /**
-   * A confirmação do "sem estoque" não passa pela fila de marcação: enquanto
-   * ela está no ar, marcar fica travado (um pedido posterior não pode
-   * ultrapassá-la e ter a marca apagada por ela), e a lista fica velha até
-   * uma leitura iniciada depois de ela terminar dar certo — o servidor pode
-   * ter desmarcado cartas, inclusive quando a resposta se perde.
+   * A confirmação do "sem estoque" vai pela fila da coleção
+   * (`escreverNaFila`): conta em `envios`, então a lista fica velha enquanto
+   * ela está no ar e até uma leitura iniciada depois dela dar certo, nesta
+   * tela ou noutra. Esta tela ainda trava os próprios botões de marcar
+   * enquanto ela está no ar: uma marca posterior esperaria a vez na fila, e a
+   * tela não deve mostrá-la antes.
    */
   const gravandoRef = useRef(false);
   const [gravando, setGravando] = useState(false);
-  const escritasRef = useRef(0);
-  const [escritasTerminadas, setEscritasTerminadas] = useState(0);
-  const [escritasLidas, setEscritasLidas] = useState(0);
 
   useEffect(() => {
     const controle = new AbortController();
     const reflete = confirmadasAte.current;
     const concluidosNaLeitura = enviosConcluidos(id);
-    const escritasNaLeitura = escritasRef.current;
     concluidosDaLeituraEmCurso.current = concluidosNaLeitura;
     leituraEmCurso.current = true;
     fetch(`/api/colecoes/${id}/opcoes-compra`, { cache: "no-store", signal: controle.signal })
@@ -205,7 +202,6 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
         setLeitura("ok");
         setConcluidosLidos(concluidosNaLeitura);
         concluidosLidosRef.current = concluidosNaLeitura;
-        setEscritasLidas(escritasNaLeitura);
         definirPendencias((p) => podarPendencias(p, reflete));
         if (!padraoAplicado.current) {
           padraoAplicado.current = true;
@@ -317,8 +313,6 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
       }
       gravandoRef.current = false;
       setGravando(false);
-      escritasRef.current++;
-      setEscritasTerminadas(escritasRef.current);
       recarregar();
     },
     [recarregar],
@@ -511,8 +505,7 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
   /* ---------- Desenho ---------- */
 
   const resumo = dados ? resumoComPendencias(dados, pendencias, fonte) : { cartas: 0, total: 0 };
-  const listaVelha =
-    (concluidosLidos !== null && envios.concluidos !== concluidosLidos) || gravando || escritasTerminadas !== escritasLidas;
+  const listaVelha = concluidosLidos !== null && envios.concluidos !== concluidosLidos;
   const atualizando = pendencias.size > 0 || envios.emVoo > 0 || listaVelha || leitura === "carregando";
   const ritmo = dados?.ritmo ?? null;
   const intervalo = ritmo ? (ritmo.intervaloSegundos >= 60 ? `${Math.round(ritmo.intervaloSegundos / 60)} min` : `${ritmo.intervaloSegundos} s`) : "";

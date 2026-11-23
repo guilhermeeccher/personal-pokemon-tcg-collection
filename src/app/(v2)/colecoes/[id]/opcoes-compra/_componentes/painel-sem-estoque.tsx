@@ -12,6 +12,8 @@ import { Botao } from "../../../../_componentes/primitivos/botao";
 import { AreaTexto } from "../../../../_componentes/primitivos/campo";
 import { AvisoEmLinha, Painel } from "../../../../_componentes/primitivos/painel";
 
+import { escreverNaFila } from "../../_componentes/envio-selecao";
+
 import { estadoDaPrevia } from "./opcoes-compra";
 import { numeracao } from "./vaga-opcoes";
 import estilos from "./opcoes.module.css";
@@ -32,8 +34,11 @@ import estilos from "./opcoes.module.css";
  * exatamente aquele texto, uma resposta de um texto que já mudou é
  * descartada, e uma marcação terminada depois da conferência pede outra — o
  * servidor recalcula ao confirmar o que desmarca, e o que entrou depois não
- * estava na prévia. Enquanto a confirmação está no ar, a página trava a
- * marcação (`aoGravar`), para nenhum pedido ultrapassá-la.
+ * estava na prévia. A confirmação vai pela fila de escritas da coleção
+ * (`escreverNaFila`, a mesma das marcações): nenhum pedido a ultrapassa, de
+ * nenhuma tela, e toda tela vê que a lista ficou velha até reler. Enquanto
+ * ela está no ar, esta página ainda trava os próprios botões de marcar
+ * (`aoGravar`), para a tela não mostrar marcas que vão esperar na fila.
  *
  * O registro é global (o estoque é da loja) e vale 30 dias; "Voltar a
  * oferecer" o apaga antes disso.
@@ -163,43 +168,55 @@ export function PainelSemEstoque({
 
   async function confirmar() {
     if (!previa || estadoDaPrevia(previa, { texto, versao: versaoTriagem }) !== "vale") return;
+    const enviado = previa.texto;
     setOcupado(true);
     setRecado(null);
     aoGravar("inicio");
-    const prazo = AbortSignal.timeout(PRAZO_CONFIRMACAO_MS);
-    let resposta: Response;
-    try {
-      resposta = await fetch(rota, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // Exatamente o texto que a prévia mostrou.
-        body: JSON.stringify({ texto: previa.texto, confirmar: true }),
-        signal: prazo,
-      });
-    } catch {
-      setOcupado(false);
-      setPrevia(null);
-      // Sem resposta, não se sabe se gravou: a releitura diz a verdade.
-      setRecado({ tom: "perigo", texto: prazo.aborted ? t("semResposta") : t("erroRede") });
-      aoGravar("fim");
+    type Resultado =
+      | { tipo: "resposta"; ok: boolean; status: number; corpo: { registradas?: number; desmarcadas?: number; naoEntendidas?: string[] } | null }
+      | { tipo: "semResposta" | "rede" };
+    // Pela fila da coleção (a mesma das marcações, `escreverNaFila`): uma
+    // marcação feita depois — aqui, na aba ou no detalhe, mesmo saindo desta
+    // tela — espera a vez e não ultrapassa a confirmação. O prazo começa
+    // quando a vez chega, não enquanto espera na fila.
+    const resultado: Resultado = await escreverNaFila(colecaoId, async () => {
+      const prazo = AbortSignal.timeout(PRAZO_CONFIRMACAO_MS);
+      try {
+        const resposta = await fetch(rota, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          // Exatamente o texto que a prévia mostrou.
+          body: JSON.stringify({ texto: enviado, confirmar: true }),
+          signal: prazo,
+        });
+        // O corpo também está sob o prazo (o mesmo sinal interrompe a leitura dele).
+        const corpo = (await resposta.json().catch(() => null)) as Extract<Resultado, { tipo: "resposta" }>["corpo"];
+        return { tipo: "resposta", ok: resposta.ok, status: resposta.status, corpo };
+      } catch {
+        return { tipo: prazo.aborted ? "semResposta" : "rede" };
+      }
+    });
+    setOcupado(false);
+    setPrevia(null);
+    // Dê certo ou não, a página relê: uma recusa depois de confirmar não
+    // gravou nada (a transação volta inteira); sem resposta, não se sabe se
+    // gravou, e a releitura diz a verdade.
+    aoGravar("fim");
+    if (resultado.tipo !== "resposta") {
+      setRecado({ tom: "perigo", texto: resultado.tipo === "semResposta" ? t("semResposta") : t("erroRede") });
+      relerRegistros();
       return;
     }
-    // O corpo também está sob o prazo (o mesmo sinal interrompe a leitura dele).
-    const corpo = (await resposta.json().catch(() => null)) as { registradas?: number; desmarcadas?: number; naoEntendidas?: string[] } | null;
-    setOcupado(false);
-    // Dê certo ou não, a página relê: uma recusa depois de confirmar não
-    // gravou nada (a transação volta inteira), e a tela diz a verdade.
-    aoGravar("fim");
-    setPrevia(null);
-    if (!resposta.ok) {
-      if (resposta.status === 404) setRecado({ tom: "perigo", texto: t("colecaoSumiu") });
-      else if (resposta.status === 400) setRecado({ tom: "alerta", texto: t("nadaReconhecido"), linhas: corpo?.naoEntendidas ?? [] });
+    if (!resultado.ok) {
+      const { status, corpo } = resultado;
+      if (status === 404) setRecado({ tom: "perigo", texto: t("colecaoSumiu") });
+      else if (status === 400) setRecado({ tom: "alerta", texto: t("nadaReconhecido"), linhas: corpo?.naoEntendidas ?? [] });
       else setRecado({ tom: "perigo", texto: t("erroGravar") });
       return;
     }
     textoAtual.current = "";
     setTexto("");
-    avisar(t("gravado", { registradas: corpo?.registradas ?? 0, desmarcadas: corpo?.desmarcadas ?? 0 }), { tom: "sucesso" });
+    avisar(t("gravado", { registradas: resultado.corpo?.registradas ?? 0, desmarcadas: resultado.corpo?.desmarcadas ?? 0 }), { tom: "sucesso" });
     relerRegistros();
   }
 
