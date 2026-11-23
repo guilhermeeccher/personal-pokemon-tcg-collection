@@ -1570,7 +1570,11 @@
   },
   "v2Primitivos": {
     "fechar": "Close",
-    "cancelar": "Cancel"
+    "cancelar": "Cancel",
+    "explicacao": {
+      "abrir": "Explain: {assunto}",
+      "fechar": "Close explanation: {assunto}"
+    }
   },
   "v2ModoEfeitos": {
     "rotulo": "Visual effects",
@@ -2756,10 +2760,6 @@
     "semCopia": "no copy",
     "semCopiaExplicacao": "You no longer have any copy of this card. The stored price stays in the table, but there is no copy to open.",
     "vazio": "No prices stored. Press the button to look up the special cards.",
-    "explicacao": {
-      "abrir": "Explain: {assunto}",
-      "fechar": "Close explanation: {assunto}"
-    },
     "cardmarket": {
       "descricao": "What the cards you own, except plain commons and uncommons, are worth by an international reference: the Cardmarket price trend, delivered by TCGdex and converted to Brazilian reais at the Central Bank of Brazil's PTAX closing rate. It is not a Brazilian market price: compare it with LigaPokemon's lowest price, not with its average.",
       "atualizar": "Update prices (Cardmarket)",

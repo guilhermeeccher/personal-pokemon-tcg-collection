@@ -10,7 +10,7 @@ import { LIMITE_COMPRA_POR_LISTA } from "@/lib/dominio/exportacao-lista-compra";
 import type { Formatos } from "../../../../_componentes/detalhe/formatos";
 import { Botao } from "../../../../_componentes/primitivos/botao";
 import { Painel } from "../../../../_componentes/primitivos/painel";
-import { Explicacao } from "../../../../inventario/precos/_componentes/explicacao";
+import { Explicacao } from "../../../../_componentes/primitivos/explicacao";
 import { useCopiarAba, useRotuloAba } from "../../_componentes/lista-liga";
 
 import type { RespostaOpcoesDTO } from "./opcoes-compra";

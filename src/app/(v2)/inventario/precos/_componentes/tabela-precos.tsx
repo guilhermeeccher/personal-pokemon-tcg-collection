@@ -35,7 +35,7 @@ import { LIMITE_TENDENCIA_SOBRE_MEDIA30 } from "@/lib/dominio/preco-cardmarket";
 
 import { CartaQueAbre } from "../../visao-geral/_componentes/detalhe-de-copia";
 
-import { Explicacao } from "./explicacao";
+import { Explicacao } from "../../../_componentes/primitivos/explicacao";
 import estilos from "./precos.module.css";
 import type { PedidoDetalhe } from "./use-detalhe-da-carta";
 

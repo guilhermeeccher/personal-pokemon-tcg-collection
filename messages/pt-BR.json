@@ -1562,7 +1562,11 @@
   },
   "v2Primitivos": {
     "fechar": "Fechar",
-    "cancelar": "Cancelar"
+    "cancelar": "Cancelar",
+    "explicacao": {
+      "abrir": "Entender: {assunto}",
+      "fechar": "Fechar explicação: {assunto}"
+    }
   },
   "v2ModoEfeitos": {
     "rotulo": "Efeitos visuais",
@@ -2748,10 +2752,6 @@
     "semCopia": "sem cópia",
     "semCopiaExplicacao": "Você não tem mais nenhuma cópia desta carta. O preço guardado continua na tabela, mas não há cópia para abrir.",
     "vazio": "Nenhum preço guardado. Aperte o botão para consultar as cartas especiais.",
-    "explicacao": {
-      "abrir": "Entender: {assunto}",
-      "fechar": "Fechar explicação: {assunto}"
-    },
     "cardmarket": {
       "descricao": "Quanto valem as cartas que você tem, exceto as comuns e incomuns, numa referência internacional: a tendência de preço do Cardmarket, trazida pela TCGdex e convertida em reais pela PTAX de fechamento do Banco Central. Não é preço do mercado brasileiro: compare com o menor preço da LigaPokemon, não com o médio.",
       "atualizar": "Atualizar preços (Cardmarket)",

@@ -566,6 +566,9 @@ rest are the technical foundations of the v2.
 34. **Explanations open by touch and keyboard** (`Explicacao`): a disclosure button with
     `aria-expanded` and the text in line below it, never a `title` and never a floating balloon. The
     v2 has no balloon primitive, and an inline disclosure needs no layer and does not leave a 320 px screen.
+    It is a primitive (`_componentes/primitivos/explicacao.tsx`, texts in `v2Primitivos.explicacao`),
+    used by the prices and the buy options screens; a screen adjusts how it sits through its
+    `data-explicacao` attributes (`raiz`, `pilula`, `texto`), never through its classes.
 35. **The table is a list, one tree.** A card per row on the phone and in a narrow column, grid columns when
     the list itself is 880 px wide or more (`@container`, on the list only — never on an ancestor of
     the detail or of a bar). A row's photo and the copy its card opens come from

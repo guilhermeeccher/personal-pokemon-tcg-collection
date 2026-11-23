@@ -20,7 +20,7 @@ import type { RodadaListadaDTO } from "@/lib/dominio/precos-v2";
 import { Botao } from "../../../_componentes/primitivos/botao";
 import { Painel } from "../../../_componentes/primitivos/painel";
 
-import { Explicacao } from "./explicacao";
+import { Explicacao } from "../../../_componentes/primitivos/explicacao";
 import estilos from "./precos.module.css";
 
 export function Rodadas({

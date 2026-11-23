@@ -157,77 +157,6 @@
   background: rgb(255 138 138 / 0.14);
 }
 
-/* A explicação que abre por toque e teclado. O botão tem 44 px de verdade e o
-   vão de 8 px entre dois seguidos (`.detalhePreco`, `.cartaCelula`); a pílula
-   que se vê é desenhada por dentro dele. */
-.explicacao {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  max-width: 100%;
-}
-.explicacaoBotao {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  max-width: 100%;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.explicacaoPilula {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 4px 2px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.5;
-  min-width: 0;
-  color: var(--v2-tinta-2);
-  background: var(--v2-superficie-2);
-}
-.explicacaoBotao[data-tom="aviso"] .explicacaoPilula {
-  color: var(--v2-falta);
-  background: rgb(255 183 102 / 0.14);
-}
-.explicacaoBotao[data-tom="perigo"] .explicacaoPilula {
-  color: var(--v2-perigo);
-  background: rgb(255 138 138 / 0.14);
-}
-.explicacaoBotao:focus-visible {
-  outline: 2px solid var(--v2-foco);
-  outline-offset: 0;
-}
-.explicacaoInfo {
-  display: inline-grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  font-size: 11px;
-  font-weight: 700;
-  background: var(--v2-superficie-3);
-}
-.explicacaoTexto {
-  font-size: 12.5px;
-  font-weight: 400;
-  line-height: 1.5;
-  color: var(--v2-tinta-2);
-  text-align: left;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-.explicacaoTexto[hidden] {
-  display: none;
-}
-
 /* ------------------------------------------------------------------ tabela */
 
 .tabela {
@@ -451,14 +380,14 @@
   .preco .etiquetas {
     justify-content: flex-end;
   }
-  .preco .explicacao {
+  .preco [data-explicacao="raiz"] {
     max-width: none;
     align-items: flex-end;
   }
-  .preco .explicacaoPilula {
+  .preco [data-explicacao="pilula"] {
     white-space: nowrap;
   }
-  .preco .explicacaoTexto {
+  .preco [data-explicacao="texto"] {
     width: 260px;
     text-align: left;
   }

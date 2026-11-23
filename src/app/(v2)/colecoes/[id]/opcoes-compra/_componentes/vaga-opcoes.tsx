@@ -11,7 +11,7 @@ import type { FontePreco } from "@/lib/dominio/fonte-preco";
 import { Carta } from "../../../../_componentes/carta/carta";
 import type { Formatos } from "../../../../_componentes/detalhe/formatos";
 import { Botao } from "../../../../_componentes/primitivos/botao";
-import { Explicacao } from "../../../../inventario/precos/_componentes/explicacao";
+import { Explicacao } from "../../../../_componentes/primitivos/explicacao";
 import { LinhaPreco } from "../../_componentes/preco-compra";
 
 import { type OpcaoDTO, OPCOES_POR_VAGA, type VagaDTO, corpoDaMarcacao } from "./opcoes-compra";

@@ -3,7 +3,7 @@
 import { useId, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
-import estilos from "./precos.module.css";
+import estilos from "./explicacao.module.css";
 
 /**
  * Uma explicação curta que abre por **toque e por teclado**, no lugar onde a
@@ -32,11 +32,11 @@ export function Explicacao({
   children?: ReactNode;
   tom?: "neutro" | "aviso" | "perigo";
 }) {
-  const t = useTranslations("v2Precos.explicacao");
+  const t = useTranslations("v2Primitivos.explicacao");
   const id = useId();
   const [aberta, setAberta] = useState(false);
   return (
-    <span className={estilos.explicacao}>
+    <span className={estilos.explicacao} data-explicacao="raiz">
       <button
         type="button"
         className={estilos.explicacaoBotao}
@@ -46,14 +46,14 @@ export function Explicacao({
         aria-label={aberta ? t("fechar", { assunto }) : t("abrir", { assunto })}
         onClick={() => setAberta((v) => !v)}
       >
-        <span className={estilos.explicacaoPilula}>
+        <span className={estilos.explicacaoPilula} data-explicacao="pilula">
           <span>{children ?? assunto}</span>
           <span className={estilos.explicacaoInfo} aria-hidden>
             {aberta ? "−" : "i"}
           </span>
         </span>
       </button>
-      <span id={id} className={estilos.explicacaoTexto} hidden={!aberta}>
+      <span id={id} className={estilos.explicacaoTexto} data-explicacao="texto" hidden={!aberta}>
         {texto}
       </span>
     </span>
