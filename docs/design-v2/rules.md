@@ -254,7 +254,7 @@ rest are the technical foundations of the v2.
     the cost is flat: ~600 nodes and ~50 images at any size. The median tap does not move with the
     size, so the worst (cold) tap and the memory decide. The Dex screens have their own lists (forms,
     boxes) and measure them when their package ports them onto this grid (5a, 5c), against the same
-    budget; the Pokédex grid (5a) is measured in rule 37.
+    budget; the Pokédex grid (5a) is measured in rule 38.
 14. **New components the v1 does not have.** The **card detail** absorbs the v1's allocate,
     upgrade, edit-copy and destination modals and the zoom, and is born with two modes, slot and
     copy. A glass **confirmation dialog** replaces the twelve `window.confirm` calls of the v1: a
@@ -515,7 +515,7 @@ rest are the technical foundations of the v2.
 
 ### Collections list: organize, suggestions, thematic collection (package 4b)
 
-30. **One page, two modes, one order.** `/colecoes` is read on the server (`lerListaColecoesV2`) and
+31. **One page, two modes, one order.** `/colecoes` is read on the server (`lerListaColecoesV2`) and
     drawn as cards ("view"); "Organize" swaps the same sections for rows with up/down buttons, a
     group selector and the group actions (`src/app/(v2)/colecoes/_componentes/`). Both modes show the
     order of `listarColecoes` and nothing on screen sorts it. **Every write rereads the page**
@@ -542,7 +542,7 @@ rest are the technical foundations of the v2.
 
 ### Prices screen (package 2d)
 
-31. **The screen reads the snapshot; the round is the server's.** `/inventario/precos`
+32. **The screen reads the snapshot; the round is the server's.** `/inventario/precos`
     (`src/app/(v2)/inventario/precos/`) reads `GET /api/inventario/precos` and starts a round with
     `POST /api/inventario/precos`, the v1's requests, with no body. While a round is alive it rereads the
     snapshot every `clamp(interval × 250 ms, 5 s, 60 s)` (`periodoDeAtualizacaoMs`, pure and tested): the
@@ -553,17 +553,17 @@ rest are the technical foundations of the v2.
     (`precosEmAndamento` also rereads, to show the live round); a round the Liga blocks arrives as the
     round's `erro` and is shown as written, and the screen has nothing to do about it: **a block is never
     worked around**.
-32. **Two sources, never mixed.** The table, the summary, the chart and the rounds list all come from the
+33. **Two sources, never mixed.** The table, the summary, the chart and the rounds list all come from the
     active source: Liga in BRL as the site gives it, with no conversion; Cardmarket in euro and BRL with the
     quote and its date, the column still headed "Trend" and, when the value is not the trend, a visible
     tag with the explanation. The chart says in writing that the total also rises when cards enter the
     sum (and, on Cardmarket, that it follows the exchange rate), and its reading panel shows the chosen
     point (the last one until someone chooses) by pointer, touch or arrow keys, with the same points in
     a table.
-33. **Explanations open by touch and keyboard** (`Explicacao`): a disclosure button with
+34. **Explanations open by touch and keyboard** (`Explicacao`): a disclosure button with
     `aria-expanded` and the text in line below it, never a `title` and never a floating balloon. The
     v2 has no balloon primitive, and an inline disclosure needs no layer and does not leave a 320 px screen.
-34. **The table is a list, one tree.** A card per row on the phone and in a narrow column, grid columns when
+35. **The table is a list, one tree.** A card per row on the phone and in a narrow column, grid columns when
     the list itself is 880 px wide or more (`@container`, on the list only — never on an ancestor of
     the detail or of a bar). A row's photo and the copy its card opens come from
     `GET /api/inventario/precos/cartas` (`data-contract.md`), asked only for the page on screen; the card
@@ -644,14 +644,14 @@ D. **The pieces package 5a owns, and their interfaces** (delivered 2026-11-23). 
 
 ### Overview and Pokédex (package 5a)
 
-35. **`/dex` only reads and navigates.** The server page reads what the v1 page reads, with the same
+36. **`/dex` only reads and navigates.** The server page reads what the v1 page reads, with the same
     functions; the screen computes with the same domain functions (`progressoDex`,
     `progressoPorRegiao`, `comTrofeusDoHome`, `pegueAgora`…), so the counts are the v1's. The
     percentages follow the v2's rule (`percentualSemFechar`: whole numbers, 100% only when complete)
     where the v1 printed one decimal. Every Pokémon of the showcase opens Register (`?busca=`), every
     game card and trophy the trophies (`?jogo=`), the plan the plans; those screens are bridges until
     their package lands, and the 307 carries the query.
-36. **`/dex/pokedex` keeps the v1's state on screen, not in the URL** (view, track, region — Kanto by
+37. **`/dex/pokedex` keeps the v1's state on screen, not in the URL** (view, track, region — Kanto by
     default —, search, state, category), as the v1 does. Sections are `PATCH /api/dex/secoes`, applied
     on the 200, with the chips disabled while one is saving; the base section is a disclosure button
     whose explanation opens by tap and keyboard. **A tap on a slot opens the Pokémon card**
@@ -660,7 +660,7 @@ D. **The pieces package 5a owns, and their interfaces** (delivered 2026-11-23). 
     box and position and the flags in writing on a phone. The cell is a fixed-height button
     (`ALTURA_CELULA` in `grade-pokedex.tsx`, summed in `pokedex.module.css`), because the virtual grid
     places rows by computed height: each text line ellipsizes instead of wrapping.
-37. **The Pokédex grid, measured against rule 13's budget** (2026-11-23, the same protocol: Chromium,
+38. **The Pokédex grid, measured against rule 13's budget** (2026-11-23, the same protocol: Chromium,
     iPhone profile 393 × 852, DPR 3, touch, iPhone user agent, CPU 4×, production build, invented
     data; "tap" is the longest Event Timing duration of a tap that opens the card, six taps in the
     middle of the list, the first cold).
