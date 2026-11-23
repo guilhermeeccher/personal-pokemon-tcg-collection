@@ -17,6 +17,7 @@
  *   tarefa fechada por outra aba, a ordem velha) volta como recusa com chave
  *   e é traduzido por `recusa.ts`.
  */
+import { textoDaRecusa, type TradutorDeRecusa } from "@/app/_comum/recusa";
 import { MAX_DETALHE_ETAPA, MAX_ETAPAS_POR_TAREFA, MAX_TEXTO_ETAPA, todasFeitas } from "@/lib/dominio/dex-etapas";
 import type { PlanoDexDTO, TarefaDexDTO } from "@/lib/dominio/tipos-cliente";
 
@@ -89,4 +90,17 @@ export function erroDaEtapa(e: { texto: string; detalhe: string }): ErroEtapa | 
   if (texto.length > MAX_TEXTO_ETAPA) return "textoLongo";
   if (e.detalhe.trim().length > MAX_DETALHE_ETAPA) return "detalheLongo";
   return null;
+}
+
+/**
+ * A frase de uma recusa nas telas de planos e de troféus: a chave traduzida
+ * por `recusa.ts`, ou a frase genérica da tela. **Nunca o `erro` em texto
+ * cru**: nestas rotas ele é o inglês de `lerDadosPlano`/`lerDadosEtapa`
+ * ("missing titulo", "fim before inicio"), que os formulários já conferem
+ * antes de enviar (`erroDoPlano`, `erroDaEtapa`); se um chegar mesmo assim,
+ * a pessoa lê a frase da tela no idioma dela, não a mensagem de depuração.
+ */
+export function fraseDaRecusa(t: TradutorDeRecusa, corpo: unknown, padrao: string): string {
+  const recusa = corpo && typeof corpo === "object" ? (corpo as { recusa?: unknown }).recusa : undefined;
+  return textoDaRecusa(t, { recusa }, padrao);
 }

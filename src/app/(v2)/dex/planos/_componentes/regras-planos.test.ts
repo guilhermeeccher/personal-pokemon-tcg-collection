@@ -8,6 +8,7 @@ import {
   erroDaEtapa,
   erroDoPlano,
   etapasEditaveis,
+  fraseDaRecusa,
   hrefCadastroDaTarefa,
   ofereceCadastro,
   telaVelha,
@@ -105,5 +106,21 @@ describe("erroDaEtapa", () => {
     expect(erroDaEtapa({ texto: "a".repeat(MAX_TEXTO_ETAPA + 1), detalhe: "" })).toBe("textoLongo");
     expect(erroDaEtapa({ texto: "a", detalhe: "b".repeat(MAX_DETALHE_ETAPA + 1) })).toBe("detalheLongo");
     expect(erroDaEtapa({ texto: "a", detalhe: "b".repeat(MAX_DETALHE_ETAPA) })).toBeNull();
+  });
+});
+
+describe("fraseDaRecusa", () => {
+  const catalogo: Record<string, string> = { dexTarefaFechada: "A tarefa precisa estar aberta.", dexEtapasDemais: "No máximo {maximo}." };
+  const t = Object.assign((chave: string, valores?: Record<string, string>) => catalogo[chave].replace("{maximo}", valores?.maximo ?? ""), {
+    has: (chave: string) => chave in catalogo,
+  });
+  it("a recusa com chave, traduzida e com os valores", () => {
+    expect(fraseDaRecusa(t, { recusa: { chave: "dexTarefaFechada" } }, "genérica")).toBe("A tarefa precisa estar aberta.");
+    expect(fraseDaRecusa(t, { recusa: { chave: "dexEtapasDemais", valores: { maximo: "50" } } }, "genérica")).toBe("No máximo 50.");
+  });
+  it("o `erro` em inglês da validação nunca chega à tela: vira a frase genérica", () => {
+    expect(fraseDaRecusa(t, { erro: "fim before inicio" }, "genérica")).toBe("genérica");
+    expect(fraseDaRecusa(t, null, "genérica")).toBe("genérica");
+    expect(fraseDaRecusa(t, { recusa: { chave: "chaveNova" } }, "genérica")).toBe("genérica");
   });
 });

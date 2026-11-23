@@ -32,7 +32,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { useId, useMemo, useState } from "react";
 
 import { hojeLocal } from "@/app/_comum/dex/hoje";
-import { textoDaRecusa } from "@/app/_comum/recusa";
 import { progressoEtapas } from "@/lib/dominio/dex-etapas";
 import { jogoDex } from "@/lib/dominio/dex-jogos";
 import { TIPOS_TAREFA, type StatusPlanoDex, type StatusTarefaDex } from "@/lib/dominio/dex-sessao";
@@ -54,6 +53,7 @@ import {
   avisoTodasFeitas,
   erroDoPlano,
   etapasEditaveis,
+  fraseDaRecusa,
   hrefCadastroDaTarefa,
   ofereceCadastro,
   telaVelha,
@@ -125,7 +125,7 @@ export function PainelPlanos({
         ...(corpo === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) }),
       });
       if (!r.ok) {
-        setErro({ texto: textoDaRecusa(tr, await r.json().catch(() => null), tp("erro")), onde });
+        setErro({ texto: fraseDaRecusa(tr, await r.json().catch(() => null), tp("erro")), onde });
         if (telaVelha(r.status)) router.refresh();
         return false;
       }
@@ -221,7 +221,7 @@ export function PainelPlanos({
                   </span>
                 )}
                 {progresso.total > 0 && (
-                  <span className={`${estilos.contagemEtapas} v2-num`}>
+                  <span className={estilos.contagemEtapas}>
                     {tp("etapasContagem", { feitas: progresso.feitas, total: progresso.total })}
                   </span>
                 )}
@@ -345,7 +345,7 @@ export function PainelPlanos({
             <span className={estilos.barra} aria-hidden>
               <span style={{ width: `${(feitas / p.tarefas.length) * 100}%` }} />
             </span>
-            <span className="v2-num">{t("tarefasContagem", { feitas, total: p.tarefas.length })}</span>
+            <span className={estilos.numeros}>{t("tarefasContagem", { feitas, total: p.tarefas.length })}</span>
           </div>
         )}
         {p.trofeuIds.length > 0 && (

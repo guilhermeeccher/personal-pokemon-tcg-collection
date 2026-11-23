@@ -27,7 +27,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { useId, useMemo, useState } from "react";
 
 import { hojeLocal } from "@/app/_comum/dex/hoje";
-import { textoDaRecusa } from "@/app/_comum/recusa";
 import { progressoTrofeus, type IdiomaTrofeu, type NivelTrofeu } from "@/lib/dominio/dex-trofeus";
 import type { TrofeuDexDTO } from "@/lib/dominio/tipos-cliente";
 
@@ -36,6 +35,8 @@ import { Botao, BotaoLink } from "../../../_componentes/primitivos/botao";
 import { Campo } from "../../../_componentes/primitivos/campo";
 import { useConfirmacao } from "../../../_componentes/primitivos/dialogo-confirmacao";
 import { AvisoEmLinha, Painel } from "../../../_componentes/primitivos/painel";
+
+import { fraseDaRecusa } from "../../planos/_componentes/regras-planos";
 
 import { DataCurta } from "./data-curta";
 import { acoesDoTrofeu, dataDeConquistaValida, jogoQueAbre, trofeusVisiveis, type AbaTrofeus } from "./regras-trofeus";
@@ -92,7 +93,7 @@ export function PainelTrofeus({
         ...(corpo === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) }),
       });
       if (!r.ok) {
-        setErro(textoDaRecusa(tr, await r.json().catch(() => null), td("erro")));
+        setErro(fraseDaRecusa(tr, await r.json().catch(() => null), td("erro")));
         // A lista desta tela está velha (outra aba desfez, o troféu saiu do arquivo): relê.
         if (r.status === 404 || r.status === 409) router.refresh();
         return false;
@@ -203,7 +204,7 @@ export function PainelTrofeus({
                 <span className={estilos.textoFraco}>{progresso.platina ? t("platinaFeita") : t("platinaComo")}</span>
                 <Barra valor={progresso.obtidos} maximo={progresso.total} cor={COR_NIVEL.platina} />
               </div>
-              <span className={`${estilos.contagem} v2-num`}>
+              <span className={estilos.contagem}>
                 {t("contagem", { obtidos: progresso.obtidos, total: progresso.total })}
               </span>
             </div>
