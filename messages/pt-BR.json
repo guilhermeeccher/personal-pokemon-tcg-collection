@@ -2836,5 +2836,109 @@
     },
     "erroCartas": "Não foi possível ler as fotos e as cópias desta página",
     "erroCartasTexto": "Os preços continuam valendo, mas sem essa leitura as cartas não abrem o detalhe. Nada foi alterado."
+  },
+  "v2CadastroSet": {
+    "titulo": "Cadastro por set",
+    "descricao": "Escolha o set e digite quantas cópias você tem de cada carta. Enter leva à próxima carta.",
+    "seletor": {
+      "titulo": "Set",
+      "idiomaCatalogo": "Idioma do catálogo",
+      "buscar": "Buscar set",
+      "placeholderBuscar": "nome, sigla ou id — ex.: 151, MEW, sv2a",
+      "expansao": "Set",
+      "selecione": "Escolha um set…",
+      "nenhumSet": "Nenhum set casa com a busca",
+      "cartas": "{total} cartas",
+      "erroCarregar": "Não deu para carregar a lista de sets.",
+      "idioma": {
+        "todos": "Todos",
+        "pt": "Português",
+        "en": "Inglês",
+        "jp": "Japonês"
+      }
+    },
+    "carregando": "Carregando as cartas…",
+    "erroGrade": "Não deu para carregar as cartas deste set.",
+    "tentarDeNovo": "Tentar de novo",
+    "contagemCartas": "{total, plural, one {# carta} other {# cartas}}",
+    "catalogo": {
+      "pt": "Catálogo em português",
+      "ptTexto": "Cada carta é identificada pela ficha em português.",
+      "en": "Catálogo em inglês",
+      "enTexto": "Este set não tem carta a carta em português no catálogo, e cada carta é identificada pela ficha em inglês. O idioma do lote é o da sua carta física: escolha Português se for a edição brasileira.",
+      "misto": "{total, plural, one {# carta deste set ainda não tem ficha em português e usa a ficha em inglês} other {# cartas deste set ainda não têm ficha em português e usam a ficha em inglês}}. O idioma do lote continua sendo o da sua carta física.",
+      "jp": "Catálogo japonês",
+      "jpTexto": "As cartas são as da ficha japonesa. O idioma do lote é o da sua carta física, à parte do catálogo.",
+      "usarJp": "Usar japonês no lote"
+    },
+    "padrao": {
+      "titulo": "Padrão do lote",
+      "explica": "Vale para cada carta que você marcar daqui em diante. Uma carta já marcada guarda o que tinha.",
+      "alterar": "Alterar",
+      "fechar": "Fechar",
+      "variante": "Variante",
+      "idioma": "Idioma da carta física",
+      "condicao": "Condição"
+    },
+    "idioma": {
+      "pt": "Português",
+      "en": "Inglês",
+      "jp": "Japonês"
+    },
+    "filtro": {
+      "rotulo": "Filtrar por número",
+      "placeholder": "ex.: 4, 04 ou 004",
+      "nenhuma": "Nenhuma carta com esse número neste set."
+    },
+    "lista": "Cartas de {set}",
+    "carta": {
+      "quantidade": "Quantidade de {nome}",
+      "menos": "Uma a menos de {nome}",
+      "mais": "Uma a mais de {nome}",
+      "voceTem": "você tem {total}",
+      "ampliar": "Ampliar {nome}",
+      "ajustar": "Variante, idioma e condição de {nome}: {valores}",
+      "ajustada": "ajustada",
+      "semVariante": "sem {padrao}: vai {variante}",
+      "recusada": "recusada"
+    },
+    "ajuste": {
+      "titulo": "#{numero} · {nome}",
+      "explica": "Vale só para esta carta. O idioma é o da sua carta física, não o do catálogo.",
+      "semVariante": "O catálogo não tem {padrao} desta carta; a lista mostra só as variantes que ela tem.",
+      "pronto": "Pronto"
+    },
+    "zoom": {
+      "titulo": "#{numero} · {nome}"
+    },
+    "barra": {
+      "rotulo": "Lote",
+      "totais": "{cartas, plural, one {# carta} other {# cartas}} · {copias, plural, one {# cópia} other {# cópias}}",
+      "nada": "Nenhuma carta marcada",
+      "gravar": "Gravar lote"
+    },
+    "resultado": {
+      "gravado": "Lote gravado",
+      "textoGravado": "{inseridas, plural, one {# cópia gravada} other {# cópias gravadas}} de {set}.",
+      "textoComFusao": "{inseridas, plural, =0 {Nenhuma cópia nova} one {# cópia gravada} other {# cópias gravadas}} e {fundidas, plural, one {# somada a uma cópia livre igual} other {# somadas a cópias livres iguais}}, de {set}.",
+      "verLinhas": "Ver {total, plural, one {a linha gravada} other {as # linhas gravadas}}",
+      "recusado": "Lote não gravado",
+      "tudoOuNada": "Nada foi gravado: o lote entra inteiro ou não entra. Corrija as cartas marcadas como recusadas e grave de novo.",
+      "linhasRecusadas": "Recusadas",
+      "padrao": "Não deu para gravar o lote.",
+      "rede": "Não deu para confirmar a gravação",
+      "redeTexto": "O servidor não confirmou a gravação (a conexão caiu ou a resposta veio com erro), e o lote pode ter entrado. As cartas são relidas abaixo: confira o “você tem” antes de gravar de novo.",
+      "fechar": "Fechar"
+    },
+    "trocarSet": {
+      "titulo": "Trocar de set?",
+      "descricao": "{total, plural, one {A carta marcada será descartada} other {As # cartas marcadas serão descartadas}}: o lote ainda não foi gravado.",
+      "confirmar": "Trocar e descartar"
+    },
+    "releitura": {
+      "relendo": "Atualizando o “você tem”…",
+      "falhou": "Não deu para atualizar o “você tem”",
+      "falhouTexto": "As quantidades que você já tem podem estar desatualizadas. Releia antes de conferir ou de gravar de novo."
+    }
   }
 }

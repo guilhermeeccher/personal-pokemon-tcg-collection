@@ -15,10 +15,10 @@
  * transformava as 40 anteriores em holo no payload de submissão, mesmo
  * sem o usuário ter tocado nelas.
  *
- * A correção: no instante em que uma linha recebe quantidade >= 1 pela
- * primeira vez (ainda sem campos próprios), os defaults correntes são
- * MATERIALIZADOS nela — variante, idioma e condição viram valores
- * próprios da linha, imunes a qualquer mudança de default depois disso.
+ * A correção: no instante em que uma linha recebe quantidade >= 1, os
+ * defaults correntes são MATERIALIZADOS nela, campo a campo — variante,
+ * idioma e condição que a linha ainda não tinha viram valores próprios
+ * dela, imunes a qualquer mudança de default depois disso.
  * O default só continua valendo para linhas que ainda não foram marcadas.
  */
 
@@ -65,19 +65,22 @@ export function estadoGradeInicial(defaults: DefaultsGrade = DEFAULTS_INICIAIS):
   return { linhas: {}, defaults };
 }
 
-/** Já tem ao menos um campo materializado — não deve mais herdar default. */
-function linhaJaTemCamposProprios(linha: LinhaGrade | undefined): boolean {
-  return (
-    linha !== undefined &&
-    (linha.variante !== undefined || linha.idioma !== undefined || linha.condicao !== undefined)
-  );
-}
-
 export function reduzirGrade(estado: EstadoGrade, acao: AcaoGrade): EstadoGrade {
   switch (acao.tipo) {
     case "quantidade": {
       const existente = estado.linhas[acao.cartaId];
-      const materializar = acao.valor > 0 && !linhaJaTemCamposProprios(existente);
+      // A materialização é campo a campo (correção de 2026-11-23): quem
+      // ajustou só o idioma de uma carta antes de dar a quantidade deixava a
+      // variante e a condição dela `undefined`, seguindo o padrão do lote
+      // até o envio — o mesmo buraco de 2026-08-24, por outra porta. Agora
+      // cada campo que a linha ainda não tem recebe o padrão corrente no
+      // instante da marcação, e o que ela já tinha fica.
+      if (acao.valor <= 0) {
+        return {
+          ...estado,
+          linhas: { ...estado.linhas, [acao.cartaId]: { ...existente, quantidade: acao.valor } },
+        };
+      }
       return {
         ...estado,
         linhas: {
@@ -85,17 +88,13 @@ export function reduzirGrade(estado: EstadoGrade, acao: AcaoGrade): EstadoGrade 
           [acao.cartaId]: {
             ...existente,
             quantidade: acao.valor,
-            ...(materializar
-              ? {
-                  // Nunca materializa uma variante impossível para a
-                  // carta: cai para a primeira disponível dela quando o
-                  // default corrente não existir naquela carta (caso
-                  // Alakazam do Base Set, só holo).
-                  variante: escolherVarianteDisponivel(estado.defaults.variante, acao.flags),
-                  idioma: estado.defaults.idioma,
-                  condicao: estado.defaults.condicao,
-                }
-              : {}),
+            // Nunca materializa uma variante impossível para a carta: cai
+            // para a primeira disponível dela quando o default corrente não
+            // existir naquela carta (caso Alakazam do Base Set, só holo).
+            variante:
+              existente?.variante ?? escolherVarianteDisponivel(estado.defaults.variante, acao.flags),
+            idioma: existente?.idioma ?? estado.defaults.idioma,
+            condicao: existente?.condicao ?? estado.defaults.condicao,
           },
         },
       };

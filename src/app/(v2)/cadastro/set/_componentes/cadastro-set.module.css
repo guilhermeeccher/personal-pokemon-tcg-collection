@@ -1,0 +1,479 @@
+/*
+ * O cadastro por set da v2 (`/cadastro/set`), pensado primeiro para o
+ * celular com a carta na mão. As cartas são células de altura fixa da grade
+ * virtual (`GradeVirtual`, uma coluna no celular, mais conforme a largura);
+ * cada uma é um painel sem desfoque (regra 5b: lista nunca gasta
+ * `backdrop-filter`), e a carta em repouso é uma imagem simples.
+ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------- Cabeçalho */
+
+.titulo {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.descricao {
+  margin: 8px 0 0;
+  max-width: 70ch;
+  font-size: 13.5px;
+  color: var(--v2-tinta-3);
+}
+
+/* ---------------------------------------------------------- Seletor de set */
+
+.seletor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.filtroIdioma {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.rotuloFiltro {
+  padding: 0;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+}
+.pilula {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-2);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  transition: background-color 0.2s, color 0.2s;
+}
+.pilula[aria-pressed="true"] {
+  color: var(--v2-fundo);
+  background: var(--v2-tinta);
+}
+.pilulaContagem {
+  font-size: 12px;
+  opacity: 0.7;
+}
+.camposSeletor {
+  display: grid;
+  gap: 12px;
+}
+@media (min-width: 48rem) {
+  .camposSeletor {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    align-items: start;
+  }
+}
+
+/* ---------------------------------------------------------- Set escolhido */
+
+.cabecaSet {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+.nomeSet {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+.infoSet {
+  font-size: 13px;
+  color: var(--v2-tinta-3);
+}
+.carregando {
+  font-size: 13.5px;
+  color: var(--v2-tinta-3);
+}
+
+/* ---------------------------------------------------------- Padrão do lote */
+
+.padrao {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.padraoCabeca {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.padraoTitulo {
+  margin: 0;
+  font-size: 15px;
+}
+/* O resumo e o botão só existem abaixo de 768 px; dali para cima os três
+   campos ficam sempre à mostra. */
+.padraoResumo {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--v2-tinta-2);
+}
+.padraoExplica {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--v2-tinta-3);
+}
+.padraoCampos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  gap: 12px;
+}
+@media (max-width: 47.99rem) {
+  .padraoCampos:not([data-aberto]) {
+    display: none;
+  }
+  .padraoCampos {
+    grid-template-columns: 1fr 1fr;
+  }
+  .padraoCampos > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 48rem) {
+  .padraoResumo,
+  .padraoAlternar {
+    display: none;
+  }
+}
+
+/* O que compõe o lote, num bloco só para travar durante o envio; o
+   espaçamento é o da página. */
+.editavel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.filtroNumero {
+  max-width: 320px;
+}
+.nenhuma {
+  padding: 20px;
+  color: var(--v2-tinta-2);
+}
+
+/* ---------------------------------------------------------- Célula */
+
+/*
+ * Altura fixa (`ALTURA_CELULA` em `celula-carta.tsx`), igual em toda
+ * largura: 10 + 96 (cabeça e quantidade ao lado da miniatura) + 8 + 44
+ * (ajuste) + 10. A grade precisa da altura de antemão para pôr cada linha
+ * sem medir.
+ */
+.celula {
+  box-sizing: border-box;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-rows: 44px 44px 44px;
+  grid-template-areas:
+    "mini cabeca"
+    "mini passo"
+    "ajuste ajuste";
+  gap: 8px 10px;
+  padding: 10px;
+}
+.celula[data-marcada] {
+  box-shadow:
+    inset 0 0 0 1px rgb(111 240 180 / 0.45),
+    0 0 0 1px rgb(111 240 180 / 0.08);
+  background: linear-gradient(180deg, rgb(111 240 180 / 0.1), rgb(111 240 180 / 0.04));
+}
+.celula[data-recusada] {
+  box-shadow: inset 0 0 0 1.5px var(--v2-perigo);
+}
+
+.miniatura {
+  grid-area: mini;
+  align-self: start;
+  width: 64px;
+  border-radius: 6px;
+}
+.cabeca {
+  grid-area: cabeca;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.linhaNome {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.numero {
+  margin-right: 6px;
+  font-weight: 500;
+  color: var(--v2-tinta-3);
+}
+.especie {
+  font-weight: 400;
+  color: var(--v2-tinta-2);
+}
+.selos {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: var(--v2-tinta-3);
+}
+.seloTem {
+  color: var(--v2-falta);
+}
+.seloAviso {
+  color: var(--v2-falta);
+}
+.seloRecusada {
+  color: var(--v2-perigo);
+  font-weight: 600;
+}
+.selos > * + *::before {
+  content: " · ";
+  color: var(--v2-tinta-3);
+}
+
+/* Quantidade: − campo +, 8 px entre os três alvos de 44 px. */
+.passo {
+  grid-area: passo;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.passoBotao {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--v2-tinta);
+  background: var(--v2-superficie-2);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+}
+.passoBotao:disabled {
+  opacity: 0.35;
+}
+.quantidade {
+  box-sizing: border-box;
+  width: 64px;
+  height: 44px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--v2-raio-campo);
+  font: inherit;
+  font-family: var(--v2-fonte-num);
+  /* 16 px em toda largura: abaixo disso o Safari do iPhone dá zoom ao focar. */
+  font-size: 16px;
+  text-align: center;
+  color: var(--v2-tinta);
+  background: rgb(0 0 0 / 0.3);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+  /*
+   * O Enter leva o foco à próxima carta, e o navegador a rola para a vista:
+   * a margem faz a carta parar acima da barra do lote (e, no celular, da
+   * barra de abas), nunca embaixo delas.
+   */
+  scroll-margin-top: 16px;
+  scroll-margin-bottom: calc(var(--v2-topo-abas) + 96px);
+}
+/* Abaixo de 360 px a barra do lote tem duas linhas (88 px). */
+@media (max-width: 359.98px) {
+  .quantidade {
+    scroll-margin-bottom: calc(var(--v2-topo-abas) + 124px);
+  }
+}
+@media (min-width: 48rem) {
+  .quantidade {
+    scroll-margin-bottom: 112px;
+  }
+}
+.quantidade:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 2px;
+}
+.celula[data-marcada] .quantidade {
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgb(111 240 180 / 0.6);
+}
+
+.ajuste {
+  grid-area: ajuste;
+  min-width: 0;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  color: var(--v2-tinta-2);
+  background: rgb(255 255 255 / 0.04);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+  text-align: left;
+}
+.ajusteValores {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ajusteValores > * + *::before {
+  content: " · ";
+  color: var(--v2-tinta-3);
+}
+/* O campo que difere do padrão do lote aparece em destaque, como texto (não
+   só cor): a marca "ajustada" vai junto. */
+.valorAjustado {
+  color: var(--v2-tinta);
+  font-weight: 700;
+}
+.marcaAjustada {
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--v2-tinta);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.1);
+}
+
+/* ---------------------------------------------------------- Barra do lote */
+
+/*
+ * `sticky`, não `fixed`: a barra ocupa a própria altura no fluxo, então o fim
+ * da lista nunca fica atrás dela; e gruda no pé da janela enquanto a lista
+ * rola — no celular, logo acima da barra de abas (`--v2-topo-abas`, que já
+ * soma a área segura). Com o teclado virtual aberto no iPhone, a barra fica
+ * atrás do teclado, nunca por cima do campo que se está digitando: o campo
+ * para acima dela pela margem de rolagem (`.quantidade`). Sem desfoque (o
+ * orçamento de três superfícies é da casca e do véu de uma janela).
+ */
+.barra {
+  position: sticky;
+  bottom: calc(var(--v2-topo-abas) + 10px);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--v2-raio-vidro);
+  background: linear-gradient(180deg, rgb(30 31 44 / 0.98), rgb(14 15 22 / 0.99));
+}
+@media (min-width: 48rem) {
+  .barra {
+    bottom: max(16px, var(--v2-seguro-base));
+  }
+}
+.barraTexto {
+  font-size: 14px;
+  font-weight: 600;
+}
+/* Abaixo de 360 px o texto e o botão não cabem lado a lado: o botão
+   ocupa a linha de baixo inteira, em vez de ficar só à esquerda. */
+@media (max-width: 359.98px) {
+  .barraTexto {
+    flex-basis: 100%;
+  }
+  .barra > button {
+    flex: 1;
+  }
+}
+.barraTexto[data-vazio] {
+  font-weight: 400;
+  color: var(--v2-tinta-3);
+}
+
+/* ---------------------------------------------------------- Resultado */
+
+.resultado {
+  outline: none;
+}
+.resultadoLista {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+.resultadoLista li {
+  overflow-wrap: anywhere;
+}
+.resultadoLinhas summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.resultadoTitulo {
+  display: block;
+  margin-top: 8px;
+}
+
+/* ---------------------------------------------------------- Janelas */
+
+.zoom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+/* A carta inteira à vista na folha do celular: a largura também sai da
+   altura da tela (cabeçalho e respiro da folha somam ~230 px). */
+.zoomCarta {
+  width: min(100%, 340px, calc((100dvh - 230px) * 600 / 825));
+}
+.zoomInfo {
+  margin: 0;
+  font-size: 13px;
+  color: var(--v2-tinta-3);
+}
+.ajusteJanela {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ajusteExplica {
+  margin: 0;
+  font-size: 13px;
+  color: var(--v2-tinta-2);
+}
+.ajusteAviso {
+  margin: 0;
+  font-size: 13px;
+  color: var(--v2-falta);
+}

@@ -103,7 +103,6 @@ describe("pontes da v2, executadas", () => {
   it("encontra as pontes que ainda restam", () => {
     expect(PONTES.map((p) => p.rota).sort()).toEqual(
       [
-        "/cadastro/set",
         "/colecoes/[id]/opcoes-compra",
         "/colecoes/falta",
         "/dex/[[...resto]]",

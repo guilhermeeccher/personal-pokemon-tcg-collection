@@ -131,6 +131,38 @@ describe("reduzirGrade — desmarcar e remarcar não perde o que já foi tocado"
   });
 });
 
+describe("reduzirGrade — ajuste parcial antes da quantidade", () => {
+  it("ajustar só o idioma e depois marcar materializa variante e condição do padrão daquele instante", () => {
+    let estado = estadoGradeInicial();
+    estado = reduzirGrade(estado, { tipo: "campoLinha", cartaId: "A", campo: "idioma", valor: "en" });
+    estado = marcar(estado, "A");
+    // Trocar o padrão depois não pode mudar a carta já marcada.
+    estado = reduzirGrade(estado, { tipo: "campoDefault", campo: "variante", valor: "holo" });
+    estado = reduzirGrade(estado, { tipo: "campoDefault", campo: "condicao", valor: "LP" });
+    const item = construirItensSubmissao(estado, SEMPRE_PT).find((i) => i.cartaId === "A");
+    expect(item).toMatchObject({ idioma: "en", variante: "normal", condicao: "NM" });
+  });
+
+  it("ajuste parcial numa carta só holo materializa holo, nunca a variante impossível do padrão", () => {
+    let estado = estadoGradeInicial();
+    estado = reduzirGrade(estado, { tipo: "campoLinha", cartaId: "B", campo: "condicao", valor: "MP" });
+    estado = reduzirGrade(estado, { tipo: "quantidade", cartaId: "B", valor: 2, flags: SO_HOLO });
+    expect(estado.linhas.B).toEqual({ quantidade: 2, variante: "holo", idioma: "pt", condicao: "MP" });
+  });
+
+  it("a variante escolhida antes da quantidade é mantida", () => {
+    let estado = estadoGradeInicial();
+    estado = reduzirGrade(estado, { tipo: "campoLinha", cartaId: "C", campo: "variante", valor: "reverse" });
+    estado = marcar(estado, "C");
+    expect(estado.linhas.C.variante).toBe("reverse");
+  });
+
+  it("quantidade zero não materializa nada", () => {
+    const estado = marcar(estadoGradeInicial(), "D", 0);
+    expect(estado.linhas.D).toEqual({ quantidade: 0 });
+  });
+});
+
 describe("construirItensSubmissao", () => {
   it("ignora linhas com quantidade 0", () => {
     let estado = estadoGradeInicial();
