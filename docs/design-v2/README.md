@@ -50,7 +50,7 @@ src/app/
     _ponte/               ← irParaV1, and the test that runs every bridge
     login/                ← URL /login, in the v2 look, no rail and no tab bar (package 1f)
     page.tsx, colecoes/…  ← real v2 screens, or bridge pages
-    dex/[[...resto]]/page.tsx  ← one bridge for the whole Dex until package 5-0
+    dex/**/page.tsx       ← one bridge per Dex screen (package 5-0), replaced screen by screen
   _comum/cabeca.tsx       ← the PWA head both root layouts render
   _componentes/           ← the v1's skin; the v2 never imports it
   _acoes/                 ← server actions (the language switch)
@@ -108,11 +108,15 @@ Every screen the v2 has not done yet has, in its place, a **bridge page**: three
 - **13 bridges in phase 0:** 12 for the card screens (`/`, `/cadastro/busca`, `/cadastro/set`,
   `/colecoes`, `/colecoes/[id]`, `/colecoes/[id]/opcoes-compra`, `/colecoes/falta`,
   `/colecoes/nova`, `/inventario`, `/inventario/precos`, `/inventario/repetidas`,
-  `/inventario/visao-geral`) and **one catch-all for the Dex**, `(v2)/dex/[[...resto]]`, which
-  checks the module flag **before** redirecting: with `MODULO_LIVING_DEX` off, `/dex/...` answers
-  404 directly, never a 307 first.
-- **No catch-all at the root of the v2.** It would swallow the password module's private 404 paths.
-  A catch-all exists only below `/dex`.
+  `/inventario/visao-geral`) and **one catch-all for the Dex**, `(v2)/dex/[[...resto]]` — which
+  package 5-0 (2026-11-23) replaced with **ten bridges, one per Dex screen** (`/dex`, `/dex/pokedex`,
+  `/dex/caixas`, `/dex/recebidos`, `/dex/cadastrar`, `/dex/novo-cadastro`, `/dex/inventario`,
+  `/dex/jogos`, `/dex/trofeus`, `/dex/planos`, the ones `src/app/(v1)/v1/dex/` has). Each checks the
+  module flag **before** redirecting: with `MODULO_LIVING_DEX` off, it answers 404 directly, never a
+  307 first. A `/dex/...` path the v1 does not have falls to Next's default 404, like any URL with
+  no route, with the module on or off.
+- **No catch-all anywhere in the v2.** At the root it would swallow the password module's private
+  404 paths; below `/dex` it would answer a 307 for a path the v1 does not have.
 - **A bridge is written one way:** `await exigirSessao();` then
   `irParaV1(["colecoes", id], await searchParams)` (`src/app/(v2)/_ponte/ir-para-v1.ts`), whose
   first argument is a literal array of segments — fixed text, the dynamic parameter of the same
@@ -225,7 +229,7 @@ mutations and confirmations are kept on all of them.
 
 | Package | Delivers | Dispatched |
 |---|---|---|
-| **5-0 Dex bridges** | replaces the single Dex bridge with one bridge per screen, keeping the direct 404 with the module off; names the owner of the Dex shared components | step 6 |
+| **5-0 Dex bridges** (done) | replaces the single Dex bridge with one bridge per screen, keeping the direct 404 with the module off; names the owner of the Dex shared components (below) | step 6 |
 | **5a Overview and Pokédex** | `/dex`, `/dex/pokedex` | after 5-0 |
 | **5b Boxes and received** | `/dex/caixas`, `/dex/recebidos` | after 5-0 |
 | **5c Register** | `/dex/cadastrar` (virtualized) | after 5-0 |
@@ -233,6 +237,27 @@ mutations and confirmations are kept on all of them.
 | **5e Inventory, games, trophies and plans** | the four screens; the split is reassessed by size, and plans get their own definition of done | after 5-0 |
 
 5a to 5e run in parallel, four at a time.
+
+**Shared Dex code: where it lives, who owns it, in what order it merges** (decision of 2026-11-23;
+the rule is `rules.md`, "Dex shared code"). Each piece is ported from
+`src/app/(v1)/v1/dex/_componentes/`, never imported from there and never copied: the first package
+that needs it builds it, and the others take it from the branch of the owner.
+
+| Piece (v1 file) | Used by | Lives in | Owner |
+|---|---|---|---|
+| form label hook (`use-rotulo-forma.ts`) | 5a, 5b, 5c, 5d, 5e | `src/app/_comum/dex/` (skinless, v1 importers updated in the same change) | **5a** |
+| Pokémon sprite (`sprite-dex.tsx`) | 5a, 5c, 5d, 5e | `src/app/(v2)/dex/_componentes/` | **5a** |
+| Pokémon card (`cartao-pokemon.tsx`) | 5a, 5b, 5d | `src/app/(v2)/dex/_componentes/` | **5a** |
+| move-to-HOME flow (`use-transferencia.tsx`: request, one-way confirmation) | 5a, 5e | logic in `src/app/_comum/dex/`; its dialog is the v2's confirmation dialog, in `(v2)/dex/_componentes/` | **5a** |
+| box name hook (`use-nome-caixa.ts`) | 5b, 5d | `src/app/_comum/dex/` | **5b** |
+| "today" helper (`hoje.ts`) | 5e (plans, trophies) | `src/app/_comum/dex/` | **5e** |
+| readable refusals (`novo-cadastro/recusas-legiveis.ts`) | 5d only | stays with 5d's screen | **5d** |
+
+**Merge order: 5a, then 5b, then 5c, 5d and 5e in any order.** A package that needs a piece whose
+owner has not merged asks (`ask`) instead of writing its own copy; two pieces doing one job is what
+this table exists to prevent. Each package owns only its own screens' pages and `_componentes`; the
+v2 shell, the primitives, the card, the motion, the detail and the grid belong to the packages that
+built them.
 
 ### Phase 6 — End of the v1
 

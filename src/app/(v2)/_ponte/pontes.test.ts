@@ -33,6 +33,21 @@ vi.mock("@/lib/modulos", () => ({
   },
 }));
 
+/* Uma ponte por tela da Dex, sem catch-all: um caminho de Dex que a v1 não tem
+   cai no 404 padrão do Next, ligado ou desligado o módulo. */
+const TELAS_DA_DEX = [
+  "/dex",
+  "/dex/cadastrar",
+  "/dex/caixas",
+  "/dex/inventario",
+  "/dex/jogos",
+  "/dex/novo-cadastro",
+  "/dex/planos",
+  "/dex/pokedex",
+  "/dex/recebidos",
+  "/dex/trofeus",
+];
+
 const PASTA_V2 = path.resolve(__dirname, "..");
 
 function paginas(pasta: string): string[] {
@@ -51,7 +66,6 @@ type Pagina = { default: (props: Props) => Promise<unknown> };
 /* O que o Next entrega à página: `params` crus, com os escapes da URL
    (medido no 16.3), e `searchParams` decodificados. */
 const ID_CRU = "37a2fdeb%20x%2Fy";
-const RESTO = ["cadastrar"];
 const BUSCA = { jogo: "a", busca: "Pokémon a+b 100%", set: ["sv01", "sv02"] };
 
 function exemploDe(rota: string): { params: Record<string, string | string[]>; segmentos: string[] } {
@@ -61,9 +75,6 @@ function exemploDe(rota: string): { params: Record<string, string | string[]>; s
     if (s === "[id]") {
       params.id = ID_CRU;
       segmentos.push(ID_CRU);
-    } else if (s === "[[...resto]]") {
-      params.resto = RESTO;
-      segmentos.push(...RESTO);
     } else if (s.startsWith("[")) {
       throw new Error(`parâmetro sem exemplo neste teste: ${s} (${rota})`);
     } else segmentos.push(s);
@@ -105,7 +116,7 @@ describe("pontes da v2, executadas", () => {
       [
         "/colecoes/[id]/opcoes-compra",
         "/colecoes/falta",
-        "/dex/[[...resto]]",
+        ...TELAS_DA_DEX,
       ].sort(),
     );
   });
@@ -125,21 +136,30 @@ describe("pontes da v2, executadas", () => {
     expect(estado.chamadas).toEqual(["exigirSessao"]);
   });
 
-  it("a Dex desligada dá 404 direto, sem redirecionar", async () => {
+  it("com a Dex desligada, cada tela dela dá 404 direto, antes de qualquer redirecionamento", async () => {
     estado.livingDex = false;
-    const dex = PONTES.find((p) => p.rota === "/dex/[[...resto]]")!;
-    for (const resto of [[], ["pokedex"], ["cadastrar"]]) {
-      const erro = await executar(dex.arquivo, { resto });
+    const dex = PONTES.filter((p) => p.rota.startsWith("/dex"));
+    expect(dex).toHaveLength(TELAS_DA_DEX.length);
+    for (const { arquivo } of dex) {
+      estado.chamadas = [];
+      const erro = await executar(arquivo, {});
       expect(erro?.digest).toBe("NEXT_HTTP_ERROR_FALLBACK;404");
+      expect(estado.chamadas).toEqual(["exigirSessao", "moduloLivingDexAtivo"]);
     }
   });
 
-  it("a Dex na raiz (/dex, sem resto) vai para /v1/dex", async () => {
-    const dex = PONTES.find((p) => p.rota === "/dex/[[...resto]]")!;
+  it("a Dex na raiz (/dex) vai para /v1/dex, sem query quando não veio nenhuma", async () => {
+    const dex = PONTES.find((p) => p.rota === "/dex")!;
     const pagina = (await import(dex.arquivo)) as Pagina;
     const erro = await pagina
       .default({ params: Promise.resolve({}), searchParams: Promise.resolve({}) })
       .catch((e: { digest?: string }) => e);
     expect((erro as { digest?: string }).digest).toBe("NEXT_REDIRECT;replace;/v1/dex;307;");
+  });
+
+  it("nenhuma ponte da Dex é catch-all", () => {
+    expect(PONTES.filter((p) => p.rota.includes("["))).toSatisfy((l: { rota: string }[]) =>
+      l.every((p) => !p.rota.startsWith("/dex")),
+    );
   });
 });
