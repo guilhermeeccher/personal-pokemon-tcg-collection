@@ -277,7 +277,12 @@
   }
 }
 
-@container (min-width: 700px) {
+/*
+ * Uma linha só quando cabem as quatro ações sem quebrar (~500 px em pt) e
+ * ainda sobra espaço para o nome: de 768 a ~1100 px de janela o trilho deixa
+ * a lista abaixo disso, e a linha fica no desenho empilhado.
+ */
+@container (min-width: 860px) {
   .linha {
     grid-template-columns: 48px minmax(0, 1fr) 48px auto;
   }
@@ -289,13 +294,15 @@
   .acoes {
     grid-column: auto;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: flex-end;
-    max-width: 480px;
   }
-  /* O campo de "Mover 1 para…" ocupa a largura do texto dele, não a da linha. */
+  .acoes > * {
+    flex: 0 0 auto;
+  }
+  /* O campo de "Mover 1 para…" tem largura fixa: sem ela, o `width: 100%` do campo estica a linha. */
   .acoes > :has(> .mover) {
-    min-width: 160px;
+    flex-basis: 170px;
   }
 }
 
