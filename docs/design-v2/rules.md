@@ -727,10 +727,10 @@ D. **The pieces package 5a owns, and their interfaces** (delivered 2026-11-23). 
 
   | List | Forms | Mounted | DOM nodes (page) | Sprites in DOM | Tap, worst / median |
   |---|---|---|---|---|---|
-  | HOME, search "ch" (all mounted) | 68 | 68 | 1,572 | 68 | 64–72 / 48 ms |
+  | HOME, search "ch" (all mounted) | 68 | 68 | 1,572 | 68 | 64–80 / 40–48 ms |
   | HOME, search "ar", all mounted (threshold 300) | 171 | 171 | 3,579 | 171 | 64 / 48 ms |
   | FireRed catalog, all mounted (threshold 300) | 253 | 253 | 5,269 | 253 | 80 / 56 ms |
-  | FireRed catalog, virtual (threshold 100) | 253 | 12 | 497 | 12 | 56 / 40–48 ms |
+  | FireRed catalog, virtual (threshold 100) | 253 | 12 | 497 | 12 | 56–64 / 40–48 ms |
   | HOME, every form, virtual | 1,224 | 12–13 | 490–512 | 13 | 48–80 / 40 ms |
   | HOME, every form, virtual, 1,400 × 900 | 1,224 | 37 | 971 | 37 | 48–64 / 48 ms |
 
