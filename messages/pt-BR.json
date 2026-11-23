@@ -2095,7 +2095,8 @@
       },
       "naoAplicou": "Nada foi alterado",
       "erro": "Não foi possível aplicar a edição.",
-      "feito": "{total, plural, one {# cópia atualizada.} other {# cópias atualizadas.}}"
+      "feito": "{total, plural, one {# cópia atualizada.} other {# cópias atualizadas.}}",
+      "selecaoMudou": "A seleção mudou enquanto a pergunta esperava (a lista foi relida). Confira as cópias e aplique de novo."
     }
   }
 }

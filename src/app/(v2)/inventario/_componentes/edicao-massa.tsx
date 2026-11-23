@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { textoDaRecusa } from "@/app/_comum/recusa";
 import { CONDICOES, IDIOMAS, type Condicao, type Idioma, type VarianteCopia } from "@/lib/dominio/enums";
@@ -33,27 +33,32 @@ const RECUSA_SELECAO_SUMIU = "copiasNaoEncontradasNadaAlterado";
 export function EdicaoMassa({
   aberto,
   itens,
+  relendo,
   onFechar,
   onAplicada,
   onDesatualizada,
 }: {
   aberto: boolean;
   itens: CopiaDoInventarioDTO[];
+  /** A lista está sendo relida: a seleção ainda pode mudar, então não se aplica nada. */
+  relendo: boolean;
   onFechar: () => void;
   onAplicada: (atualizadas: number) => void;
   onDesatualizada: () => void;
 }) {
   if (!aberto) return null;
-  return <Janela itens={itens} onFechar={onFechar} onAplicada={onAplicada} onDesatualizada={onDesatualizada} />;
+  return <Janela itens={itens} relendo={relendo} onFechar={onFechar} onAplicada={onAplicada} onDesatualizada={onDesatualizada} />;
 }
 
 function Janela({
   itens,
+  relendo,
   onFechar,
   onAplicada,
   onDesatualizada,
 }: {
   itens: CopiaDoInventarioDTO[];
+  relendo: boolean;
   onFechar: () => void;
   onAplicada: (atualizadas: number) => void;
   onDesatualizada: () => void;
@@ -88,6 +93,13 @@ function Janela({
     itens.map((i) => i.id),
     escolha,
   );
+  // A seleção de agora, para conferir depois da confirmação: enquanto a
+  // pergunta esperava, uma releitura pode ter podado a seleção, e o corpo
+  // montado antes dela levaria uma cópia que já não está selecionada.
+  const selecaoAgora = useRef("");
+  useEffect(() => {
+    selecaoAgora.current = itens.map((i) => i.id).join(",");
+  });
 
   function marcar(campo: keyof typeof marcados, valor: boolean) {
     setMarcados((m) => ({ ...m, [campo]: valor }));
@@ -115,6 +127,10 @@ function Janela({
       rotuloConfirmar: t("aplicar", { total: corpo.copiaIds.length }),
     });
     if (!ok) return;
+    if (selecaoAgora.current !== corpo.copiaIds.join(",")) {
+      setErro(t("selecaoMudou"));
+      return;
+    }
     setEnviando(true);
     setErro(null);
     try {
@@ -152,7 +168,7 @@ function Janela({
             <Botao variante="fantasma" disabled={enviando} onClick={onFechar}>
               {t("cancelar")}
             </Botao>
-            <Botao variante="primario" disabled={!corpo} carregando={enviando} onClick={() => void aplicar()}>
+            <Botao variante="primario" disabled={!corpo || relendo} carregando={enviando} onClick={() => void aplicar()}>
               {t("aplicar", { total: itens.length })}
             </Botao>
           </>

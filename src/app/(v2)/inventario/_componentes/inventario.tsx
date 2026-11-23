@@ -44,6 +44,7 @@ import { useConfirmacao } from "../../_componentes/primitivos/dialogo-confirmaca
 import { AvisoEmLinha, Painel } from "../../_componentes/primitivos/painel";
 import { EdicaoMassa } from "./edicao-massa";
 import {
+  CHAVES_FILTRO,
   type ChaveFiltro,
   FILTROS_DE_TEXTO,
   FILTROS_VAZIOS,
@@ -118,8 +119,10 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
    */
   const busca = useSearchParams();
   const daUrl = useMemo(() => {
+    // Só as chaves que a tela conhece: um parâmetro qualquer (`?constructor=1`)
+    // nunca vira chave de um objeto comum.
     const bruta: Record<string, string[]> = {};
-    for (const [chave, valor] of busca.entries()) (bruta[chave] ??= []).push(valor);
+    for (const chave of [...CHAVES_FILTRO, "pagina"]) bruta[chave] = busca.getAll(chave);
     const filtros = filtrosDaUrl(bruta);
     const pagina = paginaDaUrl(bruta);
     return { filtros, pagina, endereco: enderecoDaTela(filtros, pagina) };
@@ -419,7 +422,7 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
             {t("selecao.total", { total: selecionadas.length })}
           </span>
           <div className={estilos.selecaoAcoes}>
-            <Botao variante="primario" disabled={!pronta} onClick={() => setMassaAberta(true)}>
+            <Botao variante="primario" disabled={!pronta || carregando} onClick={() => setMassaAberta(true)}>
               {t("selecao.editar")}
             </Botao>
             {/* Abaixo de 360 px o rótulo some e fica o X (o nome segue no `aria-label`). */}
@@ -451,6 +454,7 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
       <EdicaoMassa
         aberto={massaAberta && selecionadas.length > 0}
         itens={selecionadas}
+        relendo={carregando}
         onFechar={() => setMassaAberta(false)}
         onAplicada={(atualizadas) => {
           setMassaAberta(false);

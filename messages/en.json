@@ -2103,7 +2103,8 @@
       },
       "naoAplicou": "Nothing was changed",
       "erro": "Could not apply the edit.",
-      "feito": "{total, plural, one {# copy updated.} other {# copies updated.}}"
+      "feito": "{total, plural, one {# copy updated.} other {# copies updated.}}",
+      "selecaoMudou": "The selection changed while the question was open (the list was read again). Check the copies and apply again."
     }
   }
 }
