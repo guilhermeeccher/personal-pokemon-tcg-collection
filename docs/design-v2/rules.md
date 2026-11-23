@@ -532,6 +532,13 @@ A. **One bridge per Dex screen, and no catch-all in the v2.** `/dex`, `/dex/poke
    `/dex/trofeus` and `/dex/planos`: `await exigirSessao();`, then **module off → `notFound()`**, then
    `irParaV1` with the query intact. A `/dex/...` path with no v1 screen gets Next's default 404, module
    on or off. `pontes.test.ts` runs each bridge, and `telas-v1.test.ts` fails on any catch-all.
+   **With the module off the 404 is the right status with no 307 first, but not byte-identical to the
+   404 of a URL with no route** (measured 2026-11-23): `notFound()` in a v2 page renders inside the
+   v2 root layout, so the body is the layout's shell around Next's own "404 This page could not be
+   found." (about 152 KB, no ETag), against the static 7 KB page of an unknown path. A person sees a
+   readable 404 in the v2 shell, with no Dex tab. Equalizing it would need the proxy to mark `/dex/**`
+   and a `beforeFiles` rewrite like the password module's; decided against (2026-11-23), because
+   `AGENTS.md` asks for a direct 404, not for an indistinguishable one.
 B. **Skinless Dex logic goes to `src/app/_comum/dex/`; anything with a look goes to
    `src/app/(v2)/dex/_componentes/`.** Rule 16 holds: no import from `(v1)/` or `_componentes/`, and a
    piece both versions need moves with its v1 importers updated in the same change.
