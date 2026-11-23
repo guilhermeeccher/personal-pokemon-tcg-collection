@@ -9,13 +9,16 @@ import { urlSpritePokemon } from "@/lib/imagens";
 
 import { Carta } from "../../../_componentes/carta/carta";
 import type { Formatos } from "../../../_componentes/detalhe/formatos";
-import type { PropsCelula } from "../../../_componentes/grade/grade-virtual";
+import { ATRIBUTO_CELULA, type PropsCelula } from "../../../_componentes/grade/grade-virtual";
 import { nomeTransicaoCarta } from "../../../_componentes/movimento/nome-transicao";
 import { TransicaoVista } from "../../../_componentes/movimento/transicao-vista";
 
 import type { AcaoDoToque } from "./compra-falta";
 import estilos from "./falta.module.css";
 import type { GradeFichario } from "./vista-colecao";
+
+/** O atributo da carta, o alvo do gesto de compra: o arrasto só começa nela. */
+export const ATRIBUTO_ALVO_COMPRA = "data-v2-alvo-compra";
 
 /** O que a legenda soma à altura da célula: o botão de detalhes (44 px, 8 acima) e, nas grades largas, a linha do nome. */
 export function alturaDaLegenda(densidade: GradeFichario): number {
@@ -117,6 +120,7 @@ export function CelulaFalta({
         aria-pressed={alterna ? naLista : undefined}
         aria-haspopup={acao === "abrirOpcoes" || acao === "abrirDetalhe" ? "dialog" : undefined}
         onClick={aoTocar}
+        {...{ [ATRIBUTO_ALVO_COMPRA]: "" }}
         {...celula}
       >
         {aberta ? (
@@ -158,7 +162,11 @@ export function CelulaFalta({
           type="button"
           className={estilos.detalhes}
           aria-label={t("detalhesDe", { alvo: nome ?? t("numero", { numero: vaga.numero }) })}
+          // O mesmo `tabIndex` e o mesmo índice da carta: entrar na grade por
+          // Shift+Tab cai aqui, e a grade virtual reconhece a célula pelo
+          // índice (é a carta, a primeira com ele, que ela foca nas setas).
           tabIndex={celula.tabIndex}
+          {...{ [ATRIBUTO_CELULA]: celula[ATRIBUTO_CELULA] }}
           onClick={aoDetalhes}
         >
           <Ellipsis aria-hidden />

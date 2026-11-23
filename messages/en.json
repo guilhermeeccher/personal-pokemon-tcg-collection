@@ -2571,7 +2571,8 @@
       "mostrarMais": "Show more ({total})",
       "cancelar": "Cancel",
       "confirmar": "{total, plural, =0 {Mark} =1 {Mark 1 card} other {Mark # cards}}",
-      "feito": "{total, plural, =1 {1 card went} other {# cards went}} on the list."
+      "feito": "{total, plural, =1 {1 card went} other {# cards went}} on the list.",
+      "mudou": "The list changed since this dialog opened: this is the new preview. Check it and confirm again."
     },
     "opcoes": {
       "titulo": "Buy",

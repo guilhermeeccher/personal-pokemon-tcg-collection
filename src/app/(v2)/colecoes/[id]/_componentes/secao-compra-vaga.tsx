@@ -102,7 +102,8 @@ export function SecaoCompraVaga({
 
   async function enviar(corpos: CorpoSelecao[], sucesso?: string) {
     setOcupado(true);
-    const desfecho = await enviarSelecao(colecaoId, corpos);
+    // Nunca `null`: sem `aindaVale`, a fila sempre envia.
+    const desfecho = (await enviarSelecao(colecaoId, corpos)) ?? ({ tipo: "ok" } as const);
     setOcupado(false);
     if (desfecho.tipo === "ok") {
       if (sucesso) avisar(sucesso, { tom: "sucesso" });

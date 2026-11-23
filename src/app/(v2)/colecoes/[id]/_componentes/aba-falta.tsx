@@ -56,7 +56,7 @@ import { AvisoEmLinha } from "../../../_componentes/primitivos/painel";
 
 import { type EstadoArrasto, iniciarArrasto, moverArrasto } from "./arrasto-compra";
 import { AtalhoMelhor } from "./atalho-melhor";
-import { CelulaFalta, alturaDaLegenda } from "./celula-falta";
+import { ATRIBUTO_ALVO_COMPRA, CelulaFalta, alturaDaLegenda } from "./celula-falta";
 import {
   type AcaoDoToque,
   type CorpoSelecao,
@@ -71,6 +71,7 @@ import {
   naListaDaVaga,
   planoDoAtalho,
   podarPendencias,
+  restaurarPendencias,
   resumoComPendencias,
 } from "./compra-falta";
 import { enviarSelecao } from "./envio-selecao";
@@ -140,13 +141,23 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
     setPendenciasEstado(pendenciasRef.current);
   }, []);
 
+  /**
+   * Depois de uma recusa, o texto da lista é o de antes dela e não se copia
+   * até uma leitura pedida depois da recusa chegar (mesmo que essa falhe:
+   * continua velha).
+   */
+  const [listaVelha, setListaVelha] = useState(false);
+
   const seq = useRef(0);
+  /** Sobe a cada recusa: o que estava na fila foi pensado sobre um estado que não existe mais. */
+  const geracao = useRef(0);
   /** O maior gesto cujo pedido já terminou: uma leitura pedida agora o reflete. */
   const confirmadasAte = useRef(0);
 
   useEffect(() => {
     const controle = new AbortController();
     const reflete = confirmadasAte.current;
+    const geracaoNaLeitura = geracao.current;
     fetch(`/api/colecoes/${colecao.id}/falta`, { cache: "no-store", signal: controle.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error(String(r.status));
@@ -156,6 +167,7 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
         if (controle.signal.aborted) return;
         setLeitura({ estado: "ok", dados });
         definirPendencias((p) => podarPendencias(p, reflete));
+        if (geracaoNaLeitura === geracao.current) setListaVelha(false);
       })
       .catch(() => {
         if (controle.signal.aborted) return;
@@ -171,9 +183,6 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
 
   /* ---------- Envio em fila ---------- */
 
-  const fila = useRef<Promise<void>>(Promise.resolve());
-  /** Sobe a cada recusa: o que estava na fila foi pensado sobre um estado que não existe mais. */
-  const geracao = useRef(0);
   const relogio = useRef<ReturnType<typeof setTimeout> | null>(null);
   const emVoo = useRef(0);
   useEffect(() => () => {
@@ -193,32 +202,35 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
     [t],
   );
 
+  /**
+   * Entra na fila da coleção no gesto (`enviarSelecao`, a mesma do detalhe):
+   * a ordem dos pedidos é a dos gestos, venham daqui ou do detalhe.
+   */
   const enfileirar = useCallback(
     (corpos: CorpoSelecao[], seqs: number[], sucesso?: string) => {
       const minhaGeracao = geracao.current;
       emVoo.current++;
-      fila.current = fila.current.then(async () => {
-        try {
-          if (geracao.current !== minhaGeracao) return;
-          const desfecho = await enviarSelecao(colecao.id, juntarCorpos(corpos));
-          confirmadasAte.current = Math.max(confirmadasAte.current, ...seqs);
-          if (desfecho.tipo === "recusada") {
-            // Tudo o que a tela mostrava por conta própria cai: a releitura diz a verdade.
-            geracao.current++;
-            definirPendencias(() => new Map());
-            avisar(textoDaRecusa(desfecho), { tom: "erro" });
-            reler();
-            return;
-          }
-          if (desfecho.tipo === "parcial") {
-            avisar(textoDaRecusa(desfecho), { tom: "erro" });
-            reler();
-            return;
-          }
-          if (sucesso) avisar(sucesso, { tom: "sucesso" });
-        } finally {
-          emVoo.current--;
+      void enviarSelecao(colecao.id, juntarCorpos(corpos), () => geracao.current === minhaGeracao).then((desfecho) => {
+        emVoo.current--;
+        // Descartado: uma recusa anterior já limpou a tela e pediu a releitura.
+        if (desfecho === null) return;
+        confirmadasAte.current = Math.max(confirmadasAte.current, ...seqs);
+        if (desfecho.tipo === "recusada") {
+          // Tudo o que a tela mostrava por conta própria cai: a releitura diz a
+          // verdade, e a lista para colar fica velha até ela chegar.
+          geracao.current++;
+          definirPendencias(() => new Map());
+          setListaVelha(true);
+          avisar(textoDaRecusa(desfecho), { tom: "erro" });
+          reler();
+          return;
         }
+        if (desfecho.tipo === "parcial") {
+          avisar(textoDaRecusa(desfecho), { tom: "erro" });
+          reler();
+          return;
+        }
+        if (sucesso) avisar(sucesso, { tom: "sucesso" });
         agendarReler();
       });
     },
@@ -301,11 +313,21 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
     [controle],
   );
 
-  const arrasto = useRef<{ estado: EstadoArrasto; id: number; tocados: Set<number>; corpos: CorpoSelecao[]; seqs: number[] } | null>(null);
+  const arrasto = useRef<{
+    estado: EstadoArrasto;
+    id: number;
+    tocados: Set<number>;
+    corpos: CorpoSelecao[];
+    seqs: number[];
+    /** A pendência de cada vaga antes do gesto: um cancelamento a devolve. */
+    antes: Map<string, Pendencia | undefined>;
+  } | null>(null);
   const engolirClique = useRef(false);
 
   function indiceDoAlvo(alvo: EventTarget | null): number | null {
-    const el = (alvo as Element | null)?.closest?.(`[${ATRIBUTO_CELULA}]`);
+    // Só a carta pinta: "Detalhes" tem o índice da célula (para o foco da
+    // grade), mas um gesto que nasce nele não marca nada.
+    const el = (alvo as Element | null)?.closest?.(`[${ATRIBUTO_ALVO_COMPRA}]`);
     if (!el) return null;
     const i = Number(el.getAttribute(ATRIBUTO_CELULA));
     return Number.isInteger(i) ? i : null;
@@ -319,7 +341,7 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
     const acao = acaoDe(v);
     if (acao.tipo !== "marcar" && acao.tipo !== "desmarcar") return;
     const estado = iniciarArrasto(e.clientX, e.clientY, i, acao.tipo === "marcar");
-    arrasto.current = estado ? { estado, id: e.pointerId, tocados: new Set(), corpos: [], seqs: [] } : null;
+    arrasto.current = estado ? { estado, id: e.pointerId, tocados: new Set(), corpos: [], seqs: [], antes: new Map() } : null;
   }
 
   function aoMover(e: PointerEvent<HTMLDivElement>) {
@@ -339,9 +361,32 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
       if (!v) continue;
       const acao = acaoDoArrasto(estado.marcando, acaoDe(v));
       if (!acao) continue;
+      a.antes.set(v.id, pendenciasRef.current.get(v.id));
       a.seqs.push(marcarNaTela(v, acao));
       a.corpos.push(acao.corpo);
     }
+  }
+
+  /** Depois de um arrasto, o clique que o navegador ainda manda não pode desfazer a última carta. */
+  function engolirProximoClique() {
+    engolirClique.current = true;
+    setTimeout(() => {
+      engolirClique.current = false;
+    }, 0);
+  }
+
+  /**
+   * O navegador interrompeu o gesto (`pointercancel`: um gesto do sistema, a
+   * página que começou a rolar): nada foi confirmado pelo dedo, então nada
+   * sai, e as marcas que o arrasto pôs na tela voltam ao que eram.
+   */
+  function aoCancelar(e: PointerEvent<HTMLDivElement>) {
+    const a = arrasto.current;
+    if (!a || e.pointerId !== a.id) return;
+    arrasto.current = null;
+    if (a.estado.fase !== "pintando") return;
+    engolirProximoClique();
+    definirPendencias((p) => restaurarPendencias(p, a.antes));
   }
 
   function aoSoltar(e: PointerEvent<HTMLDivElement>) {
@@ -349,11 +394,7 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
     if (!a || e.pointerId !== a.id) return;
     arrasto.current = null;
     if (a.estado.fase !== "pintando") return;
-    // O clique que o navegador ainda manda ao soltar não pode desfazer a última carta.
-    engolirClique.current = true;
-    setTimeout(() => {
-      engolirClique.current = false;
-    }, 0);
+    engolirProximoClique();
     if (a.corpos.length === 0) return;
     enfileirar(a.corpos, a.seqs);
     if (a.seqs.length > 1) {
@@ -369,29 +410,37 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
 
   /* ---------- Atalho, lista e opções ---------- */
 
-  const [plano, setPlano] = useState<PlanoDoAtalho | null>(null);
+  /**
+   * A prévia do atalho, congelada com a leitura de que saiu: confirmar envia
+   * exatamente `plano.corpos`. Se a leitura mudou enquanto a janela estava
+   * aberta, confirmar não envia — troca a prévia pela nova e pede outra
+   * conferência (`mudou`).
+   */
+  const [plano, setPlano] = useState<{ plano: PlanoDoAtalho; dados: FaltaColecaoV2DTO; mudou: boolean } | null>(null);
   const [listaAberta, setListaAberta] = useState(false);
   const { copiar, copiada } = useCopiarAba();
 
   function abrirAtalho() {
     if (!dados) return;
-    // O plano é o que a janela mostra: confirmado, é exatamente ele que sai.
-    setPlano(planoDoAtalho(dados.vagas, pendenciasRef.current));
+    setPlano({ plano: planoDoAtalho(dados.vagas, pendenciasRef.current), dados, mudou: false });
   }
 
   function confirmarAtalho() {
-    if (!plano) return;
-    const corpos: CorpoSelecao[] = [];
+    if (!plano || !dados) return;
+    if (plano.dados !== dados) {
+      setPlano({ plano: planoDoAtalho(dados.vagas, pendenciasRef.current), dados, mudou: true });
+      return;
+    }
+    const { itens, corpos } = plano.plano;
     const seqs: number[] = [];
-    for (const { vagaId, opcao } of plano.itens) {
+    for (const { vagaId, opcao } of itens) {
       const v = vagaPorId.get(vagaId);
       const corpo = corpoDoAlvo(opcao.alvo, true);
-      if (!v || !corpo) continue;
-      seqs.push(marcarNaTela(v, { tipo: "marcar", corpo, desfazer: corpoDoAlvo(opcao.alvo, false), preco: opcao.preco?.valor ?? null }));
-      corpos.push(corpo);
+      // A marca na tela é só desenho; o que sai é o plano inteiro, como foi mostrado.
+      if (v && corpo) seqs.push(marcarNaTela(v, { tipo: "marcar", corpo, desfazer: corpoDoAlvo(opcao.alvo, false), preco: opcao.preco?.valor ?? null }));
     }
     setPlano(null);
-    if (corpos.length > 0) enfileirar(corpos, seqs, t("atalho.feito", { total: seqs.length }));
+    if (corpos.length > 0) enfileirar(corpos, seqs, t("atalho.feito", { total: itens.length }));
   }
 
   const vagaDasOpcoes = opcoesDe ? (vagaPorId.get(opcoesDe) ?? null) : null;
@@ -407,7 +456,7 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
   const vao = vaoDoTamanho(tamanho);
   const manter = [abertaId, parAtivo, opcoesDe].filter((x): x is string => x !== null);
   const resumo = resumoComPendencias(dados?.lista ?? null, pendencias);
-  const atualizando = resumo.pendentes > 0 || leitura.estado === "carregando";
+  const atualizando = resumo.pendentes > 0 || listaVelha || leitura.estado === "carregando";
   const lista = dados?.lista ?? null;
   const umaAba = lista && lista.abasLiga.length === 1 ? lista.abasLiga[0] : null;
   const estado = dados?.estado ?? null;
@@ -482,7 +531,7 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
         onPointerDown={aoApertar}
         onPointerMove={aoMover}
         onPointerUp={aoSoltar}
-        onPointerCancel={aoSoltar}
+        onPointerCancel={aoCancelar}
         onClickCapture={aoCliqueCaptura}
       >
         <GradeVirtual
@@ -547,8 +596,9 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
       {plano ? (
         <AtalhoMelhor
           aberto
-          plano={plano}
-          criterio={dados?.criterio ?? null}
+          plano={plano.plano}
+          mudou={plano.mudou}
+          criterio={plano.dados.criterio}
           vagasPorId={vagaPorId}
           onFechar={() => setPlano(null)}
           onConfirmar={confirmarAtalho}

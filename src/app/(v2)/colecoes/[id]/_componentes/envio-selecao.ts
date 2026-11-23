@@ -1,15 +1,32 @@
 "use client";
 
 import { type CorpoSelecao, type DesfechoDaSelecao, desfechoDaSelecao, tamanhoDoCorpo } from "./compra-falta";
+import { criarFilaPorChave } from "./fila-por-chave";
+
+/** Uma fila por coleção, de toda a página: a aba e o detalhe escrevem pela mesma. */
+const filaDaColecao = criarFilaPorChave();
 
 /**
  * Envia marcações por `PATCH /api/colecoes/:id/opcoes-compra/selecao`, a rota
- * da v1, **um pedido de cada vez**: um "tirar" que saísse junto de um "pôr"
- * na mesma vaga poderia chegar antes dele. Para no primeiro recusado (o que
- * vem depois foi pensado sobre um estado que não existe mais); um pedido que
- * mudou menos do que pediu deixa os outros seguirem e volta como `parcial`.
+ * da v1, **um pedido de cada vez por coleção**, venha da aba ou do detalhe:
+ * um "tirar" que saísse junto de um "pôr" na mesma vaga poderia chegar antes
+ * dele. Para no primeiro recusado (o que vem depois foi pensado sobre um
+ * estado que não existe mais); um pedido que mudou menos do que pediu deixa
+ * os outros seguirem e volta como `parcial`.
+ *
+ * `aindaVale`, quando dado, é perguntado na hora em que chega a vez do
+ * pedido: a aba entra na fila no gesto, e uma recusa no meio do caminho
+ * descarta o que ela já tinha posto atrás (volta `null`, nada enviado).
  */
-export async function enviarSelecao(colecaoId: string, corpos: readonly CorpoSelecao[]): Promise<DesfechoDaSelecao> {
+export function enviarSelecao(
+  colecaoId: string,
+  corpos: readonly CorpoSelecao[],
+  aindaVale?: () => boolean,
+): Promise<DesfechoDaSelecao | null> {
+  return filaDaColecao(colecaoId, () => (aindaVale && !aindaVale() ? Promise.resolve(null) : enviarAgora(colecaoId, corpos)));
+}
+
+async function enviarAgora(colecaoId: string, corpos: readonly CorpoSelecao[]): Promise<DesfechoDaSelecao> {
   let parcial = false;
   for (const corpo of corpos) {
     let status: number;

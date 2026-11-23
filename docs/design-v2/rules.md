@@ -481,16 +481,21 @@ rest are the technical foundations of the v2.
     - **Drag** (set only, where a tap marks): horizontal only, after 8 px, never from the left 24
       px, along the row it started on (`indiceNoPonto(x, y0)`), one direction (the first card's),
       sent as one request when the finger lifts. The grid area has `touch-action: pan-y`, so a
-      vertical move scrolls and marks nothing.
-    - **Optimistic, then checked.** A mark shows at once as a pending mark per slot; requests go
-      one at a time, in order; a pending mark is dropped only by a read asked after its request
-      finished. A refusal (404, 400, 5xx, no network) drops every pending mark, says why and
-      rereads; a request that changed fewer rows than it carried (`alteradas`: the slot was filled,
-      the card stopped being a candidate) says so and rereads.
+      vertical move scrolls and marks nothing. A `pointercancel` sends nothing and puts the marks
+      the drag drew back as they were.
+    - **Optimistic, then checked.** A mark shows at once as a pending mark per slot. Requests go
+      through **one queue per collection, shared by the tab and the card detail**
+      (`envio-selecao.ts`), entered at the gesture, so the server sees the user's gestures in
+      order. A pending mark is dropped only by a read asked after its request finished. A refusal
+      (404, 400, 5xx, no network) drops every pending mark and what the tab had queued behind it,
+      says why and rereads, and the list is not copied until a read asked after the refusal
+      arrives; a request that changed fewer rows than it carried (`alteradas`: the slot was
+      filled, the card stopped being a candidate) says so and rereads.
     - **"Mark the best of each slot"** opens a dialog with the criterion and, slot by slot, the card,
-      its price and source, plus how many slots stay out and why; only its confirm sends. The plan
-      is the one the dialog shows (`planoDoAtalho`), the 1a `proposta`: no slot with a choice, no
-      unpriced card.
+      its price and source, plus how many slots stay out and why; only its confirm sends, and it
+      sends exactly the plan shown (`planoDoAtalho`, the 1a `proposta`: no slot with a choice, no
+      unpriced card). If the read changed while the dialog was open, confirm sends nothing and
+      shows the new plan to be confirmed again.
     - **The list to paste** is the server's (`lista.abasLiga`, the same function as the buy options
       screen and the per-tab download); the tab shows it in a dialog with one tab per region in a
       Pokédex, and copying waits for pending marks to be reread. Copy goes through

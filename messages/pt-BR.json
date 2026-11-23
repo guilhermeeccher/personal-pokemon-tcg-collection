@@ -2563,7 +2563,8 @@
       "mostrarMais": "Mostrar mais ({total})",
       "cancelar": "Cancelar",
       "confirmar": "{total, plural, =0 {Marcar} =1 {Marcar 1 carta} other {Marcar # cartas}}",
-      "feito": "{total, plural, =1 {1 carta entrou} other {# cartas entraram}} na lista."
+      "feito": "{total, plural, =1 {1 carta entrou} other {# cartas entraram}} na lista.",
+      "mudou": "A lista mudou desde que esta janela abriu: esta é a prévia nova. Confira e confirme de novo."
     },
     "opcoes": {
       "titulo": "Comprar",

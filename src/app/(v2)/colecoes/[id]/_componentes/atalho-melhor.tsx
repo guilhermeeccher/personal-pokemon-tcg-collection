@@ -9,6 +9,7 @@ import { Carta } from "../../../_componentes/carta/carta";
 import { useFormatos } from "../../../_componentes/detalhe/formatos";
 import { Botao } from "../../../_componentes/primitivos/botao";
 import { Modal } from "../../../_componentes/primitivos/modal";
+import { AvisoEmLinha } from "../../../_componentes/primitivos/painel";
 import type { ResolvedorFoco } from "../../../_componentes/primitivos/use-camada";
 
 import type { PlanoDoAtalho } from "./compra-falta";
@@ -31,6 +32,7 @@ const LINHAS_POR_VEZ = 40;
 export function AtalhoMelhor({
   aberto,
   plano,
+  mudou,
   criterio,
   vagasPorId,
   onFechar,
@@ -39,6 +41,8 @@ export function AtalhoMelhor({
 }: {
   aberto: boolean;
   plano: PlanoDoAtalho;
+  /** A leitura mudou desde a prévia anterior: esta é a nova, e a confirmação de antes não valeu. */
+  mudou: boolean;
   criterio: CriterioDaPropostaV2DTO | null;
   vagasPorId: ReadonlyMap<string, VagaGradeV2DTO>;
   onFechar: () => void;
@@ -72,6 +76,11 @@ export function AtalhoMelhor({
       }
     >
       <div className={estilos.atalho}>
+        {mudou ? (
+          <AvisoEmLinha tom="alerta" papel="status">
+            {t("mudou")}
+          </AvisoEmLinha>
+        ) : null}
         {criterio ? <p className={estilos.criterio}>{textoDoCriterio(tCriterio, criterio, formatos)}</p> : null}
         {fora.length > 0 ? (
           <ul className={estilos.listaFora}>

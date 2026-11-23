@@ -160,6 +160,23 @@ export function podarPendencias(pendencias: Pendencias, confirmadasAte: number):
   return saida;
 }
 
+/**
+ * Desfaz um gesto que não foi confirmado (o arrasto que o navegador
+ * cancelou): cada vaga que ele tocou volta à pendência que tinha antes dele,
+ * ou a nenhuma. Nada foi enviado, então nada há a desfazer no servidor.
+ */
+export function restaurarPendencias(
+  pendencias: Pendencias,
+  antes: ReadonlyMap<string, Pendencia | undefined>,
+): Map<string, Pendencia> {
+  const saida = new Map(pendencias);
+  for (const [vagaId, anterior] of antes) {
+    if (anterior) saida.set(vagaId, anterior);
+    else saida.delete(vagaId);
+  }
+  return saida;
+}
+
 /** O resumo da barra: o da última leitura, mais o que as pendências mudam. */
 export function resumoComPendencias(
   lista: Pick<ListaDeCompraV2DTO, "selecionadas" | "total"> | null,
