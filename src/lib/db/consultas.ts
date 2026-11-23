@@ -45,6 +45,7 @@ import {
   ordemIdiomasPorCarta,
   resolverIdiomaCatalogoDoSet,
 } from "@/lib/dominio/idioma-catalogo";
+import { type CatalogoPedidoGrade, idiomaDaGradeDoSet } from "@/lib/dominio/catalogo-grade-set";
 import { resolverDexIdsPorNome } from "@/lib/dominio/nome-especie";
 import { derivarForma } from "@/lib/dominio/forma";
 import { energiaDaCarta, type TipoEnergia } from "@/lib/dominio/tipo-energia";
@@ -488,11 +489,14 @@ export interface GradeDoSet {
 
 /**
  * Grade de cadastro de um set: resolve o fallback de idioma (regra 7) e
- * devolve as cartas na ordem impressa (`compararLocalId`).
+ * devolve as cartas na ordem impressa (`compararLocalId`). `catalogo` é o
+ * pedido do japonês (`?catalogo=jp`, para `neo1` a `neo4`); quem decide a
+ * grade é `idiomaDaGradeDoSet`, e `null` dali é "não há esta grade".
  */
 export async function obterGradeDoSet(
   db: Database,
   setId: string,
+  catalogo: CatalogoPedidoGrade = null,
 ): Promise<GradeDoSet | null> {
   // Quais idiomas este set tem no catálogo local. Consulta os três de uma
   // vez em vez de só perguntar "existe pt?": um set exclusivo do Japão
@@ -505,9 +509,11 @@ export async function obterGradeDoSet(
       and(eq(cartaCatalogo.setId, setId), eq(cartaCatalogo.ativa, true)),
     );
 
-  const idiomaCatalogo = resolverIdiomaCatalogoDoSet(
+  const idiomaCatalogo = idiomaDaGradeDoSet(
     idiomasDoSet.map((l) => l.idioma),
+    catalogo,
   );
+  if (!idiomaCatalogo) return null;
   const temPt = idiomasDoSet.some((l) => l.idioma === "pt");
 
   const linhasDosIdiomas = await db
