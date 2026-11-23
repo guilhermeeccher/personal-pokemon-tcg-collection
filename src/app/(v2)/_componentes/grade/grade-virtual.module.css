@@ -1,0 +1,18 @@
+/*
+ * A grade virtual. Só posição: a aparência da célula é de quem a desenha.
+ *
+ * Sem `container-type` aqui (regra 5d de `rules.md`): a barra de abas e a
+ * barra de compra são fixas, e a contenção as prenderia a este contêiner.
+ * Sem `transform` nem `will-change` por célula (regra 5a): a posição sai de
+ * `top`/`left`, e nenhuma célula vira camada de composição por estar na grade.
+ */
+
+.grade {
+  position: relative;
+  width: 100%;
+}
+
+.celula {
+  position: absolute;
+  box-sizing: border-box;
+}
