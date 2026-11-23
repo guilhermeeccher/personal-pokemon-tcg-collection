@@ -15,7 +15,8 @@
  *   `try/catch` (janela privada, dados do site bloqueados, prévia: o acesso
  *   pode lançar). Sem armazenamento, o interruptor ainda vale nesta aba até
  *   recarregar. O evento `storage` traz a mudança feita em outra aba.
- * - **Heurística de quadros:** mede ~1 s de `requestAnimationFrame` com a
+ * - **Heurística de quadros:** mede ~1 s de `requestAnimationFrame` (até
+ *   3 s, se o aparelho for lento demais para juntar a amostra) com a
  *   página visível, depois de um respiro para a hidratação não contar como
  *   lentidão; mede de novo sempre que a aba volta a ficar visível (o modo de
  *   economia costuma ser ligado com o app no fundo). Só mede com o
@@ -41,13 +42,13 @@ import {
   type ModoEfeitos,
   decidirMovimento,
   lerEscolhaModo,
+  medicaoTerminou,
   modoPelosQuadros,
 } from "./preferencias-movimento";
 
 const CONSULTA_REDUZIDO = "(prefers-reduced-motion: reduce)";
 /** Respiro antes de medir: hidratação e carga de imagens inflam os primeiros quadros. */
 const ESPERA_ANTES_DE_MEDIR_MS = 1500;
-const DURACAO_MEDICAO_MS = 1000;
 
 let escolhaEmMemoria: EscolhaModo | null = null;
 let heuristica: ModoEfeitos | null = null;
@@ -61,16 +62,17 @@ function lerReduzido(): boolean {
   return window.matchMedia(CONSULTA_REDUZIDO).matches;
 }
 
-function lerEscolhaGuardada(): EscolhaModo {
+/** A escolha guardada, ou `null` quando o armazenamento não pode ser lido. */
+function lerEscolhaGuardada(): EscolhaModo | null {
   try {
     return lerEscolhaModo(window.localStorage.getItem(CHAVE_ESCOLHA_MODO));
   } catch {
-    return "auto";
+    return null;
   }
 }
 
 function escolhaAtual(): EscolhaModo {
-  if (escolhaEmMemoria === null) escolhaEmMemoria = lerEscolhaGuardada();
+  if (escolhaEmMemoria === null) escolhaEmMemoria = lerEscolhaGuardada() ?? "auto";
   return escolhaEmMemoria;
 }
 
@@ -121,7 +123,7 @@ function iniciar(): () => void {
         if (anterior !== null) intervalos.push(t - anterior);
         anterior = t;
         inicio ??= t;
-        if (t - inicio < DURACAO_MEDICAO_MS) {
+        if (!medicaoTerminou(t - inicio, intervalos)) {
           pedido = requestAnimationFrame(quadro);
           return;
         }
@@ -169,6 +171,10 @@ function iniciar(): () => void {
 function assinar(aviso: () => void): () => void {
   ouvintes.add(aviso);
   if (ouvintes.size === 1) {
+    // Sem assinante ninguém ouviu o evento `storage`: outra aba pode ter
+    // mudado o interruptor nesse meio-tempo. Relê o guardado; sem
+    // armazenamento legível, a escolha em memória continua valendo.
+    escolhaEmMemoria = lerEscolhaGuardada() ?? escolhaEmMemoria;
     desmontar = iniciar();
     // Algo pode ter mudado entre o primeiro snapshot e a assinatura.
     atualizar();

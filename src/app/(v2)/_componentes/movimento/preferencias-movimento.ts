@@ -30,7 +30,8 @@
  * ela também some. `navigator.deviceMemory` e `prefers-reduced-data` têm o
  * mesmo problema (só Chromium, ou só atrás de flag). O único sinal que
  * existe nos dois motores e por HTTP é **o ritmo de quadros**: a mediana do
- * intervalo entre `requestAnimationFrame` medida por ~1 s. O iOS limita o
+ * intervalo entre `requestAnimationFrame` medida por ~1 s (mais, se o
+ * aparelho for lento demais para juntar a amostra nisso). O iOS limita o
  * rAF a 30 fps no modo de baixo consumo (intervalo ~33 ms), e um aparelho
  * que não aguenta 60 fps com a página parada também passa do limiar.
  * Limiar de 24 ms: entre os 16,7 ms de 60 Hz e os 33,3 ms de 30 Hz, com
@@ -59,6 +60,19 @@ export const MIN_AMOSTRAS_QUADRO = 30;
  */
 export const MAX_INTERVALO_VALIDO_MS = 250;
 
+/** A medição dura pelo menos isto (o "~1 s" do cabeçalho)... */
+export const DURACAO_MIN_MEDICAO_MS = 1000;
+/**
+ * ...e se estende até juntar `MIN_AMOSTRAS_QUADRO` quadros válidos, até
+ * este teto. Parar em 1 s cego deixava sem sinal justamente o aparelho mais
+ * lento: a 25 fps um segundo tem ~24 intervalos, abaixo do mínimo, e ele
+ * ficava no modo completo. Com o teto de 3 s, até ~10 fps ainda há amostra;
+ * abaixo disso a aba provavelmente nem estava em primeiro plano.
+ */
+export const DURACAO_MAX_MEDICAO_MS = 3000;
+
+const ehIntervaloValido = (v: number) => Number.isFinite(v) && v > 0 && v <= MAX_INTERVALO_VALIDO_MS;
+
 /** Valor guardado → escolha. Qualquer coisa desconhecida é `auto`. */
 export function lerEscolhaModo(bruto: string | null | undefined): EscolhaModo {
   return (ESCOLHAS_MODO as readonly string[]).includes(bruto ?? "") ? (bruto as EscolhaModo) : "auto";
@@ -66,9 +80,7 @@ export function lerEscolhaModo(bruto: string | null | undefined): EscolhaModo {
 
 /** Mediana dos intervalos válidos, ou `null` se não houver nenhum. */
 export function medianaIntervalos(intervalos: readonly number[]): number | null {
-  const validos = intervalos
-    .filter((v) => Number.isFinite(v) && v > 0 && v <= MAX_INTERVALO_VALIDO_MS)
-    .sort((a, b) => a - b);
+  const validos = intervalos.filter(ehIntervaloValido).sort((a, b) => a - b);
   if (validos.length === 0) return null;
   const meio = Math.floor(validos.length / 2);
   return validos.length % 2 ? validos[meio] : (validos[meio - 1] + validos[meio]) / 2;
@@ -79,11 +91,22 @@ export function medianaIntervalos(intervalos: readonly number[]): number | null 
  * diz nada (poucas amostras válidas). Recebe os intervalos já medidos.
  */
 export function modoPelosQuadros(intervalos: readonly number[]): ModoEfeitos | null {
-  const validos = intervalos.filter((v) => Number.isFinite(v) && v > 0 && v <= MAX_INTERVALO_VALIDO_MS);
+  const validos = intervalos.filter(ehIntervaloValido);
   if (validos.length < MIN_AMOSTRAS_QUADRO) return null;
   const mediana = medianaIntervalos(validos);
   if (mediana === null) return null;
   return mediana > LIMIAR_QUADRO_LENTO_MS ? "leve" : "completo";
+}
+
+/**
+ * A medição pode parar? Depois do mínimo de tempo, quando já há amostra
+ * suficiente; e sempre no teto, com ou sem amostra (aí `modoPelosQuadros`
+ * diz "sem sinal").
+ */
+export function medicaoTerminou(decorridoMs: number, intervalos: readonly number[]): boolean {
+  if (decorridoMs >= DURACAO_MAX_MEDICAO_MS) return true;
+  if (decorridoMs < DURACAO_MIN_MEDICAO_MS) return false;
+  return intervalos.filter(ehIntervaloValido).length >= MIN_AMOSTRAS_QUADRO;
 }
 
 export interface SinaisMovimento {

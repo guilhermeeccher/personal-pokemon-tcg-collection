@@ -3,10 +3,12 @@ import { describe, expect, it } from "vitest";
 import {
   DECISAO_PADRAO,
   ESCOLHAS_MODO,
+  DURACAO_MAX_MEDICAO_MS,
   MIN_AMOSTRAS_QUADRO,
   decidirMovimento,
   lerEscolhaModo,
   medianaIntervalos,
+  medicaoTerminou,
   modoPelosQuadros,
 } from "./preferencias-movimento";
 
@@ -60,6 +62,42 @@ describe("modoPelosQuadros", () => {
 
   it("aba no fundo (só pausas) é sem sinal, não leve", () => {
     expect(modoPelosQuadros(quadros(1000, 60))).toBeNull();
+  });
+});
+
+/** O laço de medição de `use-movimento.ts`, com quadros de intervalo fixo. */
+function medirA(fps: number): { resultado: ReturnType<typeof modoPelosQuadros>; duracaoMs: number } {
+  const intervalos: number[] = [];
+  let decorrido = 0;
+  while (!medicaoTerminou(decorrido, intervalos)) {
+    intervalos.push(1000 / fps);
+    decorrido += 1000 / fps;
+  }
+  return { resultado: modoPelosQuadros(intervalos), duracaoMs: decorrido };
+}
+
+describe("medicaoTerminou", () => {
+  it("60 e 120 Hz param em ~1 s e dão completo", () => {
+    for (const fps of [60, 120]) {
+      const { resultado, duracaoMs } = medirA(fps);
+      expect(resultado).toBe("completo");
+      expect(duracaoMs).toBeLessThan(1100);
+    }
+  });
+
+  it("aparelho lento (30, 25, 20, 12 fps) junta a amostra e dá leve, em vez de ficar sem sinal", () => {
+    for (const fps of [30, 25, 20, 12]) expect(medirA(fps).resultado).toBe("leve");
+  });
+
+  it("só pausas: para no teto, sem sinal", () => {
+    const pausas = Array.from({ length: 10 }, () => 400);
+    expect(medicaoTerminou(DURACAO_MAX_MEDICAO_MS - 1, pausas)).toBe(false);
+    expect(medicaoTerminou(DURACAO_MAX_MEDICAO_MS, pausas)).toBe(true);
+    expect(modoPelosQuadros(pausas)).toBeNull();
+  });
+
+  it("não para antes de 1 s, mesmo com amostra de sobra", () => {
+    expect(medicaoTerminou(500, quadros(1000 / 120, 60))).toBe(false);
   });
 });
 
