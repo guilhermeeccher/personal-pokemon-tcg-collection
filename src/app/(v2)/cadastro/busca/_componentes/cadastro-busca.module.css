@@ -1,0 +1,353 @@
+/*
+ * Cadastro por busca da v2. Painéis sem desfoque (regra 5b), a janela como
+ * rolagem (regra 11). Feito para o celular com a carta na mão: as buscas
+ * empilham, cada resultado tem uma linha própria com o botão embaixo, e o
+ * formulário da cópia vem depois da lista, sem folha por cima do teclado.
+ * Campos com 16 px e alvos de 44 px vêm dos primitivos.
+ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 880px;
+  margin: 0 auto;
+}
+.cabecalho {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.titulo {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.subtitulo {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+}
+
+/* ---------- Buscas ---------- */
+
+.buscas {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 16px;
+}
+.formBusca {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.camposBusca {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+/* Celular: o nome na linha toda; o set ocupa o que o número deixa. */
+.campoNome {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.campoSet {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.campoNumero {
+  flex: 0 0 96px;
+  min-width: 0;
+}
+.campoSigla {
+  min-width: 0;
+}
+.botaoBusca {
+  align-self: stretch;
+}
+
+@media (min-width: 48rem) {
+  .buscas {
+    padding: 20px;
+  }
+  .formBusca {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+  .camposBusca {
+    flex: 1;
+    flex-wrap: nowrap;
+  }
+  .campoNome {
+    flex: 2 1 0;
+  }
+  .campoSet {
+    flex: 2 1 0;
+  }
+  .campoSigla {
+    flex: 1;
+    max-width: 420px;
+  }
+  .botaoBusca {
+    align-self: flex-end;
+  }
+}
+
+.avisos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* Depois de gravar, a página rola até aqui: não deixa o aviso encostado no
+     topo nem sob a barra de abas. */
+  scroll-margin: 16px;
+}
+.avisos:empty,
+.avisos > div:empty:only-child {
+  display: none;
+}
+
+/* ---------- Sem resultado ---------- */
+
+.vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px;
+}
+.vazioTitulo {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.vazioTexto {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--v2-tinta-2);
+}
+
+/* ---------- Resultados ---------- */
+
+.resultados {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.contagem {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--v2-tinta-3);
+}
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.linha {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-areas:
+    "miniatura corpo"
+    "escolher escolher";
+  gap: 10px 14px;
+  align-items: start;
+  box-sizing: border-box;
+  padding: 12px;
+  border-radius: var(--v2-raio-painel);
+}
+.linhaAtiva {
+  box-shadow: inset 0 0 0 1px var(--v2-foco);
+}
+/* A miniatura é o alvo do zoom: 56 px de largura, mais que os 44 exigidos. */
+.miniatura {
+  grid-area: miniatura;
+  display: block;
+  width: 56px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  font: inherit;
+  color: inherit;
+  border-radius: var(--v2-raio-carta);
+}
+.miniatura:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 3px;
+}
+.semImagem {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: var(--v2-superficie-1);
+}
+.corpoLinha {
+  grid-area: corpo;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.nomeCarta {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.especie {
+  font-weight: 400;
+  color: var(--v2-tinta-3);
+}
+.detalhes {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--v2-tinta-2);
+  overflow-wrap: anywhere;
+}
+.jaTem {
+  align-self: flex-start;
+  margin: 2px 0 0;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--v2-tinta);
+  background: var(--v2-superficie-3);
+}
+.escolher {
+  grid-area: escolher;
+  width: 100%;
+}
+
+@media (min-width: 36rem) {
+  .linha {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    grid-template-areas: "miniatura corpo escolher";
+    align-items: center;
+  }
+  .escolher {
+    width: auto;
+  }
+}
+
+.naoE {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding-top: 6px;
+}
+
+/* ---------- Formulário da cópia ---------- */
+
+.itemFormulario {
+  display: block;
+}
+
+.formularioCopia {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  padding: 18px;
+  border-radius: var(--v2-raio-painel);
+  /* Quando a página rola até aqui, o título não fica sob a barra do topo. */
+  scroll-margin-top: max(16px, var(--v2-seguro-topo));
+}
+.tituloForm {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
+  outline: none;
+}
+.ajuda {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+  max-width: 62ch;
+}
+.semMoldura {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+/* Celular: duas colunas quando cabem (quantidade e variante, idioma e
+   condição) e uma só nos 320 px, onde "Português" não cabe em meia largura
+   sem ser cortado; a localização, texto livre, vai na linha toda. */
+.camposCopia {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: start;
+  gap: 12px;
+}
+.larguraTotal {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.acoesForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (min-width: 48rem) {
+  .formularioCopia {
+    padding: 22px;
+  }
+  .camposCopia {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Carta à mão ---------- */
+
+.formManual {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.tresCampos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+.doisCampos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+@media (min-width: 36rem) {
+  .tresCampos {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .doisCampos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.erros {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--v2-perigo);
+}
+
+/* ---------- Zoom ---------- */
+
+.zoom {
+  width: min(100%, 320px);
+  margin: 0 auto;
+}
