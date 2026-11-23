@@ -12,7 +12,7 @@ import { Distintivo } from "@/app/_componentes/distintivo";
 import { EstadoVazio } from "@/app/_componentes/estado-vazio";
 import { ImagemCartaComZoom } from "@/app/_componentes/imagem-carta-zoom";
 import { classesEntrada } from "@/app/_componentes/campo";
-import { copiarTexto } from "@/app/_componentes/copiar-texto";
+import { copiarTexto } from "@/app/_comum/copiar-texto";
 import {
   FILTROS_PADRAO,
   FILTROS_PADRAO_SET,

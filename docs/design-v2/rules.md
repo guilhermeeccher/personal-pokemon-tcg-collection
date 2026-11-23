@@ -50,7 +50,7 @@ Section "The app is HTTP on the local network — what that forbids in the brows
 | Rule | Scope | For the v2 |
 |---|---|---|
 | The default install is plain HTTP on the machine's IP; no secure-context-only API | **both** | More important in the v2. Besides `navigator.clipboard`, the prototype relies on two more APIs that do not exist there: `navigator.userAgentData` (its engine detection, so the glass refraction never turns on over HTTP) and `deviceorientation`. The v2 uses neither for anything that must work by default. |
-| Copy through `copiar-texto.ts` (`execCommand` fallback), never the Clipboard API directly | **both** | The v2's "copy list" goes through the same function. It lives in `src/app/_componentes/`, which the v2 may not import, so the first v2 package that needs it moves it to `src/app/_comum/` (section 7, rule 16) — never a second copy. |
+| Copy through `copiar-texto.ts` (`execCommand` fallback), never the Clipboard API directly | **both** | The v2's "copy list" goes through the same function. Package 1e moved it to `src/app/_comum/copiar-texto.ts` (section 7, rule 16), with the v1's importer updated — never a second copy. |
 | Same restriction for geolocation, notifications, service workers | **both** | — |
 
 ---
@@ -270,8 +270,8 @@ rest are the technical foundations of the v2.
 16. **The v2 does not import the v1's skin.** No file under `src/app/(v2)/` imports from
     `src/app/_componentes/` or `src/app/(v1)/` (`telas-v1.test.ts`): without the v1's tokens their
     classes have no colour. **The ban has no exceptions.** A skinless helper both versions need
-    (`copiar-texto.ts`, `use-eh-mobile.ts`, `use-camada.ts` and the like, all in
-    `_componentes/` today; `recusa.ts` already moved, by package 1c) moves to `src/app/_comum/`, with its v1 importers updated in the same
+    (`use-eh-mobile.ts`, `use-camada.ts` and the like, in
+    `_componentes/` today; `recusa.ts` already moved, by package 1c, and `copiar-texto.ts` by 1e) moves to `src/app/_comum/`, with its v1 importers updated in the same
     change — the precedent is the PWA head, `_comum/cabeca.tsx` — and is never copied. The first v2
     package that needs one moves it. Shared code outside `src/app` (`lib/`, `messages/`) is not
     affected. The v2 has its own stylesheet, `(v2)/v2.css`: today only `color-scheme: dark` and the
