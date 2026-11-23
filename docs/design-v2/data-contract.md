@@ -104,9 +104,35 @@ copy of this card, and its row is shown), `vaga=<id>` (the slot that opened it).
 |---|---|
 | `carta` | the row shown: name, set, number, `setQtdOficial`, rarity (`raridade`, as stored on that row), `raridadeCanonica`, `tipos`, `ilustrador`, `dexIds`, `ativa`, `imagemUrl`, `imagemAlta` (`high.webp`, or the user's own photo as is), `imagemOrigem`, the five `variante…Disponivel` flags, and `idiomas` (the rows the card has). `raridadeCanonica` is the rarity to label with (`raridadesCarta`, keyed by the en spelling): the en row's rarity for the same `carta_id`, else the stored one — the `raridadeCanonica` rule of the collection suggestions in `AGENTS.md`. A Japanese row keeps its stored rarity: `neo1` to `neo4` share the id with English and are other cards (`raridadeCanonicaDaFicha`, `lib/dominio/detalhe-carta.ts`) |
 | `especial` | the card enters the inventory price rounds when owned (not a plain common or uncommon) |
-| `copias` | **every** copy of the physical card (`carta_id`: any catalog row, any physical language, R7), with the editable fields, `criadoEm` (when the row was entered, not when the unit arrived) and `alocacao` (`vagaId`, `chave`, `numero`, collection id, name and type, `desde`) or null |
+| `copias` | **every** copy of the physical card (`carta_id`: any catalog row, any physical language, R7), with the editable fields, `criadoEm` (when the row was entered: units merged into an existing row keep that row's date; the part split off a lot keeps the original's date since package 2a, while a split made before it carries the split's date) and `alocacao` (`vagaId`, `chave`, `numero`, collection id, name and type, `desde`) or null |
 | `preco` | `{ fonte, origem, preco, motivo? }`, in the active source only. Owned and special: the inventory price (Liga: `valor` is the average, else the lowest, with `liga: { minimo, medio, maximo }`). Owned common/uncommon: `motivo: "naoEspecial"`, never priced. Owned special not asked yet: `naoConsultada`; asked with no price: `semPrecoNaFonte`. Not owned: the Cardmarket candidate price if a collection price round asked it (`origem: "candidata"`), else `foraDoInventario` |
 | `serie` | `{ fonte, pontos: [{ em, valor }] }`, up to 30 most recent found lookups, oldest first, from the active source's history; null unless the card is owned and special — candidates have no history by decision, and the two sources are never one series |
 | `contexto` | the `vaga` that opened it (id, key, number, its copy, collection) and the `copiaId` asked |
 
 Allocate, swap, deallocate, edit a copy and mark a purchase keep their routes; the detail only reads.
+
+## The home read (package 2a) — server-side, no route
+
+The v2 home (`/`) reads on the server, in `src/app/(v2)/page.tsx`, through `lerInicioV2`
+(`src/lib/db/inicio-v2.ts`), and adds no route: after a write in the card detail the screen calls
+`router.refresh()` and the read runs again. The shapes are in `src/lib/dominio/inicio-v2.ts`
+(`InicioV2DTO`). Only `select`.
+
+- **Totals, "Your collections" and "Almost there"** are the v1 home's, read by the same function
+  (`lerTcgInicio`): the first four collections in `listarColecoes` order, and the divisions closest to
+  complete chosen among **all** of them. The Living Dex summary is `resumoDexInicio`, read only with
+  the module on.
+- **`vitrine`** is the overview's gems rule (`listarJoias`, the stored price in the active source
+  first, then the look), cut to three, each with the copy a tap opens in the detail: the card's
+  oldest copy (`montarVitrine`). The image comes with its origin from the same rung of the image
+  ladder. No price travels: on the home a price would need its source, quote and date.
+- **`cadastradas`** — "Entered in the last 7 days" (decision 5): copies whose `criado_em` falls in
+  today and the six days before it, as **calendar days in the São Paulo time zone**, from 00:00 of the
+  first day (`janelaCadastradas`, `cadastradas-recentes.ts`, pure and tested, daylight saving
+  included). It carries `hoje` and `desde`, the counts of the whole window (`copias` rows, `unidades`
+  summed, distinct `cartas`) and the 12 most recent copies with their day. What it does not reach,
+  and the screen says so: units merged on entry into an existing row keep that row's date, and a
+  copy split off a lot before package 2a carries the date of the split. Since package 2a the part
+  split off a lot keeps the original's `criado_em` in both split paths (allocation to a slot, which
+  the swap also uses, and addition to a custom collection, which the theme batch also uses:
+  `parteSeparadaDoLote`, `divisao-lote.ts`). No old date is repaired by inference.

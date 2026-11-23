@@ -67,21 +67,25 @@ Not one of the 23 screens, but every screen depends on it.
 ## 1. `/` — Home
 
 v1: `src/app/(v1)/v1/page.tsx` (server read `lerTcgInicio`, `resumoDexInicio`) and `src/app/(v1)/v1/inicio.tsx`.
-Read-only screen: every action is a link. Owner of the screen: **2a**.
+Read-only screen: every action is a link. Owner of the screen: **2a**. Package 2a replaced the bridge of `/` with the v2 home: the showcase (the overview's gems
+in a fan, each card opening the card detail in copy mode), Almost there, "Entered in the last 7
+days" (decision 5, a new block with no v1 row: it only opens the card detail, whose actions are
+the detail's own rows), Your collections and the Living Dex summary. Every row was checked in pt
+and en at 320, 393, 734, 768, 1024 and 1400 px, with the module on and off, with data and empty.
 
 | ID | Action | v1 code | Owner | Reuses | Evidence | Rules | State |
 |---|---|---|---|---|---|---|---|
-| INI-01 | Open a card-module shortcut (collections, inventory, entry by set) | `src/app/(v1)/v1/inicio.tsx:57`, `:150` | 2a | — | `NAV` | — | pending |
-| INI-02 | Open the card overview ("Overview") | `src/app/(v1)/v1/inicio.tsx:101`, `:139` | 2a | — | `NAV` to `/inventario/visao-geral` | — | pending |
-| INI-03 | Open the inventory from the totals | `src/app/(v1)/v1/inicio.tsx:186` | 2a | `lerTcgInicio` totals | `NAV` | — | pending |
-| INI-04 | Open the collections list ("See all", empty state) | `src/app/(v1)/v1/inicio.tsx:194`, `:202` | 2a | — | `NAV` | — | pending |
-| INI-05 | Open one collection from "Your collections" (up to 4, with divisions) | `src/app/(v1)/v1/inicio.tsx:242` | 2a | `lerTcgInicio` (`src/lib/db/inicio.ts`), order of `listarColecoes` | `NAV` to `/colecoes/<id>` | Groups: order comes from the server, not re-sorted | pending |
-| INI-06 | Open a collection from "Almost there" (the divisions closest to complete, with what is missing) | `src/app/(v1)/v1/inicio.tsx:278` | 2a | `listarQuaseLa` | `NAV`; the missing thumbnails are the empty slots | R6 (the missing list is the output); R4 (set divisions count official numbering) | pending |
-| INI-07 | Open a Dex shortcut (plans, trophies, Pokédex) | `src/app/(v1)/v1/inicio.tsx:63`, `:150` | 2a | — | `NAV`; `OFF` hides the whole Dex block | Living Dex optional | pending |
-| INI-08 | Open the Dex overview | `src/app/(v1)/v1/inicio.tsx:105`, `:139` | 2a | — | `NAV` to `/dex`; `OFF` | Living Dex optional | pending |
-| INI-09 | Open a Dex pending item: received to put away, Pokémon to take to HOME | `src/app/(v1)/v1/inicio.tsx:335`, `:340` | 2a | `resumoDexInicio` | `NAV`; counts equal the v1's | Living Dex: "Received", "Take to HOME" | pending |
-| INI-10 | Open the active plans and their tasks | `src/app/(v1)/v1/inicio.tsx:359`, `:367`, `:382` | 2a | `resumoDexInicio` | `NAV` to `/dex/planos` | — | pending |
-| INI-11 | Open HOME trophies, open owned games | `src/app/(v1)/v1/inicio.tsx:477`, `:500` | 2a | — | `NAV` (`/dex/trofeus?jogo=home`, `/dex/jogos`) | HOME trophies are computed | pending |
+| INI-01 | Open a card-module shortcut (collections, inventory, entry by set) | `src/app/(v1)/v1/inicio.tsx:57`, `:150` | 2a | — | `NAV`. **2a:** the shortcut chips under the showcase (Collections, Inventory, Entry by set) land on `/colecoes` (v2) and on the bridges of `/inventario` and `/cadastro/set` (307 to `/v1/...`); with no copy at all, the empty showcase also offers Entry by set and Search | — | delivered |
+| INI-02 | Open the card overview ("Overview") | `src/app/(v1)/v1/inicio.tsx:101`, `:139` | 2a | — | `NAV` to `/inventario/visao-geral`. **2a:** the Overview chip; the bridge answered 307 to `/v1/inventario/visao-geral` | — | delivered |
+| INI-03 | Open the inventory from the totals | `src/app/(v1)/v1/inicio.tsx:186` | 2a | `lerTcgInicio` totals | `NAV`. **2a:** the cards and units figures of the showcase link to `/inventario` (bridge, 307 to `/v1/inventario`); the numbers are `lerTcgInicio`'s, the same as the v1 | — | delivered |
+| INI-04 | Open the collections list ("See all", empty state) | `src/app/(v1)/v1/inicio.tsx:194`, `:202` | 2a | — | `NAV`. **2a:** the collections figure, "All collections" over Almost there, "See all (N)" and the empty state's "Create your first collection" land on `/colecoes`, a v2 page | — | delivered |
+| INI-05 | Open one collection from "Your collections" (up to 4, with divisions) | `src/app/(v1)/v1/inicio.tsx:242` | 2a | `lerTcgInicio` (`src/lib/db/inicio.ts`), order of `listarColecoes` | `NAV` to `/colecoes/<id>`. **2a:** "Your collections" lists the first four in `listarColecoes` order (`lerTcgInicio`, never re-sorted), each a link to `/colecoes/<id>` (bridge until 1d, 307 with the id intact); a custom collection shows its count, no bar | Groups: order comes from the server, not re-sorted | delivered |
+| INI-06 | Open a collection from "Almost there" (the divisions closest to complete, with what is missing) | `src/app/(v1)/v1/inicio.tsx:278` | 2a | `listarQuaseLa` | `NAV`; the missing thumbnails are the empty slots. **2a:** one card per division of `listarQuaseLa` (chosen among all collections, ties in `listarColecoes` order), linking to `/colecoes/<id>`; Pokédex thumbnails are the species silhouette, set thumbnails the expected card greyed; the percentage floors and never reads 100 with slots missing; the first one also feeds the lead line and its "Open …" button | R6 (the missing list is the output); R4 (set divisions count official numbering) | delivered |
+| INI-07 | Open a Dex shortcut (plans, trophies, Pokédex) | `src/app/(v1)/v1/inicio.tsx:63`, `:150` | 2a | — | `NAV`; `OFF` hides the whole Dex block. **2a:** Plans, Trophies and Pokédex chips in the Living Dex panel, landing on the Dex bridge; with `MODULO_LIVING_DEX` off the panel is not rendered and the summary is not read, and `/dex` answered 404 | Living Dex optional | delivered |
+| INI-08 | Open the Dex overview | `src/app/(v1)/v1/inicio.tsx:105`, `:139` | 2a | — | `NAV` to `/dex`; `OFF`. **2a:** "Overview" in the panel header and both track rings link to `/dex` | Living Dex optional | delivered |
+| INI-09 | Open a Dex pending item: received to put away, Pokémon to take to HOME | `src/app/(v1)/v1/inicio.tsx:335`, `:340` | 2a | `resumoDexInicio` | `NAV`; counts equal the v1's. **2a:** "N received to put away" to `/dex/recebidos`, "N Pokémon to take to HOME" to `/dex/pokedex`, only when non-zero; with three records born in HOME both `/` and `/v1` read "3 received to put away" (same `resumoDexInicio`) | Living Dex: "Received", "Take to HOME" | delivered |
+| INI-10 | Open the active plans and their tasks | `src/app/(v1)/v1/inicio.tsx:359`, `:367`, `:382` | 2a | `resumoDexInicio` | `NAV` to `/dex/planos`. **2a:** up to two active plans with up to two open tasks each, the "+N" lines, and the empty state's "Open Plans", all to `/dex/planos` | — | delivered |
+| INI-11 | Open HOME trophies, open owned games | `src/app/(v1)/v1/inicio.tsx:477`, `:500` | 2a | — | `NAV` (`/dex/trofeus?jogo=home`, `/dex/jogos`). **2a:** the next HOME trophy (computed, never marked) links to `/dex/trofeus?jogo=home` (307 kept the query), "Mark the games you own" to `/dex/jogos` | HOME trophies are computed | delivered |
 
 ## 2. `/colecoes` — Collections list
 

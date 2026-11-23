@@ -277,7 +277,7 @@ import {
   avaliarElegibilidade,
   ehForaDePadrao,
 } from "@/lib/dominio/elegibilidade-vaga";
-import { planejarAlocacaoDeLote } from "@/lib/dominio/divisao-lote";
+import { parteSeparadaDoLote, planejarAlocacaoDeLote } from "@/lib/dominio/divisao-lote";
 import { proximaChaveSequencial } from "@/lib/dominio/chave-sequencial";
 import { restricaoUnicaViolada } from "@/lib/dominio/erro-postgres";
 import { colecaoDoMesmoTema, temaDaColecao } from "@/lib/dominio/tema-colecao";
@@ -3147,22 +3147,8 @@ async function alocarNaTransacao(
 
     const [nova] = await tx
       .insert(copia)
-      .values({
-        cartaId: copiaLinha.cartaId,
-        idiomaCatalogo: copiaLinha.idiomaCatalogo,
-        idioma: copiaLinha.idioma,
-        variante: copiaLinha.variante,
-        quantidade: 1,
-        condicao: copiaLinha.condicao,
-        gradedEmpresa: copiaLinha.gradedEmpresa,
-        gradedNota: copiaLinha.gradedNota,
-        gradedCertificado: copiaLinha.gradedCertificado,
-        localizacao: copiaLinha.localizacao,
-        aquisicaoData: copiaLinha.aquisicaoData,
-        aquisicaoOrigem: copiaLinha.aquisicaoOrigem,
-        aquisicaoPreco: copiaLinha.aquisicaoPreco,
-        notas: copiaLinha.notas,
-      })
+      // A parte separada guarda o `criado_em` da original (`divisao-lote.ts`).
+      .values(parteSeparadaDoLote(copiaLinha))
       .returning({ id: copia.id });
     copiaAlocadaId = nova.id;
   }
@@ -3392,22 +3378,8 @@ export async function adicionarCopiaCustomizadaNaTransacao(
 
     const [nova] = await tx
       .insert(copia)
-      .values({
-        cartaId: copiaLinha.cartaId,
-        idiomaCatalogo: copiaLinha.idiomaCatalogo,
-        idioma: copiaLinha.idioma,
-        variante: copiaLinha.variante,
-        quantidade: 1,
-        condicao: copiaLinha.condicao,
-        gradedEmpresa: copiaLinha.gradedEmpresa,
-        gradedNota: copiaLinha.gradedNota,
-        gradedCertificado: copiaLinha.gradedCertificado,
-        localizacao: copiaLinha.localizacao,
-        aquisicaoData: copiaLinha.aquisicaoData,
-        aquisicaoOrigem: copiaLinha.aquisicaoOrigem,
-        aquisicaoPreco: copiaLinha.aquisicaoPreco,
-        notas: copiaLinha.notas,
-      })
+      // A parte separada guarda o `criado_em` da original (`divisao-lote.ts`).
+      .values(parteSeparadaDoLote(copiaLinha))
       .returning({ id: copia.id });
     copiaAlocadaId = nova.id;
   }

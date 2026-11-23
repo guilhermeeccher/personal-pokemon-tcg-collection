@@ -120,8 +120,11 @@ async function copiasDaCarta(tx: Transacao, cartaId: string) {
     aquisicaoPreco: l.aquisicaoPreco,
     notas: l.notas,
     /**
-     * Quando a linha foi cadastrada. Não é a data de chegada da unidade: a
-     * divisão de lote e a fusão no cadastro não a preservam como tal.
+     * Quando a linha foi cadastrada. Não é a data de chegada de cada unidade:
+     * unidades fundidas no cadastro numa linha que já existia ficam com a data
+     * dela. A parte separada por uma divisão de lote guarda a data da original
+     * desde 2026-11-23 (`divisao-lote.ts`); uma divisão anterior guarda a data
+     * da divisão.
      */
     criadoEm: l.criadoEm.toISOString(),
     alocacao:

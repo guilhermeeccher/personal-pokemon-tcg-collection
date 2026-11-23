@@ -2096,5 +2096,90 @@
     "erroCarregar": "Could not read the duplicates",
     "erroCarregarTexto": "The read failed. Nothing was changed; try again in a moment.",
     "tentarDeNovo": "Try again"
+  },
+  "v2Inicio": {
+    "titulo": "Your collection",
+    "erroCarregar": "The home page could not be loaded",
+    "erroCarregarTexto": "Reading the database failed. Nothing was changed; try again in a moment.",
+    "tentarDeNovo": "Try again",
+    "lead": {
+      "cadastradas": "{cartas, plural, =1 {<b>1 card</b>} other {<b># cards</b>}} entered the inventory in the last 7 days.",
+      "nenhumaCadastrada": "No card entered the inventory in the last 7 days.",
+      "quaseLa": "<b>{divisao}</b> is {faltam, plural, =1 {<b>1 slot</b>} other {<b># slots</b>}} away from complete.",
+      "vazio": "Enter your first cards and build a collection: what each one is missing shows up here."
+    },
+    "abrirColecao": "Open {nome}",
+    "atalhos": "Shortcuts",
+    "atalho": {
+      "colecoes": "Collections",
+      "inventario": "Inventory",
+      "cadastroSet": "Entry by set",
+      "visaoGeral": "Overview"
+    },
+    "numeros": {
+      "cartas": "{total, plural, =1 {card} other {cards}}",
+      "unidades": "{total, plural, =1 {unit} other {units}}",
+      "colecoes": "{total, plural, =1 {collection} other {collections}}"
+    },
+    "vitrine": {
+      "rotulo": "Gems of the inventory",
+      "abrir": "Open {nome}",
+      "legenda": "{set} · {numero}",
+      "vazioTitulo": "No cards in the inventory yet",
+      "vazioTexto": "Start with entry by set, marking the cards of an expansion all at once, or search for a card by name.",
+      "cadastrarPorSet": "Entry by set",
+      "buscarCarta": "Search for a card"
+    },
+    "quaseLa": {
+      "titulo": "Almost there",
+      "todas": "All collections",
+      "faltam": "{total, plural, =1 {1 missing} other {# missing}}",
+      "progresso": "{percentual}% of {divisao}, {faltam, plural, =1 {1 missing} other {# missing}}"
+    },
+    "cadastradas": {
+      "titulo": "Entered in the last 7 days",
+      "inventario": "Inventory",
+      "contagem": "{unidades, plural, =1 {1 unit} other {# units}} · {cartas, plural, =1 {1 card} other {# cards}}",
+      "desde": "Since {data}",
+      "hoje": "today",
+      "ontem": "yesterday",
+      "quantidade": "×{total}",
+      "abrir": "Open {nome}, entered {dia}",
+      "mais": "{total, plural, =1 {+1 copy in the inventory} other {+# copies in the inventory}}",
+      "vazio": "No card entered the inventory in the last 7 days.",
+      "nota": "Counts the day each copy entered the inventory, in São Paulo time. Units added on entry to a copy that already existed keep that copy's date, and a copy split off a lot before 2026-11-23 carries the date of the split."
+    },
+    "colecoes": {
+      "titulo": "Your collections",
+      "verTodas": "See all ({total, number})",
+      "vazio": "No collections yet.",
+      "criarPrimeira": "Create your first collection",
+      "cartas": "{total, plural, =1 {1 card} other {# cards}}",
+      "progresso": "{preenchidas, number} of {total, number}"
+    },
+    "dex": {
+      "titulo": "Living Dex",
+      "visaoGeral": "Overview",
+      "atalhos": "Living Dex shortcuts",
+      "atalho": {
+        "planos": "Plans",
+        "trofeus": "Trophies",
+        "pokedex": "Pokédex"
+      },
+      "noHome": "{noHome, number} of {contam, number} in HOME",
+      "recebidos": "{total, plural, =1 {1 received to put away} other {# received to put away}}",
+      "levarAoHome": "{total, plural, =1 {1 Pokémon to take to HOME} other {# Pokémon to take to HOME}}",
+      "planosAtivos": "Active plans",
+      "tarefas": "{feitas, number}/{total, plural, =1 {1 task} other {# tasks}}",
+      "etapas": "{feitas, number}/{total, plural, =1 {1 step} other {# steps}}",
+      "maisTarefas": "{total, plural, =1 {+1 open task} other {+# open tasks}}",
+      "maisPlanos": "{total, plural, =1 {+1 active plan} other {+# active plans}}",
+      "semPlano": "No active plans.",
+      "abrirPlanos": "Open Plans",
+      "trofeus": "Trophies",
+      "proximoDoHome": "Next in HOME",
+      "todosDoHome": "Every HOME trophy earned.",
+      "semJogos": "Mark the games you own"
+    }
   }
 }
