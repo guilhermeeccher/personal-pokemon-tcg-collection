@@ -31,6 +31,7 @@
 
 import { CheckSquare, Download, FileArchive, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { textoDaRecusa } from "@/app/_comum/recusa";
@@ -50,9 +51,11 @@ import {
   alternarTodos,
   consultaDaLista,
   enderecoDaTela,
+  filtrosDaUrl,
   filtrosNoPainel,
   mesmosFiltros,
   paginaAlemDoFim,
+  paginaDaUrl,
   podarSelecao,
   totalDePaginas,
 } from "./estado-inventario";
@@ -68,9 +71,10 @@ interface Consulta {
   pagina: number;
 }
 
+/** `chave` é a consulta mais a versão (uma releitura); `consulta`, só a query. */
 type Resultado =
-  | { chave: string; ok: true; itens: CopiaDoInventarioDTO[]; total: number }
-  | { chave: string; ok: false; texto: string; filtrosInvalidos: boolean };
+  | { chave: string; consulta: string; ok: true; itens: CopiaDoInventarioDTO[]; total: number }
+  | { chave: string; consulta: string; ok: false; texto: string; filtrosInvalidos: boolean };
 
 interface RespostaLista {
   itens?: CopiaDoInventarioDTO[];
@@ -100,46 +104,67 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
   const [aberta, setAberta] = useState<AberturaDetalhe | null>(null);
   // A cópia do par ativo da transição de vista: só ela leva o nome na lista.
   const [alvo, setAlvo] = useState<string | null>(null);
-  const relogioTexto = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const listaRef = useRef<HTMLUListElement>(null);
 
   /*
    * Uma navegação para outro recorte de `/inventario` (um link da visão geral,
-   * a aba "Inventário" com a tela já aberta) chega como props novas sem
-   * remontar a tela: o App Router preserva o estado do cliente numa troca de
-   * query. Props que dizem outra coisa que a consulta atual mandam; as que
-   * só repetem o que a própria tela escreveu na barra não mexem em nada.
+   * a aba "Inventário" com a tela já aberta num filtro) não remonta a tela: o
+   * App Router preserva o estado do cliente numa troca de query. A URL que o
+   * roteador conhece é a fonte: a própria tela a escreve
+   * (`history.replaceState`, que o Next acompanha), então uma URL que diz outra
+   * coisa que a consulta atual só pode ter vindo de fora, e manda. As props do
+   * servidor não servem para isso: o `replaceState` não as atualiza, e voltar
+   * ao recorte da primeira carga não as mudaria.
    */
-  const enderecoDasProps = enderecoDaTela(filtrosIniciais, paginaInicial);
-  const [propsVistas, setPropsVistas] = useState(enderecoDasProps);
-  if (enderecoDasProps !== propsVistas) {
-    setPropsVistas(enderecoDasProps);
-    if (enderecoDasProps !== enderecoDaTela(consulta.filtros, consulta.pagina)) {
-      setFiltros(filtrosIniciais);
-      setConsulta({ filtros: filtrosIniciais, pagina: paginaInicial });
+  const busca = useSearchParams();
+  const daUrl = useMemo(() => {
+    const bruta: Record<string, string[]> = {};
+    for (const [chave, valor] of busca.entries()) (bruta[chave] ??= []).push(valor);
+    const filtros = filtrosDaUrl(bruta);
+    const pagina = paginaDaUrl(bruta);
+    return { filtros, pagina, endereco: enderecoDaTela(filtros, pagina) };
+  }, [busca]);
+  const [urlVista, setUrlVista] = useState(daUrl.endereco);
+  if (daUrl.endereco !== urlVista) {
+    setUrlVista(daUrl.endereco);
+    if (daUrl.endereco !== enderecoDaTela(consulta.filtros, consulta.pagina)) {
+      setFiltros(daUrl.filtros);
+      setConsulta({ filtros: daUrl.filtros, pagina: daUrl.pagina });
       setSelecao(new Set());
       setMassaAberta(false);
     }
   }
-  // ...e a busca digitada antes dela não chega depois para desfazê-la.
-  useEffect(() => {
-    if (relogioTexto.current) clearTimeout(relogioTexto.current);
-  }, [enderecoDasProps]);
 
-  const chaveConsulta = `${consultaDaLista(consulta.filtros, consulta.pagina)}#${versao}`;
-  const carregando = resultado?.chave !== chaveConsulta;
   /*
-   * A lista na tela é a da consulta atual, e os campos dizem o mesmo que ela?
-   * Enquanto não (uma leitura a caminho, uma busca ainda esperando a pausa), a
-   * lista à vista é a do recorte anterior: selecionar, editar em massa,
-   * remover e abrir ficam desligados, para nada agir sobre linhas que já
-   * não são as pedidas.
+   * A busca por texto: os campos mudam na hora e a consulta os alcança depois
+   * da pausa. Derivado do estado, não de um relógio guardado: qualquer coisa
+   * que iguale campos e consulta (limpar, uma navegação, um seletor) desfaz a
+   * espera pendente sozinha, e nenhuma deixa a tela esperando para sempre.
    */
-  const pronta = !carregando && mesmosFiltros(filtros, consulta.filtros);
+  useEffect(() => {
+    if (mesmosFiltros(filtros, consulta.filtros)) return;
+    const relogio = setTimeout(() => setConsulta({ filtros, pagina: 1 }), ESPERA_TEXTO_MS);
+    return () => clearTimeout(relogio);
+  }, [filtros, consulta.filtros]);
+
+  const consultaAtual = consultaDaLista(consulta.filtros, consulta.pagina);
+  const carregando = resultado?.chave !== `${consultaAtual}#${versao}`;
+  /*
+   * A lista na tela é do recorte pedido, e os campos dizem o mesmo que ele?
+   * Enquanto não (outro filtro ou outra página a caminho, uma busca ainda
+   * esperando a pausa), a lista à vista é a do recorte anterior: selecionar,
+   * editar em massa, remover e abrir ficam desligados (`inert`), para nada
+   * agir sobre linhas que já não são as pedidas. A releitura do **mesmo**
+   * recorte depois de uma escrita não trava nada: as linhas são as mesmas, e
+   * travar tiraria o foco da linha a que o detalhe acabou de devolvê-lo.
+   */
+  const pronta = resultado?.consulta === consultaAtual && mesmosFiltros(filtros, consulta.filtros);
 
   useEffect(() => {
     const controle = new AbortController();
-    const chave = `${consultaDaLista(consulta.filtros, consulta.pagina)}#${versao}`;
-    fetch(`/api/copias?${consultaDaLista(consulta.filtros, consulta.pagina)}`, { cache: "no-store", signal: controle.signal })
+    const query = consultaDaLista(consulta.filtros, consulta.pagina);
+    const chave = `${query}#${versao}`;
+    fetch(`/api/copias?${query}`, { cache: "no-store", signal: controle.signal })
       .then(async (r) => {
         const corpo = (await r.json().catch(() => null)) as RespostaLista | null;
         if (controle.signal.aborted) return;
@@ -149,6 +174,7 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
           const invalidos = r.status === 400;
           setResultado({
             chave,
+            consulta: query,
             ok: false,
             filtrosInvalidos: invalidos,
             texto: invalidos ? t("filtrosInvalidos") : textoDaRecusa(tRecusas, corpo, t("erroCarregar")),
@@ -164,10 +190,10 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
           setConsulta((c) => ({ ...c, pagina: ultima }));
           return;
         }
-        setResultado({ chave, ok: true, itens, total });
+        setResultado({ chave, consulta: query, ok: true, itens, total });
       })
       .catch(() => {
-        if (!controle.signal.aborted) setResultado({ chave, ok: false, filtrosInvalidos: false, texto: t("erroRede") });
+        if (!controle.signal.aborted) setResultado({ chave, consulta: query, ok: false, filtrosInvalidos: false, texto: t("erroRede") });
       });
     return () => controle.abort();
   }, [consulta, versao, t, tRecusas]);
@@ -183,10 +209,6 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
     }
   }, [consulta]);
 
-  useEffect(() => () => {
-    if (relogioTexto.current) clearTimeout(relogioTexto.current);
-  }, []);
-
   const reler = useCallback(() => setVersao((v) => v + 1), []);
 
   /** Um filtro mudou: a lista volta à primeira página e a seleção esvazia, como na v1. */
@@ -194,16 +216,11 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
     const novos = { ...filtros, [chave]: valor };
     setFiltros(novos);
     setSelecao(new Set());
-    if (relogioTexto.current) clearTimeout(relogioTexto.current);
-    if (FILTROS_DE_TEXTO.includes(chave)) {
-      relogioTexto.current = setTimeout(() => setConsulta({ filtros: novos, pagina: 1 }), ESPERA_TEXTO_MS);
-    } else {
-      setConsulta({ filtros: novos, pagina: 1 });
-    }
+    // Os seletores leem na hora; o texto espera a pausa (o efeito acima).
+    if (!FILTROS_DE_TEXTO.includes(chave)) setConsulta({ filtros: novos, pagina: 1 });
   }
 
   function limparFiltros() {
-    if (relogioTexto.current) clearTimeout(relogioTexto.current);
     setFiltros(FILTROS_VAZIOS);
     setSelecao(new Set());
     setConsulta({ filtros: FILTROS_VAZIOS, pagina: 1 });
@@ -355,14 +372,14 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
           />
           <span>{t("selecionarTodos")}</span>
         </label>
-        {!pronta ? (
+        {!pronta || carregando ? (
           <span className={estilos.carregando} role="status">
             {t("carregando")}
           </span>
         ) : null}
       </div>
 
-      <ul className={estilos.lista} aria-busy={!pronta || undefined} inert={!pronta} aria-label={t("titulo")}>
+      <ul ref={listaRef} className={estilos.lista} aria-busy={!pronta || carregando || undefined} inert={!pronta} aria-label={t("titulo")}>
         {itens.map((c) => (
           <LinhaCopia
             key={c.id}
@@ -452,11 +469,17 @@ export function Inventario({ filtrosIniciais, paginaInicial }: { filtrosIniciais
         onMudou={reler}
         chaveTransicao={aberta?.modo === "copia" ? `copia:${aberta.copiaId}` : undefined}
         // A linha que abriu, se ainda estiver na página (a leitura depois de
-        // uma escrita pode tê-la tirado do recorte); senão a pilha cai no
-        // abridor ou no conteúdo.
-        devolverFocoPara={() =>
-          alvo ? document.querySelector<HTMLElement>(`[data-abrir-copia="${CSS.escape(alvo)}"]`) : null
-        }
+        // uma escrita pode tê-la tirado do recorte). Fechando durante essa
+        // leitura a lista está inerte e não aceita foco: espera ela liberar
+        // (até ~2 s), senão a pilha cai no abridor ou no conteúdo.
+        devolverFocoPara={async () => {
+          if (!alvo) return null;
+          for (let i = 0; i < 120 && listaRef.current?.inert; i++) {
+            await new Promise((pronto) => requestAnimationFrame(pronto));
+          }
+          if (listaRef.current?.inert) return null;
+          return document.querySelector<HTMLElement>(`[data-abrir-copia="${CSS.escape(alvo)}"]`);
+        }}
       />
     </div>
   );
