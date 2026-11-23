@@ -263,10 +263,15 @@ export function NovoCadastro({
     return r;
   }, [pares, parVisivel, trilha]);
 
+  /* Estável enquanto o idioma e o catálogo não mudam: é prop de toda caixa
+     montada, e um objeto novo a cada toque furaria o `memo` delas. Daí a
+     função `nomeCaixa.nome` (estável) nas dependências, e não o objeto do
+     hook, que é novo a cada render. */
+  const nomeDaCaixa = nomeCaixa.nome;
   const textos = useMemo<TextosCaixaEscolha>(
     () => ({
       caixaN: (numero) => td("caixas.caixaN", { numero: String(numero) }),
-      nome: (c: CaixaDex<FormaDexDTO>) => nomeCaixa.nome(c),
+      nome: (c: CaixaDex<FormaDexDTO>) => nomeDaCaixa(c),
       faixa: (inicio, fim) => td("caixas.faixa", { inicio: String(inicio).padStart(4, "0"), fim: String(fim).padStart(4, "0") }),
       forma: rotulo.nome,
       estado: (e) => td(`estado.${e}`),
@@ -274,7 +279,7 @@ export function NovoCadastro({
       lugar: (caixa, posicao) => td("caixas.posicao", { caixa: String(caixa), posicao: String(posicao) }),
       marcada: td("novoCadastro.marcada"),
     }),
-    [td, nomeCaixa, rotulo.nome],
+    [td, nomeDaCaixa, rotulo.nome],
   );
 
   const aoTocar = useCallback(
@@ -429,13 +434,17 @@ export function NovoCadastro({
   }, [etapa]);
 
   /* O resultado aparece no alto do conteúdo e o botão está na barra, embaixo:
-     leva o aviso à vista; no sucesso a etapa trocou e o botão sumiu, então o
-     foco vem junto. */
+     leva o aviso à vista. No sucesso a etapa trocou e o botão sumiu, então o
+     foco vem junto. Numa recusa, só se o foco se perdeu: "Enviar" desliga
+     enquanto o pedido voa e a página relê, e um botão desligado larga o foco
+     no `body`; um foco que a pessoa moveu durante a espera fica onde está. */
   useEffect(() => {
     if (!resultado) return;
     const aviso = avisoRef.current;
     if (!aviso) return;
-    if (resultado.tom === "sucesso") aviso.focus({ preventScroll: true });
+    const ativo = document.activeElement;
+    const perdido = !ativo || ativo === document.body || !ativo.isConnected;
+    if (resultado.tom === "sucesso" || perdido) aviso.focus({ preventScroll: true });
     aviso.scrollIntoView({ block: "nearest" });
   }, [resultado]);
 
