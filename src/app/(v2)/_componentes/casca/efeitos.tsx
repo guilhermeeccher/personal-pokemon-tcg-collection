@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useSyncExternalStore } from "react";
 
+import type { EscolhaModo, ModoEfeitos } from "../movimento/preferencias-movimento";
 import { Segmentado } from "../primitivos/segmentado";
 import { CADEIA_APOS_REFRACAO, decidirRefracao, escalaDoDeslocamento, mapaDaLente } from "./refracao";
 
@@ -16,20 +17,16 @@ import { CADEIA_APOS_REFRACAO, decidirRefracao, escalaDoDeslocamento, mapaDaLent
  * interruptor manual que sempre vence, `localStorage`, movimento reduzido à
  * parte). A casca não decide nada: ela lê **um atributo só**,
  * `html[data-v2-efeitos="leve"]`, que o CSS (`v2.css`) e os efeitos abaixo
- * obedecem. Para ligar a lógica do 0b, a casca renderiza
- *
- *     const { modo } = useMovimento();
- *     <AtributoEfeitos modo={modo} />
- *
- * e a tela de ajustes renderiza o `InterruptorModoLeve` com o
- * `useEscolhaModo()` de lá. Enquanto isso não está ligado, sem o atributo,
- * vale o modo completo. O laboratório liga os dois a um estado local, para
- * conferir o desenho e o efeito do atributo.
+ * obedecem. A casca (`casca.tsx`) escreve o atributo com
+ * `<AtributoEfeitos modo={useMovimento().modo} />`, e quem mostra o
+ * interruptor alimenta o `InterruptorModoLeve` com o `useEscolhaModo()` de
+ * lá. Um escritor só: outra tela que renderizasse `AtributoEfeitos` brigaria
+ * com a casca pelo atributo. Sem o atributo, vale o modo completo.
  */
 
-export type ModoEfeitos = "completo" | "leve";
-/** O interruptor: `auto` deixa a heurística decidir. Espelha o tipo do 0b. */
-export type EscolhaModoEfeitos = "auto" | ModoEfeitos;
+export type { ModoEfeitos };
+/** O interruptor: `auto` deixa a heurística decidir. É o tipo do `movimento/`. */
+export type EscolhaModoEfeitos = EscolhaModo;
 
 export const ATRIBUTO_EFEITOS = "data-v2-efeitos";
 

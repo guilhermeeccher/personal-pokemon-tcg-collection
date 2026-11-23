@@ -4,13 +4,9 @@ import { Check, Info, Sparkles, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-import {
-  AtributoEfeitos,
-  type EscolhaModoEfeitos,
-  InterruptorModoLeve,
-  useModoLeve,
-} from "../_componentes/casca/efeitos";
+import { InterruptorModoLeve, useModoLeve } from "../_componentes/casca/efeitos";
 import { decidirRefracao } from "../_componentes/casca/refracao";
+import { useEscolhaModo } from "../_componentes/movimento/use-movimento";
 import { useAviso } from "../_componentes/primitivos/aviso-flutuante";
 import { Botao, BotaoLink } from "../_componentes/primitivos/botao";
 import { AreaTexto, Campo, Selecao } from "../_componentes/primitivos/campo";
@@ -48,9 +44,9 @@ export function PaginaCliente() {
   const avisar = useAviso();
   const { confirmar, dialogo } = useConfirmacao();
 
-  // Modo leve: o estado local faz o papel da lógica do pacote 0b.
-  const [escolha, setEscolha] = useState<EscolhaModoEfeitos>("auto");
-  const modoEmVigor = escolha === "leve" ? "leve" : "completo";
+  // Modo leve: o interruptor real (o mesmo da futura tela de Ajustes); quem
+  // escreve o atributo é a casca.
+  const { escolha, decisao, definir } = useEscolhaModo();
   const modoLeve = useModoLeve();
 
   const [tom, setTom] = useState<Tom>("padrao");
@@ -119,8 +115,6 @@ export function PaginaCliente() {
 
   return (
     <div className={estilos.tela}>
-      <AtributoEfeitos modo={modoEmVigor} />
-
       <header className={estilos.cabecalho}>
         <p className={estilos.sobre}>{t("sobre")}</p>
         <h1 className={estilos.titulo}>{t("titulo")}</h1>
@@ -292,7 +286,7 @@ export function PaginaCliente() {
       </Secao>
 
       <Secao id="lab-efeitos" titulo={t("efeitos")}>
-        <InterruptorModoLeve escolha={escolha} efetivo={modoEmVigor} aoEscolher={setEscolha} />
+        <InterruptorModoLeve escolha={escolha} efetivo={decisao.modo} aoEscolher={definir} />
         <p className={estilos.texto}>{t("efeitosTexto")}</p>
         <p className={estilos.texto}>
           <code className="v2-num">{refracao}</code>

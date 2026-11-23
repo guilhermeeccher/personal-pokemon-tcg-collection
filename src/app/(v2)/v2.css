@@ -414,8 +414,9 @@ h3 {
  * - **Modo leve** (`html[data-v2-efeitos="leve"]`): corta o custo de todo
  *   quadro — a deriva da luz ambiente, o íris deslizando, o brilho do vidro
  *   sob o ponteiro e a refração —, mas mantém as transições curtas. Quem
- *   decide é a lógica do pacote 0b (`movimento/`); quem escreve o atributo é
- *   `casca/atributo-efeitos.tsx`. Sem o atributo, modo completo.
+ *   decide é `movimento/` (heurística e interruptor); quem escreve o atributo é
+ *   a casca, com `AtributoEfeitos` (`casca/efeitos.tsx`). Sem o atributo, modo
+ *   completo.
  *
  * Em ambos o estado final da tela é o mesmo: some o caminho, nunca o destino.
  */

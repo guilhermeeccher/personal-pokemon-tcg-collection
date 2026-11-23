@@ -182,10 +182,12 @@ rest are the technical foundations of the v2.
    specifies the signals, the behaviour without them, the persistence and the precedence. **The
    shell reads one attribute only, `html[data-v2-efeitos="leve"]`** (written by
    `AtributoEfeitos`, `casca/efeitos.tsx`): under it the ambient light stops drifting, the iris
-   stops sliding, the glass sheen under the pointer and the refraction go away. Wiring package
-   0b's decision is `<AtributoEfeitos modo={useMovimento().modo} />` in the shell, and the switch
-   is `InterruptorModoLeve` fed by 0b's `useEscolhaModo()`; until that is wired, there is no
-   attribute and the effects are full. A continuously animated element carries the class
+   stops sliding, the glass sheen under the pointer and the refraction go away. The shell is the
+   attribute's only writer: `Casca` renders `<AtributoEfeitos modo={useMovimento().modo} />`
+   above the choice of shell, so it holds on `/login` too, and a screen never renders a second
+   one. The switch is `InterruptorModoLeve` fed by `useEscolhaModo()` (`_componentes/movimento/`);
+   `/laboratorio` shows it, and the settings screen will. Without the attribute the effects are
+   full. A continuously animated element carries the class
    `v2-anima`, which both reduced motion and light mode stop.
 7. **One view transition at a time, and only through React.** `<ViewTransition>` from React, which
    Next 16.3.2 ships with no flag; **do not add `experimental.viewTransition`** to `next.config.ts`

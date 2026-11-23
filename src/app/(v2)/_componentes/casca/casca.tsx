@@ -10,7 +10,8 @@ import { Modal } from "../primitivos/modal";
 import { ID_CONTEUDO } from "../primitivos/use-camada";
 import { ATRIBUTO_POLEGAR, usePolegar } from "../primitivos/use-polegar";
 import estilos from "./casca.module.css";
-import { useBrilhoVidro, useModoLeve, useRefracao } from "./efeitos";
+import { useMovimento } from "../movimento/use-movimento";
+import { AtributoEfeitos, useBrilhoVidro, useModoLeve, useRefracao } from "./efeitos";
 import { IconeNav, Pokebola } from "./icones";
 import { type GrupoNavV2, ITEM_BUSCA, abaAtiva, abasDaBarra, gruposDaNav, itemAtivo } from "./mapa-navegacao";
 import { Sair } from "./sair";
@@ -25,10 +26,21 @@ const CAMINHO_SEM_MENU = "/login";
  * motivo de a v1 esconder o dela). O trilho e as abas são `fixed`, então não
  * dá para escondê-los pelo conteúdo: a escolha é aqui, e os hooks de cada
  * casca ficam no seu componente.
+ *
+ * O modo leve é decidido aqui, uma vez para a v2 inteira: a decisão do
+ * `movimento/` (heurística de quadros, interruptor que sempre vence) vira o
+ * atributo `html[data-v2-efeitos]`, que o CSS e os efeitos obedecem. Fica
+ * acima da escolha de casca para valer também no login.
  */
 export function Casca(props: { livingDex: boolean; acessoComSenha: boolean; children: ReactNode }) {
   const pathname = usePathname();
-  return pathname === CAMINHO_SEM_MENU ? <CascaSemMenu>{props.children}</CascaSemMenu> : <CascaCompleta {...props} />;
+  const { modo } = useMovimento();
+  return (
+    <>
+      <AtributoEfeitos modo={modo} />
+      {pathname === CAMINHO_SEM_MENU ? <CascaSemMenu>{props.children}</CascaSemMenu> : <CascaCompleta {...props} />}
+    </>
+  );
 }
 
 /**
