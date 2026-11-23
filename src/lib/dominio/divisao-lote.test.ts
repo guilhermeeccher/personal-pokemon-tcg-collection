@@ -66,7 +66,9 @@ describe("parteSeparadaDoLote", () => {
 
   it("nasce com 1 unidade e herda todo o resto, menos id e atualizado_em", () => {
     const parte = parteSeparadaDoLote(original);
-    const { id: _id, atualizadoEm: _atualizado, quantidade: _quantidade, ...herdados } = original;
+    const herdados = Object.fromEntries(
+      Object.entries(original).filter(([c]) => !["id", "atualizadoEm", "quantidade"].includes(c)),
+    );
     expect(parte).toEqual({ ...herdados, quantidade: 1 });
     expect(parte).not.toHaveProperty("id");
     expect(parte).not.toHaveProperty("atualizadoEm");
