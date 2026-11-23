@@ -76,8 +76,12 @@ describe("pontes", () => {
     (p) => destinoDaPonte(p.fonte, catchAllsOpcionais(p.rota)) !== null,
   );
 
-  it("encontra as pontes", () => {
-    expect(pontes.length).toBeGreaterThan(0);
+  /* Desde o pacote 5d (2026-11-23) toda tela tem a sua versão na v2 e não
+     resta ponte. Uma ponte nova só volta com uma decisão (ela é a exceção,
+     não o caminho), e então este teste muda junto e as conferências abaixo
+     voltam a valer para ela. */
+  it("não resta ponte na v2", () => {
+    expect(pontes.map((p) => p.rota)).toEqual([]);
   });
 
   it.each(pontes)("$rota vai para a mesma tela em /v1, e ela existe", ({ rota, fonte }) => {
