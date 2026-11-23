@@ -1766,5 +1766,231 @@
       "misturaTitulo": "Não dá para misturar japonês com pt/en",
       "misturaTexto": "A receita tem sets do catálogo japonês e do ocidental (pt/en). O japonês nunca completa o pt/en, nem o contrário: neo1 a neo4, por exemplo, têm o mesmo código no inglês e no japonês, mas são outras cartas. Deixe só um dos lados na receita; para ter os dois, crie duas coleções."
     }
+  },
+  "v2Detalhe": {
+    "carregando": "Carregando…",
+    "fechar": "Fechar",
+    "naoDeu": "Não deu certo",
+    "tentarDeNovo": "Tentar de novo",
+    "erroRede": "Sem resposta do servidor. Confira a conexão e tente de novo.",
+    "aindaNaoESua": "Ainda não é sua",
+    "ficha": "Ficha da carta",
+    "ilustracaoDe": "Ilustração de {nome}",
+    "ilustradorDesconhecido": "Ilustrador não informado",
+    "tituloEspecie": "#{numero} {especie}",
+    "descricaoVaga": "{colecao} · vaga {numero}",
+    "quantidade": "{total, plural, one {# unidade} other {# unidades}}",
+    "estaCopia": "esta cópia",
+    "ondeAlocada": "Em {colecao}, vaga {numero}, desde {desde}",
+    "ondeLivre": "Livre no inventário, em nenhuma coleção",
+    "suasCopias": "{total, plural, =0 {Suas cópias desta carta} one {Sua cópia desta carta} other {Suas # cópias desta carta}}",
+    "semCopias": "Você não tem nenhuma cópia desta carta.",
+    "verEstaCopia": "Ver esta cópia",
+    "nestaVaga": "Nesta vaga",
+    "desalocar": "Desalocar",
+    "desalocarExplica": "Desalocar tira a cópia da vaga e a devolve livre ao inventário. A cópia nunca é apagada.",
+    "foraDoPadrao": "Fora do padrão: {idioma}, a coleção exige {exigido}",
+    "idiomaNome": {
+      "pt": "Português",
+      "en": "Inglês",
+      "jp": "Japonês"
+    },
+    "tipoColecao": {
+      "pokedex": "Pokédex",
+      "set": "Set",
+      "customizada": "Customizada"
+    },
+    "desatualizada": {
+      "titulo": "Esta vaga mudou em outra aba",
+      "texto": "O que está aqui é o estado de agora; a tela de trás foi avisada para reler."
+    },
+    "sumiu": {
+      "titulo": "Não existe mais",
+      "vaga": "Esta vaga não existe mais (a carta pode ter saído da coleção em outra aba).",
+      "copia": "Esta cópia não existe mais (pode ter sido removida em outra aba)."
+    },
+    "melhoria": {
+      "titulo": "Cópia melhor no inventário",
+      "temMelhor": "{total, plural, one {Você tem uma cópia livre melhor} other {Você tem # cópias livres melhores}}",
+      "explica": "Trocar põe a escolhida na vaga e devolve a atual livre ao inventário, numa operação só: se falhar, a vaga fica como está. Nada é trocado sem o seu clique.",
+      "trocar": "Trocar",
+      "descartar": "Descartar",
+      "restaurar": "Restaurar",
+      "descartadaAgora": "Sugestão descartada.",
+      "descartarExplica": "Descartar cala a sugestão desta cópia nesta vaga, e só dela: se entrar no inventário outra cópia melhor, a vaga volta a avisar. Nada é apagado.",
+      "eixo": {
+        "raridade": "Raridade: {de} → {para}",
+        "idioma": "Idioma: {de} → {para}",
+        "variante": "Variante: {de} → {para}"
+      }
+    },
+    "vazia": {
+      "titulo": "Cópias livres que servem",
+      "explicaCarta": "Só cópias livres desta carta, em qualquer idioma físico. Escolha uma para alocar.",
+      "explicaEspecie": "Qualquer carta desta espécie serve, formas incluídas; cartas com mais de um Pokémon ficam de fora. Escolha uma para alocar.",
+      "alocar": "Alocar nesta vaga",
+      "semCandidata": "Nenhuma cópia livre serve nesta vaga.",
+      "escolhaUma": "Escolha uma cópia para alocar.",
+      "lote": "Uma linha com mais de uma unidade se divide ao alocar: só uma unidade vai para a vaga, o resto continua livre."
+    },
+    "compra": {
+      "titulo": "Na lista de compras",
+      "nenhuma": "Esta vaga não está na lista de compras.",
+      "soLeitura": "Marcar e desmarcar compra fica na aba O que falta."
+    },
+    "copia": {
+      "onde": "Onde está",
+      "alocarEmColecao": "Alocar a uma coleção",
+      "esconderDestinos": "Esconder destinos",
+      "destinos": "Destinos",
+      "destinosExplica": "As vagas vazias que esta cópia preenche e as coleções customizadas. Escolha um destino.",
+      "alocarAqui": "Alocar no destino",
+      "semDestinos": "Nenhuma coleção tem vaga vazia para esta cópia.",
+      "vagaNumero": "vaga {numero}",
+      "semVagaFixa": "sem vaga fixa (a vaga nasce ao adicionar)",
+      "editar": "Editar a cópia",
+      "abrirEdicao": "Editar",
+      "fecharEdicao": "Fechar edição"
+    },
+    "edicao": {
+      "quantidade": "Quantidade",
+      "idioma": "Idioma físico",
+      "idiomaDica": "O idioma da carta que você tem na mão, não o da ficha do catálogo.",
+      "variante": "Variante",
+      "condicao": "Condição",
+      "localizacao": "Localização",
+      "localizacaoExemplo": "Fichário 1, página 3",
+      "certificacao": "Certificação",
+      "empresa": "Empresa",
+      "nota": "Nota",
+      "certificado": "Certificado",
+      "aquisicao": "Aquisição",
+      "data": "Data",
+      "origem": "Origem",
+      "preco": "Preço (R$)",
+      "notas": "Notas",
+      "salvar": "Salvar alterações",
+      "desfazer": "Desfazer",
+      "semMudanca": "Nada mudou ainda.",
+      "erro": {
+        "quantidade": "Quantidade inteira, de 1 para cima.",
+        "aquisicaoData": "Data inválida.",
+        "aquisicaoPreco": "Preço inválido: use um número, como 12,50."
+      }
+    },
+    "foto": {
+      "titulo": "Foto própria",
+      "adicionar": "Adicionar foto",
+      "trocar": "Trocar foto",
+      "fechar": "Fechar",
+      "explicaAdicionar": "A foto vale para esta ficha do catálogo: toda cópia dela passa a mostrá-la.",
+      "explicaTrocar": "Esta carta mostra uma foto que você enviou. Envie outra para trocar, ou remova para voltar à do catálogo.",
+      "modo": "Como enviar",
+      "modoArquivo": "Arquivo",
+      "modoLink": "Link",
+      "modoMypcards": "MyPCards",
+      "arquivo": "Arquivo da foto",
+      "arquivoDica": "JPEG, PNG ou WEBP.",
+      "link": "Endereço da imagem",
+      "linkDica": "O servidor baixa a imagem e guarda uma cópia na instalação.",
+      "mypcards": "Endereço de uma imagem do set {set} no MyPCards",
+      "mypcardsDica": "Abra o set no MyPCards, copie o endereço de qualquer imagem e cole aqui: o set inteiro é mapeado de uma vez.",
+      "salvarFoto": "Salvar foto",
+      "mapearSet": "Mapear o set",
+      "remover": "Remover foto própria",
+      "erroEscolhaArquivo": "Escolha um arquivo.",
+      "erroColeLink": "Cole o endereço da imagem.",
+      "erroColeMypcards": "Cole o endereço de uma imagem do MyPCards.",
+      "semSet": "Esta carta não tem set para mapear."
+    },
+    "preco": {
+      "titulo": "Preço de referência",
+      "fonte": {
+        "cardmarket": "Cardmarket",
+        "liga": "LigaPokemon"
+      },
+      "criterio": {
+        "media30": "média de 30 dias",
+        "media": "média"
+      },
+      "emEuro": "{valor}",
+      "cotacao": "PTAX {cotacao} de {data}",
+      "lidoEm": "lido em {data}",
+      "explicaMedia30": "A tendência ({tendencia}) passou de 3 vezes a média de 30 dias; vale a média.",
+      "explicaMedia": "O Cardmarket não tem tendência para esta carta; vale a média.",
+      "comparavelLiga": "Euro convertido pela PTAX: comparável ao menor preço da Liga, não à média. Não é preço de loja brasileira.",
+      "origemCandidata": "Da busca de preços de compra de uma coleção.",
+      "ligaMedia": "preço médio",
+      "ligaMenor": "menor preço",
+      "ligaMinimo": "menor {valor}",
+      "ligaMaximo": "maior {valor}",
+      "motivo": {
+        "naoEspecial": "Comum ou incomum: as rodadas de preço não consultam esta carta.",
+        "naoConsultada": "Nenhuma rodada de preços ({fonte}) consultou esta carta ainda.",
+        "semPrecoNaFonte": "{fonte} não tem preço para esta carta.",
+        "foraDoInventario": "Sem preço de referência: a carta não está no inventário."
+      },
+      "serieVazia": "Ainda sem histórico.",
+      "serieUmPonto": "Uma leitura, em {data}: {valor}.",
+      "serieResumo": "{total} leituras ({fonte}) de {de} a {ate}: de {primeiro} a {ultimo}; menor {menor}, maior {maior}."
+    },
+    "confirmar": {
+      "foraTitulo": "Alocar fora do padrão?",
+      "foraDescricao": "A cópia é em {idioma} e a coleção exige {exigido}. Ela entra mesmo assim, marcada como fora do padrão.",
+      "alocarMesmoAssim": "Alocar mesmo assim",
+      "desalocarTitulo": "Desalocar a vaga {numero}?",
+      "desalocarDescricao": "A cópia volta livre ao inventário e a vaga fica vazia. Se a vaga estava na lista de compras, ela volta para a lista.",
+      "desalocarCustomizada": "A cópia volta livre ao inventário e sai desta coleção customizada (a vaga dela deixa de existir).",
+      "desalocarCopiaTitulo": "Desalocar esta cópia?",
+      "desalocarCopiaDescricao": "Ela sai da vaga {numero} de {colecao} e volta livre ao inventário.",
+      "trocarTitulo": "Trocar a cópia da vaga {numero}?",
+      "trocarDescricao": "Sai {sai}, que volta livre ao inventário. Entra {entra}.",
+      "removerFotoTitulo": "Remover a foto própria?",
+      "removerFotoDescricao": "A carta volta a mostrar a foto do catálogo, se houver uma. O arquivo enviado é apagado da instalação."
+    },
+    "erro": {
+      "ler": "Não foi possível ler esta parte do detalhe.",
+      "alocar": "Não foi possível alocar.",
+      "desalocar": "Não foi possível desalocar.",
+      "trocar": "Não foi possível trocar.",
+      "descartar": "Não foi possível mudar a sugestão.",
+      "salvar": "Não foi possível salvar a cópia.",
+      "foto": "Não foi possível salvar a foto.",
+      "removerFoto": "Não foi possível remover a foto.",
+      "mapear": "Não foi possível mapear o set."
+    },
+    "feito": {
+      "alocada": "{carta} alocada na vaga {numero}.",
+      "alocadaDividida": "{carta} alocada na vaga {numero}. O lote foi dividido: uma unidade foi para a vaga, o resto continua livre.",
+      "desalocada": "Vaga {numero} desalocada; a cópia voltou ao inventário.",
+      "desalocadaCopia": "Cópia desalocada de {colecao}.",
+      "trocada": "Vaga {numero} trocada; a cópia anterior voltou ao inventário.",
+      "trocadaDividida": "Vaga {numero} trocada; a anterior voltou ao inventário e o lote da nova foi dividido.",
+      "alocadaNoDestino": "Alocada em {colecao}, vaga {numero}.",
+      "adicionadaAColecao": "Adicionada a {colecao}.",
+      "loteDividido": "O lote foi dividido: uma unidade foi alocada, o resto continua livre.",
+      "salva": "Cópia salva.",
+      "fotoSalva": "Foto salva.",
+      "fotoRemovida": "Foto própria removida.",
+      "setMapeadoComFila": "Set mapeado. {total, plural, one {# carta está} other {# cartas estão}} na fila de download; as fotos aparecem conforme chegam.",
+      "setMapeadoSemFila": "Set mapeado. Nenhuma carta dele precisava de foto."
+    },
+    "laboratorio": {
+      "titulo": "Detalhe de carta",
+      "explica": "Abre o detalhe com ids reais da instalação: ?colecao=<id> (e opcionalmente &vaga=<id>) para o modo vaga, ?carta=<id>&copia=<id> para o modo cópia. A grade é relida depois de cada escrita, como a tela da coleção fará.",
+      "semParametros": "Passe ?colecao= ou ?carta=&copia= na URL.",
+      "colecao": "Coleção {nome} · {total} vagas",
+      "abrirVaga": "Abrir vaga {numero}",
+      "abrirCopia": "Abrir a cópia",
+      "eventos": "Eventos recebidos",
+      "nenhumEvento": "Nenhum ainda.",
+      "filtro": {
+        "preenchidas": "Preenchidas",
+        "upgrade": "Com upgrade",
+        "livres": "Vazias com cópia livre",
+        "vazias": "Vazias sem cópia"
+      },
+      "erroGrade": "Não foi possível ler a grade da coleção."
+    }
   }
 }

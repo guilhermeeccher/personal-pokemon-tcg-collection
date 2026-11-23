@@ -15,6 +15,7 @@ import { Modal } from "../_componentes/primitivos/modal";
 import { AvisoEmLinha, Painel } from "../_componentes/primitivos/painel";
 import { Segmentado } from "../_componentes/primitivos/segmentado";
 import estilos from "./laboratorio.module.css";
+import { type ParametrosDetalhe, SecaoDetalhe } from "./secao-detalhe";
 
 /* Tons de luz ambiente para conferir a transição de cor registrada por
    `@property`. Cores soltas, não dado de carta. */
@@ -39,8 +40,9 @@ function Secao({ id, titulo, children }: { id: string; titulo: string; children:
   );
 }
 
-export function PaginaCliente() {
+export function PaginaCliente({ detalhe }: { detalhe: ParametrosDetalhe }) {
   const t = useTranslations("v2Laboratorio");
+  const tDetalhe = useTranslations("v2Detalhe.laboratorio");
   const avisar = useAviso();
   const { confirmar, dialogo } = useConfirmacao();
 
@@ -120,6 +122,10 @@ export function PaginaCliente() {
         <h1 className={estilos.titulo}>{t("titulo")}</h1>
         <p className={estilos.texto}>{t("intro")}</p>
       </header>
+
+      <Secao id="lab-detalhe" titulo={tDetalhe("titulo")}>
+        <SecaoDetalhe parametros={detalhe} />
+      </Secao>
 
       <Secao id="lab-tokens" titulo={t("tokens")}>
         <div className={estilos.amostras}>

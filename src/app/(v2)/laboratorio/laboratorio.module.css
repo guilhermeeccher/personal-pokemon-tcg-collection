@@ -118,3 +118,52 @@
   border-radius: 16px;
   color: var(--v2-tinta-2);
 }
+
+/* Detalhe de carta: as vagas de teste, em miniatura, como a grade as mostraria. */
+.gradeCartas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 12px;
+}
+.cartaDaGrade {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+.cartaDaGrade:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+.lugarDaCarta {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 245 / 337;
+  border-radius: var(--v2-raio-carta);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px var(--v2-aresta);
+}
+.cartaApagada img {
+  filter: grayscale(1) brightness(0.45);
+}
+.legendaCarta {
+  font-size: 12px;
+  color: var(--v2-tinta-2);
+  overflow-wrap: anywhere;
+}
+.eventos {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}

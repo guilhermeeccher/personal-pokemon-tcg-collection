@@ -1,0 +1,345 @@
+/*
+ * O detalhe de carta: dentro da janela da v2 (`primitivos/modal`), que já é
+ * painel no desktop e folha que sobe de baixo no celular. Aqui só o arranjo
+ * de dentro: o palco da carta e a coluna de informação lado a lado a partir
+ * de 768 px, um embaixo do outro abaixo disso. Uma árvore só nas duas
+ * larguras (o CSS muda o arranjo, nunca o conteúdo).
+ *
+ * Nenhum `backdrop-filter` aqui: o véu da janela já é a superfície de vidro
+ * (orçamento de três), e o que fica por cima é painel translúcido.
+ */
+
+.grade {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+/* ---------- Palco ---------- */
+
+.palco {
+  position: sticky;
+  top: 0;
+  display: grid;
+  place-items: center;
+  padding: 28px 12px 36px;
+  border-radius: var(--v2-raio-painel);
+  background: radial-gradient(60% 50% at 50% 45%, rgb(192 155 255 / 0.18), transparent 70%);
+}
+.palcoCarta {
+  position: relative;
+  width: min(330px, 100%);
+}
+.fantasma img {
+  filter: grayscale(1) brightness(0.45) contrast(1.15);
+}
+.etiquetaFantasma {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgb(10 11 18 / 0.78);
+  box-shadow: inset 0 0 0 1px var(--v2-aresta);
+}
+.especie {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 245 / 337;
+  border-radius: var(--v2-raio-carta);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px var(--v2-aresta);
+}
+.especie img {
+  width: 55%;
+  height: auto;
+  image-rendering: pixelated;
+  filter: grayscale(1) brightness(0.7);
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+.semImagem {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 245 / 337;
+  padding: 16px;
+  border-radius: var(--v2-raio-carta);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px var(--v2-aresta);
+  color: var(--v2-tinta-2);
+  text-align: center;
+  font-size: 14px;
+}
+
+/* ---------- Informação ---------- */
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+.sobre {
+  margin: 0;
+  font-family: var(--v2-fonte-num);
+  font-size: 12.5px;
+  color: var(--v2-tinta-3);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chip {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: var(--v2-superficie-2);
+  box-shadow: inset 0 0 0 1px var(--v2-aresta);
+}
+.bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tituloBloco {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--v2-tinta-2);
+}
+.sutil {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--v2-tinta-2);
+}
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.linhaCopia {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  font-size: 14px;
+}
+.emFoco {
+  box-shadow: inset 0 0 0 1px rgb(200 180 255 / 0.45);
+}
+.linhaCopiaTexto {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  overflow-wrap: anywhere;
+}
+.marcaFoco {
+  color: var(--v2-tinta-2);
+}
+.idioma {
+  flex: none;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-family: var(--v2-fonte-num);
+  font-size: 11.5px;
+  background: var(--v2-superficie-3);
+}
+.etiqueta {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--v2-superficie-3);
+}
+.etiquetaAviso {
+  composes: etiqueta;
+  color: var(--v2-falta);
+  background: rgb(255 183 102 / 0.12);
+}
+.etiquetaIris {
+  composes: etiqueta;
+  background: linear-gradient(120deg, rgb(143 220 255 / 0.18), rgb(192 155 255 / 0.18), rgb(255 176 214 / 0.14));
+}
+.precoLinha {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+}
+.precoValor {
+  font-family: var(--v2-fonte-display);
+  font-size: 32px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+.serie {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.serieSvg {
+  width: 100%;
+  height: 54px;
+}
+.serieArea {
+  fill: rgb(192 155 255 / 0.18);
+}
+.serieLinha {
+  fill: none;
+  stroke: #d7c4ff;
+  stroke-width: 1.6;
+}
+
+/* ---------- Ações e listas de escolha ---------- */
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Linha de candidata ou destino: o `label` inteiro é a área de toque do
+   rádio (44 px no mínimo), e o rádio fica à vista. */
+.opcao {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  cursor: pointer;
+}
+.opcao:has(input:checked) {
+  box-shadow: inset 0 0 0 1px rgb(200 180 255 / 0.55);
+  background: var(--v2-superficie-2);
+}
+.opcao:has(input:focus-visible) {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 2px;
+}
+.opcao input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: #c7a8ff;
+}
+.miniatura {
+  flex: none;
+  width: 44px;
+}
+.opcaoTexto {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.linhaMelhoria {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+.descartada {
+  opacity: 0.55;
+}
+.linhaMelhoria .acoes {
+  margin-left: auto;
+}
+
+/* ---------- Formulário de edição ---------- */
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.duas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.tres {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 12px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--v2-superficie-1);
+}
+.grupo legend {
+  padding: 0;
+  font-size: 13px;
+  color: var(--v2-tinta-2);
+}
+.alternar {
+  align-self: flex-start;
+}
+
+/* ---------- Celular (abaixo de 768 px) ---------- */
+
+@media (max-width: 47.99rem) {
+  .grade {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .palco {
+    position: static;
+    padding: 18px 12px 24px;
+  }
+  .palcoCarta {
+    width: min(62%, 260px);
+  }
+  .precoValor {
+    font-size: 28px;
+  }
+  .tres {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .linhaMelhoria .acoes {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+}
+.erro {
+  margin-bottom: 14px;
+}

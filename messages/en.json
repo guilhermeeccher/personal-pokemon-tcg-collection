@@ -1774,5 +1774,231 @@
       "misturaTitulo": "Japanese cannot be mixed with pt/en",
       "misturaTexto": "The recipe has sets from the Japanese catalog and from the Western one (pt/en). Japanese never fills in for pt/en, nor the other way round: neo1 to neo4, for example, share a code in English and Japanese but are different cards. Keep only one side in the recipe; to have both, create two collections."
     }
+  },
+  "v2Detalhe": {
+    "carregando": "Loading…",
+    "fechar": "Close",
+    "naoDeu": "That didn't work",
+    "tentarDeNovo": "Try again",
+    "erroRede": "No answer from the server. Check the connection and try again.",
+    "aindaNaoESua": "Not yours yet",
+    "ficha": "Card details",
+    "ilustracaoDe": "Illustrated by {nome}",
+    "ilustradorDesconhecido": "Illustrator not listed",
+    "tituloEspecie": "#{numero} {especie}",
+    "descricaoVaga": "{colecao} · slot {numero}",
+    "quantidade": "{total, plural, one {# unit} other {# units}}",
+    "estaCopia": "this copy",
+    "ondeAlocada": "In {colecao}, slot {numero}, since {desde}",
+    "ondeLivre": "Free in the inventory, in no collection",
+    "suasCopias": "{total, plural, =0 {Your copies of this card} one {Your copy of this card} other {Your # copies of this card}}",
+    "semCopias": "You have no copy of this card.",
+    "verEstaCopia": "View this copy",
+    "nestaVaga": "In this slot",
+    "desalocar": "Deallocate",
+    "desalocarExplica": "Deallocating takes the copy out of the slot and returns it to the inventory as free. The copy is never deleted.",
+    "foraDoPadrao": "Out of pattern: {idioma}, the collection requires {exigido}",
+    "idiomaNome": {
+      "pt": "Portuguese",
+      "en": "English",
+      "jp": "Japanese"
+    },
+    "tipoColecao": {
+      "pokedex": "Pokédex",
+      "set": "Set",
+      "customizada": "Custom"
+    },
+    "desatualizada": {
+      "titulo": "This slot changed in another tab",
+      "texto": "What you see here is the current state; the screen behind was told to reload."
+    },
+    "sumiu": {
+      "titulo": "No longer exists",
+      "vaga": "This slot no longer exists (the card may have left the collection in another tab).",
+      "copia": "This copy no longer exists (it may have been removed in another tab)."
+    },
+    "melhoria": {
+      "titulo": "Better copy in the inventory",
+      "temMelhor": "{total, plural, one {You have a better free copy} other {You have # better free copies}}",
+      "explica": "Swapping puts the chosen copy in the slot and returns the current one to the inventory as free, in a single operation: if it fails, the slot stays as it is. Nothing is swapped without your click.",
+      "trocar": "Swap",
+      "descartar": "Dismiss",
+      "restaurar": "Restore",
+      "descartadaAgora": "Suggestion dismissed.",
+      "descartarExplica": "Dismissing silences the suggestion of this copy in this slot, and only that one: if another better copy enters the inventory, the slot flags it again. Nothing is deleted.",
+      "eixo": {
+        "raridade": "Rarity: {de} → {para}",
+        "idioma": "Language: {de} → {para}",
+        "variante": "Variant: {de} → {para}"
+      }
+    },
+    "vazia": {
+      "titulo": "Free copies that fit",
+      "explicaCarta": "Only free copies of this card, in any physical language. Pick one to allocate.",
+      "explicaEspecie": "Any card of this species fits, forms included; cards with more than one Pokémon are left out. Pick one to allocate.",
+      "alocar": "Allocate to this slot",
+      "semCandidata": "No free copy fits this slot.",
+      "escolhaUma": "Pick a copy to allocate.",
+      "lote": "A row with more than one unit is split when allocated: one unit goes to the slot, the rest stays free."
+    },
+    "compra": {
+      "titulo": "On the buy list",
+      "nenhuma": "This slot is not on the buy list.",
+      "soLeitura": "Marking and unmarking purchases happens in the What's missing tab."
+    },
+    "copia": {
+      "onde": "Where it is",
+      "alocarEmColecao": "Allocate to a collection",
+      "esconderDestinos": "Hide destinations",
+      "destinos": "Destinations",
+      "destinosExplica": "The empty slots this copy fills and the custom collections. Pick a destination.",
+      "alocarAqui": "Allocate to destination",
+      "semDestinos": "No collection has an empty slot for this copy.",
+      "vagaNumero": "slot {numero}",
+      "semVagaFixa": "no fixed slot (the slot is created when added)",
+      "editar": "Edit the copy",
+      "abrirEdicao": "Edit",
+      "fecharEdicao": "Close editing"
+    },
+    "edicao": {
+      "quantidade": "Quantity",
+      "idioma": "Physical language",
+      "idiomaDica": "The language of the card in your hand, not of the catalog row.",
+      "variante": "Variant",
+      "condicao": "Condition",
+      "localizacao": "Location",
+      "localizacaoExemplo": "Binder 1, page 3",
+      "certificacao": "Grading",
+      "empresa": "Company",
+      "nota": "Grade",
+      "certificado": "Certificate",
+      "aquisicao": "Acquisition",
+      "data": "Date",
+      "origem": "Source",
+      "preco": "Price (R$)",
+      "notas": "Notes",
+      "salvar": "Save changes",
+      "desfazer": "Undo",
+      "semMudanca": "Nothing changed yet.",
+      "erro": {
+        "quantidade": "A whole number, 1 or more.",
+        "aquisicaoData": "Invalid date.",
+        "aquisicaoPreco": "Invalid price: use a number, like 12.50."
+      }
+    },
+    "foto": {
+      "titulo": "Own photo",
+      "adicionar": "Add photo",
+      "trocar": "Replace photo",
+      "fechar": "Close",
+      "explicaAdicionar": "The photo belongs to this catalog row: every copy of it will show it.",
+      "explicaTrocar": "This card shows a photo you sent. Send another to replace it, or remove it to go back to the catalog's.",
+      "modo": "How to send",
+      "modoArquivo": "File",
+      "modoLink": "Link",
+      "modoMypcards": "MyPCards",
+      "arquivo": "Photo file",
+      "arquivoDica": "JPEG, PNG or WEBP.",
+      "link": "Image address",
+      "linkDica": "The server downloads the image and keeps a copy in the install.",
+      "mypcards": "Address of an image of set {set} on MyPCards",
+      "mypcardsDica": "Open the set on MyPCards, copy the address of any image and paste it here: the whole set is mapped at once.",
+      "salvarFoto": "Save photo",
+      "mapearSet": "Map the set",
+      "remover": "Remove own photo",
+      "erroEscolhaArquivo": "Choose a file.",
+      "erroColeLink": "Paste the image address.",
+      "erroColeMypcards": "Paste the address of a MyPCards image.",
+      "semSet": "This card has no set to map."
+    },
+    "preco": {
+      "titulo": "Reference price",
+      "fonte": {
+        "cardmarket": "Cardmarket",
+        "liga": "LigaPokemon"
+      },
+      "criterio": {
+        "media30": "30-day average",
+        "media": "average"
+      },
+      "emEuro": "{valor}",
+      "cotacao": "PTAX {cotacao} of {data}",
+      "lidoEm": "read on {data}",
+      "explicaMedia30": "The trend ({tendencia}) was more than 3 times the 30-day average; the average counts.",
+      "explicaMedia": "Cardmarket has no trend for this card; the average counts.",
+      "comparavelLiga": "Euro converted by the PTAX: comparable to the Liga's lowest price, not its average. Not a Brazilian store price.",
+      "origemCandidata": "From a collection's buy price lookup.",
+      "ligaMedia": "average price",
+      "ligaMenor": "lowest price",
+      "ligaMinimo": "lowest {valor}",
+      "ligaMaximo": "highest {valor}",
+      "motivo": {
+        "naoEspecial": "Common or uncommon: price rounds do not look this card up.",
+        "naoConsultada": "No price round ({fonte}) has looked this card up yet.",
+        "semPrecoNaFonte": "{fonte} has no price for this card.",
+        "foraDoInventario": "No reference price: the card is not in the inventory."
+      },
+      "serieVazia": "No history yet.",
+      "serieUmPonto": "One reading, on {data}: {valor}.",
+      "serieResumo": "{total} readings ({fonte}) from {de} to {ate}: from {primeiro} to {ultimo}; lowest {menor}, highest {maior}."
+    },
+    "confirmar": {
+      "foraTitulo": "Allocate out of pattern?",
+      "foraDescricao": "The copy is in {idioma} and the collection requires {exigido}. It goes in anyway, marked as out of pattern.",
+      "alocarMesmoAssim": "Allocate anyway",
+      "desalocarTitulo": "Deallocate slot {numero}?",
+      "desalocarDescricao": "The copy goes back to the inventory as free and the slot becomes empty. If the slot was on the buy list, it comes back to the list.",
+      "desalocarCustomizada": "The copy goes back to the inventory as free and leaves this custom collection (its slot stops existing).",
+      "desalocarCopiaTitulo": "Deallocate this copy?",
+      "desalocarCopiaDescricao": "It leaves slot {numero} of {colecao} and goes back to the inventory as free.",
+      "trocarTitulo": "Swap the copy in slot {numero}?",
+      "trocarDescricao": "Out goes {sai}, back to the inventory as free. In comes {entra}.",
+      "removerFotoTitulo": "Remove your own photo?",
+      "removerFotoDescricao": "The card goes back to the catalog photo, if there is one. The uploaded file is deleted from the install."
+    },
+    "erro": {
+      "ler": "This part of the detail could not be read.",
+      "alocar": "Could not allocate.",
+      "desalocar": "Could not deallocate.",
+      "trocar": "Could not swap.",
+      "descartar": "Could not change the suggestion.",
+      "salvar": "Could not save the copy.",
+      "foto": "Could not save the photo.",
+      "removerFoto": "Could not remove the photo.",
+      "mapear": "Could not map the set."
+    },
+    "feito": {
+      "alocada": "{carta} allocated to slot {numero}.",
+      "alocadaDividida": "{carta} allocated to slot {numero}. The lot was split: one unit went to the slot, the rest stays free.",
+      "desalocada": "Slot {numero} deallocated; the copy went back to the inventory.",
+      "desalocadaCopia": "Copy deallocated from {colecao}.",
+      "trocada": "Slot {numero} swapped; the previous copy went back to the inventory.",
+      "trocadaDividida": "Slot {numero} swapped; the previous copy went back to the inventory and the new one's lot was split.",
+      "alocadaNoDestino": "Allocated to {colecao}, slot {numero}.",
+      "adicionadaAColecao": "Added to {colecao}.",
+      "loteDividido": "The lot was split: one unit was allocated, the rest stays free.",
+      "salva": "Copy saved.",
+      "fotoSalva": "Photo saved.",
+      "fotoRemovida": "Own photo removed.",
+      "setMapeadoComFila": "Set mapped. {total, plural, one {# card is} other {# cards are}} queued for download; photos show up as they arrive.",
+      "setMapeadoSemFila": "Set mapped. None of its cards needed a photo."
+    },
+    "laboratorio": {
+      "titulo": "Card detail",
+      "explica": "Opens the detail with real ids of the install: ?colecao=<id> (and optionally &vaga=<id>) for slot mode, ?carta=<id>&copia=<id> for copy mode. The grid is reloaded after every write, as the collection screen will do.",
+      "semParametros": "Pass ?colecao= or ?carta=&copia= in the URL.",
+      "colecao": "Collection {nome} · {total} slots",
+      "abrirVaga": "Open slot {numero}",
+      "abrirCopia": "Open the copy",
+      "eventos": "Events received",
+      "nenhumEvento": "None yet.",
+      "filtro": {
+        "preenchidas": "Filled",
+        "upgrade": "With upgrade",
+        "livres": "Empty with a free copy",
+        "vazias": "Empty with no copy"
+      },
+      "erroGrade": "Could not read the collection grid."
+    }
   }
 }
