@@ -609,8 +609,15 @@ rest are the technical foundations of the v2.
     pending mark is dropped only by a read asked after its request finished, or by any refusal (which
     rereads). Copying, the per-tab download and the CSV and text downloads wait while a mark is pending,
     in flight, or not reread yet. The out-of-stock paste is a preview, then a confirm that records and
-    unmarks in one transaction on the server; confirm waits while a mark is in flight, cancel sends
-    nothing, and the keys of the slots it would unmark are labelled (`rotuloChaveVaga`), never raw.
+    unmarks in one transaction on the server. The preview belongs to the text that was checked and to
+    the triage of that moment (`estadoDaPrevia`): confirm sends exactly that text, an answer for a text
+    that has since changed is dropped, and a mark finished after the check (from any screen) asks for
+    a new check, since the server recomputes what it unmarks. Confirm waits while a mark is in flight;
+    while the confirm is in flight, marking and the shortcut wait, and the list counts as stale until a
+    read started after it succeeds. Cancel sends nothing, and the keys of the slots it would unmark
+    are labelled (`rotuloChaveVaga`), never raw. Pending marks are keyed by the slot and the card
+    (`chavePendencia`), not by the row id, which a new Liga scan changes. A request another screen
+    left in flight when this page opened rereads the page when it finishes.
     - **The slot list is not virtualized**, and says why: each slot has its own height (collapsed, or
       open with N options) and the virtual grid needs uniform cells. It mounts 60 slots at a time with
       "Show more", and 6 options per open slot with "Show all" — the same path as the Upgrades tab —

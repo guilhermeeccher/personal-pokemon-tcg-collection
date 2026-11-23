@@ -60,6 +60,7 @@ import {
   type VagaDTO,
   VAGAS_POR_VEZ,
   agruparVagas,
+  chavePendencia,
   chaveRecolhidas,
   comPendencias,
   corpoDaBuscaDePrecos,
@@ -163,11 +164,29 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
    * deixa a lista velha até uma leitura iniciada depois dele chegar.
    */
   const [concluidosLidos, setConcluidosLidos] = useState<number | null>(null);
+  const concluidosLidosRef = useRef<number | null>(null);
+  /** Quantos pedidos da coleção tinham terminado quando saiu a leitura em voo. */
+  const concluidosDaLeituraEmCurso = useRef(0);
+
+  /**
+   * A confirmação do "sem estoque" não passa pela fila de marcação: enquanto
+   * ela está no ar, marcar fica travado (um pedido posterior não pode
+   * ultrapassá-la e ter a marca apagada por ela), e a lista fica velha até
+   * uma leitura iniciada depois de ela terminar dar certo — o servidor pode
+   * ter desmarcado cartas, inclusive quando a resposta se perde.
+   */
+  const gravandoRef = useRef(false);
+  const [gravando, setGravando] = useState(false);
+  const escritasRef = useRef(0);
+  const [escritasTerminadas, setEscritasTerminadas] = useState(0);
+  const [escritasLidas, setEscritasLidas] = useState(0);
 
   useEffect(() => {
     const controle = new AbortController();
     const reflete = confirmadasAte.current;
     const concluidosNaLeitura = enviosConcluidos(id);
+    const escritasNaLeitura = escritasRef.current;
+    concluidosDaLeituraEmCurso.current = concluidosNaLeitura;
     leituraEmCurso.current = true;
     fetch(`/api/colecoes/${id}/opcoes-compra`, { cache: "no-store", signal: controle.signal })
       .then(async (r) => {
@@ -185,6 +204,8 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
         setDados(corpo);
         setLeitura("ok");
         setConcluidosLidos(concluidosNaLeitura);
+        concluidosLidosRef.current = concluidosNaLeitura;
+        setEscritasLidas(escritasNaLeitura);
         definirPendencias((p) => podarPendencias(p, reflete));
         if (!padraoAplicado.current) {
           padraoAplicado.current = true;
@@ -264,13 +285,44 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
     },
     [],
   );
+  /**
+   * Relê depois de uma rajada de pedidos, quando nenhuma leitura — a última
+   * que deu certo, ou a que está no ar — já começou depois do último pedido
+   * terminado da coleção. Vale para os pedidos desta página e para os que a
+   * aba ou o detalhe deixaram no ar ao abrir esta tela.
+   */
   const agendarReler = useCallback(() => {
     if (relogioReler.current) clearTimeout(relogioReler.current);
     relogioReler.current = setTimeout(() => {
       relogioReler.current = null;
-      if (emVoo.current === 0) recarregar();
+      if (emVoo.current > 0) return;
+      const coberto = leituraEmCurso.current ? concluidosDaLeituraEmCurso.current : concluidosLidosRef.current;
+      if (enviosConcluidos(id) !== coberto) recarregar();
     }, ESPERA_RELEITURA_MS);
-  }, [recarregar]);
+  }, [id, recarregar]);
+
+  // Um pedido que terminou sem esta página o ter feito (a aba "O que falta"
+  // ou o detalhe o deixaram no ar) também deixa a lista velha: relê.
+  useEffect(() => {
+    if (concluidosLidos === null || envios.emVoo > 0 || envios.concluidos === concluidosLidos) return;
+    agendarReler();
+  }, [envios.concluidos, envios.emVoo, concluidosLidos, agendarReler]);
+
+  const aoGravarSemEstoque = useCallback(
+    (fase: "inicio" | "fim") => {
+      if (fase === "inicio") {
+        gravandoRef.current = true;
+        setGravando(true);
+        return;
+      }
+      gravandoRef.current = false;
+      setGravando(false);
+      escritasRef.current++;
+      setEscritasTerminadas(escritasRef.current);
+      recarregar();
+    },
+    [recarregar],
+  );
 
   const textoDoDesfecho = useCallback(
     (d: Exclude<DesfechoDaSelecao, { tipo: "ok" }>) => (d.tipo === "parcial" ? t("recusa.parcial") : t(`recusa.${d.motivo}`)),
@@ -316,11 +368,12 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
    */
   const alternar = useCallback(
     (opcao: OpcaoDTO) => {
+      if (gravandoRef.current) return;
       const nova = !opcao.selecionada;
       const corpo = corpoDaMarcacao(opcao, fonte, nova);
       if (!corpo) return;
       const n = ++seq.current;
-      definirPendencias((p) => new Map(p).set(opcao.id, { seq: n, selecionada: nova }));
+      definirPendencias((p) => new Map(p).set(chavePendencia(opcao), { seq: n, selecionada: nova }));
       enfileirar([corpo], [n]);
     },
     [fonte, definirPendencias, enfileirar],
@@ -347,12 +400,16 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
   }, [cardmarket, ehSet, ordenacao, teto.valor, dados?.varredura?.filtros, formatos, t]);
 
   function abrirAtalho() {
-    if (!dados) return;
+    if (!dados || gravandoRef.current) return;
     setAtalho({ plano: planoMelhor(vagasTela, fonte, pendenciasRef.current), base: dados, mudou: false });
   }
 
   function confirmarAtalho() {
     if (!atalho || !dados) return;
+    if (gravandoRef.current) {
+      setAtalho(null);
+      return;
+    }
     // A leitura mudou com a janela aberta: o plano mostrado não vale mais.
     if (atalho.base !== dados) {
       setAtalho({ plano: planoMelhor(vagasTela, fonte, pendenciasRef.current), base: dados, mudou: true });
@@ -363,7 +420,7 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
     if (corpos.length === 0) return;
     const seqs = itens.map(({ opcao }) => {
       const n = ++seq.current;
-      definirPendencias((p) => new Map(p).set(opcao.id, { seq: n, selecionada: true }));
+      definirPendencias((p) => new Map(p).set(chavePendencia(opcao), { seq: n, selecionada: true }));
       return n;
     });
     enfileirar(corpos, seqs, t("atalho.feito", { total: itens.length }));
@@ -454,7 +511,8 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
   /* ---------- Desenho ---------- */
 
   const resumo = dados ? resumoComPendencias(dados, pendencias) : { cartas: 0, total: 0 };
-  const listaVelha = concluidosLidos !== null && envios.concluidos !== concluidosLidos;
+  const listaVelha =
+    (concluidosLidos !== null && envios.concluidos !== concluidosLidos) || gravando || escritasTerminadas !== escritasLidas;
   const atualizando = pendencias.size > 0 || envios.emVoo > 0 || listaVelha || leitura === "carregando";
   const ritmo = dados?.ritmo ?? null;
   const intervalo = ritmo ? (ritmo.intervaloSegundos >= 60 ? `${Math.round(ritmo.intervaloSegundos / 60)} min` : `${ritmo.intervaloSegundos} s`) : "";
@@ -692,7 +750,7 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
 
       {dados && vagasTela.some((v) => v.opcoes.length > 0) ? (
         <div className={estilos.linhaAcoes}>
-          <Botao icone={<WandSparkles aria-hidden />} onClick={abrirAtalho}>
+          <Botao icone={<WandSparkles aria-hidden />} disabled={gravando} onClick={abrirAtalho}>
             {t("atalho.botao")}
           </Botao>
           <span className={estilos.sutil}>{cardmarket ? t("atalho.ajudaCardmarket") : t("atalho.ajudaLiga")}</span>
@@ -703,7 +761,14 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
         <ListaParaColar colecaoId={id} dados={dados} cardmarket={cardmarket} atualizando={atualizando} formatos={formatos} />
       ) : null}
 
-      <PainelSemEstoque colecaoId={id} bloqueado={envios.emVoo > 0 || pendencias.size > 0} formatos={formatos} aoAlterar={recarregar} />
+      <PainelSemEstoque
+        colecaoId={id}
+        bloqueado={envios.emVoo > 0 || pendencias.size > 0}
+        versaoTriagem={envios.concluidos}
+        formatos={formatos}
+        aoGravar={aoGravarSemEstoque}
+        aoAlterar={recarregar}
+      />
 
       {dados && !cardmarket && !varredura ? (
         <Painel className={estilos.parametros}>
@@ -776,6 +841,7 @@ export function OpcoesCompra({ id, fonte: fonteDoServidor }: { id: string; fonte
                     ehSet={ehSet}
                     formatos={formatos}
                     textoSemOpcao={textoSemOpcao}
+                    travada={gravando}
                     aoRecolher={recolherUma}
                     aoAlternar={alternar}
                     aoZoom={setZoom}

@@ -2,7 +2,7 @@
 
 import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { rotuloChaveVaga } from "@/lib/dominio/chave-vaga-set";
 
@@ -12,6 +12,7 @@ import { Botao } from "../../../../_componentes/primitivos/botao";
 import { AreaTexto } from "../../../../_componentes/primitivos/campo";
 import { AvisoEmLinha, Painel } from "../../../../_componentes/primitivos/painel";
 
+import { estadoDaPrevia } from "./opcoes-compra";
 import { numeracao } from "./vaga-opcoes";
 import estilos from "./opcoes.module.css";
 
@@ -25,6 +26,14 @@ import estilos from "./opcoes.module.css";
  * rota grava o registro e desmarca **na mesma transação**. Desmarcar é mexer
  * na triagem do usuário, e ele vê antes o que sai da lista. Cancelar não
  * envia nada.
+ *
+ * **A prévia vale para o que foi conferido.** Ela guarda o texto enviado e a
+ * versão da triagem daquele instante (`estadoDaPrevia`): confirmar manda
+ * exatamente aquele texto, uma resposta de um texto que já mudou é
+ * descartada, e uma marcação terminada depois da conferência pede outra — o
+ * servidor recalcula ao confirmar o que desmarca, e o que entrou depois não
+ * estava na prévia. Enquanto a confirmação está no ar, a página trava a
+ * marcação (`aoGravar`), para nenhum pedido ultrapassá-la.
  *
  * O registro é global (o estoque é da loja) e vale 30 dias; "Voltar a
  * oferecer" o apaga antes disso.
@@ -58,7 +67,9 @@ type Recado = { tom: "perigo" | "alerta"; texto: string; linhas?: string[] };
 export function PainelSemEstoque({
   colecaoId,
   bloqueado,
+  versaoTriagem,
   formatos,
+  aoGravar,
   aoAlterar,
 }: {
   colecaoId: string;
@@ -68,8 +79,12 @@ export function PainelSemEstoque({
    * ordem em relação a ela.
    */
   bloqueado: boolean;
+  /** Sobe a cada pedido de marcação terminado da coleção, de qualquer tela. */
+  versaoTriagem: number;
   formatos: Formatos;
-  /** A triagem mudou: a tela relê a lista e as vagas. */
+  /** A confirmação começou ou terminou (deu certo ou não): a página trava a marcação e, no fim, relê. */
+  aoGravar: (fase: "inicio" | "fim") => void;
+  /** "Voltar a oferecer" mudou as opções: a tela relê. */
   aoAlterar: () => void;
 }) {
   const t = useTranslations("v2OpcoesCompra.semEstoque");
@@ -79,7 +94,9 @@ export function PainelSemEstoque({
 
   const [aberto, setAberto] = useState(false);
   const [texto, setTexto] = useState("");
-  const [previa, setPrevia] = useState<Previa | null>(null);
+  // O texto do campo agora, para descartar a resposta de uma conferência cujo texto já mudou.
+  const textoAtual = useRef("");
+  const [previa, setPrevia] = useState<{ dados: Previa; texto: string; versao: number } | null>(null);
   const [registros, setRegistros] = useState<Registro[] | null>(null);
   const [falhaRegistros, setFalhaRegistros] = useState(false);
   const [recado, setRecado] = useState<Recado | null>(null);
@@ -105,7 +122,9 @@ export function PainelSemEstoque({
     return () => controle.abort();
   }, [rota, versao]);
 
-  async function enviar(confirmar: boolean) {
+  async function conferir() {
+    const enviado = texto;
+    const versao = versaoTriagem;
     setOcupado(true);
     setRecado(null);
     let resposta: Response;
@@ -113,38 +132,62 @@ export function PainelSemEstoque({
       resposta = await fetch(rota, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ texto, confirmar }),
+        body: JSON.stringify({ texto: enviado, confirmar: false }),
       });
     } catch {
       setOcupado(false);
       setRecado({ tom: "perigo", texto: t("erroRede") });
       return;
     }
-    const corpo = (await resposta.json().catch(() => null)) as
-      | (Previa & { registradas?: number; desmarcadas?: number; naoEntendidas?: string[] })
-      | null;
+    const corpo = (await resposta.json().catch(() => null)) as (Previa & { naoEntendidas?: string[] }) | null;
     setOcupado(false);
-
-    if (!resposta.ok) {
+    // O texto mudou enquanto a conferência estava no ar: esta prévia não é dele.
+    if (textoAtual.current !== enviado) return;
+    if (!resposta.ok || !corpo) {
       setPrevia(null);
       if (resposta.status === 404) setRecado({ tom: "perigo", texto: t("colecaoSumiu") });
-      else if (resposta.status === 400)
-        setRecado({ tom: "alerta", texto: t("nadaReconhecido"), linhas: corpo?.naoEntendidas ?? [] });
+      else if (resposta.status === 400) setRecado({ tom: "alerta", texto: t("nadaReconhecido"), linhas: corpo?.naoEntendidas ?? [] });
       else setRecado({ tom: "perigo", texto: t("erroGravar") });
-      // Uma recusa depois de confirmar não gravou nada (a transação volta
-      // inteira); a lista é relida do mesmo jeito, para a tela dizer a verdade.
-      if (confirmar) aoAlterar();
       return;
     }
-    if (!confirmar) {
-      setPrevia(corpo);
+    setPrevia({ dados: corpo, texto: enviado, versao });
+  }
+
+  async function confirmar() {
+    if (!previa || estadoDaPrevia(previa, { texto, versao: versaoTriagem }) !== "vale") return;
+    setOcupado(true);
+    setRecado(null);
+    aoGravar("inicio");
+    let resposta: Response;
+    try {
+      resposta = await fetch(rota, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Exatamente o texto que a prévia mostrou.
+        body: JSON.stringify({ texto: previa.texto, confirmar: true }),
+      });
+    } catch {
+      setOcupado(false);
+      setRecado({ tom: "perigo", texto: t("erroRede") });
+      aoGravar("fim");
       return;
     }
+    const corpo = (await resposta.json().catch(() => null)) as { registradas?: number; desmarcadas?: number; naoEntendidas?: string[] } | null;
+    setOcupado(false);
+    // Dê certo ou não, a página relê: uma recusa depois de confirmar não
+    // gravou nada (a transação volta inteira), e a tela diz a verdade.
+    aoGravar("fim");
     setPrevia(null);
+    if (!resposta.ok) {
+      if (resposta.status === 404) setRecado({ tom: "perigo", texto: t("colecaoSumiu") });
+      else if (resposta.status === 400) setRecado({ tom: "alerta", texto: t("nadaReconhecido"), linhas: corpo?.naoEntendidas ?? [] });
+      else setRecado({ tom: "perigo", texto: t("erroGravar") });
+      return;
+    }
+    textoAtual.current = "";
     setTexto("");
     avisar(t("gravado", { registradas: corpo?.registradas ?? 0, desmarcadas: corpo?.desmarcadas ?? 0 }), { tom: "sucesso" });
     relerRegistros();
-    aoAlterar();
   }
 
   async function voltarAOferecer(r: Registro) {
@@ -171,6 +214,7 @@ export function PainelSemEstoque({
   }
 
   const total = registros?.length ?? 0;
+  const triagemMudou = previa !== null && estadoDaPrevia(previa, { texto, versao: versaoTriagem }) === "triagemMudou";
   return (
     <Painel as="section" className={estilos.semEstoqueSecao} aria-label={t("titulo", { total })}>
       <button type="button" className={estilos.semEstoqueAbrir} aria-expanded={aberto} aria-controls={idCorpo} onClick={() => setAberto((v) => !v)}>
@@ -197,6 +241,7 @@ export function PainelSemEstoque({
           rotulo={t("campo")}
           value={texto}
           onChange={(e) => {
+            textoAtual.current = e.target.value;
             setTexto(e.target.value);
             // A prévia é do texto que foi conferido: mudou o texto, ela sai.
             setPrevia(null);
@@ -207,16 +252,16 @@ export function PainelSemEstoque({
           spellCheck={false}
         />
         <div>
-          <Botao pequeno disabled={ocupado || texto.trim() === ""} carregando={ocupado && previa === null} onClick={() => void enviar(false)}>
+          <Botao pequeno disabled={ocupado || texto.trim() === ""} carregando={ocupado && previa === null} onClick={() => void conferir()}>
             {t("conferir")}
           </Botao>
         </div>
 
         {previa ? (
           <div className={estilos.previa} role="region" aria-label={t("previaRotulo")}>
-            <strong className={estilos.texto}>{t("previa", { cartas: previa.cartas.length, desmarcadas: previa.desmarcariam })}</strong>
+            <strong className={estilos.texto}>{t("previa", { cartas: previa.dados.cartas.length, desmarcadas: previa.dados.desmarcariam })}</strong>
             <ul className={estilos.previaLista}>
-              {previa.cartas.map((c) => (
+              {previa.dados.cartas.map((c) => (
                 <li key={`${c.nome}|${numeracao(c)}|${c.qualidade}`}>
                   <b>
                     {c.nome} ({numeracao(c)})
@@ -233,21 +278,32 @@ export function PainelSemEstoque({
                 </li>
               ))}
             </ul>
-            {previa.naoEntendidas.length > 0 ? (
+            {previa.dados.naoEntendidas.length > 0 ? (
               <AvisoEmLinha tom="alerta">
-                {t("naoEntendidas", { total: previa.naoEntendidas.length })}
+                {t("naoEntendidas", { total: previa.dados.naoEntendidas.length })}
                 <ul className={estilos.naoEntendidas}>
-                  {previa.naoEntendidas.map((l, i) => (
+                  {previa.dados.naoEntendidas.map((l, i) => (
                     <li key={`${i}-${l}`}>{l}</li>
                   ))}
                 </ul>
               </AvisoEmLinha>
             ) : null}
             {bloqueado ? <p className={estilos.sutil}>{t("esperandoMarcacao")}</p> : null}
+            {triagemMudou ? (
+              <AvisoEmLinha tom="alerta" papel="status">
+                {t("triagemMudou")}
+              </AvisoEmLinha>
+            ) : null}
             <div className={estilos.previaAcoes}>
-              <Botao variante="primario" pequeno disabled={ocupado || bloqueado} carregando={ocupado} onClick={() => void enviar(true)}>
-                {t("confirmar")}
-              </Botao>
+              {triagemMudou ? (
+                <Botao variante="primario" pequeno disabled={ocupado || bloqueado} carregando={ocupado} onClick={() => void conferir()}>
+                  {t("conferirDeNovo")}
+                </Botao>
+              ) : (
+                <Botao variante="primario" pequeno disabled={ocupado || bloqueado} carregando={ocupado} onClick={() => void confirmar()}>
+                  {t("confirmar")}
+                </Botao>
+              )}
               <Botao pequeno variante="fantasma" disabled={ocupado} onClick={() => setPrevia(null)}>
                 {t("cancelar")}
               </Botao>

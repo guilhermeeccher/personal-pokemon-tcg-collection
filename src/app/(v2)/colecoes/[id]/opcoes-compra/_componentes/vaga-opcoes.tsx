@@ -47,6 +47,7 @@ export const VagaOpcoes = memo(function VagaOpcoes({
   ehSet,
   formatos,
   textoSemOpcao,
+  travada,
   aoRecolher,
   aoAlternar,
   aoZoom,
@@ -57,6 +58,8 @@ export const VagaOpcoes = memo(function VagaOpcoes({
   ehSet: boolean;
   formatos: Formatos;
   textoSemOpcao: string;
+  /** A confirmação do "sem estoque" está no ar: marcar espera. */
+  travada: boolean;
   aoRecolher: (vaga: VagaDTO, recolher: boolean) => void;
   aoAlternar: (opcao: OpcaoDTO) => void;
   aoZoom: (opcao: OpcaoDTO) => void;
@@ -162,7 +165,7 @@ export const VagaOpcoes = memo(function VagaOpcoes({
                         icone={o.selecionada ? <Check aria-hidden /> : <Plus aria-hidden />}
                         aria-pressed={o.selecionada}
                         aria-label={o.selecionada ? t("desmarcarDe", { nome, edicao: o.edicaoNome }) : t("marcarDe", { nome, edicao: o.edicaoNome })}
-                        disabled={!podeAlternar}
+                        disabled={!podeAlternar || travada}
                         onClick={() => aoAlternar(o)}
                       >
                         {o.selecionada ? t("naLista") : t("marcar")}

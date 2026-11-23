@@ -5,12 +5,14 @@ import {
   type VagaDTO,
   PERIODO_CANDIDATAS_MS,
   agruparVagas,
+  chavePendencia,
   comPendencias,
   corpoDaBuscaDePrecos,
   corpoDaMarcacao,
   corpoDaVarredura,
   cortarGrupos,
   estaRecolhida,
+  estadoDaPrevia,
   filtrosIniciais,
   lerRecolhidas,
   lerTeto,
@@ -217,10 +219,24 @@ describe("recolher", () => {
 });
 
 describe("pendências", () => {
-  const vagas = [vaga("1", [opcao({ id: "a", preco: 10.1 }), opcao({ id: "b", preco: 0.2, selecionada: true })])];
+  const vagas = [vaga("1", [opcao({ id: "a", preco: 10.1, numero: "1" }), opcao({ id: "b", preco: 0.2, numero: "2", selecionada: true })])];
+  const ka = chavePendencia(vagas[0].opcoes[0]);
+  const kb = chavePendencia(vagas[0].opcoes[1]);
+
+  it("a chave é a carta na vaga, não o id da linha: outra varredura não a perde", () => {
+    const antes = opcao({ id: "liga-1", chave: "25", edicaoSigla: "BS", numero: "58" });
+    const depois = { ...antes, id: "liga-2" };
+    expect(chavePendencia(antes)).toBe(chavePendencia(depois));
+    expect(chavePendencia(antes)).not.toBe(chavePendencia({ ...antes, numero: "59" }));
+    expect(chavePendencia(antes)).not.toBe(chavePendencia({ ...antes, chave: "26" }));
+    const p = new Map([[chavePendencia(antes), { seq: 1, selecionada: true }]]);
+    expect(comPendencias([vaga("25", [depois])], p)[0].opcoes[0].selecionada).toBe(true);
+    // A escolha avulsa é a própria escolha.
+    expect(chavePendencia(opcao({ id: "escolha|e1", escolhaId: "e1" }))).toContain("e1");
+  });
 
   it("a marca otimista vence a leitura até ser podada", () => {
-    const p = new Map([["a", { seq: 3, selecionada: true }]]);
+    const p = new Map([[ka, { seq: 3, selecionada: true }]]);
     expect(comPendencias(vagas, p)[0].opcoes.map((o) => o.selecionada)).toEqual([true, true]);
     expect(podarPendencias(p, 2).size).toBe(1);
     expect(podarPendencias(p, 3).size).toBe(0);
@@ -230,12 +246,12 @@ describe("pendências", () => {
   it("o resumo conta o que muda em centavos inteiros", () => {
     const dados = { selecionadas: 1, total: 0.2, vagas };
     const p = new Map([
-      ["a", { seq: 1, selecionada: true }],
-      ["b", { seq: 2, selecionada: false }],
+      [ka, { seq: 1, selecionada: true }],
+      [kb, { seq: 2, selecionada: false }],
     ]);
     expect(resumoComPendencias(dados, p)).toEqual({ cartas: 1, total: 10.1 });
     // Uma pendência igual ao que a leitura já diz não conta duas vezes.
-    expect(resumoComPendencias(dados, new Map([["b", { seq: 1, selecionada: true }]]))).toEqual({ cartas: 1, total: 0.2 });
+    expect(resumoComPendencias(dados, new Map([[kb, { seq: 1, selecionada: true }]]))).toEqual({ cartas: 1, total: 0.2 });
     // Uma opção que saiu da leitura (vaga preenchida) não conta.
     expect(resumoComPendencias(dados, new Map([["sumiu", { seq: 1, selecionada: true }]]))).toEqual({ cartas: 1, total: 0.2 });
   });
@@ -250,7 +266,7 @@ describe("marcar a melhor de cada vaga", () => {
       vaga("4", []),
       vaga("5", [opcao({ id: "5|e", chave: "5", cartaId: "e" })]),
     ];
-    const plano = planoMelhor(vagas, "cardmarket", new Map([["5|e", { seq: 1, selecionada: true }]]));
+    const plano = planoMelhor(vagas, "cardmarket", new Map([[chavePendencia(vagas[4].opcoes[0]), { seq: 1, selecionada: true }]]));
     expect(plano.itens.map((i) => i.opcao.id)).toEqual(["1|a"]);
     expect(plano.fora).toEqual({ jaTemEscolha: 1, semPreco: 1, semOpcao: 1, pendentes: 1 });
     expect(plano.corpos).toEqual([{ cartas: [{ chave: "1", cartaId: "a" }], selecionada: true }]);
@@ -260,5 +276,13 @@ describe("marcar a melhor de cada vaga", () => {
     const vagas = [vaga("1", [opcao({ id: "o1" }), opcao({ id: "o2" })]), vaga("2", [opcao({ id: "o3" })])];
     const plano = planoMelhor(vagas, "liga", new Map());
     expect(plano.corpos).toEqual([{ ids: ["o1", "o3"], selecionada: true }]);
+  });
+});
+
+describe("prévia do sem estoque", () => {
+  it("vale só para o texto conferido e a triagem daquele instante", () => {
+    expect(estadoDaPrevia({ texto: "A", versao: 2 }, { texto: "A", versao: 2 })).toBe("vale");
+    expect(estadoDaPrevia({ texto: "A", versao: 2 }, { texto: "B", versao: 2 })).toBe("textoMudou");
+    expect(estadoDaPrevia({ texto: "A", versao: 2 }, { texto: "A", versao: 3 })).toBe("triagemMudou");
   });
 });

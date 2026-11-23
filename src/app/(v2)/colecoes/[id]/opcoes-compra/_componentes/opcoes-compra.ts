@@ -212,7 +212,7 @@ export function corpoDaBuscaDePrecos(reconsultarTudo: boolean): Record<string, u
 
 /**
  * Uma marca que a tela já mostra e que nenhuma leitura confirmou ainda, por
- * opção (várias por vaga são permitidas). Some quando chega uma leitura
+ * opção (várias por vaga são permitidas), na chave de `chavePendencia`. Some quando chega uma leitura
  * pedida **depois** que o pedido dela terminou (`podarPendencias`), e com
  * qualquer recusa.
  */
@@ -223,15 +223,29 @@ export interface PendenciaOpcao {
 
 export type PendenciasOpcao = ReadonlyMap<string, PendenciaOpcao>;
 
+/**
+ * A chave de uma pendência: a vaga e a carta, nunca o `id` da linha. Na Liga o
+ * `id` é de `liga_opcao` e muda a cada varredura — durante uma rodada, uma
+ * leitura traz a mesma carta com outro `id`, e uma pendência presa ao antigo
+ * sumiria (a opção voltaria desmarcada e o toque seguinte repetiria o
+ * pedido). Edição e número são a identidade que a Liga dá à carta, a mesma
+ * da escolha (`identidade-carta.ts`). O `id` do momento continua sendo o que
+ * vai no corpo do pedido.
+ */
+export function chavePendencia(o: Pick<OpcaoDTO, "chave" | "cartaId" | "edicaoSigla" | "edicaoNome" | "numero" | "escolhaId">): string {
+  if (o.escolhaId) return `${o.chave}|escolha|${o.escolhaId}`;
+  return `${o.chave}|${o.cartaId ?? ""}|${o.edicaoSigla ?? o.edicaoNome}|${o.numero}`;
+}
+
 /** As vagas com a marca otimista de cada opção pendente por cima da leitura. */
 export function comPendencias(vagas: readonly VagaDTO[], pendencias: PendenciasOpcao): VagaDTO[] {
   if (pendencias.size === 0) return [...vagas];
   return vagas.map((v) =>
-    v.opcoes.some((o) => pendencias.has(o.id))
+    v.opcoes.some((o) => pendencias.has(chavePendencia(o)))
       ? {
           ...v,
           opcoes: v.opcoes.map((o) => {
-            const p = pendencias.get(o.id);
+            const p = pendencias.get(chavePendencia(o));
             return p ? { ...o, selecionada: p.selecionada } : o;
           }),
         }
@@ -269,7 +283,7 @@ export function resumoComPendencias(
   if (pendencias.size > 0) {
     for (const v of dados.vagas) {
       for (const o of v.opcoes) {
-        const p = pendencias.get(o.id);
+        const p = pendencias.get(chavePendencia(o));
         if (!p || p.selecionada === o.selecionada) continue;
         cartas += p.selecionada ? 1 : -1;
         if (o.preco !== null) centavos += (p.selecionada ? 1 : -1) * Math.round(o.preco * 100);
@@ -472,7 +486,7 @@ export function planoMelhor(vagas: readonly VagaDTO[], fonte: FontePreco, penden
   const fora = { jaTemEscolha: 0, semPreco: 0, semOpcao: 0, pendentes: 0 };
   const corpos: CorpoSelecao[] = [];
   for (const v of vagas) {
-    if (v.opcoes.some((o) => pendencias.has(o.id))) {
+    if (v.opcoes.some((o) => pendencias.has(chavePendencia(o)))) {
       fora.pendentes++;
       continue;
     }
@@ -494,4 +508,22 @@ export function planoMelhor(vagas: readonly VagaDTO[], fonte: FontePreco, penden
     corpos.push(corpo);
   }
   return { itens, fora, corpos: juntarCorpos(corpos) };
+}
+
+/* ------------------------------------------------------------ "Sem estoque" */
+
+/**
+ * Se a prévia da colagem ainda vale para confirmar. Ela é do texto que foi
+ * conferido e da triagem daquele instante (`versao`, que sobe a cada pedido de
+ * marcação terminado, de qualquer tela): o servidor recalcula, ao confirmar,
+ * quais escolhas desmarca, então uma marcação feita depois da conferência
+ * seria desmarcada sem ter aparecido na prévia. Nos dois casos, confere de novo.
+ */
+export function estadoDaPrevia(
+  previa: { texto: string; versao: number },
+  agora: { texto: string; versao: number },
+): "vale" | "textoMudou" | "triagemMudou" {
+  if (previa.texto !== agora.texto) return "textoMudou";
+  if (previa.versao !== agora.versao) return "triagemMudou";
+  return "vale";
 }

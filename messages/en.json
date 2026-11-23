@@ -3339,7 +3339,9 @@
       "registradas": "On record",
       "vence": "offered again on {data}",
       "voltar": "Offer again",
-      "voltouAOferecer": "{nome} is offered again."
+      "voltouAOferecer": "{nome} is offered again.",
+      "triagemMudou": "The buy list changed after the check (a marking finished). Check again: the preview has to show what will be unmarked now.",
+      "conferirDeNovo": "Check again"
     }
   }
 }

@@ -3331,7 +3331,9 @@
       "registradas": "Registradas",
       "vence": "volta a ser oferecida em {data}",
       "voltar": "Voltar a oferecer",
-      "voltouAOferecer": "{nome} volta a ser oferecida."
+      "voltouAOferecer": "{nome} volta a ser oferecida.",
+      "triagemMudou": "A lista de compras mudou depois da conferência (uma marcação terminou). Confira de novo: a prévia precisa mostrar o que será desmarcado agora.",
+      "conferirDeNovo": "Conferir de novo"
     }
   }
 }
