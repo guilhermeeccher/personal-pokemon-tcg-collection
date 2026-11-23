@@ -30,7 +30,7 @@ Section "Mobile layout — below 768px, and only there".
 | **Fields are 16px on mobile** | **both** | Includes every v2 field: the "Almost there" filter, searches, the "up to R$ X" ceiling field. |
 | **Touch targets are at least 44 x 44px, 8px apart** | **both** | Check the shortcut chips and the binder pager dots in particular. Informative badges are still not targets. |
 | **One tree, not two** | **both** | The v2 adds a case: **Binder and Whole set are the same list of slots** in two sizes, never two lists. A page-turn animation may build a second, short-lived copy of the two faces only for the duration of the turn, only `aria-hidden`/`inert`, and never with state (refs, marks) inside it. |
-| **Dex → Cadastrar virtualizes its list below 768px, and only that screen does** | **v1 only** | **New wording:** a grid or list of the v2 is virtualized above a **measured** threshold, at every width, with the window as the scroller. Package 1d delivers the reusable virtual grid and fixes the threshold by measuring a full collection and the relevant Dex screens (budget of nodes, images and response time); until it is measured, no number is a rule. A v2 screen that renders more than the threshold without virtualizing says why. The v1 keeps its rule: its desktop scrolls in an inner pane, so its window virtualizer only works on the phone. |
+| **Dex → Cadastrar virtualizes its list below 768px, and only that screen does** | **v1 only** | **New wording:** a grid or list of the v2 is virtualized above a **measured** threshold, at every width, with the window as the scroller. Package 1d delivers the reusable virtual grid and fixes the threshold by measuring a full collection and the relevant Dex screens (budget of nodes, images and response time); until it is measured, no number is a rule. A v2 screen that renders more than the threshold without virtualizing says why. The v1 keeps its rule: its desktop scrolls in an inner pane, so its window virtualizer only works on the phone. **Measured by package 1d (2026-11-23): 300 items**, with the budget and the numbers in section 7, rule 13; the Dex lists measure themselves against the same budget when their packages port them. |
 | **Nothing only on hover or in `title`** | **both** | The v2 adds a corollary: **tilt and holo under the pointer are an enhancement, never information** — the copy's variant also shows as text or a badge. The prototype breaks this rule (slot number only on hover, the fan opening on `:hover`, an explanation in a `title`); the v2 does not copy those. |
 | **Overlays share one stack** (`use-camada.ts`): Esc closes only the top layer, focus containment belongs to the top modal layer, scroll lock reference-counted; the `Modal` is a bottom sheet on mobile with its actions in `rodape`, kept in view at the bottom of the sheet | **both**, with two v2 additions | The whole rule holds for the v2, bottom sheet included. (1) **Scroll lock at every width in the v2.** The v1 locks only below 768 px because its desktop scrolls in an inner pane; the v2's window scrolls at every width, so a dialog without the lock would let the page scroll under it on the desktop. The v1 keeps its behaviour. (2) **Focus and position return to the right cell** when a layer closes, even when the cell that opened it left the DOM through virtualization. The card detail is a layer of this stack and contains focus from the moment it opens. **Delivered by package 0c:** the stack is ported, not imported (`(v2)/_componentes/primitivos/camadas.ts`, pure and tested, and `use-camada.ts`), with the levels `janela` < `detalhe` < `confirmacao` < `balao`, whose z-index comes from the same table (the layer seen on top is the one that gets Esc and Tab); a modal layer locks scroll by default at every width (`scrollbar-gutter: stable` keeps the desktop from shifting), and a dialog over another dialog does not blur again (one veil spends the budget); every layer takes a `devolverFocoPara` resolver, called on close and allowed to be async, so a virtual grid can scroll the cell back in and hand it over. Focus goes to the first of resolver, opener and the main content that is still in the DOM. |
 | **Quantity steppers use `Quantidade`** (controlled, `value` required) | **both** | Whatever the v2 stepper looks like, it stays controlled: crossing 768 px remounts it. |
@@ -223,7 +223,38 @@ rest are the technical foundations of the v2.
     for a surface over the veil (the dialog panel), drawn like glass without the blur.
 13. **A reusable virtual grid**, delivered by package 1d, with a measured threshold (section 1). It
     keeps selection outside the window, keyboard navigation, column changes, anchors and focus, and
-    keeps the card that opened the detail mounted while the detail is open.
+    keeps the card that opened the detail mounted while the detail is open. **Delivered by package
+    1d:** `GradeVirtual` (`src/app/(v2)/_componentes/grade/`), its interface and budget in rule 28,
+    and the threshold, **300 items**, measured as below.
+
+    **The measurement (2026-11-23).** Chromium with an iPhone profile (393 × 852, DPR 3, touch, the
+    iPhone Safari user agent) and the CPU throttled 4×, the production build, invented data, the
+    whole-list tab of each collection. "Loaded images" is the `<img>` elements in the DOM that
+    finished loading after scrolling to the middle; "tap" is the longest Event Timing duration of a
+    tap that opens the card detail (pointer down, up and click), six taps on cards in the middle of
+    the list, so the first one is cold.
+
+    | Slots | Mounted | DOM nodes (page) | `<img>` in DOM | Loaded images | Tap, worst / median |
+    |---|---|---|---|---|---|
+    | 165 (set), all mounted | 165 | 1,442 | 165 | ≤ 57 | 64 / 40 ms |
+    | 266 (set with secrets), all mounted | 266 | 2,268 | 265 | 52 | 72–88 / 48–56 ms |
+    | 493 (Pokédex, four regions), all mounted | 493 | 3,940 | 482 | 184 | 104 / 48 ms |
+    | 649 (Pokédex, five regions), all mounted | 649 | 5,120 | 636 | 313 | 80 / 32 ms |
+    | 1,025 (national Pokédex), all mounted | 1,025 | 7,914 | 936 | 318 | 168–192 / 32 ms |
+    | 493, virtual | 24–52 | 412–607 | 51 | 27 | 40 / 32 ms |
+    | 649, virtual | 20–56 | 387–639 | 56 | 44 | 40 / 32 ms |
+    | 1,025, virtual | 20–52 | 406–630 | 43 | 25 | 56 / 32 ms |
+
+    **The budget it fixes**, for one grid on one screen: about 2,500 DOM nodes, about 60 loaded card
+    images (a `low.webp` is ~0.3 MiB decoded; with everything mounted, every image the user ever
+    scrolled past stays in the DOM, and the count only grows), and a cold tap under 100 ms. Mounting
+    everything stays inside it up to the 266-slot set and leaves it from about 500 slots (the tap
+    passes 100 ms and the loaded images triple); 300 keeps the biggest sets (a set with secrets is
+    usually under 300) in one plain tree and virtualizes every Pokédex past three regions. Virtual,
+    the cost is flat: ~600 nodes and ~50 images at any size. The median tap does not move with the
+    size, so the worst (cold) tap and the memory decide. The Dex screens have their own lists (forms,
+    boxes) and measure them when their package ports them onto this grid (5a, 5c), against the same
+    budget.
 14. **New components the v1 does not have.** The **card detail** absorbs the v1's allocate,
     upgrade, edit-copy and destination modals and the zoom, and is born with two modes, slot and
     copy. A glass **confirmation dialog** replaces the twelve `window.confirm` calls of the v1: a
@@ -289,7 +320,8 @@ rest are the technical foundations of the v2.
     `detalhe` level of the layer stack, so it is a panel from 768 px and a bottom sheet below, with
     Esc, focus and scroll lock from the stack; confirmations open above it at the `confirmacao` level.
     Its forms and lists are inline sections, never a second dialog: a `janela` would sit **under** the
-    detail. No production screen opens it yet; `/laboratorio?colecao=<id>&vaga=<id>` and
+    detail. The collection page (package 1d) opens it in slot mode from every tab, and in copy mode
+    from "your cards that fit this theme"; `/laboratorio?colecao=<id>&vaga=<id>` and
     `/laboratorio?carta=<id>&copia=<id>` (add `&abrir=1` to open on load) prove it with real ids.
 24. **Its interface.**
 
@@ -335,6 +367,105 @@ rest are the technical foundations of the v2.
     `{ tipo: "desatualizada" }`; when the thing that was opened is gone, the detail says so and only
     offers to close. The own-photo requests live in `src/app/_comum/imagem-local.ts`, skinless, so the
     v2 does not import the v1's dialog.
+
+### Collection page and virtual grid (package 1d)
+
+27. **The collection page owns the tabs.** `/colecoes/[id]` (`src/app/(v2)/colecoes/[id]/`) reads
+    `GET /api/colecoes/:id/grade` once and rereads it after every write, aborting the read before
+    it; a failed reread keeps the grid on screen and says it may be stale. The tabs
+    (`vista-colecao.ts`, pure and tested), decision 1:
+
+    | Type | Tabs |
+    |---|---|
+    | Set | Binder, Whole set, Upgrades, What's missing |
+    | Pokédex | Binder (pages by national number), Whole Pokédex (virtual), Upgrades, What's missing |
+    | Custom | the whole list only, in allocation order, no denominator (no empty slot, and `…/melhorias` answers empty for it) |
+
+    - The tab is in the URL (`?aba=fichario|inteiro|upgrades|falta`), written with
+      `history.replaceState` (no server round trip); an unknown value, or a tab the type does not
+      have, falls back to the first.
+    - **Binder and the whole list are one list of slots in two sizes** (the `Bolso` component),
+      never two lists. The binder is 3×3 to 6×6, pages instead of filters: one page open, or two
+      (the open binder, always starting on an even page) when the binder itself is 720 px wide or
+      more — the component's own width, not the shell's 768 px. Pages turn by the arrows, the page
+      field, or a wide horizontal swipe that never starts within 24 px of the left edge (rule 3);
+      the dots are informative only, never targets. The new page slides in with a CSS animation
+      marked `v2-anima`, so reduced motion and light mode drop it with the same final state; there
+      is no copy of the pages during the turn. The place in the binder is the first slot in view,
+      not a page number: changing the size, turning the phone or entering "Edit cards" keeps that
+      slot in view.
+    - **The binder never goes under 44 px pockets.** A size whose pockets would be narrower than
+      44 px with 8 px between them is disabled (`maiorGradeQueCabe`): at 320 px the 6×6 would give
+      38 px pockets, so it is off there and a stored 6×6 shows as 5×5. In "Edit cards" every pocket
+      gets a remove button of its own under the card (44 px tall, 8 px below it — two targets,
+      never one over the other), so the binder goes up to 4×4 and the whole list starts at size L
+      for the label to fit.
+    - **Upgrades mounts 100 rows at a time** (two cards each), with "Show more": the list is the
+      slots with a better free copy, almost always a few, and a row has no fixed height to
+      virtualize (on the phone its button wraps to a line of its own). A candidate is shown only if
+      it was computed against the copy in the slot now.
+    - The divisions (Pokédex regions, a set's main and secret parts, the sets of a joined
+      collection) are jumps: the binder turns to the page where the division starts, the whole list
+      scrolls to it. The v1's region filter became this navigation; no slot is ever hidden.
+    - Display preferences are per device (rule 19): `v2-colecao-fichario` (3–6) and
+      `v2-colecao-tamanho` (0–3, the whole-list card size), read through `useSyncExternalStore`, so
+      the server and the hydration see the default and the stored value comes in right after.
+    - **Opening the detail** is rule 25's opener half: the touched card gets the name in an urgent
+      update and the detail opens in `startTransition`; `onMudou` rereads the grid and the detail
+      receives the new slot by id. **Focus comes back to the slot's cell**: the binder turns to its
+      page, the whole list scrolls it in through `elementoDe`; when the slot left the tab (allocated
+      from What's missing, swapped from Upgrades, removed from the collection), to the slot now in
+      the same place of that tab's list (`vagaDoFoco`).
+    - Every collection operation keeps the v1's route and body: name, required language and notes,
+      secrets and the Pokédex scope live in a **Settings** dialog with the CSV and Delete; turning
+      secrets off and removing a region ask through the confirmation dialog and say that a filled
+      slot makes the server refuse, as it does. "Edit cards" (a set) shows the remove button on
+      every slot and the single-card search above the tabs.
+28. **The virtual grid's interface** (`grade-virtual.tsx`; the geometry is pure, in
+    `geometria-grade.ts`, and tested):
+
+    ```ts
+    <GradeVirtual
+      itens={readonly T[]}
+      chaveDe={(item) => string}                    // stable key; selection lives outside, by key
+      renderizar={(item, celula, indice) => ReactNode} // spread `celula` on the focusable element
+      minCelula={px} vaoX?={px} vaoY?={px}          // columns = what fits; cells are uniform
+      proporcao?={825 / 600} alturaExtra?={px}       // card ratio, plus a fixed caption
+      limiar?={LIMIAR_VIRTUALIZACAO}                 // 300; at or below it everything is mounted
+      manterMontadas?={readonly string[]}            // keys kept mounted out of range
+      rotulo={string}                                // the list's accessible name
+      ref={ControleGradeVirtual}                     // rolarAte(i), elementoDe(key), indiceNoPonto(x, y)
+    />
+    ```
+
+    - The window scrolls at every width; the grid takes the height of all its rows and mounts the
+      visible rows plus three on each side. Cells are placed by `top`/`left` (no transform, no
+      `will-change`, no `container-type`), with `role="list"`, and each cell is a `listitem` with
+      `aria-setsize`/`aria-posinset`, so a screen reader knows the whole size.
+    - **Keyboard:** one cell in the Tab order (the active one, or the first really in view — not a
+      spare row above the window — when Tab comes from outside); arrows move by cell or row, Home/End to the ends of the list, PageUp/PageDown
+      by a window of rows; the target is mounted and scrolled in before it takes focus. The focused
+      cell stays mounted when it scrolls away.
+    - **Geometry changes keep the anchor:** a width or size change that moves the rows (other
+      columns, or the same columns with taller cells) puts the first item that was in view back
+      where it was.
+    - **`elementoDe(key)`** scrolls the item in, waits two frames for it to mount and returns its
+      focusable element: pass it, wrapped, as a layer's `devolverFocoPara`.
+    - **`indiceNoPonto(clientX, clientY)`** maps a pointer to an item (the gaps belong to none): the
+      drag marking of package 1e uses it, on the horizontal axis only (rule 2).
+    - **Nothing lives in a cell.** Marks, selection and "open" are the caller's, by key; a cell that
+      leaves the range and comes back loses nothing.
+29. **The "What's missing" slot for package 1e.** The page renders `AbaFalta` from
+    `src/app/(v2)/colecoes/[id]/_componentes/aba-falta.tsx` when the tab is `falta`, and passes that
+    file's `secaoCompraDoDetalhe` to the detail as `secaoCompra` (rule 24). Package 1e replaces the
+    body of `AbaFalta` and fills `secaoCompraDoDetalhe`, keeping the signature; the page does not
+    change. `AbaFalta` receives `ContextoAbaFalta`: `colecao` (the whole grid DTO), `vazias` (the
+    empty slots in grid order), `versaoGrade` (bumps on every new grid: reread `GET …/falta` with
+    it), `abrirVaga(vaga)`, `reler()`, `abertaId`/`parAtivo` (for the transition), `tamanho` (the
+    whole-list size preference) and `controle` (the grid handle the page uses to return focus —
+    pass it to the `GradeVirtual` the tab renders). Until 1e, the tab shows the empty slots on the
+    virtual grid, each opening the detail, and a "Do it in v1" link to `/v1/colecoes/<id>` for the
+    buy marking, the list and the buy options.
 
 ## 8. Other rules, checked for the transition
 
