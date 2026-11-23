@@ -3388,5 +3388,44 @@
       "semResposta": "O servidor não respondeu a tempo: não dá para saber se a colagem foi gravada. A lista foi relida; confira as registradas antes de colar de novo.",
       "erroRedeConferir": "Sem conexão com o servidor: nada foi conferido."
     }
+  },
+  "v2DexInventario": {
+    "descricao": "Os Pokémon que você registrou, agrupados quando iguais. Cada ação move ou apaga um Pokémon do grupo; corrigir vale para o grupo inteiro.",
+    "voltarVisaoGeral": "Visão geral",
+    "abrirJogos": "Meus jogos",
+    "filtros": "Filtros do inventário",
+    "maisFiltros": "Mais filtros",
+    "filtrosAtivos": "{total, plural, one {Filtros (# ligado)} other {Filtros (# ligados)}}",
+    "limparFiltros": "Limpar filtros",
+    "total": "{grupos, plural, one {# grupo} other {# grupos}} · {pokemon, plural, one {# Pokémon} other {# Pokémon}}",
+    "lista": "Pokémon registrados",
+    "cadastrar": "Registrar Pokémon",
+    "enviarRotulo": "Enviar 1 {nome} ao HOME",
+    "moverRotulo": "Mover 1 {nome} para…",
+    "corrigirRotulo": "Corrigir {quantidade, plural, one {o registro} other {os # registros}} de {nome}",
+    "apagarRotulo": "Apagar 1 {nome}",
+    "apagarTitulo": "Apagar 1 registro de {nome}?",
+    "apagarTexto": "Use para um lançamento errado. Para tirar o Pokémon de um jogo, mova-o: apagar não desfaz.",
+    "apagarConfirmar": "Apagar 1",
+    "apagado": "1 registro de {nome} apagado",
+    "corrigirTexto": "{nome}. Shiny, origem, data e notas mudam em todos os registros do grupo; o lugar onde ele está não muda por aqui.",
+    "corrigido": "Correção salva",
+    "movidos": "{quantidade, plural, one {# Pokémon movido} other {# Pokémon movidos}}",
+    "mostrarMais": "Mostrar mais ({restantes} restantes)"
+  },
+  "v2DexJogos": {
+    "descricao": "Marque os jogos que você tem. A lista é a do catálogo, com a conexão de cada um com o HOME; quem parou de jogar marca o jogo como parado, que guarda os registros e não recebe novos.",
+    "voltarVisaoGeral": "Visão geral",
+    "abrirInventario": "Inventário",
+    "lista": "Seus jogos",
+    "trofeusRotulo": "Troféus de {jogo}",
+    "editarRotulo": "Editar {jogo}",
+    "removerRotulo": "Remover {jogo}",
+    "removerTexto": "Só sai da lista um jogo sem Pokémon nele. Se você parou de jogar, marque como parado: os registros ficam, e nada novo entra.",
+    "adicionado": "{jogo} adicionado",
+    "salvo": "{jogo} salvo",
+    "parado": "{jogo} marcado como parado",
+    "reativado": "{jogo} de volta à lista de jogando",
+    "removido": "{jogo} removido da sua lista"
   }
 }

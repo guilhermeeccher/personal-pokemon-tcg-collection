@@ -1,0 +1,245 @@
+/*
+ * "Meus jogos" na v2. Um painel sem desfoque por jogo (são no máximo os
+ * treze do catálogo) e um para adicionar; nenhum `backdrop-filter` fora da
+ * casca (regra 5b).
+ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------- Cabeçalho */
+
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 24px;
+}
+.sobretitulo {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--v2-tinta-3);
+}
+.titulo {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.subtitulo {
+  margin: 8px 0 0;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+}
+.acoesCab {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.blocoTitulo {
+  margin: 0;
+  font-size: 17px;
+}
+.nota {
+  margin: 0;
+  font-size: 13px;
+  color: var(--v2-tinta-3);
+}
+
+/* -------------------------------------------------------------- Jogos */
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.jogo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--v2-raio-painel);
+}
+/* Parado: um pouco apagado. É realce; o selo "Parado" diz o estado em texto. */
+.jogo[data-parado] {
+  opacity: 0.72;
+}
+.jogoCab {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+.jogoNome {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.25;
+}
+.selos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.selo {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+  box-shadow: inset 0 0 0 1px var(--v2-aresta);
+}
+.selo[data-tom="aviso"] {
+  color: var(--v2-falta);
+  box-shadow: inset 0 0 0 1px rgb(255 183 102 / 0.5);
+}
+.selo[data-tom="sucesso"],
+.selo[data-tom="ativo"] {
+  color: var(--v2-livre);
+  box-shadow: inset 0 0 0 1px rgb(111 240 180 / 0.45);
+}
+.info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--v2-tinta-2);
+}
+.notas {
+  overflow-wrap: anywhere;
+  color: var(--v2-tinta-3);
+}
+
+/* O andamento dos troféus é um link de 44 px de altura para a tela de troféus do jogo. */
+.trofeus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: var(--v2-raio-campo);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--v2-tinta);
+  text-decoration: none;
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px var(--v2-superficie-2);
+}
+.trofeus:hover {
+  background: var(--v2-superficie-2);
+}
+.trofeus:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 2px;
+}
+.trofeus[data-platina] {
+  color: #0b0b12;
+  background: var(--v2-iris-linear);
+  box-shadow: none;
+}
+.barra {
+  position: relative;
+  flex: 1 1 120px;
+  max-width: 260px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--v2-superficie-2);
+}
+.barra > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--v2-iris-linear);
+}
+.trofeus[data-platina] .barra {
+  display: none;
+}
+
+/*
+ * As ações quebram linha pelo texto, com 44 px de altura e 8 px de intervalo:
+ * em duas colunas fixas, "Marcar como parado" não cabe na metade de 320 px.
+ * No celular cada uma estica para a linha que ocupa.
+ */
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.acoes > * {
+  flex: 1 1 auto;
+}
+.formEdicao {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.acoesForm {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (min-width: 48rem) {
+  .acoes > * {
+    flex: 0 0 auto;
+  }
+  .formEdicao {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .formEdicao > :nth-child(2) {
+    flex: 1 1 220px;
+  }
+}
+
+/* ---------------------------------------------------------- Adicionar */
+
+.adicionar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--v2-raio-painel);
+}
+.formAdicionar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* A partir de 768 px os campos quebram linha pelo espaço que sobra ao lado do trilho. */
+@media (min-width: 48rem) {
+  .formAdicionar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .formAdicionar > :nth-child(1) {
+    flex: 1 1 220px;
+  }
+  .formAdicionar > :nth-child(2) {
+    flex: 0 1 170px;
+  }
+  .formAdicionar > :nth-child(3) {
+    flex: 1 1 220px;
+  }
+}

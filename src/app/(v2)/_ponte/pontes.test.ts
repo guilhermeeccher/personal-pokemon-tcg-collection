@@ -38,8 +38,6 @@ vi.mock("@/lib/modulos", () => ({
 const TELAS_DA_DEX = [
   "/dex/cadastrar",
   "/dex/caixas",
-  "/dex/inventario",
-  "/dex/jogos",
   "/dex/novo-cadastro",
   "/dex/planos",
   "/dex/recebidos",
