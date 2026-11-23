@@ -9,6 +9,7 @@
  * as duas telas serem o mesmo pedido.
  */
 
+import { formatarIdiomasDisponiveis, formatarRotuloSet, type TextosRotuloSet } from "./agrupamento-sets";
 import type { Idioma } from "./enums";
 import type { Regiao } from "./escopo-pokedex";
 import type { FiltroIdiomaSet } from "./filtro-idioma-set";
@@ -48,6 +49,24 @@ export function catalogoDoSetEscolhido(
 ): CatalogoDoSet {
   if (set.idiomaCatalogo === "jp") return "jp";
   return filtro === "jp" && set.idiomasDisponiveis.includes("jp") ? "jp" : "ocidental";
+}
+
+/**
+ * O rótulo da opção no seletor. `/api/sets` traz a linha ocidental de um set
+ * dos dois catálogos (`neo1`): o nome, a data e a contagem de cartas dela
+ * descrevem outras cartas (111 em inglês, 96 em japonês). Com o filtro em
+ * "Japonês" a opção vira a do catálogo japonês, e como a linha na tela não
+ * tem os números dele, o rótulo traz só o id e o idioma, nunca os do outro.
+ */
+export function rotuloDoSetNoSeletor(
+  set: Parameters<typeof formatarRotuloSet>[0] & { idiomaCatalogo: Idioma },
+  filtro: FiltroIdiomaSet,
+  textos: TextosRotuloSet,
+): string {
+  if (catalogoDoSetEscolhido(set, filtro) === "jp" && set.idiomaCatalogo !== "jp") {
+    return `${set.setId} — ${formatarIdiomasDisponiveis(["jp"])}`;
+  }
+  return formatarRotuloSet(set, textos);
 }
 
 export type TipoDaReceita = "vazia" | "ocidental" | "japonesa" | "mista";

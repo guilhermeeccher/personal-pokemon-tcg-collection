@@ -10,6 +10,7 @@ import {
   montarCorpoCriacao,
   removerSetDaReceita,
   resolverSetInicial,
+  rotuloDoSetNoSeletor,
   totaisDeSecretas,
 } from "./nova-colecao-v2";
 
@@ -246,5 +247,35 @@ describe("buscarSets", () => {
 
   it("sem resultado, lista vazia", () => {
     expect(buscarSets(sets, "zzz")).toEqual([]);
+  });
+});
+
+describe("rotuloDoSetNoSeletor", () => {
+  const textos = { cartas: (n: number) => `${n} cartas`, data: () => null };
+  const neo1 = {
+    setId: "neo1",
+    setNome: "Nome ocidental de teste",
+    setSigla: null,
+    setLancamento: null,
+    idiomasDisponiveis: ["en", "jp"] as ("en" | "jp")[],
+    idiomaCatalogo: "en" as const,
+    qtdOficial: 111,
+    qtdTotal: 111,
+    qtdCartasNoCatalogo: 111,
+  };
+
+  it("neo1 sob o filtro Japonês não anuncia a contagem nem o nome da linha ocidental", () => {
+    expect(rotuloDoSetNoSeletor(neo1, "jp", textos)).toBe("neo1 — JP");
+  });
+
+  it("neo1 sob qualquer outro filtro mantém o rótulo ocidental", () => {
+    for (const filtro of ["todos", "pt", "en"] as const) {
+      expect(rotuloDoSetNoSeletor(neo1, filtro, textos)).toContain("111 cartas");
+    }
+  });
+
+  it("set só japonês usa a própria linha, com contagem", () => {
+    const so = { ...neo1, setId: "M6a", idiomasDisponiveis: ["jp"] as "jp"[], idiomaCatalogo: "jp" as const, qtdOficial: 96 };
+    expect(rotuloDoSetNoSeletor(so, "jp", textos)).toContain("96 cartas");
   });
 });

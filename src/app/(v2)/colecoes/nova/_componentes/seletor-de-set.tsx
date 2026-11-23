@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   agruparSetsPorSerie,
-  formatarRotuloSet,
   type TextosRotuloSet,
 } from "@/lib/dominio/agrupamento-sets";
 import {
@@ -14,7 +13,7 @@ import {
   filtrarSetsPorIdioma,
   type FiltroIdiomaSet,
 } from "@/lib/dominio/filtro-idioma-set";
-import { buscarSets } from "@/lib/dominio/nova-colecao-v2";
+import { buscarSets, rotuloDoSetNoSeletor } from "@/lib/dominio/nova-colecao-v2";
 import type { SetParaCadastroDTO } from "@/lib/dominio/tipos-cliente";
 
 import { Campo, Selecao } from "../../../_componentes/primitivos/campo";
@@ -134,7 +133,7 @@ export function SeletorDeSet({
           <optgroup key={grupo.serieId} label={grupo.serie}>
             {grupo.sets.map((s) => (
               <option key={s.setId} value={s.setId}>
-                {formatarRotuloSet(s, textosRotulo)}
+                {rotuloDoSetNoSeletor(s, filtroIdioma, textosRotulo)}
               </option>
             ))}
           </optgroup>
