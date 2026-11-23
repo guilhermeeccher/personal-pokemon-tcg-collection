@@ -679,6 +679,31 @@ D. **The pieces package 5a owns, and their interfaces** (delivered 2026-11-23). 
     25 card images. No region reaches 300 slots today; if one does (new forms), it virtualizes on its
     own.
 
+### Dex inventory and games (package 5e-a)
+
+Unnumbered on purpose: packages 5b to 5e run in parallel, and the numbers are given when they merge.
+
+- **`/dex/inventario` keeps one row per Pokémon in the database and groups only on screen.** The
+  filters, the grouping and the order are the v1's, in `linhas-inventario.ts` (pure, tested); the
+  same records give the same groups and counts as `/v1/dex/inventario`. "Send 1 to HOME" and "Move
+  1 to…" move the group's oldest record and "Delete 1" deletes its newest, as in the v1; "Fix" is
+  `PATCH /api/dex/registros` for the whole group and never touches the location. Moving goes
+  through `useTransferencia`, so leaving a send-only game always asks. "Move 1 to…" offers HOME and
+  the active games but the current one, the v1's list: the screen does not second-guess the HOME
+  rules, and a destination the route refuses shows the route's sentence.
+- **The inventory mounts 60 groups at a time** ("Show more"; a filter change starts over), so a
+  collection of years of GO never puts hundreds of rows with their buttons on one page (rule 13's
+  node budget). The count at the top is always the whole list's.
+- **The inventory row follows the list's width, not the window's** (`container-type` on the list,
+  which is no ancestor of a fixed bar, rule 5d): below ~560 px of list the actions sit in two
+  columns under the name, from there in a row; under ~330 px "Send" and "Move" take the whole line.
+  From 768 px the rail leaves the same window with a narrow or a wide list, which a media query
+  cannot see.
+- **`/dex/jogos` only marks games of the fixed catalog.** A stopped game keeps its records and
+  leaves the inventory's move list; removing one with records is refused by the route
+  (`dexJogoComRegistros`) and the screen shows it. The trophy progress is computed on the server with
+  the v1's `progressoTrofeus`, and links to `/dex/trofeus?jogo=`.
+
 ## 8. Other rules, checked for the transition
 
 | Rule | Section of `AGENTS.md` | Scope | Note |
