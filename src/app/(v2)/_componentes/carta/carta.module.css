@@ -1,0 +1,296 @@
+/*
+ * Carta da v2. Lê só os tokens de pele da v2 (`--v2-*`, definidos pela casca)
+ * e declara aqui o valor de reserva de cada um, para a carta funcionar antes
+ * de a casca existir e em qualquer página que a use sozinha.
+ *
+ * Orçamento de composição (decisão de 2026-11-22): `will-change`,
+ * `preserve-3d`, `isolation` e `mix-blend-mode` só existem nas regras da
+ * carta ativa (`[data-ativa]`: ponteiro em cima, foco, vitrine ou palco).
+ * Em repouso a carta é uma imagem simples, mais, se a variante é especial,
+ * um gradiente fixo sem mistura, sem filtro e sem máscara. Numa grade de
+ * centenas de cartas, isso é a diferença entre uma camada de composição e
+ * três por carta. Nenhum `backdrop-filter` aqui, nunca (o selo de origem é
+ * um fundo opaco). `regras-movimento.test.ts` fixa as três regras.
+ */
+
+.carta {
+  /* Estado da mola, sem unidade (0–1). O laço de quadros escreve por cima
+     enquanto a carta se mexe; sem ele, valem estes. */
+  --px: 0.5;
+  --py: 0.5;
+  --o: 0;
+  position: relative;
+  display: block;
+  aspect-ratio: 600 / 825;
+  border-radius: var(--v2-raio-carta, 4.6% / 3.4%);
+  background: var(--v2-fundo, #030406);
+  box-shadow: var(--v2-sombra-carta, 0 2px 4px rgb(0 0 0 / 0.35), 0 10px 24px rgb(0 0 0 / 0.45));
+  transition: box-shadow 0.4s var(--v2-curva-suave, cubic-bezier(0.2, 0.8, 0.2, 1));
+  /* O navegador rola na vertical; o arrasto horizontal fica para o JS. */
+  touch-action: pan-y;
+  /* Pressionar a carta no iOS não abre o menu de imagem nem seleciona. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* No detalhe a carta inclina sob o dedo, e só ali o toque não rola a página:
+   a área nunca passa do tamanho da carta. */
+.carta[data-modo="palco"] {
+  touch-action: none;
+}
+
+.imagem {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+  -webkit-user-drag: none;
+}
+
+/* ---------- Repouso: indicador estático da variante especial ---------- */
+
+.carta:not([data-ativa]):is([data-fx="holo"], [data-fx="reverse"], [data-fx="ilustracao"], [data-fx="hiper"])::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 28%,
+    rgb(255 255 255 / 0.15) 44%,
+    rgb(190 210 255 / 0.1) 54%,
+    transparent 70%
+  );
+}
+
+/* holo: só a janela da ilustração (recorte por posição, não por máscara) */
+.carta:not([data-ativa])[data-fx="holo"]::after {
+  inset: 11.5% 8.5% 47% 8.5%;
+  border-radius: 2px;
+}
+
+.carta:not([data-ativa])[data-fx="hiper"]::after {
+  background: linear-gradient(
+    115deg,
+    transparent 24%,
+    rgb(255 226 138 / 0.2) 42%,
+    rgb(255 207 92 / 0.14) 56%,
+    transparent 72%
+  );
+}
+
+/* ---------- Ativa: camadas de luz ---------- */
+
+.carta[data-ativa] {
+  will-change: transform;
+  transform-style: preserve-3d;
+  /* As camadas misturam só com a carta, nunca com o fundo da página. */
+  isolation: isolate;
+  box-shadow: var(--v2-sombra-carta, 0 2px 4px rgb(0 0 0 / 0.35), 0 18px 40px rgb(0 0 0 / 0.5));
+}
+
+/* Ativa sem mola (movimento reduzido ou modo leve): o brilho fica parado no
+   centro, a meia-luz. Mesmo destino, sem caminho. */
+.carta[data-estatico] {
+  --o: 0.5;
+}
+
+.camada {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* brilho que segue o ponteiro, em toda carta */
+.carta[data-ativa] .brilho {
+  background: radial-gradient(
+    farthest-corner circle at calc(var(--px) * 100%) calc(var(--py) * 100%),
+    rgb(255 255 255 / 0.55) 0%,
+    rgb(255 255 255 / 0.14) 22%,
+    transparent 58%
+  );
+  mix-blend-mode: overlay;
+  opacity: calc(var(--o) * 0.95);
+}
+
+/* O arco-íris anda 70% do que o ponteiro anda, a partir do centro. */
+.carta[data-ativa] .fx {
+  --bx: calc((50 + (var(--px) - 0.5) * 70) * 1%);
+  --by: calc((50 + (var(--py) - 0.5) * 70) * 1%);
+  opacity: 0;
+  mix-blend-mode: color-dodge;
+  background-size: 280% 280%;
+  background-position: var(--bx) var(--by);
+}
+
+/* holo: o arco-íris só na janela da ilustração */
+.carta[data-ativa][data-fx="holo"] .fx {
+  background-image: repeating-linear-gradient(
+    115deg,
+    #ff7773 0%,
+    #ffed5f 4.5%,
+    #a8ff5f 9%,
+    #83fff7 13.5%,
+    #7894ff 18%,
+    #d875ff 22.5%,
+    #ff7773 27%
+  );
+  filter: brightness(0.55) contrast(1.6) saturate(1.3);
+  opacity: calc(var(--o) * 0.85 + 0.08);
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 11.5%, #000 11.5%, #000 53%, transparent 53%),
+    linear-gradient(to right, transparent 8.5%, #000 8.5%, #000 91.5%, transparent 91.5%);
+  mask-image:
+    linear-gradient(to bottom, transparent 11.5%, #000 11.5%, #000 53%, transparent 53%),
+    linear-gradient(to right, transparent 8.5%, #000 8.5%, #000 91.5%, transparent 91.5%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/* reverse: o brilho em tudo, menos na ilustração, com textura de purpurina */
+.carta[data-ativa][data-fx="reverse"] .fx {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='1'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 9 -4.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(
+      115deg,
+      #ff7773 0%,
+      #ffed5f 4.5%,
+      #a8ff5f 9%,
+      #83fff7 13.5%,
+      #7894ff 18%,
+      #d875ff 22.5%,
+      #ff7773 27%
+    );
+  background-size:
+    120px 120px,
+    280% 280%;
+  background-position:
+    calc(var(--bx) * -1) var(--by),
+    var(--bx) var(--by);
+  filter: brightness(0.6) contrast(1.5);
+  opacity: calc(var(--o) * 0.8 + 0.1);
+  -webkit-mask-image:
+    linear-gradient(to bottom, #000 11.5%, transparent 11.5%, transparent 53%, #000 53%),
+    linear-gradient(to right, #000 8.5%, transparent 8.5%, transparent 91.5%, #000 91.5%);
+  mask-image:
+    linear-gradient(to bottom, #000 11.5%, transparent 11.5%, transparent 53%, #000 53%),
+    linear-gradient(to right, #000 8.5%, transparent 8.5%, transparent 91.5%, #000 91.5%);
+  -webkit-mask-composite: source-over;
+  mask-composite: add;
+}
+
+/* ilustração rara: arte cheia, textura gravada sobre a carta inteira */
+.carta[data-ativa][data-fx="ilustracao"] .fx {
+  background-image:
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.16) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(
+      115deg,
+      #ff7773 0%,
+      #ffed5f 4.5%,
+      #a8ff5f 9%,
+      #83fff7 13.5%,
+      #7894ff 18%,
+      #d875ff 22.5%,
+      #ff7773 27%
+    );
+  background-size:
+    100% 100%,
+    280% 280%;
+  filter: brightness(0.5) contrast(1.7) saturate(1.2);
+  opacity: calc(var(--o) * 0.75 + 0.06);
+}
+
+/* hiper rara: ouro com purpurina */
+.carta[data-ativa][data-fx="hiper"] .fx {
+  mix-blend-mode: overlay;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.9' numOctaves='1'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .9 0 0 0 0 .6 0 0 0 10 -5.4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(110deg, #fff3c4 0%, #ffcf5c 6%, #a8741a 12%, #ffe28a 18%, #fff3c4 24%);
+  background-size:
+    90px 90px,
+    260% 260%;
+  opacity: calc(var(--o) * 0.9 + 0.15);
+}
+
+/* ---------- Texto sobre a carta (nunca só no hover, nunca em `title`) ---------- */
+
+.variante {
+  position: absolute;
+  z-index: 2;
+  left: 6%;
+  top: 4.5%;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.66);
+  color: var(--v2-tinta, #f4f2f8);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.variante::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--v2-tinta-3, rgb(244 242 248 / 0.4));
+}
+
+.carta:not([data-fx="normal"]) .variante::before {
+  background: var(
+    --v2-iris,
+    conic-gradient(from 210deg, #7fd6ff, #b48cff, #ff8fd1, #ffc983, #8ff0c0, #7fd6ff)
+  );
+}
+
+/* Código curto da foto emprestada (EN/PT/MYP). A explicação vai em texto
+   para leitor de tela, ao lado. */
+.selo {
+  position: absolute;
+  z-index: 2;
+  right: 5%;
+  bottom: 3.5%;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.72);
+  color: var(--v2-tinta-2, rgb(244 242 248 / 0.66));
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+/* Sem imagem (nenhuma URL, ou a URL falhou): o lugar da carta continua. */
+.vazia {
+  display: grid;
+  place-items: center;
+  color: var(--v2-tinta-3, rgb(244 242 248 / 0.4));
+}
+
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carta {
+    transition: none;
+  }
+}
