@@ -2092,7 +2092,7 @@
       "cancelar": "Cancel",
       "aplicar": "{total, plural, one {Apply to # copy} other {Apply to # copies}}",
       "confirmarTitulo": "{total, plural, one {Change # copy?} other {Change # copies?}}",
-      "confirmarAlocacao": "All or nothing: if one copy cannot change, none does",
+      "confirmarAlocacao": "All or nothing: if one copy cannot change, none does.",
       "muda": {
         "condicao": "Condition: {valor}",
         "localizacao": "Location: {valor}",

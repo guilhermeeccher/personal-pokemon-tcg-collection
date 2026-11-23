@@ -2084,7 +2084,7 @@
       "cancelar": "Cancelar",
       "aplicar": "{total, plural, one {Aplicar a # cópia} other {Aplicar a # cópias}}",
       "confirmarTitulo": "{total, plural, one {Alterar # cópia?} other {Alterar # cópias?}}",
-      "confirmarAlocacao": "Tudo ou nada: se uma cópia não puder mudar, nenhuma muda",
+      "confirmarAlocacao": "Tudo ou nada: se uma cópia não puder mudar, nenhuma muda.",
       "muda": {
         "condicao": "Condição: {valor}",
         "localizacao": "Localização: {valor}",
