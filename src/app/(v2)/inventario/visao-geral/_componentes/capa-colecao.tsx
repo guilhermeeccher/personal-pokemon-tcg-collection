@@ -9,7 +9,7 @@ import type { ResumoInventario } from "@/lib/db/resumo-inventario";
 import { percentualSemFechar } from "@/lib/dominio/visao-geral-v2";
 import { urlImagemCarta } from "@/lib/imagens";
 
-import { ImagemEscada } from "../../../colecoes/_componentes/imagem-escada";
+import { ImagemEscada } from "../../../_componentes/primitivos/imagem-escada";
 
 import estilos from "./visao-geral.module.css";
 

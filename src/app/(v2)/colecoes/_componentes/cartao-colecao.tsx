@@ -6,7 +6,7 @@ import { progressoDaColecao, type ColecaoListaV2DTO } from "@/lib/dominio/lista-
 
 import { AnelProgresso, ContagemEmCirculo } from "./anel-progresso";
 import estilos from "./colecoes.module.css";
-import { ImagemEscada } from "./imagem-escada";
+import { ImagemEscada } from "../../_componentes/primitivos/imagem-escada";
 import { rotuloDoTema } from "./rotulo-tema";
 
 /**
