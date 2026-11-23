@@ -10,6 +10,16 @@
  *
  * Cópia com `quantidade = 1` é alocada direto, sem criar linha nova.
  *
+ * **A parte que se separa guarda a data de cadastro da original**
+ * (`parteSeparadaDoLote`, decisão de 2026-11-22). Dividir um lote não é
+ * cadastrar: a unidade que vai para a vaga entrou no inventário junto com as
+ * outras, e o "Cadastradas nos últimos 7 dias" da página inicial conta por
+ * `criado_em`. Antes desta regra a linha nova nascia com a hora da alocação, e
+ * alocar uma carta antiga a fazia parecer recém-chegada. Vale daqui para a
+ * frente: as divisões feitas antes guardam a data da divisão, e nenhuma é
+ * corrigida por inferência (não há como saber, olhando a linha, de qual lote
+ * ela saiu).
+ *
  * Módulo puro, sem I/O — só decide o plano; quem chama executa o
  * INSERT/UPDATE dentro da mesma transação que preenche a vaga (ou tudo
  * acontece, ou nada).
@@ -39,4 +49,56 @@ export function planejarAlocacaoDeLote(quantidadeAtual: number): PlanoAlocacaoLo
     return { dividir: false, quantidadeRestanteNaOriginal: 0 };
   }
   return { dividir: true, quantidadeRestanteNaOriginal: quantidadeAtual - 1 };
+}
+
+/**
+ * Os campos que a parte separada herda da cópia original — todos, menos o
+ * `id` (é outra linha), a `quantidade` (nasce com 1) e o `atualizado_em`
+ * (a linha nova é escrita agora). O `criado_em` vem junto: ver o topo.
+ */
+export const CAMPOS_HERDADOS_NA_DIVISAO = [
+  "cartaId",
+  "idiomaCatalogo",
+  "idioma",
+  "variante",
+  "condicao",
+  "gradedEmpresa",
+  "gradedNota",
+  "gradedCertificado",
+  "localizacao",
+  "aquisicaoData",
+  "aquisicaoOrigem",
+  "aquisicaoPreco",
+  "notas",
+  "criadoEm",
+] as const;
+
+export type CampoHerdadoNaDivisao = (typeof CAMPOS_HERDADOS_NA_DIVISAO)[number];
+
+/**
+ * A linha da parte que se separa do lote, pronta para o INSERT. As duas vias
+ * que dividem — a alocação numa vaga e a adição a uma customizada, em
+ * `lib/db/consultas.ts` — montam a linha por aqui, para nenhuma das duas
+ * esquecer um campo que a outra copia.
+ */
+export function parteSeparadaDoLote<C extends Record<CampoHerdadoNaDivisao, unknown>>(
+  original: C,
+): Pick<C, CampoHerdadoNaDivisao> & { quantidade: 1 } {
+  return {
+    cartaId: original.cartaId,
+    idiomaCatalogo: original.idiomaCatalogo,
+    idioma: original.idioma,
+    variante: original.variante,
+    condicao: original.condicao,
+    gradedEmpresa: original.gradedEmpresa,
+    gradedNota: original.gradedNota,
+    gradedCertificado: original.gradedCertificado,
+    localizacao: original.localizacao,
+    aquisicaoData: original.aquisicaoData,
+    aquisicaoOrigem: original.aquisicaoOrigem,
+    aquisicaoPreco: original.aquisicaoPreco,
+    notas: original.notas,
+    criadoEm: original.criadoEm,
+    quantidade: 1,
+  };
 }
