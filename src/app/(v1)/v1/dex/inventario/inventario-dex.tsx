@@ -228,7 +228,9 @@ export function InventarioDex({
                         {t("inventario.enviarHome")}
                       </Botao>
                     )}
-                    {destinos.length > 1 && (
+                    {/* Um destino além do HOME basta (o HOME tem o botão próprio): pedir dois
+                        deixava um Pokémon no HOME, com um só jogo ativo, sem como sair de lá. */}
+                    {destinos.some((d) => d !== LOCAL_HOME) && (
                       <select
                         aria-label={t("inventario.moverPara")}
                         className={`${classesEntrada} md:!min-h-6 md:!py-0 text-xs max-md:w-full`}
