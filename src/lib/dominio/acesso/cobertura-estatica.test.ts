@@ -59,6 +59,9 @@ const sob = (relativoAoApp: string) => `${APP}/${relativoAoApp}`;
  * `cartas/[cartaId]/detalhe`, de 2026-11-22) foram conferidas assim: só
  * `select`, e a grade e o detalhe numa transação `read only`. A `falta` usa a
  * montagem da tela de opções, mas **não** a limpeza de rodada morta.
+ *
+ * `inventario/precos/cartas` (pacote 2d, 2026-11-23) também só faz `select`:
+ * a foto e a cópia das cartas de uma página da tabela de preços.
  */
 const ROTAS_COM_GET = [
   "api/cartas/[cartaId]/detalhe/route.ts",
@@ -84,6 +87,7 @@ const ROTAS_COM_GET = [
   "api/grupos-colecao/[id]/faltantes/route.ts",
   "api/grupos-colecao/series/route.ts",
   "api/imagens-locais/[cartaId]/[idioma]/route.ts",
+  "api/inventario/precos/cartas/route.ts",
   "api/inventario/precos/route.ts",
   "api/inventario/repetidas/route.ts",
   "api/inventario/resumo/route.ts",

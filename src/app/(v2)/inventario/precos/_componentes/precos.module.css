@@ -1,0 +1,654 @@
+/*
+ * A tela de preços da v2. Painéis sem desfoque (regra 5b de
+ * `docs/design-v2/rules.md`): são muitos e repetem, e vidro com desfoque é só da
+ * casca. A tabela e as rodadas são **listas** com uma árvore só: um cartão por
+ * linha no celular e numa coluna estreita, e colunas de grade quando o
+ * próprio componente tem largura para elas — `@container` na própria lista, e
+ * não o breakpoint da casca, porque a trilha lateral come ~250 px dos 768 e a
+ * largura que importa à tabela é a dela (regra 1: container query é para
+ * componente, nunca para o breakpoint da casca). O `container-type` fica só nas
+ * duas listas, que não têm barra fixa nem camada dentro.
+ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.cabecalho {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.titulo {
+  margin: 0;
+  font-size: clamp(30px, 6vw, 48px);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.subtituloPagina {
+  margin: 0;
+  max-width: 70ch;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--v2-tinta-3);
+}
+.subtitulo {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+}
+.aviso {
+  margin: 0;
+  max-width: 78ch;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--v2-tinta-3);
+}
+.resumo {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-2);
+}
+.vazio {
+  padding: 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--v2-tinta-2);
+}
+.secao {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Atualizar. */
+.controle {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+.controleLinha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+/* O rótulo é longo e o botão não quebra: no celular ocupa a largura e quebra. */
+.botaoAtualizar {
+  max-width: 100%;
+  white-space: normal;
+  height: auto;
+  min-height: 44px;
+}
+.ultima {
+  font-size: 13px;
+  color: var(--v2-tinta-2);
+}
+.cotacao {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--v2-tinta-2);
+}
+
+/* A rodada viva. */
+.rodadaViva {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rodadaVivaTopo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+.progresso {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--v2-superficie-2);
+}
+.progressoBarra {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--v2-iris-linear);
+  transition: width 0.4s var(--v2-curva-suave);
+}
+.erroRodada {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--v2-perigo);
+  overflow-wrap: anywhere;
+}
+
+/* O selo de situação: texto, nunca só cor. */
+.selo {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-2);
+}
+.selo[data-tom="aviso"] {
+  color: var(--v2-falta);
+  background: rgb(255 183 102 / 0.14);
+}
+.selo[data-tom="perigo"] {
+  color: var(--v2-perigo);
+  background: rgb(255 138 138 / 0.14);
+}
+
+/* A explicação que abre por toque e teclado. A área de toque passa de 44 px
+   por um pseudoelemento, sem inflar o visual de uma etiqueta de uma linha. */
+.explicacao {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 100%;
+}
+.explicacaoBotao {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px 2px 10px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-2);
+  cursor: pointer;
+}
+.explicacaoBotao::after {
+  content: "";
+  position: absolute;
+  inset: -10px -6px;
+}
+.explicacaoBotao[data-tom="aviso"] {
+  color: var(--v2-falta);
+  background: rgb(255 183 102 / 0.14);
+}
+.explicacaoBotao[data-tom="perigo"] {
+  color: var(--v2-perigo);
+  background: rgb(255 138 138 / 0.14);
+}
+.explicacaoBotao:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 2px;
+}
+.explicacaoInfo {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--v2-superficie-3);
+}
+.explicacaoTexto {
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--v2-tinta-2);
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.explicacaoTexto[hidden] {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ tabela */
+
+.tabela {
+  container: precos / inline-size;
+}
+.cabecalhoTabela {
+  display: none;
+}
+.linhas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.linha {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 4px 14px;
+  align-items: start;
+  box-sizing: border-box;
+  padding: 14px;
+  border-radius: var(--v2-raio-painel);
+}
+.foto {
+  grid-column: 1;
+  grid-row: 1 / span 4;
+  width: 64px;
+}
+.semFoto {
+  display: block;
+  aspect-ratio: 600 / 825;
+  border-radius: var(--v2-raio-carta);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px var(--v2-aresta);
+}
+.cartaCelula {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+.nome,
+.nomeBotao {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--v2-tinta);
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.nomeBotao {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+/* O nome é o comando de teclado e de leitor de tela; a área passa de 44 px. */
+.nomeBotao::after {
+  content: "";
+  position: absolute;
+  inset: -12px -6px;
+}
+.nomeBotao:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--v2-tinta-3);
+  text-underline-offset: 3px;
+}
+.nomeBotao:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.set {
+  grid-column: 2;
+  font-size: 12.5px;
+  color: var(--v2-tinta-2);
+  overflow-wrap: anywhere;
+}
+.numero {
+  grid-column: 2;
+  font-size: 12.5px;
+  color: var(--v2-tinta-3);
+}
+.raridade {
+  grid-column: 2;
+  font-size: 12.5px;
+  color: var(--v2-tinta-2);
+  overflow-wrap: anywhere;
+}
+.precos {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin-top: 8px;
+}
+.preco {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  font-size: 15px;
+  color: var(--v2-tinta);
+  text-align: left;
+}
+.precoForte {
+  font-weight: 700;
+}
+.semPreco {
+  font-size: 13px;
+  color: var(--v2-tinta-2);
+}
+.detalhePreco {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  font-family: var(--v2-fonte-ui);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--v2-tinta-3);
+  white-space: normal;
+}
+.consulta {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--v2-tinta-3);
+}
+/* O cabeçalho da coluna some no cartão: o rótulo vem na frente do valor. */
+.rotuloCampo {
+  font-family: var(--v2-fonte-ui);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--v2-tinta-3);
+}
+
+@container precos (min-width: 880px) {
+  .cabecalhoTabela,
+  .linha {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 2fr) minmax(0, 1.5fr) 52px minmax(0, 1.2fr) minmax(0, 3.4fr) 92px;
+    gap: 14px;
+    align-items: center;
+  }
+  .cabecalhoTabela {
+    padding: 0 14px 8px;
+    font-size: 12px;
+    color: var(--v2-tinta-3);
+  }
+  .linha {
+    padding: 10px 14px;
+  }
+  .foto {
+    grid-column: auto;
+    grid-row: auto;
+    width: 56px;
+  }
+  .cartaCelula,
+  .set,
+  .numero,
+  .raridade,
+  .consulta {
+    grid-column: auto;
+  }
+  .consulta {
+    font-size: 12.5px;
+  }
+  .precos {
+    grid-column: auto;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 0;
+    align-items: start;
+  }
+  .preco {
+    align-items: flex-end;
+    text-align: right;
+  }
+  .semPreco {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+  .rotuloCampo {
+    display: none;
+  }
+  .cabecalhoTabela .precosCab {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    text-align: right;
+  }
+}
+
+/* ----------------------------------------------------------------- paginação */
+
+.paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+.paginacao > span {
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------ gráfico */
+
+.grafico {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+.graficoTexto {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.areaGrafico {
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+}
+.areaGrafico:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 4px;
+}
+/* O desenho só cede a rolagem vertical: o dedo na horizontal aponta o ponto. */
+.svg {
+  display: block;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.linhaGrade {
+  stroke: var(--v2-aresta);
+  stroke-width: 1;
+}
+.textoEixo {
+  font-size: 12px;
+  fill: var(--v2-tinta-3);
+}
+.serie {
+  fill: none;
+  stroke: var(--v2-foco);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.guia {
+  stroke: var(--v2-tinta-3);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.ponto {
+  fill: var(--v2-foco);
+  stroke: var(--v2-fundo);
+  stroke-width: 2;
+}
+.pontoAtivo {
+  fill: var(--v2-tinta);
+}
+/* Altura reservada para o painel não pular quando o ponto muda. */
+.leitura {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-height: 7.5rem;
+  padding: 12px 14px;
+  border-radius: 16px;
+}
+.leituraRotulo {
+  font-size: 11.5px;
+  color: var(--v2-tinta-3);
+}
+.leituraData {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.leituraTotal {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.leituraLinha {
+  font-size: 12.5px;
+  color: var(--v2-tinta-2);
+}
+.dica {
+  margin: -4px 0 0;
+  font-size: 12px;
+  color: var(--v2-tinta-3);
+}
+.detalhes {
+  font-size: 13px;
+}
+.resumo + .detalhes {
+  margin-top: 0;
+}
+.detalhes > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  color: var(--v2-tinta-2);
+}
+.detalhes > summary:focus-visible {
+  outline: 2px solid var(--v2-foco);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.tabelaPontos {
+  overflow-x: auto;
+}
+.tabelaPontos table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: left;
+}
+.tabelaPontos th {
+  padding: 6px 8px;
+  font-weight: 500;
+  color: var(--v2-tinta-3);
+}
+.tabelaPontos td {
+  padding: 6px 8px;
+  border-top: 1px solid var(--v2-aresta);
+}
+.tabelaPontos th:not(:first-child),
+.tabelaPontos td:not(:first-child) {
+  text-align: right;
+}
+
+/* ------------------------------------------------------------------ rodadas */
+
+.cabecalhoRodadas {
+  display: none;
+}
+.rodada {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px 14px;
+  align-items: start;
+  box-sizing: border-box;
+  padding: 14px;
+  border-radius: var(--v2-raio-painel);
+}
+.rodadaData {
+  font-size: 14px;
+}
+.rodadaSituacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.rodadaCartas,
+.rodadaRequisicoes {
+  font-size: 13px;
+  color: var(--v2-tinta-2);
+}
+/* O custo da rodada (requisições) não é o que se veio ver: some no celular. */
+.rodadaRequisicoes {
+  display: none;
+}
+.rodadaTotal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  font-size: 14px;
+}
+.foraDoGrafico {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  color: var(--v2-tinta-2);
+}
+.rodadaAcao {
+  grid-column: 1 / -1;
+  justify-self: end;
+}
+.colDireita {
+  text-align: right;
+}
+
+.rodadas {
+  container: rodadas / inline-size;
+}
+@container rodadas (min-width: 640px) {
+  .cabecalhoRodadas,
+  .rodada {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr) 96px;
+    gap: 14px;
+    align-items: center;
+  }
+  .cabecalhoRodadas {
+    padding: 0 14px 8px;
+    font-size: 12px;
+    color: var(--v2-tinta-3);
+  }
+  .rodada {
+    padding: 10px 14px;
+  }
+  .rodadaRequisicoes {
+    display: block;
+  }
+  .rodadaCartas,
+  .rodadaRequisicoes,
+  .rodadaTotal {
+    text-align: right;
+  }
+  .rodadaTotal,
+  .foraDoGrafico {
+    align-items: flex-end;
+  }
+  .rodadaAcao {
+    grid-column: auto;
+  }
+  .rodada .rotuloCampo {
+    display: none;
+  }
+}
