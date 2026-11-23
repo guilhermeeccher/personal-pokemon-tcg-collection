@@ -1,10 +1,16 @@
 import { exigirSessao } from "@/lib/acesso";
 
-import { irParaV1 } from "@/app/(v2)/_ponte/ir-para-v1";
+import { PaginaColecao } from "./pagina-cliente";
 
-/** Ponte: a v2 ainda não tem esta tela (`_ponte/ir-para-v1.ts`). */
-export default async function PonteColecao({ params, searchParams }: PageProps<"/colecoes/[id]">) {
+/**
+ * A coleção na v2 (pacote 1d): o fichário, a lista inteira, os upgrades e o
+ * que falta, com o detalhe de carta do pacote 1b. A página é de cliente
+ * (`pagina-cliente.tsx`): ela lê a grade pela API e relê a cada escrita, e o
+ * detalhe é estado de cliente sobre ela, não uma rota (regra 7 de
+ * `docs/design-v2/rules.md`).
+ */
+export default async function PaginaDaColecao({ params }: PageProps<"/colecoes/[id]">) {
   await exigirSessao();
   const { id } = await params;
-  irParaV1(["colecoes", id], await searchParams);
+  return <PaginaColecao id={id} />;
 }
