@@ -31,6 +31,7 @@ function diaComoData(dia: string): Date {
  */
 export function Cadastradas({ cadastradas, cartas }: { cadastradas: CadastradasInicioV2; cartas: CartasDoInicio }) {
   const t = useTranslations("v2Inicio.cadastradas");
+  const tc = useTranslations("componentes");
   const formato = useFormatter();
   const data = (dia: string, opcoes: DateTimeFormatOptions) => formato.dateTime(diaComoData(dia), { ...opcoes, timeZone: "UTC" });
   const textoDoDia = (dia: string) => {
@@ -70,7 +71,7 @@ export function Cadastradas({ cadastradas, cartas }: { cadastradas: CadastradasI
                   <span className={estilos.legendaCarta} aria-hidden>
                     <b>{c.nome}</b>
                     <span>
-                      {dia}
+                      {dia} · {tc(`variante.${c.variante}`)}
                       {c.quantidade > 1 && <span className="v2-num"> · {t("quantidade", { total: c.quantidade })}</span>}
                     </span>
                   </span>

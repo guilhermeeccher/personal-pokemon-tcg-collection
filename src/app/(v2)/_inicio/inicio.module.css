@@ -101,6 +101,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  min-width: 44px;
   min-height: 44px;
   color: inherit;
   text-decoration: none;
@@ -738,13 +739,14 @@
 }
 
 /*
- * Lado a lado, texto e leque pedem uns 820 px de conteúdo. Com o trilho de
- * vidro (768 px e acima) o conteúdo perde ~320 px, então a vitrine empilha
- * até ~1140 px de janela, e não só abaixo de 768 px: entre os dois, o leque
- * de tamanho cheio passava da borda. Media query, e não container query: a
+ * Lado a lado, o leque de tamanho cheio pede uns 470 px de coluna (uns 550
+ * abrindo sob o ponteiro), o que dá uns 960 px de conteúdo. Com o trilho de
+ * vidro (768 px e acima) o conteúdo perde ~350 px, então a vitrine empilha
+ * até ~1320 px de janela, e não só abaixo de 768 px: entre os dois, o leque
+ * passava da borda e cobria o texto. Media query, e não container query: a
  * casca proíbe `container-type` acima de barra fixa (regra 5d de `rules.md`).
  */
-@media (max-width: 71.24rem) {
+@media (max-width: 82.49rem) {
   .vitrine {
     grid-template-columns: minmax(0, 1fr);
     gap: 4px;
@@ -773,7 +775,7 @@
     transform: translate(84px, 18px) rotate(11deg);
   }
 }
-@media (max-width: 71.24rem) and (hover: hover) {
+@media (max-width: 82.49rem) and (hover: hover) {
   .leque:hover .esquerda {
     transform: translate(-112px, 24px) rotate(-14deg);
   }

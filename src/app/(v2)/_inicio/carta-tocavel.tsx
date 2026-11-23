@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import type { CartaDoInicioV2 } from "@/lib/dominio/inicio-v2";
@@ -13,9 +14,13 @@ import type { CartasDoInicio } from "./tipos";
 
 /**
  * Uma carta do início que abre o detalhe: o botão inteiro é o alvo de toque,
- * com o rótulo dizendo o que abre. Enquanto o detalhe dela está aberto, a
- * carta sai daqui e fica o lugar dela, do mesmo tamanho: o nome de transição
- * só pode existir num elemento, e é o do palco do detalhe que o leva.
+ * com o rótulo dizendo o que abre. A variante da cópia também é texto, nunca
+ * só o brilho (regra 1 de `rules.md`): no rótulo, e à vista na legenda de
+ * quem a escreve ou sobre a carta (`mostrarVariante`).
+ *
+ * Enquanto o detalhe dela está aberto, a carta sai daqui e fica o lugar dela,
+ * do mesmo tamanho: o nome de transição só pode existir num elemento, e é o
+ * do palco do detalhe que o leva.
  *
  * Fora do par ativo, a carta não leva nome nem transição nenhuma: sem nome, o
  * React daria um nome automático a cada carta e animaria todas (orçamento de
@@ -28,6 +33,7 @@ export function CartaTocavel({
   rotulo,
   modo = "grade",
   qualidade = "low",
+  mostrarVariante = false,
   className,
   children,
 }: {
@@ -37,13 +43,24 @@ export function CartaTocavel({
   rotulo: string;
   modo?: ModoCarta;
   qualidade?: QualidadeImagem;
+  /** A variante escrita sobre a carta, quando a legenda não a escreve. */
+  mostrarVariante?: boolean;
   className?: string;
   /** Legenda abaixo da carta, dentro do mesmo botão. */
   children?: ReactNode;
 }) {
+  const tc = useTranslations("componentes");
   const noParAtivo = cartas.alvo === chave;
+  // O `aria-label` substitui o nome do que está dentro do botão, inclusive o
+  // texto da variante que a `<Carta>` dá ao leitor de tela: ela vai junto aqui.
+  const rotuloCompleto = `${rotulo} · ${tc(`variante.${carta.variante}`)}`;
   return (
-    <button type="button" className={[estilos.cartaTocavel, className].filter(Boolean).join(" ")} onClick={() => cartas.abrir(chave, carta)} aria-label={rotulo}>
+    <button
+      type="button"
+      className={[estilos.cartaTocavel, className].filter(Boolean).join(" ")}
+      onClick={() => cartas.abrir(chave, carta)}
+      aria-label={rotuloCompleto}
+    >
       {cartas.aberta === chave ? (
         <span className={estilos.lugarDaCarta} aria-hidden />
       ) : (
@@ -56,6 +73,7 @@ export function CartaTocavel({
             raridade={carta.raridade}
             modo={modo}
             qualidade={qualidade}
+            mostrarVariante={mostrarVariante}
             fallback={<span className={estilos.semImagem}>{carta.nome}</span>}
           />
         </TransicaoVista>

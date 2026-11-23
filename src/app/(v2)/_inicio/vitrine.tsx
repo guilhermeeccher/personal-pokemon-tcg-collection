@@ -120,7 +120,10 @@ export function Vitrine({ dados, cartas }: { dados: InicioV2DTO; cartas: CartasD
                 cartas={cartas}
                 rotulo={t("vitrine.abrir", { nome: carta.nome })}
                 modo="vitrine"
-                qualidade={posicao === "centro" ? "high" : "low"}
+                // `high` só no centro, e só com o detalhe fechado: aberto, o
+                // palco dele é a carta grande da vez (regra 8 de `rules.md`).
+                qualidade={posicao === "centro" && cartas.aberta === null ? "high" : "low"}
+                mostrarVariante
                 className={`${estilos.lequeItem} ${estilos[posicao]}`}
               />
             ))}
