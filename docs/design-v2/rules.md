@@ -467,6 +467,33 @@ rest are the technical foundations of the v2.
     virtual grid, each opening the detail, and a "Do it in v1" link to `/v1/colecoes/<id>` for the
     buy marking, the list and the buy options.
 
+### Collections list: organize, suggestions, thematic collection (package 4b)
+
+30. **One page, two modes, one order.** `/colecoes` is read on the server (`lerListaColecoesV2`) and
+    drawn as cards ("view"); "Organize" swaps the same sections for rows with up/down buttons, a
+    group selector and the group actions (`src/app/(v2)/colecoes/_componentes/`). Both modes show the
+    order of `listarColecoes` and nothing on screen sorts it. **Every write rereads the page**
+    (`router.refresh` inside a transition), whatever its answer, and every control stays disabled
+    from the click until the new list has arrived, so the next click always starts from the order
+    the server has.
+    - **A refusal says what happened, and the screen state follows it** (`organizar.ts`, pure and
+      tested): a stale list (409 `ordemDeColecoesDesatualizada`) reads "nothing was applied" — the
+      catalogue sentence asks for a reload the screen already did — and rereads; a batch preview
+      ("Create missing ones", "Bring existing ones") whose group is gone (404) or lost its series
+      (`grupoSemSerie`) closes and the page says why; anything else, a lost response included,
+      rereads the preview before the confirm button comes back. Marks survive a reread only where
+      they still mean the same choice (`marcasDeFaltantes`, `marcasDeExistentes`).
+    - **A batch sends what its preview showed**: the series, and for "Bring existing ones" the group
+      each collection leaves (`grupoOrigemId`). The concurrency lives in the routes (the
+      organization lock); the screen never re-checks it.
+    - **Suggestions** are a client read of `GET /api/sugestoes`, shown in the server's order; the
+      collapsed state is a device preference (`v2-colecoes-sugestoes-recolhida`, rule 19), and
+      "Not interested" asks through the confirmation dialog.
+    - **The thematic collection** is created through `POST /api/colecoes` and goes straight to
+      "your cards that fit", which is package 1d's `CartasDoTema`, reused unchanged; its thumbnail
+      opens `DetalheCarta` in copy mode above it, and the marks live in the list, not in the detail.
+    - The copy is in the `v2Organizar` namespace of `messages/*.json`.
+
 ## 8. Other rules, checked for the transition
 
 | Rule | Section of `AGENTS.md` | Scope | Note |
