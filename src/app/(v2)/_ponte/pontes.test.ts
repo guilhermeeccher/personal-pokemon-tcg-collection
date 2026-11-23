@@ -112,8 +112,6 @@ describe("pontes da v2, executadas", () => {
         "/dex/[[...resto]]",
         "/inventario",
         "/inventario/precos",
-        "/inventario/repetidas",
-        "/inventario/visao-geral",
       ].sort(),
     );
   });

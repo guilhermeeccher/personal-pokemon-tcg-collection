@@ -1,0 +1,612 @@
+/*
+ * A visão geral da v2. Painéis sem desfoque (regra 5b: uma lista, e esta tela
+ * tem dezenas de linhas, nunca gasta `backdrop-filter`), uma coluna no
+ * celular e grades que crescem onde cabem. Nenhuma camada de composição por
+ * item (`will-change`, `mix-blend-mode`): só a carta sob o dedo se mexe, e
+ * isso é da Carta. Números em `v2-num` (tabulares).
+ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------- Cabeçalho */
+
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 24px;
+}
+.titulo {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.subtitulo {
+  margin: 8px 0 0;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+}
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------------------------------------------------------- Contagens */
+
+.contagens {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 40rem) {
+  .contagens {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.contagem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: var(--v2-raio-painel);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+@media (hover: hover) {
+  .contagem:hover {
+    background: var(--v2-superficie-2);
+  }
+}
+.contagem:active {
+  background: var(--v2-superficie-2);
+}
+.contagemValor {
+  font-size: clamp(26px, 5vw, 34px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.contagemRotulo {
+  font-size: 13px;
+  color: var(--v2-tinta-2);
+}
+
+/* ---------------------------------------------------------- Estados */
+
+.estado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 20px;
+}
+.estadoTitulo {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+.estadoTexto {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--v2-tinta-2);
+}
+
+/* ---------------------------------------------------------- Seções */
+
+.secao {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cabecaSecao {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.iconeSecao {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 4px;
+  color: #ffc983;
+}
+.cabecaLinha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+.tituloSecao {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+.textoSecao {
+  margin: 4px 0 0;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-2);
+}
+.notaFonte {
+  margin: 6px 0 0;
+  max-width: 62ch;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+}
+.linkSecao {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 14px;
+  color: var(--v2-foco);
+  text-decoration: none;
+}
+.linkSecao:hover {
+  text-decoration: underline;
+}
+
+/* ---------------------------------------------------------- Joias */
+
+/* Uma grade que quebra linha: a carta tem `touch-action: pan-y`, e uma faixa
+   que rola na horizontal não rolaria com o dedo começando sobre uma. */
+.joias {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 120px), 1fr));
+  gap: 18px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.joia {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.semAbrir {
+  display: block;
+  aspect-ratio: 600 / 825;
+  border-radius: var(--v2-raio-carta);
+  background: var(--v2-superficie-1);
+}
+.legenda {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--v2-tinta-2);
+}
+.joiaNome {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--v2-tinta);
+  overflow-wrap: anywhere;
+}
+.joiaSet,
+.joiaRaridade {
+  overflow-wrap: anywhere;
+}
+.preco {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 2px;
+}
+.precoValor {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--v2-tinta);
+}
+.precoOrigem {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--v2-tinta-3);
+}
+
+/* ---------------------------------------------------------- Capas de coleção */
+
+.capas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.capa {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  border-radius: var(--v2-raio-painel);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 0.4s var(--v2-curva-mola),
+    background-color 0.2s;
+}
+@media (hover: hover) {
+  .capa:hover {
+    background: var(--v2-superficie-2);
+    transform: translateY(-2px);
+  }
+}
+.capa:active {
+  background: var(--v2-superficie-2);
+}
+.capaCompleta {
+  background: rgb(111 240 180 / 0.07);
+  box-shadow: inset 0 0 0 1px rgb(111 240 180 / 0.28);
+}
+.capaImagem {
+  position: relative;
+  width: 84px;
+  aspect-ratio: 5 / 7;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--v2-superficie-2);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.1),
+    0 4px 12px rgb(0 0 0 / 0.35);
+}
+.capaFoto {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.capaLogo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+  object-fit: contain;
+}
+.capaVazia {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--v2-tinta-3);
+}
+.iconeCapa {
+  width: 28px;
+  height: 28px;
+}
+.pokebola {
+  width: 40px;
+  height: 40px;
+}
+.capaCorpo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.capaTitulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.capaNome {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
+}
+.capaTipo {
+  margin: -4px 0 0;
+  font-size: 12.5px;
+  color: var(--v2-tinta-3);
+}
+.capaGrande {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.capaContagem {
+  font-size: 13px;
+  letter-spacing: 0;
+  color: var(--v2-tinta-2);
+}
+.chipCompleta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--v2-livre);
+  background: rgb(111 240 180 / 0.12);
+}
+.chipCompleta svg {
+  width: 12px;
+  height: 12px;
+}
+
+.divisoes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.divisaoLinha {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 4px;
+  font-size: 12.5px;
+}
+.divisaoNome {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--v2-tinta);
+}
+.divisaoNumeros {
+  flex: none;
+  white-space: nowrap;
+  color: var(--v2-tinta-2);
+}
+.maisDivisoes {
+  font-size: 12px;
+  color: var(--v2-tinta-3);
+}
+
+/* ---------------------------------------------------------- Barras */
+
+.barra {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--v2-superficie-2);
+}
+.barraPreenchida {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: inherit;
+  background: var(--v2-iris-linear);
+}
+.barraCompleta {
+  background: var(--v2-livre);
+}
+.raridade_comum {
+  background: rgb(244 242 248 / 0.45);
+}
+.raridade_incomum {
+  background: #8ff0c0;
+}
+.raridade_rara {
+  background: #ffc983;
+}
+.raridade_holo {
+  background: #7fd6ff;
+}
+.raridade_secreta {
+  background: #ff8fd1;
+}
+
+/* ---------------------------------------------------------- Quase lá */
+
+.listaQuaseLa {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+}
+.listaQuaseLa > li + li {
+  border-top: 1px solid var(--v2-aresta);
+}
+.linhaQuaseLa {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+@media (min-width: 40rem) {
+  .linhaQuaseLa {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+@media (hover: hover) {
+  .linhaQuaseLa:hover {
+    background: var(--v2-superficie-1);
+  }
+}
+.quaseLaTexto {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.quaseLaTexto .divisaoLinha {
+  margin-bottom: 0;
+  font-size: 14px;
+}
+.colecaoDaDivisao {
+  color: var(--v2-tinta-3);
+}
+.faltam {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--v2-falta);
+}
+.faltantes {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.faltanteCarta,
+.faltanteSprite {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 6px;
+  font-size: 10px;
+  color: var(--v2-tinta-3);
+  background: var(--v2-superficie-1);
+  box-shadow: inset 0 0 0 1px var(--v2-aresta);
+}
+.faltanteCarta {
+  width: 36px;
+  height: 50px;
+}
+.faltanteCarta img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+  filter: grayscale(1);
+}
+.faltanteSprite {
+  width: 48px;
+  height: 48px;
+}
+.faltanteSprite img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.6;
+}
+.maisFaltantes {
+  padding-left: 4px;
+  font-size: 12px;
+  color: var(--v2-tinta-3);
+}
+
+/* ---------------------------------------------------------- Distribuições */
+
+.distribuicoes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+@media (min-width: 64rem) {
+  .distribuicoes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border-radius: var(--v2-raio-painel);
+}
+.painelLink {
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+@media (hover: hover) {
+  .painelLink:hover {
+    background: var(--v2-superficie-2);
+  }
+}
+.tituloGrupo {
+  margin: 0 0 4px;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+}
+.vazioGrupo {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--v2-tinta-3);
+}
+/* 8 px entre os alvos de toque: o padding de `.linha` é área clicável, não separação. */
+.linhas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.linha {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 8px 6px;
+  margin: 0 -6px;
+  border-radius: 10px;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+a.linha:active {
+  background: var(--v2-superficie-2);
+}
+@media (hover: hover) {
+  a.linha:hover {
+    background: var(--v2-superficie-1);
+  }
+}
+.linhaTopo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  font-size: 13.5px;
+}
+.linhaRotulo {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.linhaNumeros {
+  flex: none;
+  white-space: nowrap;
+  font-size: 12.5px;
+  color: var(--v2-tinta-2);
+}

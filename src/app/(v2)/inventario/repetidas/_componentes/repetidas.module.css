@@ -1,0 +1,156 @@
+/*
+ * As repetidas da v2. Cartões de painel (sem desfoque: regra 5b), uma coluna
+ * no celular e uma grade onde cabem duas ou mais. A carta é um atalho de
+ * ponteiro; o botão "Ver cópias" é o comando de teclado e de leitor de tela.
+ */
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 24px;
+}
+.titulo {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.subtitulo {
+  margin: 8px 0 0;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--v2-tinta-3);
+}
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.estado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 20px;
+}
+.estadoTexto {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--v2-tinta-2);
+}
+
+.grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cartao {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  box-sizing: border-box;
+  padding: 14px;
+  border-radius: var(--v2-raio-painel);
+}
+.miniatura {
+  width: 96px;
+}
+.semAbrir {
+  display: block;
+  aspect-ratio: 600 / 825;
+  border-radius: var(--v2-raio-carta);
+  background: var(--v2-superficie-1);
+}
+.corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.nome {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
+}
+.numero {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--v2-tinta-3);
+}
+.sub {
+  margin: -4px 0 0;
+  font-size: 12.5px;
+  color: var(--v2-tinta-2);
+  overflow-wrap: anywhere;
+}
+.numeros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 0;
+}
+.numeros dt {
+  font-size: 11.5px;
+  color: var(--v2-tinta-3);
+}
+.numeros dd {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+}
+.livres dd {
+  color: var(--v2-livre);
+  font-weight: 700;
+}
+.idiomas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.idioma {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--v2-tinta-2);
+  background: var(--v2-superficie-2);
+}
+.idiomaLivre {
+  color: var(--v2-livre);
+  background: rgb(111 240 180 / 0.12);
+}
+.abrir {
+  align-self: flex-start;
+}
+
+.paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+.paginacao > span {
+  font-size: 13px;
+  text-align: center;
+}

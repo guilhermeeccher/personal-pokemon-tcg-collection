@@ -1992,5 +1992,101 @@
       },
       "erroGrade": "Não foi possível ler a grade da coleção."
     }
+  },
+  "v2VisaoGeral": {
+    "titulo": "Visão geral",
+    "subtitulo": "Seu inventário num relance. Toque numa coleção para abri-la, ou em qualquer número para abrir o inventário já filtrado.",
+    "abrirInventario": "Abrir o inventário",
+    "verRepetidas": "Ver repetidas",
+    "erroCarregar": "Não foi possível ler a visão geral",
+    "erroCarregarTexto": "A leitura falhou. Nada foi alterado; tente de novo em instantes.",
+    "tentarDeNovo": "Tentar de novo",
+    "totais": {
+      "cartasDistintas": "Cartas distintas",
+      "unidadesTotais": "Unidades totais",
+      "alocadas": "Alocadas",
+      "livres": "Livres"
+    },
+    "vazio": {
+      "titulo": "Nenhuma carta cadastrada ainda",
+      "texto": "Cadastre as cartas que você tem para ver aqui as joias, as coleções e o que está perto de fechar.",
+      "porSet": "Cadastrar por set",
+      "porBusca": "Cadastrar por busca"
+    },
+    "joias": {
+      "titulo": "Joias da coleção",
+      "descricao": "As cartas que mais valem no inventário; as sem preço consultado seguem pela raridade.",
+      "notaLiga": "Preços da LigaPokemon, em reais, como o site os dá — sem conversão.",
+      "notaCardmarket": "Referência internacional: o valor do Cardmarket (a tendência; a média de 30 dias quando a tendência destoa dela, ou a média quando não há tendência) convertido em reais pela PTAX do dia indicado. Não é um valor de mercado brasileiro.",
+      "abrir": "Abrir {nome}, {set}",
+      "precoLiga": "Liga ~{valor}",
+      "precoCardmarket": "Cardmarket ~{valor}",
+      "origemCardmarket": "{eur} × PTAX {cotacao} em {data}",
+      "criterio": {
+        "media30": "média de 30 dias (a tendência destoava)",
+        "media": "média (sem tendência)"
+      }
+    },
+    "colecoes": {
+      "titulo": "Suas coleções",
+      "verTodas": "Ver todas",
+      "nenhuma": "Nenhuma coleção ainda.",
+      "criar": "Criar coleção",
+      "tipo": {
+        "pokedex": "Pokédex",
+        "set": "Set",
+        "customizada": "Customizada"
+      },
+      "cartas": "{total, plural, =1 {1 carta} other {# cartas}}",
+      "semVagas": "Sem vagas ainda",
+      "completa": "Completa",
+      "maisDivisoes": "{total, plural, =1 {+1 divisão} other {+# divisões}}"
+    },
+    "quaseLa": {
+      "titulo": "Quase lá",
+      "descricao": "As divisões mais perto de fechar, com as primeiras cartas que faltam.",
+      "faltam": "{total, plural, =1 {falta 1} other {faltam #}}"
+    },
+    "estatisticas": {
+      "titulo": "Estatísticas",
+      "descricao": "Como o inventário está distribuído. Toque num recorte para abrir o inventário já filtrado.",
+      "porExpansao": "Por expansão",
+      "porRaridade": "Por raridade",
+      "porIdioma": "Por idioma (físico)",
+      "porCondicao": "Por condição",
+      "porVariante": "Por variante",
+      "nenhumaCopia": "Nenhuma cópia cadastrada ainda.",
+      "abrirFiltrado": "Abrir o inventário filtrado por {rotulo}",
+      "repetidas": "Repetidas",
+      "repetidasDescricao": "O que sobra para troca: total, alocadas e livres por carta."
+    }
+  },
+  "v2Repetidas": {
+    "titulo": "Repetidas",
+    "descricao": "{total, plural, =0 {Nenhuma carta} =1 {1 carta} other {# cartas}} com 2 ou mais unidades. Ordenadas pelas unidades livres, da maior para a menor.",
+    "voltarVisaoGeral": "Visão geral",
+    "abrirInventario": "Abrir o inventário",
+    "filtro": {
+      "rotulo": "Quais repetidas mostrar",
+      "todas": "Todas",
+      "soLivres": "Só com unidades livres"
+    },
+    "total": "Total",
+    "alocadas": "Alocadas",
+    "livres": "Livres",
+    "idiomasFisicos": "Idiomas físicos das cópias",
+    "idiomaChip": "{idioma} · {livres}/{quantidade} livres",
+    "abrir": "Ver cópias",
+    "abrirCarta": "Abrir {nome}",
+    "vazio": "Nenhuma carta repetida (2 ou mais unidades) no inventário.",
+    "vazioSoLivres": "Nenhuma carta repetida com unidades livres no momento.",
+    "mostrarTodas": "Mostrar todas as repetidas",
+    "paginacaoRotulo": "Páginas das repetidas",
+    "anterior": "Anterior",
+    "proxima": "Próxima",
+    "paginacao": "Página {pagina} de {totalPaginas}",
+    "erroCarregar": "Não foi possível ler as repetidas",
+    "erroCarregarTexto": "A leitura falhou. Nada foi alterado; tente de novo em instantes.",
+    "tentarDeNovo": "Tentar de novo"
   }
 }
