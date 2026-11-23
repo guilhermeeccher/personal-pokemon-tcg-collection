@@ -478,7 +478,6 @@ function ModoVaga({
       t("erro.descartar"),
     );
     if (!r.ok) return;
-    // Sem reler a lista: a descartada fica nela, apagada, com "Restaurar".
     const atual = melhoria?.atual;
     setDescartadas((atuais) =>
       descartar
@@ -487,6 +486,10 @@ function ModoVaga({
           : atuais
         : atuais.filter((d) => d.candidata.id !== c.id),
     );
+    // Restaurar relê: a candidata só existia na lista local (o servidor a
+    // deixara de listar), e sem releitura ela sumiria se a grade de quem abriu
+    // não chegasse. Descartar não relê: a descartada fica à vista, apagada.
+    if (!descartar) reler();
     avisarMudanca({ tipo: descartar ? "melhoriaDescartada" : "melhoriaRestaurada", vagaId: vaga.id, copiaId: c.id });
   }
 
@@ -516,7 +519,7 @@ function ModoVaga({
         origem={ficha ? ficha.imagemOrigem : sobrescritaValida ? null : (vaga.imagemOrigem ?? null)}
         alt={nomeVaga}
         variante={copiaAtual?.variante ?? (vazia ? null : (vaga.copia?.variante ?? null))}
-        raridade={ficha?.raridade ?? cartaDaVaga?.raridade ?? null}
+        raridade={ficha ? ficha.raridade : (cartaDaVaga?.raridade ?? null)}
         fantasma={vazia}
         sprite={sprite}
         chaveTransicao={chaveTransicao}
