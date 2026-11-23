@@ -218,7 +218,7 @@ set by the dispatch order below.
 
 | Package | Delivers | Depends on |
 |---|---|---|
-| **4a Buy options** | its own page `/colecoes/[id]/opcoes-compra` in the v2 (the same URL as today), opened from the "What's missing" tab: price round, out-of-stock paste, filters, exports. **Done:** the page replaced the last bridge outside the Dex (`rules.md`, rules 35 to 38) | 1e |
+| **4a Buy options** | its own page `/colecoes/[id]/opcoes-compra` in the v2 (the same URL as today), opened from the "What's missing" tab: price round, out-of-stock paste, filters, exports. **Done:** the page replaced the last bridge outside the Dex (`rules.md`, rules 36 to 39) | 1e |
 | **4b Organize collections** | groups, order, batch actions, suggestions, thematic collection, inside `/colecoes` | **1c** |
 
 ### Phase 5 — Living Dex (a third of the frontend)

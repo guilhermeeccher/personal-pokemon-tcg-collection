@@ -254,7 +254,7 @@ rest are the technical foundations of the v2.
     the cost is flat: ~600 nodes and ~50 images at any size. The median tap does not move with the
     size, so the worst (cold) tap and the memory decide. The Dex screens have their own lists (forms,
     boxes) and measure them when their package ports them onto this grid (5a, 5c), against the same
-    budget; the Pokédex grid (5a) is measured in rule 38.
+    budget; the Pokédex grid (5a) is measured in rule 42.
 14. **New components the v1 does not have.** The **card detail** absorbs the v1's allocate,
     upgrade, edit-copy and destination modals and the zoom, and is born with two modes, slot and
     copy. A glass **confirmation dialog** replaces the twelve `window.confirm` calls of the v1: a
@@ -489,7 +489,7 @@ rest are the technical foundations of the v2.
       order. Package 4a's out-of-stock confirm (it records and unmarks in one server transaction)
       goes through the same queue, by `escreverNaFila`: a mark made after it, on any screen, waits
       for it, and it counts in flight and finished like a mark, so every screen sees the list stale
-      until a later read (rule 38). The queue also keeps, per collection, the requests in flight, the requests finished
+      until a later read (rule 39). The queue also keeps, per collection, the requests in flight, the requests finished
       and a generation that a refusal from either side bumps: the list is not copied while a
       request is in flight, nor until a read started after the last finished request arrives
       (a failed read keeps it stale), and a request queued before a refusal is dropped unsent. A
@@ -512,7 +512,7 @@ rest are the technical foundations of the v2.
     - **`PRECO_FONTE=liga`** (decision 3): a notice says new lookups are unavailable; marking works
       only over the options of saved scans, unmarking and copying always. Nothing starts a scan.
     - The buy options page itself (price round, ceiling and order, out-of-stock paste, downloads) is
-      package 4a's (rules 35 to 38); the tab's top panel links to it, `/colecoes/<id>/opcoes-compra`.
+      package 4a's (rules 36 to 39); the tab's top panel links to it, `/colecoes/<id>/opcoes-compra`.
     - `secaoCompraDoDetalhe` renders the same slot options component (`secao-compra-vaga.tsx`) inside
       the card detail.
 
@@ -576,7 +576,7 @@ rest are the technical foundations of the v2.
 
 ### Buy options page (package 4a)
 
-35. **One page, the v1's routes, the same files.** `/colecoes/[id]/opcoes-compra`
+36. **One page, the v1's routes, the same files.** `/colecoes/[id]/opcoes-compra`
     (`src/app/(v2)/colecoes/[id]/opcoes-compra/`) replaced the last bridge outside the Dex, at the same
     URL, opened from the "What's missing" tab. It reads `GET /api/colecoes/:id/opcoes-compra` and
     writes through the v1's requests, unchanged: `POST` on the same route starts the round, `PATCH
@@ -587,7 +587,7 @@ rest are the technical foundations of the v2.
     use, so the server sees the user's gestures in order whichever screen made them; copying is 1e's
     `useCopiarAba`, over `copiarTexto` (plain HTTP). The pure decisions are in `opcoes-compra.ts`,
     tested without a database.
-36. **The round is the server's; the screen reads the snapshot.** While a round lives (the Liga scan,
+37. **The round is the server's; the screen reads the snapshot.** While a round lives (the Liga scan,
     or this collection's Cardmarket candidates round) the page rereads the snapshot every
     `periodoDeLeituraMs`: on the Liga, `clamp(interval × 250 ms, 5 s, 60 s)` through 2d's
     `periodoDeAtualizacaoMs`, never a fixed number; on Cardmarket, which has no `robots.txt` interval,
@@ -598,7 +598,7 @@ rest are the technical foundations of the v2.
     the live round. On the Liga source a notice says, always, that a new scan will probably stop at
     the first refused request (decision 3): the round's `erro` is shown as the server wrote it, and
     **a block is never worked around**. Nothing on the page talks to the Liga, TCGdex or the BCB.
-37. **Ceiling and order, and the shortcut.** On Cardmarket they are a screen filter
+38. **Ceiling and order, and the shortcut.** On Cardmarket they are a screen filter
     (`filtrarCandidatas`), applied with the optimistic marks already on, so a card just marked is
     never hidden; a card with no price stays, last. On the Liga they are the next scan's parameters,
     and the options shown are the last scan's — the screen says so. "Mark the best of each slot" is
@@ -607,7 +607,7 @@ rest are the technical foundations of the v2.
     priced on Cardmarket, only in a slot with no choice and no pending mark), plus how many slots stay
     out and why; confirm sends exactly that plan, and if the read changed while the dialog was open it
     sends nothing and shows the new plan to confirm again.
-38. **Marks per option; the list waits for the reread.** Several choices per slot stay allowed. A tap
+39. **Marks per option; the list waits for the reread.** Several choices per slot stay allowed. A tap
     shows at once as a pending mark per option; a tap again before the reread sends the inverse. A
     pending mark is dropped only by a read asked after its request finished, or by any refusal (which
     rereads). Copying, the per-tab download and the CSV and text downloads wait while a mark is pending,
@@ -710,14 +710,14 @@ D. **The pieces package 5a owns, and their interfaces** (delivered 2026-11-23). 
 
 ### Overview and Pokédex (package 5a)
 
-36. **`/dex` only reads and navigates.** The server page reads what the v1 page reads, with the same
+40. **`/dex` only reads and navigates.** The server page reads what the v1 page reads, with the same
     functions; the screen computes with the same domain functions (`progressoDex`,
     `progressoPorRegiao`, `comTrofeusDoHome`, `pegueAgora`…), so the counts are the v1's. The
     percentages follow the v2's rule (`percentualSemFechar`: whole numbers, 100% only when complete)
     where the v1 printed one decimal. Every Pokémon of the showcase opens Register (`?busca=`), every
     game card and trophy the trophies (`?jogo=`), the plan the plans; those screens are bridges until
     their package lands, and the 307 carries the query.
-37. **`/dex/pokedex` keeps the v1's state on screen, not in the URL** (view, track, region — Kanto by
+41. **`/dex/pokedex` keeps the v1's state on screen, not in the URL** (view, track, region — Kanto by
     default —, search, state, category), as the v1 does. Sections are `PATCH /api/dex/secoes`, applied
     on the 200, with the chips disabled while one is saving; the base section is a disclosure button
     whose explanation opens by tap and keyboard. **A tap on a slot opens the Pokémon card**
@@ -726,7 +726,7 @@ D. **The pieces package 5a owns, and their interfaces** (delivered 2026-11-23). 
     box and position and the flags in writing on a phone. The cell is a fixed-height button
     (`ALTURA_CELULA` in `grade-pokedex.tsx`, summed in `pokedex.module.css`), because the virtual grid
     places rows by computed height: each text line ellipsizes instead of wrapping.
-38. **The Pokédex grid, measured against rule 13's budget** (2026-11-23, the same protocol: Chromium,
+42. **The Pokédex grid, measured against rule 13's budget** (2026-11-23, the same protocol: Chromium,
     iPhone profile 393 × 852, DPR 3, touch, iPhone user agent, CPU 4×, production build, invented
     data; "tap" is the longest Event Timing duration of a tap that opens the card, six taps in the
     middle of the list, the first cold).
