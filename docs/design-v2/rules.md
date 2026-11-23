@@ -642,6 +642,20 @@ D. **The pieces package 5a owns, and their interfaces** (delivered 2026-11-23). 
      shows 60 Pokémon at a time ("Show more"), so a game with hundreds to take never mounts them all
      on the grid's page; "Send all" still sends the whole group.
 
+E. **The piece package 5b owns: the box name** (delivered 2026-11-23). Ported from
+   `src/app/(v1)/v1/dex/_componentes/use-nome-caixa.ts`, which moved to `src/app/_comum/dex/` with its
+   three v1 importers (Boxes, Received, New registration) updated in the same change.
+
+   ```ts
+   // src/app/_comum/dex/use-nome-caixa.ts — skinless, "use client" (next-intl)
+   const nomeCaixa = useNomeCaixa();
+   nomeCaixa.nome(caixa)         // "National 2", "Regional · Hisui 1": the box's name in the interface language
+   nomeCaixa.grupo(grupo, regiao) // the group alone, with the region for a regional block
+   ```
+
+   One name for one box on every screen: Boxes, Received and the New registration (5d) read the same
+   hook, so the user recognizes a box from one screen on the next. A screen never writes it by hand.
+
 ### Overview and Pokédex (package 5a)
 
 36. **`/dex` only reads and navigates.** The server page reads what the v1 page reads, with the same

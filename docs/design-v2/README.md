@@ -255,7 +255,9 @@ that needs it builds it, and the others take it from the branch of the owner.
 
 Package 5a delivered its four pieces (2026-11-23); their interfaces are in `rules.md`, "Dex shared
 code", D. The v1 now takes the form label from `src/app/_comum/dex/` and its move-to-HOME request from
-`_comum/dex/use-mover-registros.ts`, keeping its own sprite, card and modal.
+`_comum/dex/use-mover-registros.ts`, keeping its own sprite, card and modal. Package 5b delivered the
+box name hook (2026-11-23), E; the v1's Boxes, Received and New registration take it from
+`src/app/_comum/dex/` too.
 
 **Merge order: 5a, then 5b, then 5c, 5d and 5e in any order.** A package that needs a piece whose
 owner has not merged asks (`ask`) instead of writing its own copy; two pieces doing one job is what

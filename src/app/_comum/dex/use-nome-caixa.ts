@@ -10,6 +10,9 @@ import { NOME_REGIAO_FORMA, type RegiaoForma } from "@/lib/dominio/dex-classific
  * Nome de uma caixa do HOME nas telas da Living Dex: "Nacional 2",
  * "Regionais · Hisui 1", "Cosméticas 3". O mesmo nas Caixas e em
  * Recebidos, para o usuário reconhecer a caixa de uma tela na outra.
+ *
+ * Sem pele, por isso em `_comum/`: as Caixas, Recebidos e o Novo cadastro da
+ * v1 e da v2 usam o mesmo hook, e nenhuma tela escreve o nome da caixa à mão.
  */
 export function useNomeCaixa() {
   const t = useTranslations("dex");
