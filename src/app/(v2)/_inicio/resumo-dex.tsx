@@ -163,10 +163,9 @@ export function ResumoDex({ dex }: { dex: ResumoDexInicioDTO }) {
             <span className={estilos.rotuloPequeno}>{t("proximoDoHome")}</span>
             <span className={estilos.linhaTopo}>
               <span className={estilos.linhaNome}>
-                <span style={{ color: COR_NIVEL[proximo.nivel] }} aria-hidden>
-                  <Medal size={16} />
-                </span>{" "}
-                {proximo.titulo} <span className={estilos.selo}>{td(`trofeus.nivel.${proximo.nivel}`)}</span>
+                <Medal size={16} style={{ color: COR_NIVEL[proximo.nivel] }} aria-hidden />
+                {proximo.titulo}
+                <span className={estilos.selo}>{td(`trofeus.nivel.${proximo.nivel}`)}</span>
               </span>
               <span className={`${estilos.linhaValor} v2-num`}>
                 {proximo.feito}/{proximo.alvo}
