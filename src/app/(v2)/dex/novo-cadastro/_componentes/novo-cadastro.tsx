@@ -681,7 +681,7 @@ export function NovoCadastro({
 
           <div className={`${estilos.barra} v2-painel-flutuante`} role="region" aria-label={t("barra")}>
             <div className={estilos.barraTexto}>
-              <span className={`${estilos.barraContagem} v2-num`}>{textoContagem}</span>
+              <span className={estilos.barraContagem}>{textoContagem}</span>
               <span className={estilos.barraLinha}>{textoUltimo}</span>
               {parDoUltimo && (
                 <span className={estilos.barraPar}>
@@ -750,7 +750,7 @@ export function NovoCadastro({
           <section className={estilos.secao} aria-labelledby="nc-lote">
             <h2 id="nc-lote" className={estilos.tituloSecao}>
               {td("novoCadastro.lote")}
-              <span className={`${estilos.contagemSecao} v2-num`}>{textoContagem}</span>
+              <span className={estilos.contagemSecao}>{textoContagem}</span>
             </h2>
             {impedidos.length > 0 && (
               <div>
