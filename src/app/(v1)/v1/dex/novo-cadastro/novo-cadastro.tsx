@@ -118,7 +118,7 @@ import { SpriteDex } from "../_componentes/sprite-dex";
 import { useNomeCaixa } from "@/app/_comum/dex/use-nome-caixa";
 import { useRotuloForma } from "@/app/_comum/dex/use-rotulo-forma";
 
-import { recusasLegiveis } from "./recusas-legiveis";
+import { recusasLegiveis } from "@/app/_comum/dex/recusas-legiveis";
 
 /* No celular a pílula chega a 44px de altura e largura, com mais respiro
    lateral; o intervalo de 8px vem do `gap-2` do grupo. Mesma classe do

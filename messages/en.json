@@ -3572,5 +3572,29 @@
     },
     "etapasFechadas": "Steps change only while the task is open in an active plan.",
     "limiteEtapas": "This task already has {maximo} steps, the maximum. To go on, split the work into another task."
+  },
+  "v2DexNovoCadastro": {
+    "descricao": "Select in the boxes what is going to HOME and say which game it leaves. Everything arrives in HOME as \"to put away\", in Received.",
+    "recebidos": "Received",
+    "caixas": "Boxes",
+    "etapa1": "Step 1 of 2 · the slots going to HOME",
+    "etapa2": "Step 2 of 2 · where they leave from",
+    "filtros": "Grid filters",
+    "grade": "HOME boxes to choose from",
+    "legenda": "Slot legend",
+    "legendaBuraco": "Dashed",
+    "legendaBuracoTexto": "the position exists in HOME, but nothing is stored there in this track",
+    "notaNoHome": "Tap a missing or in-game slot to select it. A slot already in HOME, or a dashed one, is only identified in the bar below.",
+    "barra": "New registration batch",
+    "soEnvio": "send only",
+    "notaSaida": "This is where the Pokémon leaves from now, not where it was born: if a record of this slot is already in that game, it is moved and keeps its origin, date and notes; otherwise a new one is born in that game. From HOME, always a new one.",
+    "tirarImpedidos": "{quantidade, plural, =1 {Remove the one that cannot go} other {Remove the # that cannot go}}",
+    "mostrarMais": "Show more ({restantes} left)",
+    "recusado": "Nothing was sent",
+    "confirmacao": {
+      "titulo": "One-way transfer",
+      "confirmar": "Transfer",
+      "lote": "{quantidade, plural, =1 {It applies to the Pokémon in this batch.} other {It applies to all # Pokémon in this batch.}}"
+    }
   }
 }

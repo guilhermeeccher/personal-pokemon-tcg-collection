@@ -34,10 +34,9 @@ vi.mock("@/lib/modulos", () => ({
 }));
 
 /* Uma ponte por tela da Dex, sem catch-all: um caminho de Dex que a v1 não tem
-   cai no 404 padrão do Next, ligado ou desligado o módulo. */
-const TELAS_DA_DEX = [
-  "/dex/novo-cadastro",
-];
+   cai no 404 padrão do Next, ligado ou desligado o módulo. Vazia desde o pacote
+   5d (2026-11-23): toda tela da Dex já tem a sua versão na v2. */
+const TELAS_DA_DEX: readonly string[] = [];
 
 const PASTA_V2 = path.resolve(__dirname, "..");
 

@@ -983,6 +983,52 @@ F. **The piece package 5e-b owns** (delivered 2026-11-23), moved from
   **offers** Register on the task's game (`hrefCadastroDaTarefa`: `jogo` and, for a single slot,
   `busca` with the species), in the task's own row; it never records.
 
+### New registration (package 5d)
+
+- **`/dex/novo-cadastro` keeps the v1's two steps and the v1's request.** The server page reads what
+  the v1 page reads (the Boxes' four reads, the active games, the unearned checkpoints). Step 1 is the
+  box grid of `/dex/caixas` — `montarCaixasDex`, the same numbers, groups and holes, on the
+  `GradeVirtual` with 5b's box geometry (`caixas/_componentes/geometria-caixa.ts`, `LIMIAR_CAIXAS`,
+  imported, never copied; the screen's stylesheet declares the same `--cx-*` measures and a test reads
+  it) — where a tap marks a slot that is missing or in a game, in either track. Step 2 is the game left
+  from (the active games and HOME; the last one used is a device preference, `v2-dex-novo-cadastro-saida`,
+  rule 19), the batch with each item's box and position and the v1's marks, and the send,
+  `POST /api/dex/registros/enviar` with `{ jogoOrigem, itens, confirmarSemVolta }`. The rules that were
+  in the v1 component are pure and tested: `lote-envio.ts` (selection by slot and track, the route's
+  ceiling, marks, what blocks the send) and `fluxo-envio.ts` (the request and the confirmation).
+- **A slot in HOME, and a hole, are identified, never marked.** A tap or keyboard focus writes the
+  slot's name, box, position and state (or the hole's reason) in the action bar, and the selection does
+  not change; a slot marked before it reached HOME (another tab) keeps its ring and a tap unmarks it. The
+  bar also says where the other half of a gender pair is and marks it without scrolling to it. Nothing
+  is only on hover: the mouse preview is `useCartaoFlutuante`, an enhancement.
+- **Leaving a send-only game always asks, once per batch.** The first send goes with
+  `confirmarSemVolta: false`; the 409 `dexConfirmarSemVolta` opens the v2 confirmation dialog with the
+  route's sentence, and only "Transfer" resends the same game and items with `true`. Cancel and Esc send
+  nothing, and the same 409 to a confirmed request is a plain refusal, never a second question.
+- **What the route would refuse for certain comes first in the batch and blocks the send**: a form HOME
+  does not take from that game, and a slot already in HOME. The batch mounts 60 items at a time ("Show
+  more"), so a blocking item is never hidden at the end of 500, and "Remove the ones that cannot go"
+  takes them all out. Marks that only warn (outside the game, trade, event, locked, moved, born in)
+  never block: the route accepts them.
+- **A refusal rereads the page.** The route serializes sends with its own advisory lock, so two tabs
+  sending the same slot get one 201 and one 400 `dexVagaJaNoHome`; the second tab shows the refusal
+  through `recusas-legiveis.ts` (moved to `src/app/_comum/dex/`, the v1 imports it from there), with
+  the form and track in the interface language, and rereads, after which the item shows "Already in
+  HOME". Send stays off until the reread arrives.
+- **The grid, measured against rule 13's budget** — see the table below this list. The box geometry,
+  the threshold and the cell are 5b's (rule 44, which also measured the grid mounted whole), and so
+  is the 42 px slot at 320 px, the one declared exception to the 44 px target.
+
+  | Track (whole, "only missing" off) | Boxes | Mounted | DOM nodes (page) | `<img>` in the grid | Loaded | Tap, worst / median |
+  |---|---|---|---|---|---|---|
+  | normal, virtual (the shipped `LIMIAR_CAIXAS`), three runs | 51 | 10 | 1,551 | 300 | 282 | 64–72 / 40–48 ms |
+
+  Measured 2026-11-23 with rule 44's protocol (Chromium, iPhone profile 393 × 852, DPR 3, touch,
+  iPhone user agent, CPU 4×, production build, invented data, scrolled to the middle; "tap" is the
+  longest Event Timing duration of a tap that marks a slot, six taps, the first cold). A tap redraws
+  one box: `CaixaEscolha` is `memo`, and each box gets its marked slots as one string, so a mark
+  elsewhere does not redraw it.
+
 ## 8. Other rules, checked for the transition
 
 | Rule | Section of `AGENTS.md` | Scope | Note |

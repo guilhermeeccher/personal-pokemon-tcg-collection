@@ -233,8 +233,8 @@ mutations and confirmations are kept on all of them.
 | **5a Overview and Pokédex** (done) | `/dex`, `/dex/pokedex`, and the four shared Dex pieces below | after 5-0 |
 | **5b Boxes and received** (done) | `/dex/caixas`, `/dex/recebidos`, and the box name hook | after 5-0 |
 | **5c Register** (done) | `/dex/cadastrar` (virtualized, its own measured threshold: `rules.md`, "Register by game (package 5c)") | after 5-0 |
-| **5d New registration** | `/dex/novo-cadastro` (two steps), with its own definition of done | after 5-0 |
-| **5e Inventory, games, trophies and plans** | the four screens; the split is reassessed by size, and plans get their own definition of done | after 5-0 |
+| **5d New registration** (done) | `/dex/novo-cadastro` (two steps), with its own definition of done | after 5-0 |
+| **5e Inventory, games, trophies and plans** (done) | the four screens, split by size on 2026-11-23 into **5e-a** (inventory, games) and **5e-b** (trophies, plans, with their own definition of done) | after 5-0 |
 
 5a to 5e run in parallel, four at a time.
 
@@ -251,7 +251,7 @@ that needs it builds it, and the others take it from the branch of the owner.
 | move-to-HOME flow (`use-transferencia.tsx`: request, one-way confirmation) | 5a, 5e | logic in `src/app/_comum/dex/`; its dialog is the v2's confirmation dialog, in `(v2)/dex/_componentes/` | **5a** |
 | box name hook (`use-nome-caixa.ts`) | 5b, 5d | `src/app/_comum/dex/` | **5b** |
 | "today" helper (`hoje.ts`) | 5e (plans, trophies) | `src/app/_comum/dex/` | **5e-b** (delivered) |
-| readable refusals (`novo-cadastro/recusas-legiveis.ts`) | 5d only | stays with 5d's screen | **5d** |
+| readable refusals (`recusas-legiveis.ts`) | 5d (and the v1's New registration) | `src/app/_comum/dex/` (skinless; moved by 5d with its v1 importer) | **5d** |
 
 Package 5a delivered its four pieces (2026-11-23); their interfaces are in `rules.md`, "Dex shared
 code", D. The v1 now takes the form label from `src/app/_comum/dex/` and its move-to-HOME request from
