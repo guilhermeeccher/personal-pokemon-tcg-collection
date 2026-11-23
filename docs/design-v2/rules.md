@@ -768,8 +768,10 @@ E. **The piece package 5b owns: the box name** (delivered 2026-11-23). Ported fr
       the rest (what was put away stays put away; the screen reads again and shows what is left).
     - **Twelve boxes at a time** ("Show more") and sixty "no place" lines: each box mounts its 30
       cells and its list, and a first load of the whole HOME is dozens of boxes. "All put away"
-      covers the whole round, in view or not. After a put-away the focus goes to the
-      count (the button that had it left the list with its box).
+      covers the whole round, in view or not. After the page is read again, **if focus was lost**
+      (a disabled button drops it, and a box's button leaves the list with its box) it goes back to
+      the button that asked when that button is still there (a refusal) or to the count when it is
+      not; a focus the user moved on purpose while waiting stays where it is.
 
 ## 8. Other rules, checked for the transition
 

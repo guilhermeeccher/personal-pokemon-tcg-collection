@@ -89,21 +89,29 @@ export function RecebidosHome({
     return f ? rotulo.nome(f) : formaId;
   };
 
-  // A caixa que se guardou sai da lista, e com ela o botão que tinha o foco:
-  // quando a leitura nova chega, **se o foco se perdeu** (caiu no `body`), ele
-  // vai para a contagem, que diz o que sobrou, e a tela rola até ela. Um foco
-  // que a pessoa mudou de propósito durante a leitura, ou o do botão que
-  // continua na tela (uma recusa), fica onde está.
+  // Um botão desligado enquanto o pedido roda perde o foco (no Chromium cai no
+  // `body`), e o de uma caixa guardada sai da lista junto com ela. Quando a
+  // leitura nova chega, **se o foco se perdeu**: volta ao botão que pediu, se
+  // ele continua na tela (uma recusa, uma falha de rede), ou vai para a
+  // contagem, que diz o que sobrou (a caixa saiu). Um foco que a pessoa mudou
+  // de propósito durante a espera fica onde está.
+  const gatilho = useRef<string | null>(null);
   const lendoAntes = useRef(false);
   useEffect(() => {
     if (lendoAntes.current && !lendo) {
       const foco = document.activeElement;
-      if (!foco || foco === document.body) status.current?.focus();
+      if (!foco || foco === document.body) {
+        const botao = gatilho.current
+          ? document.querySelector<HTMLButtonElement>(`[data-guardar="${gatilho.current}"]`)
+          : null;
+        (botao && !botao.disabled ? botao : status.current)?.focus();
+      }
     }
     lendoAntes.current = lendo;
   }, [lendo]);
 
   async function guardar(chave: string, ids: string[]) {
+    gatilho.current = chave;
     setOcupado(chave);
     setErro(null);
     const r = await guardarRecebidos(ids, (url, init) => fetch(url, init));
@@ -170,6 +178,7 @@ export function RecebidosHome({
             pequeno
             carregando={ocupado === "tudo"}
             disabled={desligado}
+            data-guardar="tudo"
             onClick={guardarTudo}
           >
             {td("recebidos.guardeiTudo")}
@@ -220,6 +229,7 @@ export function RecebidosHome({
                       className={estilos.guardei}
                       disabled={desligado}
                       carregando={ocupado === chave}
+                      data-guardar={chave}
                       aria-label={t("guardeiCaixa", { quantidade: itens.length, numero: caixa.numero })}
                       onClick={() => guardar(chave, itens.map((i) => i.registro.id))}
                     >
@@ -274,6 +284,7 @@ export function RecebidosHome({
                     className={estilos.guardei}
                     disabled={desligado}
                     carregando={ocupado === "sem-lugar"}
+                    data-guardar="sem-lugar"
                     aria-label={t("guardeiSemLugar", { quantidade: recebidos.semLugar.length })}
                     onClick={() => guardar("sem-lugar", recebidos.semLugar.map((s) => s.registro.id))}
                   >
