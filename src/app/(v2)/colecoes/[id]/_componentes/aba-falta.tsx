@@ -71,11 +71,12 @@ import {
   naListaDaVaga,
   planoDoAtalho,
   podarPendencias,
+  rebasearPendencias,
   restaurarPendencias,
   resumoComPendencias,
   semGestos,
 } from "./compra-falta";
-import { enviarSelecao, geracaoDosEnvios, useEnvios } from "./envio-selecao";
+import { enviarSelecao, enviosConcluidos, useEnvios } from "./envio-selecao";
 import estilos from "./falta.module.css";
 import { ListaLiga, useCopiarAba } from "./lista-liga";
 import { textoDoCriterio } from "./preco-compra";
@@ -155,17 +156,19 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
   // Os envios da coleção, da aba e do detalhe juntos (`envio-selecao.ts`).
   const envios = useEnvios(colecao.id);
   /**
-   * A geração dos envios quando saiu a última leitura que deu certo. Uma
-   * recusa (daqui ou do detalhe) sobe a geração: até uma leitura pedida depois
-   * dela chegar, o texto da lista é o de antes e não se copia — mesmo que essa
-   * leitura falhe.
+   * Quantos pedidos da coleção tinham terminado quando saiu a última leitura
+   * que deu certo. Um pedido que termina depois (daqui ou do detalhe, certo ou
+   * recusado) deixa o texto da lista velho até uma leitura iniciada depois
+   * dele chegar — e, se essa leitura falhar, ele continua velho.
    */
-  const [geracaoLida, setGeracaoLida] = useState<number | null>(null);
+  const [concluidosLidos, setConcluidosLidos] = useState<number | null>(null);
+  /** Gestos que a fila descartou: nunca saíram, e nada os traz de volta. */
+  const descartados = useRef(new Set<number>());
 
   useEffect(() => {
     const controle = new AbortController();
     const reflete = confirmadasAte.current;
-    const geracaoNaLeitura = geracaoDosEnvios(colecao.id);
+    const concluidosNaLeitura = enviosConcluidos(colecao.id);
     fetch(`/api/colecoes/${colecao.id}/falta`, { cache: "no-store", signal: controle.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error(String(r.status));
@@ -175,8 +178,10 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
         if (controle.signal.aborted) return;
         setLeitura({ estado: "ok", dados });
         podadasAte.current = Math.max(podadasAte.current, reflete);
-        definirPendencias((p) => podarPendencias(p, reflete));
-        setGeracaoLida(geracaoNaLeitura);
+        // As que sobram passam a se comparar com esta leitura (o total da barra).
+        const naLista = new Map(dados.vagas.map((v) => [v.vagaId, v.escolhas.length > 0] as const));
+        definirPendencias((p) => rebasearPendencias(podarPendencias(p, reflete), (id) => naLista.get(id) ?? false));
+        setConcluidosLidos(concluidosNaLeitura);
       })
       .catch(() => {
         if (controle.signal.aborted) return;
@@ -189,7 +194,7 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
   const faltaPorId = useMemo(() => new Map((dados?.vagas ?? []).map((v) => [v.vagaId, v] as const)), [dados]);
   const vagaPorId = useMemo(() => new Map(vazias.map((v) => [v.id, v] as const)), [vazias]);
   const fonte = dados?.fonte ?? null;
-  const listaVelha = geracaoLida !== null && envios.geracao !== geracaoLida;
+  const listaVelha = concluidosLidos !== null && envios.concluidos !== concluidosLidos;
 
   /* ---------- Envio em fila ---------- */
 
@@ -224,6 +229,7 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
         if (desfecho === null) {
           // Descartado: uma recusa (daqui ou do detalhe) entrou antes. As
           // marcas deste gesto nunca saíram; quem recusou já pediu a releitura.
+          for (const n of seqs) descartados.current.add(n);
           definirPendencias((p) => semGestos(p, seqs));
           return;
         }
@@ -398,7 +404,9 @@ export function AbaFalta({ colecao, vazias, versaoGrade, abrirVaga, reler, abert
     arrasto.current = null;
     if (a.estado.fase !== "pintando") return;
     engolirProximoClique();
-    definirPendencias((p) => restaurarPendencias(p, a.antes, podadasAte.current));
+    definirPendencias((p) =>
+      restaurarPendencias(p, a.antes, (n) => n > podadasAte.current && !descartados.current.has(n)),
+    );
   }
 
   function aoSoltar(e: PointerEvent<HTMLDivElement>) {

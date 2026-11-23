@@ -135,10 +135,14 @@ export function SecaoCompraVaga({
       })
       .catch(() => {
         if (controle.signal.aborted) return;
-        // Com opções já na tela, elas ficam — e a seção diz que podem estar velhas.
+        // Com opções já na tela, elas ficam — e a seção diz que podem estar
+        // velhas, com os botões ainda travados: um toque sobre elas repetiria
+        // o pedido. "Tentar de novo" relê e destrava.
         if (jaLeu.current) setFalhaReler(true);
-        else setLeitura({ estado: "erro" });
-        setAguardando(false);
+        else {
+          setLeitura({ estado: "erro" });
+          setAguardando(false);
+        }
       });
     return () => controle.abort();
   }, [colecaoId, vaga.chave, assinaturaEscolhas, pedido]);
@@ -204,8 +208,12 @@ export function SecaoCompraVaga({
             {escolhas.map((e) => {
               // A grade só diz o nome; a opção da mesma carta, quando está entre
               // as lidas, diz a edição e o número — duas "Bulbasaur" se distinguem.
-              const d = detalhadas.find((x) => x.escolhaId === e.id) ?? (e.cartaId === null ? undefined : opcoes.find((x) => x.cartaId === e.cartaId));
+              const d =
+                detalhadas.find((x) => x.escolhaId === e.id) ??
+                opcoes.find((x) => x.alvo.tipo === "escolha" && x.alvo.escolhaId === e.id) ??
+                (e.cartaId === null ? undefined : opcoes.find((x) => x.cartaId === e.cartaId));
               const sobre = d ? [d.edicaoNome, d.total ? `${d.numero}/${d.total}` : d.numero, d.preco ? formatos.brl(d.preco.valor) : null] : [];
+              const qual = d ? `${e.nome} (${[d.edicaoNome, d.total ? `${d.numero}/${d.total}` : d.numero].join(" ")})` : e.nome;
               return (
                 <li key={e.id} className={estilos.linhaEscolha}>
                   <span className={estilos.nomeEscolha}>
@@ -217,7 +225,7 @@ export function SecaoCompraVaga({
                     variante="fantasma"
                     icone={<X aria-hidden />}
                     disabled={travado}
-                    aria-label={t("tirarDe", { nome: e.nome })}
+                    aria-label={t("tirarDe", { nome: qual })}
                     onClick={() => void enviar([{ ids: [e.id], selecionada: false }])}
                   >
                     {t("tirar")}

@@ -14,6 +14,7 @@ import {
   naListaDaVaga,
   planoDoAtalho,
   podarPendencias,
+  rebasearPendencias,
   restaurarPendencias,
   resumoComPendencias,
   semGestos,
@@ -241,7 +242,7 @@ describe("pendências otimistas", () => {
     m = comPendencia(m, "v-1", p(2, false), false);
     m = comPendencia(m, "v-2", p(3, true), false);
     m = comPendencia(m, "v-3", p(4, true), false); // de outro gesto: fica
-    const r = restaurarPendencias(m, antes, 0);
+    const r = restaurarPendencias(m, antes, () => true);
     expect(r.get("v-1")).toEqual(antiga);
     expect(r.has("v-2")).toBe(false);
     expect(r.get("v-3")?.seq).toBe(4);
@@ -252,7 +253,19 @@ describe("pendências otimistas", () => {
     const antes = new Map<string, Pendencia | undefined>([["v-1", m.get("v-1")]]);
     m = comPendencia(m, "v-1", p(2, false), false);
     // Uma leitura que refletia o gesto 1 chegou no meio do arrasto (ou uma recusa podou até ele).
-    expect(restaurarPendencias(m, antes, 1).has("v-1")).toBe(false);
+    expect(restaurarPendencias(m, antes, (n) => n > 1).has("v-1")).toBe(false);
+    // Ou a fila a descartou (uma recusa do detalhe entrou antes dela).
+    expect(restaurarPendencias(m, antes, (n) => n !== 1).has("v-1")).toBe(false);
+  });
+
+  it("uma leitura nova vira a base das pendências que sobram: o segundo toque, inverso, não conta carta a mais", () => {
+    // Toque 1 pôs a vaga (antes: fora); toque 2 a tirou, ainda pendente.
+    let m = comPendencia(new Map(), "v-1", p(1, true, 5), false);
+    m = comPendencia(m, "v-1", p(2, false, 5), false);
+    // A leitura refletiu o toque 1: a vaga está na lista, e a lista soma 1 carta.
+    const r = rebasearPendencias(podarPendencias(m, 1), () => true);
+    expect(r.get("v-1")).toMatchObject({ seq: 2, antes: true });
+    expect(resumoComPendencias({ selecionadas: 1, total: 5 }, r)).toMatchObject({ cartas: 0, total: 0 });
   });
 
   it("os gestos descartados na fila saem da tela; os outros ficam", () => {

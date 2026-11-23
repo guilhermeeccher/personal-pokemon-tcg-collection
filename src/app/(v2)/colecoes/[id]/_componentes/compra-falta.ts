@@ -165,20 +165,33 @@ export function podarPendencias(pendencias: Pendencias, confirmadasAte: number):
  * cancelou): cada vaga que ele tocou volta à pendência que tinha antes dele,
  * ou a nenhuma. Nada foi enviado, então nada há a desfazer no servidor.
  *
- * A pendência de antes só volta se ainda estiver viva: uma leitura que chegou
- * durante o gesto pode tê-la refletido, ou uma recusa a derrubado
- * (`podadasAte`); ressuscitá-la deixaria a vaga "salvando" para sempre.
+ * A pendência de antes só volta se ainda estiver viva (`viva(seq)`): uma
+ * leitura que chegou durante o gesto pode tê-la refletido, uma recusa a
+ * derrubado, ou a fila a descartado; ressuscitá-la deixaria a vaga
+ * "salvando" para sempre.
  */
 export function restaurarPendencias(
   pendencias: Pendencias,
   antes: ReadonlyMap<string, Pendencia | undefined>,
-  podadasAte: number,
+  viva: (seq: number) => boolean,
 ): Map<string, Pendencia> {
   const saida = new Map(pendencias);
   for (const [vagaId, anterior] of antes) {
-    if (anterior && anterior.seq > podadasAte) saida.set(vagaId, anterior);
+    if (anterior && viva(anterior.seq)) saida.set(vagaId, anterior);
     else saida.delete(vagaId);
   }
+  return saida;
+}
+
+/**
+ * Depois de uma leitura nova, cada pendência que sobrou passa a se comparar
+ * com ela: `antes` vira o que a leitura diz da vaga. Sem isto, um toque
+ * refletido e um segundo, inverso, ainda pendente fariam a barra contar uma
+ * carta a mais.
+ */
+export function rebasearPendencias(pendencias: Pendencias, naListaPelaLeitura: (vagaId: string) => boolean): Map<string, Pendencia> {
+  const saida = new Map<string, Pendencia>();
+  for (const [vagaId, p] of pendencias) saida.set(vagaId, { ...p, antes: naListaPelaLeitura(vagaId) });
   return saida;
 }
 

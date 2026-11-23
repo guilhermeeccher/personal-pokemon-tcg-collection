@@ -486,14 +486,16 @@ rest are the technical foundations of the v2.
     - **Optimistic, then checked.** A mark shows at once as a pending mark per slot. Requests go
       through **one queue per collection, shared by the tab and the card detail**
       (`envio-selecao.ts`), entered at the gesture, so the server sees the user's gestures in
-      order. The queue also keeps, per collection, the requests in flight and a generation that
-      a refusal from either side bumps: the list is not copied while a request is in flight or
-      until a read asked after the last refusal arrives, and a request queued before a refusal is
-      dropped unsent. A pending mark is dropped only by a read asked after its request finished,
-      and a cancelled drag never brings back one that a read or a refusal already ended. A refusal
-      (404, 400, 5xx, no network) drops every pending mark, says why and rereads. In the slot
-      options, the buttons stay locked after a write until the options are read again (a second
-      tap would repeat the request instead of undoing it); a request that changed fewer rows than it carried (`alteradas`: the slot was
+      order. The queue also keeps, per collection, the requests in flight, the requests finished
+      and a generation that a refusal from either side bumps: the list is not copied while a
+      request is in flight, nor until a read started after the last finished request arrives
+      (a failed read keeps it stale), and a request queued before a refusal is dropped unsent. A
+      pending mark is dropped only by a read asked after its request finished; the marks left
+      are recounted against each new read; and a cancelled drag never brings back one that a
+      read, a refusal or the queue already ended. A refusal (404, 400, 5xx, no network) drops
+      every pending mark, says why and rereads. In the slot options, the buttons stay locked
+      after a write until the options are read again successfully (a second tap would repeat the
+      request instead of undoing it; a failed reread says so and offers "Try again"); a request that changed fewer rows than it carried (`alteradas`: the slot was
       filled, the card stopped being a candidate) says so and rereads.
     - **"Mark the best of each slot"** opens a dialog with the criterion and, slot by slot, the card,
       its price and source, plus how many slots stay out and why; only its confirm sends, and it

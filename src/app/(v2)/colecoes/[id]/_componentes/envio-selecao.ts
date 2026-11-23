@@ -10,14 +10,16 @@ const filaDaColecao = criarFilaPorChave();
 
 /**
  * O que a página inteira sabe dos envios de uma coleção, venham da aba ou do
- * detalhe: quantos pedidos estão na fila ou no ar, e a **geração**, que sobe a
- * cada recusa. Quem mostra a lista para colar lê isto: com um pedido no ar,
- * ou com uma recusa que nenhuma leitura posterior refletiu ainda, o texto
- * está velho.
+ * detalhe: quantos pedidos estão na fila ou no ar; a **geração**, que sobe a
+ * cada recusa (e descarta o que entrou na fila antes dela); e quantos pedidos
+ * já **terminaram**, dessem certo ou não. Quem mostra a lista para colar lê
+ * isto: com um pedido no ar, ou com um pedido terminado que nenhuma leitura
+ * iniciada depois dele refletiu ainda, o texto está velho.
  */
 interface EstadoEnvios {
   emVoo: number;
   geracao: number;
+  concluidos: number;
 }
 
 const estados = new Map<string, EstadoEnvios>();
@@ -26,7 +28,7 @@ const ouvintes = new Set<() => void>();
 function estadoDe(colecaoId: string): EstadoEnvios {
   let e = estados.get(colecaoId);
   if (!e) {
-    e = { emVoo: 0, geracao: 0 };
+    e = { emVoo: 0, geracao: 0, concluidos: 0 };
     estados.set(colecaoId, e);
   }
   return e;
@@ -45,7 +47,7 @@ function assinar(aviso: () => void) {
   };
 }
 
-const NADA: EstadoEnvios = { emVoo: 0, geracao: 0 };
+const NADA: EstadoEnvios = { emVoo: 0, geracao: 0, concluidos: 0 };
 
 /** O estado dos envios da coleção, para desenhar. */
 export function useEnvios(colecaoId: string): EstadoEnvios {
@@ -56,9 +58,9 @@ export function useEnvios(colecaoId: string): EstadoEnvios {
   );
 }
 
-/** A geração de agora, lida na hora (em evento, não em desenho). */
-export function geracaoDosEnvios(colecaoId: string): number {
-  return estadoDe(colecaoId).geracao;
+/** Quantos pedidos da coleção já terminaram, lido na hora em que uma leitura sai. */
+export function enviosConcluidos(colecaoId: string): number {
+  return estadoDe(colecaoId).concluidos;
 }
 
 /**
@@ -80,7 +82,7 @@ export function enviarSelecao(colecaoId: string, corpos: readonly CorpoSelecao[]
   return filaDaColecao(colecaoId, async () => {
     if (estadoDe(colecaoId).geracao !== geracaoNaEntrada) return null;
     const desfecho = await enviarAgora(colecaoId, corpos);
-    if (desfecho.tipo === "recusada") mudar(colecaoId, (e) => ({ ...e, geracao: e.geracao + 1 }));
+    mudar(colecaoId, (e) => ({ ...e, concluidos: e.concluidos + 1, geracao: e.geracao + (desfecho.tipo === "recusada" ? 1 : 0) }));
     return desfecho;
   }).finally(() => mudar(colecaoId, (e) => ({ ...e, emVoo: e.emVoo - 1 })));
 }
