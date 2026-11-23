@@ -186,7 +186,7 @@ export function ListaJogos({
                 </div>
 
                 <p className={estilos.info}>
-                  <span className="v2-num">{td("jogos.registrosAqui", { quantidade: String(j.registrosAqui) })}</span>
+                  <span>{td("jogos.registrosAqui", { quantidade: String(j.registrosAqui) })}</span>
                   {j.desde && (
                     <span>
                       {td("jogos.desde")} <span className="v2-num">{j.desde}</span>
@@ -202,7 +202,7 @@ export function ListaJogos({
                     data-platina={tro.platina || undefined}
                     aria-label={t("trofeusRotulo", { jogo: j.nome })}
                   >
-                    <span className="v2-num">
+                    <span>
                       {tro.platina
                         ? td("jogos.platina")
                         : td("jogos.trofeus", { obtidos: String(tro.obtidos), total: String(tro.total) })}

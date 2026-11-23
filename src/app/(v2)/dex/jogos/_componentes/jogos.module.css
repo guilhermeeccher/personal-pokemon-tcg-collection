@@ -172,11 +172,18 @@
   display: none;
 }
 
-/* Celular: as ações em duas colunas de 44 px, 8 px de intervalo; a partir de 768 px, em linha. */
+/*
+ * As ações quebram linha pelo texto, com 44 px de altura e 8 px de intervalo:
+ * em duas colunas fixas, "Marcar como parado" não cabe na metade de 320 px.
+ * No celular cada uma estica para a linha que ocupa.
+ */
 .acoes {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+}
+.acoes > * {
+  flex: 1 1 auto;
 }
 .formEdicao {
   display: flex;
@@ -191,9 +198,8 @@
 }
 
 @media (min-width: 48rem) {
-  .acoes {
-    display: flex;
-    flex-wrap: wrap;
+  .acoes > * {
+    flex: 0 0 auto;
   }
   .formEdicao {
     flex-direction: row;

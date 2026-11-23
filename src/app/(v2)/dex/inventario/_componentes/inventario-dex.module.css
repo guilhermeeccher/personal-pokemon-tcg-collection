@@ -147,7 +147,14 @@
 
 /* ------------------------------------------------------------- Lista */
 
+/*
+ * O desenho da linha segue a largura da lista, não a da janela: de 768 px a
+ * ~1000 px o trilho come 260 px e a lista fica estreita demais para uma
+ * linha só. `container-type` aqui não fere a regra 5d: a lista não é
+ * ancestral de nenhuma barra fixa (o trilho e a barra de abas são da casca).
+ */
 .lista {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -163,8 +170,8 @@
 }
 
 /*
- * Celular: o sprite, o nome e a quantidade na primeira linha; as ações embaixo,
- * em duas colunas de 44 px de altura e 8 px de intervalo. A partir de 768 px,
+ * Estreita: o sprite, o nome e a quantidade na primeira linha; as ações
+ * embaixo, em duas colunas de 44 px de altura e 8 px de intervalo. Larga:
  * tudo numa linha, com as ações à direita.
  */
 .linha {
@@ -262,7 +269,15 @@
   min-width: 0;
 }
 
-@media (min-width: 48rem) {
+/* Bem estreita (320 px): "Enviar" e "Mover" ganham a linha inteira, para o texto caber. */
+@container (max-width: 330px) {
+  .acoes > .enviar,
+  .acoes > :has(> .mover) {
+    grid-column: 1 / -1;
+  }
+}
+
+@container (min-width: 700px) {
   .linha {
     grid-template-columns: 48px minmax(0, 1fr) 48px auto;
   }
@@ -276,7 +291,7 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
-    max-width: 520px;
+    max-width: 480px;
   }
   /* O campo de "Mover 1 para…" ocupa a largura do texto dele, não a da linha. */
   .acoes > :has(> .mover) {

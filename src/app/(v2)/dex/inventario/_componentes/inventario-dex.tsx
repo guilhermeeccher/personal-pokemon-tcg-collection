@@ -287,6 +287,7 @@ export function InventarioDex({
                       <Botao
                         pequeno
                         variante="primario"
+                        className={estilos.enviar}
                         disabled={ocupado}
                         aria-label={t("enviarRotulo", { nome: nomeAcessivel })}
                         onClick={() => mover([idParaMover(g)], LOCAL_HOME)}
