@@ -148,9 +148,9 @@
 /* ------------------------------------------------------------- Lista */
 
 /*
- * O desenho da linha segue a largura da lista, não a da janela: de 768 px a
- * ~1000 px o trilho come 260 px e a lista fica estreita demais para uma
- * linha só. `container-type` aqui não fere a regra 5d: a lista não é
+ * O desenho da linha segue a largura da lista, não a da janela: a partir de
+ * 768 px o trilho come 260 px, e a mesma janela pode deixar a lista estreita
+ * ou larga. `container-type` aqui não fere a regra 5d: a lista não é
  * ancestral de nenhuma barra fixa (o trilho e a barra de abas são da casca).
  */
 .lista {
@@ -170,9 +170,9 @@
 }
 
 /*
- * Estreita: o sprite, o nome e a quantidade na primeira linha; as ações
- * embaixo, em duas colunas de 44 px de altura e 8 px de intervalo. Larga:
- * tudo numa linha, com as ações à direita.
+ * O sprite, o nome e a quantidade na primeira linha; as ações embaixo, com
+ * 44 px de altura e 8 px de intervalo — em duas colunas numa lista estreita,
+ * em linha numa larga.
  */
 .linha {
   display: grid;
@@ -278,31 +278,23 @@
 }
 
 /*
- * Uma linha só quando cabem as quatro ações sem quebrar (~500 px em pt) e
- * ainda sobra espaço para o nome: de 768 a ~1100 px de janela o trilho deixa
- * a lista abaixo disso, e a linha fica no desenho empilhado.
+ * Lista larga (a partir de ~560 px, que no desktop é quase sempre: a casca
+ * limita a largura do conteúdo): as ações saem da grade de duas colunas e
+ * ficam em linha, abaixo do nome, cada uma da largura do seu texto. Numa
+ * linha só com o nome não cabem: as quatro ações somam ~500 px em pt.
  */
-@container (min-width: 860px) {
-  .linha {
-    grid-template-columns: 48px minmax(0, 1fr) 48px auto;
-  }
-  .quantidade {
-    align-self: center;
-    padding-top: 0;
-    text-align: right;
-  }
+@container (min-width: 560px) {
   .acoes {
-    grid-column: auto;
+    grid-column: 2 / -1;
     display: flex;
-    flex-wrap: nowrap;
-    justify-content: flex-end;
+    flex-wrap: wrap;
   }
   .acoes > * {
     flex: 0 0 auto;
   }
   /* O campo de "Mover 1 para…" tem largura fixa: sem ela, o `width: 100%` do campo estica a linha. */
   .acoes > :has(> .mover) {
-    flex-basis: 170px;
+    flex-basis: 190px;
   }
 }
 
