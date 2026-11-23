@@ -257,8 +257,9 @@ export function EtapasTarefa({
         </ol>
       )}
       {!editavel && <p className={estilos.textoFraco}>{t("etapasFechadas")}</p>}
+      {/* Cheia (a lista relida depois de um `dexEtapasDemais`), o formulário de etapa nova dá lugar à nota. */}
       {editavel &&
-        (form?.etapaId === null ? (
+        (form?.etapaId === null && cabe ? (
           formulario(form)
         ) : (
           <>
