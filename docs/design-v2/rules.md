@@ -463,9 +463,44 @@ rest are the technical foundations of the v2.
     empty slots in grid order), `versaoGrade` (bumps on every new grid: reread `GET …/falta` with
     it), `abrirVaga(vaga)`, `reler()`, `abertaId`/`parAtivo` (for the transition), `tamanho` (the
     whole-list size preference) and `controle` (the grid handle the page uses to return focus —
-    pass it to the `GradeVirtual` the tab renders). Until 1e, the tab shows the empty slots on the
-    virtual grid, each opening the detail, and a "Do it in v1" link to `/v1/colecoes/<id>` for the
-    buy marking, the list and the buy options.
+    pass it to the `GradeVirtual` the tab renders).
+
+### What's missing and marking to buy (package 1e)
+
+30. **What the tab does.** `AbaFalta` reads `GET /api/colecoes/:id/falta` (package 1a) with every new
+    grid and draws every empty slot (R6) on the page's `GradeVirtual`. Every write is the v1's
+    `PATCH /api/colecoes/:id/opcoes-compra/selecao`, with the v1's bodies (`{ cartas: [{ chave,
+    cartaId }], selecionada }` on Cardmarket, `{ ids, selecionada }` for a Liga option or a choice).
+    The decisions are pure and tested (`compra-falta.ts`, `arrasto-compra.ts`):
+    - **A tap** (decision 2): in a set it puts the slot's card on the list and takes it off again;
+      with no price yet it is the manual choice of that card (works before the first price round).
+      In a Pokédex it opens the slot's options, read on demand (`…/falta/alternativas`). A slot
+      with a free copy opens the detail, where allocating fills it; buying it stays possible
+      there. A slot with two or more choices opens its options: "Clear the slot" is a named
+      action there, with a confirmation, never a tap.
+    - **Drag** (set only, where a tap marks): horizontal only, after 8 px, never from the left 24
+      px, along the row it started on (`indiceNoPonto(x, y0)`), one direction (the first card's),
+      sent as one request when the finger lifts. The grid area has `touch-action: pan-y`, so a
+      vertical move scrolls and marks nothing.
+    - **Optimistic, then checked.** A mark shows at once as a pending mark per slot; requests go
+      one at a time, in order; a pending mark is dropped only by a read asked after its request
+      finished. A refusal (404, 400, 5xx, no network) drops every pending mark, says why and
+      rereads; a request that changed fewer rows than it carried (`alteradas`: the slot was filled,
+      the card stopped being a candidate) says so and rereads.
+    - **"Mark the best of each slot"** opens a dialog with the criterion and, slot by slot, the card,
+      its price and source, plus how many slots stay out and why; only its confirm sends. The plan
+      is the one the dialog shows (`planoDoAtalho`), the 1a `proposta`: no slot with a choice, no
+      unpriced card.
+    - **The list to paste** is the server's (`lista.abasLiga`, the same function as the buy options
+      screen and the per-tab download); the tab shows it in a dialog with one tab per region in a
+      Pokédex, and copying waits for pending marks to be reread. Copy goes through
+      `src/app/_comum/copiar-texto.ts` (plain HTTP).
+    - **`PRECO_FONTE=liga`** (decision 3): a notice says new lookups are unavailable; marking works
+      only over the options of saved scans, unmarking and copying always. Nothing starts a scan.
+    - The buy options page itself (price round, ceiling and order, out-of-stock paste, downloads) is
+      package 4a's; until then the tab links to `/v1/colecoes/<id>/opcoes-compra`.
+    - `secaoCompraDoDetalhe` renders the same slot options component (`secao-compra-vaga.tsx`) inside
+      the card detail.
 
 ## 8. Other rules, checked for the transition
 
